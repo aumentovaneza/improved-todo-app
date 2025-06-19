@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Carbon\Carbon;
 
 class Task extends Model
 {
@@ -27,6 +28,7 @@ class Task extends Model
         'is_recurring',
         'recurrence_type',
         'recurrence_config',
+        'recurring_until',
     ];
 
     protected $casts = [
@@ -35,6 +37,7 @@ class Task extends Model
         'completed_at' => 'datetime',
         'is_recurring' => 'boolean',
         'recurrence_config' => 'array',
+        'recurring_until' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -159,5 +162,107 @@ class Task extends Model
                 ELSE CONCAT(DATE(due_date), " 00:00:00")
             END ASC
         ');
+    }
+
+    /**
+     * Get all occurrences of this task within a date range
+     * For non-recurring tasks, returns the task itself if it falls within the range
+     * For recurring tasks, generates occurrences based on the recurrence pattern
+     */
+    public function getOccurrencesInRange($startDate, $endDate)
+    {
+        $occurrences = collect();
+
+        if (!$this->is_recurring) {
+            // Non-recurring task - check if due_date falls within range
+            if (
+                $this->due_date &&
+                $this->due_date->between($startDate, $endDate)
+            ) {
+                $occurrences->push($this);
+            }
+        } else {
+            // Recurring task - generate occurrences
+            if (!$this->recurring_until || !$this->recurrence_type) {
+                return $occurrences;
+            }
+
+            // Start from the task creation date or start date, whichever is later
+            $currentDate = max($this->created_at->startOfDay(), $startDate->copy()->startOfDay());
+            $endDateLimit = min($endDate->copy()->endOfDay(), $this->recurring_until->copy()->endOfDay());
+
+            while ($currentDate <= $endDateLimit) {
+                // Create a virtual occurrence for this date
+                $occurrence = clone $this;
+                $occurrence->due_date = $currentDate->copy();
+                $occurrence->is_recurring_instance = true;
+                $occurrence->original_task_id = $this->id;
+
+                $occurrences->push($occurrence);
+
+                // Move to next occurrence
+                $currentDate = $this->getNextOccurrenceDate($currentDate);
+
+                if (!$currentDate || $currentDate > $endDateLimit) {
+                    break;
+                }
+            }
+        }
+
+        return $occurrences;
+    }
+
+    /**
+     * Get the next occurrence date based on recurrence type
+     */
+    private function getNextOccurrenceDate($currentDate)
+    {
+        switch ($this->recurrence_type) {
+            case 'daily':
+                return $currentDate->copy()->addDay();
+            case 'weekly':
+                return $currentDate->copy()->addWeek();
+            case 'monthly':
+                return $currentDate->copy()->addMonth();
+            case 'yearly':
+                return $currentDate->copy()->addYear();
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * Check if this task should be displayed on a specific date
+     */
+    public function isVisibleOnDate($date)
+    {
+        if (!$this->is_recurring) {
+            return $this->due_date && $this->due_date->format('Y-m-d') === $date->format('Y-m-d');
+        }
+
+        if (!$this->recurring_until || !$this->recurrence_type) {
+            return false;
+        }
+
+        if ($date > $this->recurring_until) {
+            return false;
+        }
+
+        // Check if the date matches the recurrence pattern
+        $baseDate = $this->created_at;
+        $daysDiff = $baseDate->diffInDays($date);
+
+        switch ($this->recurrence_type) {
+            case 'daily':
+                return true;
+            case 'weekly':
+                return $daysDiff % 7 === 0;
+            case 'monthly':
+                return $baseDate->day === $date->day;
+            case 'yearly':
+                return $baseDate->month === $date->month && $baseDate->day === $date->day;
+            default:
+                return false;
+        }
     }
 }

@@ -17,6 +17,9 @@ export default function TaskModal({ show, onClose, onSubmitting }) {
         start_time: "",
         end_time: "",
         is_all_day: true,
+        is_recurring: false,
+        recurrence_type: "",
+        recurring_until: "",
     };
 
     const { data, setData, post, processing, errors, reset, clearErrors } =
@@ -35,6 +38,9 @@ export default function TaskModal({ show, onClose, onSubmitting }) {
                 start_time: "",
                 end_time: "",
                 is_all_day: true,
+                is_recurring: false,
+                recurrence_type: "",
+                recurring_until: "",
             });
             clearErrors();
             setIsSubmitting(false);
@@ -64,6 +70,9 @@ export default function TaskModal({ show, onClose, onSubmitting }) {
                     start_time: "",
                     end_time: "",
                     is_all_day: true,
+                    is_recurring: false,
+                    recurrence_type: "",
+                    recurring_until: "",
                 });
                 clearErrors();
                 setIsSubmitting(false);
@@ -90,6 +99,9 @@ export default function TaskModal({ show, onClose, onSubmitting }) {
             start_time: "",
             end_time: "",
             is_all_day: true,
+            is_recurring: false,
+            recurrence_type: "",
+            recurring_until: "",
         });
         clearErrors();
         setIsSubmitting(false);
@@ -183,27 +195,107 @@ export default function TaskModal({ show, onClose, onSubmitting }) {
                                 <option value="low">Low</option>
                             </select>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">
-                                Due Date
-                            </label>
+                        <div className="flex items-center">
                             <input
-                                type="date"
-                                className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
-                                value={data.due_date}
-                                onChange={(e) =>
-                                    setData("due_date", e.target.value)
-                                }
+                                type="checkbox"
+                                id="is_recurring"
+                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
+                                checked={data.is_recurring}
+                                onChange={(e) => {
+                                    setData("is_recurring", e.target.checked);
+                                    if (!e.target.checked) {
+                                        // Clear recurring fields when switching to non-recurring
+                                        setData("recurrence_type", "");
+                                        setData("recurring_until", "");
+                                    } else {
+                                        // Clear due_date when switching to recurring
+                                        setData("due_date", "");
+                                    }
+                                }}
                             />
-                            {errors.due_date && (
-                                <div className="text-red-500 text-xs mt-1">
-                                    {errors.due_date}
-                                </div>
-                            )}
+                            <label
+                                htmlFor="is_recurring"
+                                className="ml-2 block text-sm text-gray-900 dark:text-gray-100"
+                            >
+                                Recurring Task
+                            </label>
                         </div>
 
+                        {data.is_recurring ? (
+                            <>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">
+                                        Recurrence Type
+                                    </label>
+                                    <select
+                                        className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                        value={data.recurrence_type}
+                                        onChange={(e) =>
+                                            setData(
+                                                "recurrence_type",
+                                                e.target.value
+                                            )
+                                        }
+                                        required={data.is_recurring}
+                                    >
+                                        <option value="">Select type</option>
+                                        <option value="daily">Daily</option>
+                                        <option value="weekly">Weekly</option>
+                                        <option value="monthly">Monthly</option>
+                                        <option value="yearly">Yearly</option>
+                                    </select>
+                                    {errors.recurrence_type && (
+                                        <div className="text-red-500 text-xs mt-1">
+                                            {errors.recurrence_type}
+                                        </div>
+                                    )}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">
+                                        Recurring Until
+                                    </label>
+                                    <input
+                                        type="date"
+                                        className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                        value={data.recurring_until}
+                                        onChange={(e) =>
+                                            setData(
+                                                "recurring_until",
+                                                e.target.value
+                                            )
+                                        }
+                                        required={data.is_recurring}
+                                    />
+                                    {errors.recurring_until && (
+                                        <div className="text-red-500 text-xs mt-1">
+                                            {errors.recurring_until}
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        ) : (
+                            <div>
+                                <label className="block text-sm font-medium mb-1">
+                                    Due Date
+                                </label>
+                                <input
+                                    type="date"
+                                    className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                    value={data.due_date}
+                                    onChange={(e) =>
+                                        setData("due_date", e.target.value)
+                                    }
+                                />
+                                {errors.due_date && (
+                                    <div className="text-red-500 text-xs mt-1">
+                                        {errors.due_date}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {/* Time Section */}
-                        {data.due_date && (
+                        {(data.due_date || data.recurring_until) && (
                             <div className="space-y-3">
                                 <div className="flex items-center space-x-2">
                                     <input

@@ -29,6 +29,7 @@ export default function Dashboard({
     todayTasks,
     overdueTasks,
     upcomingTasks,
+    weeklyTasks,
     stats,
     categories,
 }) {
@@ -794,6 +795,7 @@ export default function Dashboard({
                 todayTasks={localTodayTasks}
                 overdueTasks={localOverdueTasks}
                 upcomingTasks={localUpcomingTasks}
+                weeklyTasks={weeklyTasks}
                 toggleTaskStatus={toggleTaskStatus}
                 setSelectedTask={setSelectedTask}
                 setShowViewModal={setShowViewModal}

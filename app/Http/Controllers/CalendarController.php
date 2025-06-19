@@ -19,9 +19,10 @@ class CalendarController extends Controller
         $currentDate = $request->get('date', now()->format('Y-m-d'));
         $date = Carbon::parse($currentDate);
 
-        // Get tasks for the current month
-        $startOfMonth = $date->copy()->startOfMonth();
-        $endOfMonth = $date->copy()->endOfMonth();
+        // Get tasks for the current month (convert user timezone range to UTC for database queries)
+        $userDate = $user->toUserTimezone($date);
+        $startOfMonth = $userDate->copy()->startOfMonth()->utc();
+        $endOfMonth = $userDate->copy()->endOfMonth()->utc();
 
         // Get all tasks (both regular and recurring)
         $allTasks = $user->tasks()
@@ -35,15 +36,19 @@ class CalendarController extends Controller
             $taskOccurrences = $taskOccurrences->merge($occurrences);
         }
 
-        // Group tasks by date
-        $tasks = $taskOccurrences->groupBy(function ($task) {
-            return Carbon::parse($task->due_date)->format('Y-m-d');
+        // Group tasks by date (in user's timezone)
+        $tasks = $taskOccurrences->groupBy(function ($task) use ($user) {
+            // Convert the task's due_date to user timezone for grouping
+            $taskDueDate = $task->due_date; // This is already a Carbon instance from the cast
+            $userDate = $user->toUserTimezone($taskDueDate);
+            return $userDate->format('Y-m-d');
         });
 
         // Get upcoming tasks (next 7 days) - both regular and recurring
+        $userNow = $user->toUserTimezone(now());
         $upcomingTaskOccurrences = collect();
         foreach ($allTasks as $task) {
-            $occurrences = $task->getOccurrencesInRange(now(), now()->addDays(7));
+            $occurrences = $task->getOccurrencesInRange($userNow->copy()->utc(), $userNow->copy()->addDays(7)->utc());
             $upcomingTaskOccurrences = $upcomingTaskOccurrences->merge($occurrences);
         }
         $upcomingTasks = $upcomingTaskOccurrences->where('status', 'pending');
@@ -53,7 +58,7 @@ class CalendarController extends Controller
             ->with(['category', 'subtasks', 'tags'])
             ->where('status', 'pending')
             ->where('is_recurring', false)
-            ->where('due_date', '<', now())
+            ->where('due_date', '<', $userNow)
             ->orderByDateTime()
             ->get();
 

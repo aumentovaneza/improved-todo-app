@@ -25,9 +25,16 @@ export default function ScheduleModal({
     setShowViewModal,
     setShowEditModal,
 }) {
-    const [selectedDate, setSelectedDate] = useState(
-        new Date().toISOString().split("T")[0]
-    );
+    const [selectedDate, setSelectedDate] = useState(() => {
+        const today = new Date();
+        return (
+            today.getFullYear() +
+            "-" +
+            String(today.getMonth() + 1).padStart(2, "0") +
+            "-" +
+            String(today.getDate()).padStart(2, "0")
+        );
+    });
     const [selectedDateTasks, setSelectedDateTasks] = useState([]);
 
     // Get tasks for a specific date from weeklyTasks
@@ -35,10 +42,15 @@ export default function ScheduleModal({
         // Filter weekly tasks for the specific date
         const tasksForDate = weeklyTasks.filter((task) => {
             if (!task.due_date) return false;
-            const taskDate = new Date(task.due_date)
-                .toISOString()
-                .split("T")[0];
-            return taskDate === date;
+            // Use local date components to avoid timezone issues
+            const taskDate = new Date(task.due_date);
+            const taskDateStr =
+                taskDate.getFullYear() +
+                "-" +
+                String(taskDate.getMonth() + 1).padStart(2, "0") +
+                "-" +
+                String(taskDate.getDate()).padStart(2, "0");
+            return taskDateStr === date;
         });
 
         // Sort tasks by time - all-day tasks first, then by time
@@ -144,12 +156,19 @@ export default function ScheduleModal({
         for (let i = 0; i < 7; i++) {
             const date = new Date();
             date.setDate(date.getDate() + i);
+            // Use local date components to avoid timezone issues
+            const dateStr =
+                date.getFullYear() +
+                "-" +
+                String(date.getMonth() + 1).padStart(2, "0") +
+                "-" +
+                String(date.getDate()).padStart(2, "0");
             days.push({
-                date: date.toISOString().split("T")[0],
+                date: dateStr,
                 dayName: date.toLocaleDateString("en-US", { weekday: "short" }),
                 dayNumber: date.getDate(),
                 isToday: i === 0,
-                tasks: getTasksForDate(date.toISOString().split("T")[0]),
+                tasks: getTasksForDate(dateStr),
             });
         }
         return days;
@@ -195,13 +214,20 @@ export default function ScheduleModal({
                                 />
                                 <div className="flex gap-2">
                                     <button
-                                        onClick={() =>
-                                            setSelectedDate(
-                                                new Date()
-                                                    .toISOString()
-                                                    .split("T")[0]
-                                            )
-                                        }
+                                        onClick={() => {
+                                            const today = new Date();
+                                            const todayStr =
+                                                today.getFullYear() +
+                                                "-" +
+                                                String(
+                                                    today.getMonth() + 1
+                                                ).padStart(2, "0") +
+                                                "-" +
+                                                String(
+                                                    today.getDate()
+                                                ).padStart(2, "0");
+                                            setSelectedDate(todayStr);
+                                        }}
                                         className="btn-secondary text-xs py-1 px-2"
                                     >
                                         Today
@@ -212,11 +238,17 @@ export default function ScheduleModal({
                                             tomorrow.setDate(
                                                 tomorrow.getDate() + 1
                                             );
-                                            setSelectedDate(
-                                                tomorrow
-                                                    .toISOString()
-                                                    .split("T")[0]
-                                            );
+                                            const tomorrowStr =
+                                                tomorrow.getFullYear() +
+                                                "-" +
+                                                String(
+                                                    tomorrow.getMonth() + 1
+                                                ).padStart(2, "0") +
+                                                "-" +
+                                                String(
+                                                    tomorrow.getDate()
+                                                ).padStart(2, "0");
+                                            setSelectedDate(tomorrowStr);
                                         }}
                                         className="btn-secondary text-xs py-1 px-2"
                                     >

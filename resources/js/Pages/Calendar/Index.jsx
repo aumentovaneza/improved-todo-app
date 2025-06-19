@@ -48,9 +48,22 @@ export default function Index({
         const current = new Date(startDate);
 
         for (let i = 0; i < 42; i++) {
-            const dateStr = current.toISOString().split("T")[0];
+            // Use local date string to avoid timezone conversion issues
+            const dateStr =
+                current.getFullYear() +
+                "-" +
+                String(current.getMonth() + 1).padStart(2, "0") +
+                "-" +
+                String(current.getDate()).padStart(2, "0");
             const isCurrentMonth = current.getMonth() === month;
-            const isToday = dateStr === new Date().toISOString().split("T")[0];
+            const today = new Date();
+            const todayStr =
+                today.getFullYear() +
+                "-" +
+                String(today.getMonth() + 1).padStart(2, "0") +
+                "-" +
+                String(today.getDate()).padStart(2, "0");
+            const isToday = dateStr === todayStr;
             const dayTasks = tasks[dateStr] || [];
 
             days.push({
@@ -73,10 +86,16 @@ export default function Index({
     const navigateMonth = (direction) => {
         const date = new Date(currentDate);
         date.setMonth(date.getMonth() + direction);
+        const dateStr =
+            date.getFullYear() +
+            "-" +
+            String(date.getMonth() + 1).padStart(2, "0") +
+            "-" +
+            String(date.getDate()).padStart(2, "0");
         router.get(
             route("calendar.index"),
             {
-                date: date.toISOString().split("T")[0],
+                date: dateStr,
             },
             { preserveState: true }
         );
@@ -189,7 +208,6 @@ export default function Index({
                                         >
                                             {day.day}
                                         </div>
-
                                         {/* Tasks for this day */}
                                         <div className="space-y-1">
                                             {day.tasks

@@ -23,8 +23,10 @@ import TaskEditModal from "@/Components/TaskEditModal";
 import Toast from "@/Components/Toast";
 import { toast } from "react-toastify";
 
-export default function Index({ tasks, categories, filters }) {
-    const [taskList, setTaskList] = useState(tasks.data);
+export default function Index({ categorizedTasks, categories, filters }) {
+    const [categorizedTaskList, setCategorizedTaskList] = useState(
+        categorizedTasks || []
+    );
     const [search, setSearch] = useState(filters.search || "");
     const [statusFilter, setStatusFilter] = useState(filters.status || "");
     const [priorityFilter, setPriorityFilter] = useState(
@@ -43,17 +45,24 @@ export default function Index({ tasks, categories, filters }) {
     const [selectedTask, setSelectedTask] = useState(null);
 
     useEffect(() => {
-        setTaskList(tasks.data);
-    }, [tasks.data]);
+        setCategorizedTaskList(categorizedTasks || []);
+    }, [categorizedTasks]);
+
+    // Get all tasks from all categories for operations that need the full list
+    const getAllTasks = () => {
+        return categorizedTaskList.flatMap((group) => group.tasks.data || []);
+    };
 
     const handleDragEnd = (result) => {
         if (!result.destination) return;
 
-        const items = Array.from(taskList);
+        const allTasks = getAllTasks();
+        const items = Array.from(allTasks);
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0, reorderedItem);
 
-        setTaskList(items);
+        // Update local state - this is more complex with categorized data
+        // For now, we'll let the server response handle the update
 
         // Send the new order to the server
         router.post(
@@ -171,19 +180,25 @@ export default function Index({ tasks, categories, filters }) {
         const newStatus = task.status === "completed" ? "pending" : "completed";
 
         // Update local state immediately for instant feedback
-        setTaskList(
-            taskList.map((t) =>
-                t.id === task.id
-                    ? {
-                          ...t,
-                          status: newStatus,
-                          completed_at:
-                              newStatus === "completed"
-                                  ? new Date().toISOString()
-                                  : null,
-                      }
-                    : t
-            )
+        setCategorizedTaskList(
+            categorizedTaskList.map((group) => ({
+                ...group,
+                tasks: {
+                    ...group.tasks,
+                    data: group.tasks.data.map((t) =>
+                        t.id === task.id
+                            ? {
+                                  ...t,
+                                  status: newStatus,
+                                  completed_at:
+                                      newStatus === "completed"
+                                          ? new Date().toISOString()
+                                          : null,
+                              }
+                            : t
+                    ),
+                },
+            }))
         );
 
         // Send request to server
@@ -203,19 +218,25 @@ export default function Index({ tasks, categories, filters }) {
                     // Revert changes on error
                     const revertStatus =
                         newStatus === "completed" ? "pending" : "completed";
-                    setTaskList(
-                        taskList.map((t) =>
-                            t.id === task.id
-                                ? {
-                                      ...t,
-                                      status: revertStatus,
-                                      completed_at:
-                                          revertStatus === "completed"
-                                              ? new Date().toISOString()
-                                              : null,
-                                  }
-                                : t
-                        )
+                    setCategorizedTaskList(
+                        categorizedTaskList.map((group) => ({
+                            ...group,
+                            tasks: {
+                                ...group.tasks,
+                                data: group.tasks.data.map((t) =>
+                                    t.id === task.id
+                                        ? {
+                                              ...t,
+                                              status: revertStatus,
+                                              completed_at:
+                                                  revertStatus === "completed"
+                                                      ? new Date().toISOString()
+                                                      : null,
+                                          }
+                                        : t
+                                ),
+                            },
+                        }))
                     );
                     toast.error("Failed to update task status");
                 },
@@ -344,9 +365,9 @@ export default function Index({ tasks, categories, filters }) {
                 </div>
 
                 {/* Tasks List */}
-                <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg">
-                    {taskList.length === 0 ? (
-                        <div className="p-6 sm:p-8 text-center">
+                <div className="space-y-6">
+                    {categorizedTaskList.length === 0 ? (
+                        <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 sm:p-8 text-center">
                             <div className="text-gray-400 dark:text-gray-500 mb-4">
                                 <CheckCircle className="mx-auto h-10 w-10 sm:h-12 sm:w-12" />
                             </div>
@@ -377,225 +398,260 @@ export default function Index({ tasks, categories, filters }) {
                                 )}
                         </div>
                     ) : (
-                        <DragDropContext onDragEnd={handleDragEnd}>
-                            <Droppable droppableId="tasks">
-                                {(provided) => (
-                                    <div
-                                        {...provided.droppableProps}
-                                        ref={provided.innerRef}
-                                        className="divide-y divide-gray-200 dark:divide-gray-700"
-                                    >
-                                        {taskList.map((task, index) => (
-                                            <Draggable
-                                                key={task.id}
-                                                draggableId={task.id.toString()}
-                                                index={index}
-                                            >
-                                                {(provided, snapshot) => (
-                                                    <div
-                                                        ref={provided.innerRef}
-                                                        {...provided.draggableProps}
-                                                        className={`p-4 sm:p-6 transition-colors duration-150 ${
-                                                            snapshot.isDragging
-                                                                ? "bg-gray-50 dark:bg-gray-700"
-                                                                : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                                                        }`}
-                                                    >
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                                                {/* Drag Handle */}
-                                                                <div
-                                                                    {...provided.dragHandleProps}
-                                                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab active:cursor-grabbing"
-                                                                >
-                                                                    <GripVertical className="h-4 w-4 sm:h-5 sm:w-5" />
-                                                                </div>
-
-                                                                {/* Status Icon */}
-                                                                <button
-                                                                    onClick={() =>
-                                                                        toggleTaskStatus(
-                                                                            task
-                                                                        )
-                                                                    }
-                                                                    className="flex-shrink-0 hover:scale-110 transition-transform"
-                                                                >
-                                                                    {getStatusIcon(
-                                                                        task.status
-                                                                    )}
-                                                                </button>
-
-                                                                {/* Task Content */}
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                                                        <div className="flex-1 min-w-0">
-                                                                            <h3
-                                                                                className={`text-sm sm:text-base font-medium truncate ${
-                                                                                    task.status ===
-                                                                                    "completed"
-                                                                                        ? "text-gray-500 dark:text-gray-400 line-through"
-                                                                                        : "text-gray-900 dark:text-gray-100"
-                                                                                }`}
-                                                                            >
-                                                                                {
-                                                                                    task.title
-                                                                                }
-                                                                            </h3>
-                                                                            {task.description && (
-                                                                                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
-                                                                                    {
-                                                                                        task.description
-                                                                                    }
-                                                                                </p>
-                                                                            )}
-                                                                        </div>
-                                                                        <div className="flex items-center space-x-2">
-                                                                            {/* Priority Badge */}
-                                                                            <span
-                                                                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(
-                                                                                    task.priority
-                                                                                )}`}
-                                                                            >
-                                                                                {task.priority
-                                                                                    .charAt(
-                                                                                        0
-                                                                                    )
-                                                                                    .toUpperCase() +
-                                                                                    task.priority.slice(
-                                                                                        1
-                                                                                    )}
-                                                                            </span>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {/* Task Meta Info */}
-                                                                    <div className="flex flex-wrap items-center gap-2 mt-2">
-                                                                        {/* Category */}
-                                                                        {task.category && (
-                                                                            <div className="flex items-center space-x-1">
-                                                                                <div
-                                                                                    className="w-2 h-2 rounded-full"
-                                                                                    style={{
-                                                                                        backgroundColor:
-                                                                                            task
-                                                                                                .category
-                                                                                                .color,
-                                                                                    }}
-                                                                                />
-                                                                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                                                    {
-                                                                                        task
-                                                                                            .category
-                                                                                            .name
-                                                                                    }
-                                                                                </span>
-                                                                            </div>
-                                                                        )}
-
-                                                                        {/* Due Date */}
-                                                                        {task.due_date && (
-                                                                            <div
-                                                                                className={`flex items-center space-x-1 ${
-                                                                                    isOverdue(
-                                                                                        task.due_date
-                                                                                    )
-                                                                                        ? "text-red-600 dark:text-red-400"
-                                                                                        : "text-gray-500 dark:text-gray-400"
-                                                                                }`}
-                                                                            >
-                                                                                <Calendar className="h-3 w-3" />
-                                                                                <span className="text-xs">
-                                                                                    {new Date(
-                                                                                        task.due_date
-                                                                                    ).toLocaleDateString()}
-                                                                                </span>
-                                                                            </div>
-                                                                        )}
-
-                                                                        {/* Subtasks count */}
-                                                                        {task.subtasks_count >
-                                                                            0 && (
-                                                                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                                                {
-                                                                                    task.completed_subtasks_count
-                                                                                }
-
-                                                                                /
-                                                                                {
-                                                                                    task.subtasks_count
-                                                                                }{" "}
-                                                                                subtasks
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Action Buttons */}
-                                                            <div className="flex items-center space-x-1 sm:space-x-2 ml-2">
-                                                                <button
-                                                                    onClick={() => {
-                                                                        setSelectedTask(
-                                                                            task
-                                                                        );
-                                                                        setShowViewModal(
-                                                                            true
-                                                                        );
-                                                                    }}
-                                                                    className="p-1 sm:p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                                                                >
-                                                                    <Eye className="h-4 w-4" />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => {
-                                                                        setSelectedTask(
-                                                                            task
-                                                                        );
-                                                                        setShowEditModal(
-                                                                            true
-                                                                        );
-                                                                    }}
-                                                                    className="p-1 sm:p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                                                                >
-                                                                    <Edit className="h-4 w-4" />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </Draggable>
-                                        ))}
-                                        {provided.placeholder}
+                        categorizedTaskList.map((group, groupIndex) => (
+                            <div
+                                key={group.category.id || "uncategorized"}
+                                className="bg-white dark:bg-gray-800 shadow-sm rounded-lg"
+                            >
+                                {/* Category Header */}
+                                <div className="px-4 sm:px-6 py-3 border-b border-gray-200 dark:border-gray-700">
+                                    <div className="flex items-center space-x-3">
+                                        <div
+                                            className="w-3 h-3 rounded-full"
+                                            style={{
+                                                backgroundColor:
+                                                    group.category.color,
+                                            }}
+                                        />
+                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                            {group.category.name}
+                                        </h3>
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                                            {group.tasks.total}{" "}
+                                            {group.tasks.total === 1
+                                                ? "task"
+                                                : "tasks"}
+                                        </span>
                                     </div>
-                                )}
-                            </Droppable>
-                        </DragDropContext>
+                                </div>
+
+                                {/* Tasks in Category */}
+                                <DragDropContext onDragEnd={handleDragEnd}>
+                                    <Droppable
+                                        droppableId={`category-${
+                                            group.category.id || "uncategorized"
+                                        }`}
+                                    >
+                                        {(provided) => (
+                                            <div
+                                                {...provided.droppableProps}
+                                                ref={provided.innerRef}
+                                                className="divide-y divide-gray-200 dark:divide-gray-700"
+                                            >
+                                                {group.tasks.data.map(
+                                                    (task, index) => {
+                                                        const globalIndex =
+                                                            getAllTasks().findIndex(
+                                                                (t) =>
+                                                                    t.id ===
+                                                                    task.id
+                                                            );
+                                                        return (
+                                                            <Draggable
+                                                                key={task.id}
+                                                                draggableId={task.id.toString()}
+                                                                index={
+                                                                    globalIndex
+                                                                }
+                                                            >
+                                                                {(
+                                                                    provided,
+                                                                    snapshot
+                                                                ) => (
+                                                                    <div
+                                                                        ref={
+                                                                            provided.innerRef
+                                                                        }
+                                                                        {...provided.draggableProps}
+                                                                        className={`p-4 sm:p-6 transition-colors duration-150 ${
+                                                                            snapshot.isDragging
+                                                                                ? "bg-gray-50 dark:bg-gray-700"
+                                                                                : "hover:bg-gray-50 dark:hover:bg-gray-700"
+                                                                        }`}
+                                                                    >
+                                                                        <div className="flex items-center justify-between">
+                                                                            <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                                                                {/* Drag Handle */}
+                                                                                <div
+                                                                                    {...provided.dragHandleProps}
+                                                                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab active:cursor-grabbing"
+                                                                                >
+                                                                                    <GripVertical className="h-4 w-4 sm:h-5 sm:w-5" />
+                                                                                </div>
+
+                                                                                {/* Status Icon */}
+                                                                                <button
+                                                                                    onClick={() =>
+                                                                                        toggleTaskStatus(
+                                                                                            task
+                                                                                        )
+                                                                                    }
+                                                                                    className="flex-shrink-0 hover:scale-110 transition-transform"
+                                                                                >
+                                                                                    {getStatusIcon(
+                                                                                        task.status
+                                                                                    )}
+                                                                                </button>
+
+                                                                                {/* Task Content */}
+                                                                                <div className="flex-1 min-w-0">
+                                                                                    <div className="flex flex-col sm:flex-row sm:items-center">
+                                                                                        <div className="flex-1 min-w-0">
+                                                                                            <div className="flex flex-row items-center gap-2">
+                                                                                                <h3
+                                                                                                    className={`text-sm sm:text-base font-medium truncate ${
+                                                                                                        task.status ===
+                                                                                                        "completed"
+                                                                                                            ? "text-gray-500 dark:text-gray-400 line-through"
+                                                                                                            : "text-gray-900 dark:text-gray-100"
+                                                                                                    }`}
+                                                                                                >
+                                                                                                    {
+                                                                                                        task.title
+                                                                                                    }
+                                                                                                </h3>
+                                                                                                {/* Priority Badge */}
+                                                                                                <span
+                                                                                                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(
+                                                                                                        task.priority
+                                                                                                    )}`}
+                                                                                                >
+                                                                                                    {task.priority
+                                                                                                        .charAt(
+                                                                                                            0
+                                                                                                        )
+                                                                                                        .toUpperCase() +
+                                                                                                        task.priority.slice(
+                                                                                                            1
+                                                                                                        )}
+                                                                                                </span>
+                                                                                            </div>
+
+                                                                                            {task.description && (
+                                                                                                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
+                                                                                                    {
+                                                                                                        task.description
+                                                                                                    }
+                                                                                                </p>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    </div>
+
+                                                                                    {/* Task Meta Info */}
+                                                                                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                                                                                        {/* Due Date */}
+                                                                                        {task.due_date && (
+                                                                                            <div
+                                                                                                className={`flex items-center space-x-1 ${
+                                                                                                    isOverdue(
+                                                                                                        task.due_date
+                                                                                                    )
+                                                                                                        ? "text-red-600 dark:text-red-400"
+                                                                                                        : "text-gray-500 dark:text-gray-400"
+                                                                                                }`}
+                                                                                            >
+                                                                                                <Calendar className="h-3 w-3" />
+                                                                                                <span className="text-xs">
+                                                                                                    {new Date(
+                                                                                                        task.due_date
+                                                                                                    ).toLocaleDateString()}
+                                                                                                </span>
+                                                                                            </div>
+                                                                                        )}
+
+                                                                                        {/* Subtasks count */}
+                                                                                        {task.subtasks_count >
+                                                                                            0 && (
+                                                                                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                                                                {
+                                                                                                    task.completed_subtasks_count
+                                                                                                }
+
+                                                                                                /
+                                                                                                {
+                                                                                                    task.subtasks_count
+                                                                                                }{" "}
+                                                                                                subtasks
+                                                                                            </span>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            {/* Action Buttons */}
+                                                                            <div className="flex items-center space-x-1 sm:space-x-2 ml-2">
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setSelectedTask(
+                                                                                            task
+                                                                                        );
+                                                                                        setShowViewModal(
+                                                                                            true
+                                                                                        );
+                                                                                    }}
+                                                                                    className="p-1 sm:p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                                                                >
+                                                                                    <Eye className="h-4 w-4" />
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setSelectedTask(
+                                                                                            task
+                                                                                        );
+                                                                                        setShowEditModal(
+                                                                                            true
+                                                                                        );
+                                                                                    }}
+                                                                                    className="p-1 sm:p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                                                                >
+                                                                                    <Edit className="h-4 w-4" />
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </Draggable>
+                                                        );
+                                                    }
+                                                )}
+                                                {provided.placeholder}
+                                            </div>
+                                        )}
+                                    </Droppable>
+                                </DragDropContext>
+
+                                {/* Category Pagination */}
+                                {group.tasks.links &&
+                                    group.tasks.links.length > 3 && (
+                                        <div className="px-4 sm:px-6 py-3 border-t border-gray-200 dark:border-gray-700">
+                                            <div className="flex flex-wrap justify-center gap-1 sm:gap-2">
+                                                {group.tasks.links.map(
+                                                    (link, index) => (
+                                                        <Link
+                                                            key={index}
+                                                            href={
+                                                                link.url || "#"
+                                                            }
+                                                            className={`px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
+                                                                link.active
+                                                                    ? "bg-blue-600 text-white"
+                                                                    : link.url
+                                                                    ? "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                                    : "text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                                                            }`}
+                                                            dangerouslySetInnerHTML={{
+                                                                __html: link.label,
+                                                            }}
+                                                        />
+                                                    )
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                            </div>
+                        ))
                     )}
                 </div>
-
-                {/* Pagination */}
-                {tasks.links && tasks.links.length > 3 && (
-                    <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 sm:p-6">
-                        <div className="flex flex-wrap justify-center gap-1 sm:gap-2">
-                            {tasks.links.map((link, index) => (
-                                <Link
-                                    key={index}
-                                    href={link.url || "#"}
-                                    className={`px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
-                                        link.active
-                                            ? "bg-blue-600 text-white"
-                                            : link.url
-                                            ? "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                            : "text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                                    }`}
-                                    dangerouslySetInnerHTML={{
-                                        __html: link.label,
-                                    }}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                )}
             </div>
 
             {/* Modals */}

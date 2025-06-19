@@ -6,7 +6,6 @@ use App\Models\Task;
 use App\Models\Category;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -20,9 +19,62 @@ class TaskController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = Task::with(['category', 'subtasks'])
+        $baseQuery = Task::with(['category', 'subtasks'])
             ->where('user_id', Auth::id());
 
+        // Apply filters to base query
+        $this->applyFilters($baseQuery, $request);
+
+        // Get all active categories for the user
+        $categories = Category::where('is_active', true)->get();
+
+        // Get categorized tasks with pagination
+        $categorizedTasks = [];
+
+        // Handle tasks with categories
+        foreach ($categories as $category) {
+            $categoryQuery = clone $baseQuery;
+            $categoryQuery->where('category_id', $category->id);
+
+            $paginatedTasks = $categoryQuery->orderBy('position')->paginate(5, ['*'], "category_{$category->id}_page");
+
+            if ($paginatedTasks->total() > 0) {
+                $categorizedTasks[] = [
+                    'category' => $category,
+                    'tasks' => $paginatedTasks
+                ];
+            }
+        }
+
+        // Handle uncategorized tasks
+        $uncategorizedQuery = clone $baseQuery;
+        $uncategorizedQuery->whereNull('category_id');
+        $uncategorizedTasks = $uncategorizedQuery->orderBy('position')->paginate(5, ['*'], 'uncategorized_page');
+
+        if ($uncategorizedTasks->total() > 0) {
+            $categorizedTasks[] = [
+                'category' => (object) [
+                    'id' => null,
+                    'name' => 'Uncategorized',
+                    'color' => '#6B7280',
+                    'is_active' => true
+                ],
+                'tasks' => $uncategorizedTasks
+            ];
+        }
+
+        return Inertia::render('Tasks/Index', [
+            'categorizedTasks' => $categorizedTasks,
+            'categories' => $categories,
+            'filters' => $request->only(['search', 'status', 'priority', 'category_id', 'due_date_filter']),
+        ]);
+    }
+
+    /**
+     * Apply filters to the task query
+     */
+    private function applyFilters($query, Request $request)
+    {
         // Search functionality
         if ($request->filled('search')) {
             $search = $request->get('search');
@@ -65,28 +117,6 @@ class TaskController extends Controller
                     break;
             }
         }
-
-        $tasks = $query->orderBy('position')->paginate(20);
-
-        $categories = Category::where('is_active', true)->get();
-
-        return Inertia::render('Tasks/Index', [
-            'tasks' => $tasks,
-            'categories' => $categories,
-            'filters' => $request->only(['search', 'status', 'priority', 'category_id', 'due_date_filter']),
-        ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): Response
-    {
-        $categories = Category::where('is_active', true)->get();
-
-        return Inertia::render('Tasks/Create', [
-            'categories' => $categories,
-        ]);
     }
 
     /**

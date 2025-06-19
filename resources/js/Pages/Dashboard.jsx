@@ -44,6 +44,22 @@ export default function Dashboard({
     const [showScheduleModal, setShowScheduleModal] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
 
+    // Handle task updates from modals
+    const handleTaskUpdate = (updatedTask) => {
+        setSelectedTask(updatedTask);
+        // Update the task in all relevant lists
+        const updateTaskInList = (taskList, setTaskList) => {
+            setTaskList(
+                taskList.map((t) => (t.id === updatedTask.id ? updatedTask : t))
+            );
+        };
+
+        updateTaskInList(localCurrentTasks, setLocalCurrentTasks);
+        updateTaskInList(localTodayTasks, setLocalTodayTasks);
+        updateTaskInList(localOverdueTasks, setLocalOverdueTasks);
+        updateTaskInList(localUpcomingTasks, setLocalUpcomingTasks);
+    };
+
     const [quickTask, setQuickTask] = useState({
         title: "",
         description: "",
@@ -777,6 +793,7 @@ export default function Dashboard({
                     setSelectedTask(null);
                 }}
                 task={selectedTask}
+                onTaskUpdate={handleTaskUpdate}
             />
             <TaskEditModal
                 show={showEditModal}
@@ -786,6 +803,7 @@ export default function Dashboard({
                 }}
                 task={selectedTask}
                 categories={categories}
+                onTaskUpdate={handleTaskUpdate}
             />
 
             <ScheduleModal

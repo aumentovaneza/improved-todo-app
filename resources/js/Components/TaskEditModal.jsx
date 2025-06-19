@@ -5,7 +5,13 @@ import PrimaryButton from "./PrimaryButton";
 import SubtaskManager from "./SubtaskManager";
 import { useEffect } from "react";
 
-export default function TaskEditModal({ show, onClose, task, categories }) {
+export default function TaskEditModal({
+    show,
+    onClose,
+    task,
+    categories,
+    onTaskUpdate,
+}) {
     const { data, setData, put, processing, errors, reset } = useForm({
         title: "",
         description: "",
@@ -388,9 +394,11 @@ export default function TaskEditModal({ show, onClose, task, categories }) {
                         <div className="border-t lg:border-t-0 lg:border-l border-gray-200 dark:border-gray-700 pt-6 lg:pt-0 lg:pl-6 lg:order-2">
                             {task && (
                                 <SubtaskManager
+                                    key={`edit-${task.id}-${task.updated_at}`}
                                     task={task}
                                     subtasks={task.subtasks || []}
                                     canEdit={true}
+                                    onTaskUpdate={onTaskUpdate}
                                 />
                             )}
                         </div>

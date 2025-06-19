@@ -28,7 +28,6 @@
         "@dnd-kit/utilities": "^3.2.2",
         "date-fns": "^4.1.0",
         "lucide-react": "^0.517.0",
-        "react-beautiful-dnd": "^13.1.1",
         "react-toastify": "^11.0.5",
         "sweetalert2": "^11.22.0"
     }

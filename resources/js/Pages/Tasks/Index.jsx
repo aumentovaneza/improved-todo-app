@@ -1,7 +1,22 @@
 import TodoLayout from "@/Layouts/TodoLayout";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useState, useEffect } from "react";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from "@dnd-kit/core";
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
     Plus,
     Search,
@@ -22,6 +37,232 @@ import TaskViewModal from "@/Components/TaskViewModal";
 import TaskEditModal from "@/Components/TaskEditModal";
 import Toast from "@/Components/Toast";
 import { toast } from "react-toastify";
+
+function SortableTask({
+    task,
+    globalIndex,
+    getPriorityColor,
+    getStatusIcon,
+    isOverdue,
+    toggleTaskStatus,
+    setSelectedTask,
+    setShowViewModal,
+    setShowEditModal,
+}) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({
+        id: task.id.toString(),
+    });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            className={`p-4 sm:p-6 transition-colors duration-150 ${
+                isDragging
+                    ? "bg-gray-50 dark:bg-gray-700"
+                    : "hover:bg-gray-50 dark:hover:bg-gray-700"
+            }`}
+        >
+            <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3 flex-1 min-w-0">
+                    {/* Drag Handle */}
+                    <div
+                        {...attributes}
+                        {...listeners}
+                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab active:cursor-grabbing"
+                    >
+                        <GripVertical className="h-4 w-4 sm:h-5 sm:w-5" />
+                    </div>
+
+                    {/* Status Icon */}
+                    <button
+                        onClick={() => toggleTaskStatus(task)}
+                        className="flex-shrink-0 hover:scale-110 transition-transform"
+                    >
+                        {getStatusIcon(task.status)}
+                    </button>
+
+                    {/* Task Content */}
+                    <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center">
+                            <div className="flex-1 min-w-0">
+                                <div className="flex flex-row items-center gap-2">
+                                    <h3
+                                        className={`text-sm sm:text-base font-medium truncate ${
+                                            task.status === "completed"
+                                                ? "text-gray-500 dark:text-gray-400 line-through"
+                                                : "text-gray-900 dark:text-gray-100"
+                                        }`}
+                                    >
+                                        {task.title}
+                                    </h3>
+                                    {/* Priority Badge */}
+                                    <span
+                                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(
+                                            task.priority
+                                        )}`}
+                                    >
+                                        {task.priority.charAt(0).toUpperCase() +
+                                            task.priority.slice(1)}
+                                    </span>
+                                </div>
+
+                                {task.description && (
+                                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
+                                        {task.description}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Task Meta Info */}
+                        <div className="flex flex-wrap items-center gap-2 mt-2">
+                            {/* Due Date and Time */}
+                            {task.due_date && (
+                                <div
+                                    className={`flex items-center space-x-1 ${
+                                        isOverdue(task.due_date)
+                                            ? "text-red-600 dark:text-red-400"
+                                            : "text-gray-500 dark:text-gray-400"
+                                    }`}
+                                >
+                                    <Calendar className="h-3 w-3" />
+                                    <span className="text-xs">
+                                        {new Date(
+                                            task.due_date
+                                        ).toLocaleDateString()}
+                                        {!task.is_all_day &&
+                                            (task.start_time ||
+                                                task.end_time) && (
+                                                <span className="ml-1 font-medium">
+                                                    {(() => {
+                                                        const formatTime = (
+                                                            timeStr
+                                                        ) => {
+                                                            if (!timeStr)
+                                                                return "";
+                                                            // Handle both time formats (HH:MM and full datetime)
+                                                            if (
+                                                                timeStr.includes(
+                                                                    "T"
+                                                                ) ||
+                                                                timeStr.includes(
+                                                                    " "
+                                                                )
+                                                            ) {
+                                                                const date =
+                                                                    new Date(
+                                                                        timeStr
+                                                                    );
+                                                                return date.toLocaleTimeString(
+                                                                    [],
+                                                                    {
+                                                                        hour: "numeric",
+                                                                        minute: "2-digit",
+                                                                        hour12: true,
+                                                                    }
+                                                                );
+                                                            }
+                                                            // Just time string like "14:30:00" or "14:30"
+                                                            const [
+                                                                hours,
+                                                                minutes,
+                                                            ] =
+                                                                timeStr.split(
+                                                                    ":"
+                                                                );
+                                                            const hour =
+                                                                parseInt(hours);
+                                                            const ampm =
+                                                                hour >= 12
+                                                                    ? "PM"
+                                                                    : "AM";
+                                                            const displayHour =
+                                                                hour % 12 || 12;
+                                                            return `${displayHour}:${minutes} ${ampm}`;
+                                                        };
+
+                                                        const startTime =
+                                                            formatTime(
+                                                                task.start_time
+                                                            );
+                                                        const endTime =
+                                                            formatTime(
+                                                                task.end_time
+                                                            );
+
+                                                        if (
+                                                            startTime &&
+                                                            endTime
+                                                        ) {
+                                                            return `${startTime} - ${endTime}`;
+                                                        } else if (startTime) {
+                                                            return `From ${startTime}`;
+                                                        } else if (endTime) {
+                                                            return `Until ${endTime}`;
+                                                        }
+                                                        return "";
+                                                    })()}
+                                                </span>
+                                            )}
+                                        {task.is_all_day && (
+                                            <span className="ml-1 text-gray-400">
+                                                (All day)
+                                            </span>
+                                        )}
+                                    </span>
+                                </div>
+                            )}
+
+                            {/* Subtasks count */}
+                            {task.subtasks_count > 0 && (
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    {task.completed_subtasks_count}/
+                                    {task.subtasks_count} subtasks
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center space-x-1 sm:space-x-2 ml-2">
+                    <button
+                        onClick={() => {
+                            setSelectedTask(task);
+                            setShowViewModal(true);
+                        }}
+                        className="p-1 sm:p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    >
+                        <Eye className="h-4 w-4" />
+                    </button>
+                    <button
+                        onClick={() => {
+                            setSelectedTask(task);
+                            setShowEditModal(true);
+                        }}
+                        className="p-1 sm:p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    >
+                        <Edit className="h-4 w-4" />
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export default function Index({ categorizedTasks, categories, filters }) {
     const [categorizedTaskList, setCategorizedTaskList] = useState(
@@ -45,6 +286,30 @@ export default function Index({ categorizedTasks, categories, filters }) {
     const [selectedTask, setSelectedTask] = useState(null);
     const [isTaskSubmitting, setIsTaskSubmitting] = useState(false);
 
+    // Handle task updates from modals
+    const handleTaskUpdate = (updatedTask) => {
+        setSelectedTask(updatedTask);
+        // Also update the task in the categorized task list
+        setCategorizedTaskList(
+            categorizedTaskList.map((group) => ({
+                ...group,
+                tasks: {
+                    ...group.tasks,
+                    data: group.tasks.data.map((t) =>
+                        t.id === updatedTask.id ? updatedTask : t
+                    ),
+                },
+            }))
+        );
+    };
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
     useEffect(() => {
         setCategorizedTaskList(categorizedTasks || []);
     }, [categorizedTasks]);
@@ -54,28 +319,96 @@ export default function Index({ categorizedTasks, categories, filters }) {
         return categorizedTaskList.flatMap((group) => group.tasks.data || []);
     };
 
-    const handleDragEnd = (result) => {
-        if (!result.destination) return;
+    const handleDragEnd = (event) => {
+        const { active, over } = event;
 
-        const allTasks = getAllTasks();
-        const items = Array.from(allTasks);
-        const [reorderedItem] = items.splice(result.source.index, 1);
-        items.splice(result.destination.index, 0, reorderedItem);
+        if (!over || active.id === over.id) {
+            return;
+        }
 
-        // Update local state - this is more complex with categorized data
-        // For now, we'll let the server response handle the update
+        // Find which category contains both the dragged task and target
+        let sourceGroup = null;
+        let sourceTaskIndex = -1;
+        let targetTaskIndex = -1;
+        let targetGroup = null;
+
+        for (const group of categorizedTaskList) {
+            const activeIndex = group.tasks.data.findIndex(
+                (task) => task.id.toString() === active.id
+            );
+            const overIndex = group.tasks.data.findIndex(
+                (task) => task.id.toString() === over.id
+            );
+
+            if (activeIndex !== -1) {
+                sourceGroup = group;
+                sourceTaskIndex = activeIndex;
+            }
+            if (overIndex !== -1) {
+                targetGroup = group;
+                targetTaskIndex = overIndex;
+            }
+        }
+
+        // Only allow reordering within the same category
+        if (
+            !sourceGroup ||
+            !targetGroup ||
+            sourceGroup !== targetGroup ||
+            sourceTaskIndex === -1 ||
+            targetTaskIndex === -1
+        ) {
+            return;
+        }
+
+        // Store original state for potential revert
+        const originalCategorizedTaskList = [...categorizedTaskList];
+
+        // Perform optimistic update within the same category
+        const updatedCategorizedTaskList = categorizedTaskList.map((group) => {
+            if (group === sourceGroup) {
+                const reorderedTasks = [...group.tasks.data];
+                const [movedTask] = reorderedTasks.splice(sourceTaskIndex, 1);
+                reorderedTasks.splice(targetTaskIndex, 0, movedTask);
+
+                return {
+                    ...group,
+                    tasks: {
+                        ...group.tasks,
+                        data: reorderedTasks,
+                    },
+                };
+            }
+            return group;
+        });
+
+        setCategorizedTaskList(updatedCategorizedTaskList);
+
+        // Get the actual tasks being moved
+        const sourceTask = sourceGroup.tasks.data[sourceTaskIndex];
+        const targetTask = sourceGroup.tasks.data[targetTaskIndex];
+
+        // Use the target task's current position as the new position
+        const globalNewPosition = targetTask.position;
 
         // Send the new order to the server
         router.post(
             route("tasks.reorder"),
             {
-                taskId: result.draggableId,
-                newPosition: result.destination.index,
+                taskId: active.id,
+                newPosition: globalNewPosition,
             },
             {
                 preserveScroll: true,
-                onSuccess: (page) => {
+                preserveState: true,
+                only: [], // Don't reload any data
+                onSuccess: () => {
                     toast.success("Task reordered successfully");
+                },
+                onError: () => {
+                    // Revert to original state on error
+                    setCategorizedTaskList(originalCategorizedTaskList);
+                    toast.error("Failed to reorder task");
                 },
             }
         );
@@ -429,291 +762,60 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                 </div>
 
                                 {/* Tasks in Category */}
-                                <DragDropContext onDragEnd={handleDragEnd}>
-                                    <Droppable
-                                        droppableId={`category-${
-                                            group.category.id || "uncategorized"
-                                        }`}
-                                    >
-                                        {(provided) => (
-                                            <div
-                                                {...provided.droppableProps}
-                                                ref={provided.innerRef}
-                                                className="divide-y divide-gray-200 dark:divide-gray-700"
-                                            >
-                                                {group.tasks.data.map(
-                                                    (task, index) => {
-                                                        const globalIndex =
-                                                            getAllTasks().findIndex(
-                                                                (t) =>
-                                                                    t.id ===
-                                                                    task.id
-                                                            );
-                                                        return (
-                                                            <Draggable
-                                                                key={task.id}
-                                                                draggableId={task.id.toString()}
-                                                                index={
-                                                                    globalIndex
-                                                                }
-                                                            >
-                                                                {(
-                                                                    provided,
-                                                                    snapshot
-                                                                ) => (
-                                                                    <div
-                                                                        ref={
-                                                                            provided.innerRef
-                                                                        }
-                                                                        {...provided.draggableProps}
-                                                                        className={`p-4 sm:p-6 transition-colors duration-150 ${
-                                                                            snapshot.isDragging
-                                                                                ? "bg-gray-50 dark:bg-gray-700"
-                                                                                : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                                                                        }`}
-                                                                    >
-                                                                        <div className="flex items-center justify-between">
-                                                                            <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                                                                {/* Drag Handle */}
-                                                                                <div
-                                                                                    {...provided.dragHandleProps}
-                                                                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab active:cursor-grabbing"
-                                                                                >
-                                                                                    <GripVertical className="h-4 w-4 sm:h-5 sm:w-5" />
-                                                                                </div>
-
-                                                                                {/* Status Icon */}
-                                                                                <button
-                                                                                    onClick={() =>
-                                                                                        toggleTaskStatus(
-                                                                                            task
-                                                                                        )
-                                                                                    }
-                                                                                    className="flex-shrink-0 hover:scale-110 transition-transform"
-                                                                                >
-                                                                                    {getStatusIcon(
-                                                                                        task.status
-                                                                                    )}
-                                                                                </button>
-
-                                                                                {/* Task Content */}
-                                                                                <div className="flex-1 min-w-0">
-                                                                                    <div className="flex flex-col sm:flex-row sm:items-center">
-                                                                                        <div className="flex-1 min-w-0">
-                                                                                            <div className="flex flex-row items-center gap-2">
-                                                                                                <h3
-                                                                                                    className={`text-sm sm:text-base font-medium truncate ${
-                                                                                                        task.status ===
-                                                                                                        "completed"
-                                                                                                            ? "text-gray-500 dark:text-gray-400 line-through"
-                                                                                                            : "text-gray-900 dark:text-gray-100"
-                                                                                                    }`}
-                                                                                                >
-                                                                                                    {
-                                                                                                        task.title
-                                                                                                    }
-                                                                                                </h3>
-                                                                                                {/* Priority Badge */}
-                                                                                                <span
-                                                                                                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(
-                                                                                                        task.priority
-                                                                                                    )}`}
-                                                                                                >
-                                                                                                    {task.priority
-                                                                                                        .charAt(
-                                                                                                            0
-                                                                                                        )
-                                                                                                        .toUpperCase() +
-                                                                                                        task.priority.slice(
-                                                                                                            1
-                                                                                                        )}
-                                                                                                </span>
-                                                                                            </div>
-
-                                                                                            {task.description && (
-                                                                                                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
-                                                                                                    {
-                                                                                                        task.description
-                                                                                                    }
-                                                                                                </p>
-                                                                                            )}
-                                                                                        </div>
-                                                                                    </div>
-
-                                                                                    {/* Task Meta Info */}
-                                                                                    <div className="flex flex-wrap items-center gap-2 mt-2">
-                                                                                        {/* Due Date and Time */}
-                                                                                        {task.due_date && (
-                                                                                            <div
-                                                                                                className={`flex items-center space-x-1 ${
-                                                                                                    isOverdue(
-                                                                                                        task.due_date
-                                                                                                    )
-                                                                                                        ? "text-red-600 dark:text-red-400"
-                                                                                                        : "text-gray-500 dark:text-gray-400"
-                                                                                                }`}
-                                                                                            >
-                                                                                                <Calendar className="h-3 w-3" />
-                                                                                                <span className="text-xs">
-                                                                                                    {new Date(
-                                                                                                        task.due_date
-                                                                                                    ).toLocaleDateString()}
-                                                                                                    {!task.is_all_day &&
-                                                                                                        (task.start_time ||
-                                                                                                            task.end_time) && (
-                                                                                                            <span className="ml-1 font-medium">
-                                                                                                                {(() => {
-                                                                                                                    const formatTime =
-                                                                                                                        (
-                                                                                                                            timeStr
-                                                                                                                        ) => {
-                                                                                                                            if (
-                                                                                                                                !timeStr
-                                                                                                                            )
-                                                                                                                                return "";
-                                                                                                                            // Handle both time formats (HH:MM and full datetime)
-                                                                                                                            if (
-                                                                                                                                timeStr.includes(
-                                                                                                                                    "T"
-                                                                                                                                ) ||
-                                                                                                                                timeStr.includes(
-                                                                                                                                    " "
-                                                                                                                                )
-                                                                                                                            ) {
-                                                                                                                                const date =
-                                                                                                                                    new Date(
-                                                                                                                                        timeStr
-                                                                                                                                    );
-                                                                                                                                return date.toLocaleTimeString(
-                                                                                                                                    [],
-                                                                                                                                    {
-                                                                                                                                        hour: "numeric",
-                                                                                                                                        minute: "2-digit",
-                                                                                                                                        hour12: true,
-                                                                                                                                    }
-                                                                                                                                );
-                                                                                                                            }
-                                                                                                                            // Just time string like "14:30:00" or "14:30"
-                                                                                                                            const [
-                                                                                                                                hours,
-                                                                                                                                minutes,
-                                                                                                                            ] =
-                                                                                                                                timeStr.split(
-                                                                                                                                    ":"
-                                                                                                                                );
-                                                                                                                            const hour =
-                                                                                                                                parseInt(
-                                                                                                                                    hours
-                                                                                                                                );
-                                                                                                                            const ampm =
-                                                                                                                                hour >=
-                                                                                                                                12
-                                                                                                                                    ? "PM"
-                                                                                                                                    : "AM";
-                                                                                                                            const displayHour =
-                                                                                                                                hour %
-                                                                                                                                    12 ||
-                                                                                                                                12;
-                                                                                                                            return `${displayHour}:${minutes} ${ampm}`;
-                                                                                                                        };
-
-                                                                                                                    const startTime =
-                                                                                                                        formatTime(
-                                                                                                                            task.start_time
-                                                                                                                        );
-                                                                                                                    const endTime =
-                                                                                                                        formatTime(
-                                                                                                                            task.end_time
-                                                                                                                        );
-
-                                                                                                                    if (
-                                                                                                                        startTime &&
-                                                                                                                        endTime
-                                                                                                                    ) {
-                                                                                                                        return `${startTime} - ${endTime}`;
-                                                                                                                    } else if (
-                                                                                                                        startTime
-                                                                                                                    ) {
-                                                                                                                        return `From ${startTime}`;
-                                                                                                                    } else if (
-                                                                                                                        endTime
-                                                                                                                    ) {
-                                                                                                                        return `Until ${endTime}`;
-                                                                                                                    }
-                                                                                                                    return "";
-                                                                                                                })()}
-                                                                                                            </span>
-                                                                                                        )}
-                                                                                                    {task.is_all_day && (
-                                                                                                        <span className="ml-1 text-gray-400">
-                                                                                                            (All
-                                                                                                            day)
-                                                                                                        </span>
-                                                                                                    )}
-                                                                                                </span>
-                                                                                            </div>
-                                                                                        )}
-
-                                                                                        {/* Subtasks count */}
-                                                                                        {task.subtasks_count >
-                                                                                            0 && (
-                                                                                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                                                                {
-                                                                                                    task.completed_subtasks_count
-                                                                                                }
-
-                                                                                                /
-                                                                                                {
-                                                                                                    task.subtasks_count
-                                                                                                }{" "}
-                                                                                                subtasks
-                                                                                            </span>
-                                                                                        )}
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-
-                                                                            {/* Action Buttons */}
-                                                                            <div className="flex items-center space-x-1 sm:space-x-2 ml-2">
-                                                                                <button
-                                                                                    onClick={() => {
-                                                                                        setSelectedTask(
-                                                                                            task
-                                                                                        );
-                                                                                        setShowViewModal(
-                                                                                            true
-                                                                                        );
-                                                                                    }}
-                                                                                    className="p-1 sm:p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                                                                                >
-                                                                                    <Eye className="h-4 w-4" />
-                                                                                </button>
-                                                                                <button
-                                                                                    onClick={() => {
-                                                                                        setSelectedTask(
-                                                                                            task
-                                                                                        );
-                                                                                        setShowEditModal(
-                                                                                            true
-                                                                                        );
-                                                                                    }}
-                                                                                    className="p-1 sm:p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                                                                                >
-                                                                                    <Edit className="h-4 w-4" />
-                                                                                </button>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                            </Draggable>
-                                                        );
-                                                    }
-                                                )}
-                                                {provided.placeholder}
-                                            </div>
+                                <DndContext
+                                    sensors={sensors}
+                                    collisionDetection={closestCenter}
+                                    onDragEnd={handleDragEnd}
+                                >
+                                    <SortableContext
+                                        items={group.tasks.data.map((task) =>
+                                            task.id.toString()
                                         )}
-                                    </Droppable>
-                                </DragDropContext>
+                                        strategy={verticalListSortingStrategy}
+                                    >
+                                        <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                                            {group.tasks.data.map(
+                                                (task, index) => {
+                                                    const globalIndex =
+                                                        getAllTasks().findIndex(
+                                                            (t) =>
+                                                                t.id === task.id
+                                                        );
+                                                    return (
+                                                        <SortableTask
+                                                            key={task.id}
+                                                            task={task}
+                                                            globalIndex={
+                                                                globalIndex
+                                                            }
+                                                            getPriorityColor={
+                                                                getPriorityColor
+                                                            }
+                                                            getStatusIcon={
+                                                                getStatusIcon
+                                                            }
+                                                            isOverdue={
+                                                                isOverdue
+                                                            }
+                                                            toggleTaskStatus={
+                                                                toggleTaskStatus
+                                                            }
+                                                            setSelectedTask={
+                                                                setSelectedTask
+                                                            }
+                                                            setShowViewModal={
+                                                                setShowViewModal
+                                                            }
+                                                            setShowEditModal={
+                                                                setShowEditModal
+                                                            }
+                                                        />
+                                                    );
+                                                }
+                                            )}
+                                        </div>
+                                    </SortableContext>
+                                </DndContext>
 
                                 {/* Category Pagination */}
                                 {group.tasks.links &&
@@ -761,6 +863,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
                 show={showViewModal}
                 onClose={() => setShowViewModal(false)}
                 task={selectedTask}
+                onTaskUpdate={handleTaskUpdate}
             />
 
             <TaskEditModal
@@ -768,6 +871,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
                 onClose={() => setShowEditModal(false)}
                 task={selectedTask}
                 categories={categories}
+                onTaskUpdate={handleTaskUpdate}
             />
 
             <Toast />

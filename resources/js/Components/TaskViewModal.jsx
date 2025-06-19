@@ -3,7 +3,7 @@ import SecondaryButton from "./SecondaryButton";
 import SubtaskManager from "./SubtaskManager";
 import { Calendar, CheckCircle, Clock } from "lucide-react";
 
-export default function TaskViewModal({ show, onClose, task }) {
+export default function TaskViewModal({ show, onClose, task, onTaskUpdate }) {
     if (!task) return null;
 
     const getPriorityColor = (priority) => {
@@ -230,9 +230,11 @@ export default function TaskViewModal({ show, onClose, task }) {
 
                     {/* Subtasks */}
                     <SubtaskManager
+                        key={`view-${task.id}-${task.updated_at}`}
                         task={task}
                         subtasks={task.subtasks || []}
                         canEdit={true}
+                        onTaskUpdate={onTaskUpdate}
                     />
 
                     {/* Reminders */}

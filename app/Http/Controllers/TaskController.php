@@ -143,9 +143,10 @@ class TaskController extends Controller
             'recurrence_config' => 'nullable|array',
             'recurring_until' => 'nullable|date',
             'tags' => 'nullable|array',
-            'tags.*.name' => 'required|string|max:255',
-            'tags.*.color' => 'required|string|regex:/^#[0-9A-F]{6}$/i',
-            'tags.*.is_new' => 'boolean',
+            'tags.*.id' => 'nullable|exists:tags,id',
+            'tags.*.name' => 'nullable|string|max:255',
+            'tags.*.color' => 'nullable|string|regex:/^#[0-9A-F]{6}$/i',
+            'tags.*.is_new' => 'nullable|boolean',
         ]);
 
         // Validate recurring task logic
@@ -204,7 +205,10 @@ class TaskController extends Controller
             $tagIds = [];
             foreach ($validated['tags'] as $tagData) {
                 if (isset($tagData['is_new']) && $tagData['is_new']) {
-                    // Create new tag
+                    // Create new tag - validate required fields
+                    if (empty($tagData['name']) || empty($tagData['color'])) {
+                        continue; // Skip invalid new tags
+                    }
                     $tag = Tag::firstOrCreate(
                         ['name' => $tagData['name']],
                         [
@@ -215,7 +219,7 @@ class TaskController extends Controller
                     $tagIds[] = $tag->id;
                 } else {
                     // Existing tag (if we have an id)
-                    if (isset($tagData['id'])) {
+                    if (isset($tagData['id']) && !empty($tagData['id'])) {
                         $tagIds[] = $tagData['id'];
                     }
                 }
@@ -262,9 +266,10 @@ class TaskController extends Controller
             'recurrence_config' => 'nullable|array',
             'recurring_until' => 'nullable|date',
             'tags' => 'nullable|array',
-            'tags.*.name' => 'required|string|max:255',
-            'tags.*.color' => 'required|string|regex:/^#[0-9A-F]{6}$/i',
-            'tags.*.is_new' => 'boolean',
+            'tags.*.id' => 'nullable|exists:tags,id',
+            'tags.*.name' => 'nullable|string|max:255',
+            'tags.*.color' => 'nullable|string|regex:/^#[0-9A-F]{6}$/i',
+            'tags.*.is_new' => 'nullable|boolean',
         ]);
 
         // Validate recurring task logic
@@ -329,7 +334,10 @@ class TaskController extends Controller
             $tagIds = [];
             foreach ($validated['tags'] as $tagData) {
                 if (isset($tagData['is_new']) && $tagData['is_new']) {
-                    // Create new tag
+                    // Create new tag - validate required fields
+                    if (empty($tagData['name']) || empty($tagData['color'])) {
+                        continue; // Skip invalid new tags
+                    }
                     $tag = Tag::firstOrCreate(
                         ['name' => $tagData['name']],
                         [
@@ -340,7 +348,7 @@ class TaskController extends Controller
                     $tagIds[] = $tag->id;
                 } else {
                     // Existing tag (if we have an id)
-                    if (isset($tagData['id'])) {
+                    if (isset($tagData['id']) && !empty($tagData['id'])) {
                         $tagIds[] = $tagData['id'];
                     }
                 }

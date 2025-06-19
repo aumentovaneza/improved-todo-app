@@ -61,7 +61,12 @@ export default function TaskEditModal({
                 recurring_until: task.recurring_until
                     ? new Date(task.recurring_until).toISOString().split("T")[0]
                     : "",
-                tags: task.tags || [],
+                tags: task.tags
+                    ? task.tags.map((tag) => ({
+                          ...tag,
+                          is_new: false,
+                      }))
+                    : [],
             });
         }
     }, [task]);

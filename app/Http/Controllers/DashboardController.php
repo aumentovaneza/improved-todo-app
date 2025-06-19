@@ -19,7 +19,7 @@ class DashboardController extends Controller
         $userTomorrow = $userToday->copy()->addDay();
 
         // Get all user tasks
-        $allTasks = Task::with(['category', 'subtasks'])
+        $allTasks = Task::with(['category', 'subtasks', 'tags'])
             ->where('user_id', $user->id)
             ->get();
 
@@ -32,7 +32,7 @@ class DashboardController extends Controller
         $todayTasks = $todayTaskOccurrences->where('status', '!=', 'completed')->take(5);
 
         // Get overdue tasks (only non-recurring tasks can be overdue)
-        $overdueTasks = Task::with(['category', 'subtasks'])
+        $overdueTasks = Task::with(['category', 'subtasks', 'tags'])
             ->overdueForUser($user)
             ->where('is_recurring', false)
             ->orderByDateTime()
@@ -48,7 +48,7 @@ class DashboardController extends Controller
         $upcomingTasks = $upcomingTaskOccurrences->where('status', '!=', 'completed')->take(5);
 
         // Get current tasks (pending and in progress, non-recurring only for simplicity)
-        $currentTasks = Task::with(['category', 'subtasks'])
+        $currentTasks = Task::with(['category', 'subtasks', 'tags'])
             ->where('user_id', $user->id)
             ->where('is_recurring', false)
             ->whereIn('status', ['pending', 'in_progress'])

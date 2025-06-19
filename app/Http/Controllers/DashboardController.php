@@ -73,11 +73,22 @@ class DashboardController extends Controller
         // Get categories for quick task creation
         $categories = Category::where('is_active', true)->get();
 
+        // Generate a week's worth of task occurrences for the schedule modal
+        $weekStart = $userToday->copy();
+        $weekEnd = $userToday->copy()->addDays(7);
+
+        $weeklyTaskOccurrences = collect();
+        foreach ($allTasks as $task) {
+            $occurrences = $task->getOccurrencesInRange($weekStart, $weekEnd);
+            $weeklyTaskOccurrences = $weeklyTaskOccurrences->merge($occurrences);
+        }
+
         return Inertia::render('Dashboard', [
             'currentTasks' => $currentTasks,
             'todayTasks' => $todayTasks,
             'overdueTasks' => $overdueTasks,
             'upcomingTasks' => $upcomingTasks,
+            'weeklyTasks' => $weeklyTaskOccurrences->values()->all(),
             'stats' => $stats,
             'categories' => $categories,
         ]);

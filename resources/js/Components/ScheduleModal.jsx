@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, router } from "@inertiajs/react";
 import { toast } from "react-toastify";
 import {
@@ -19,6 +19,7 @@ export default function ScheduleModal({
     todayTasks = [],
     overdueTasks = [],
     upcomingTasks = [],
+    weeklyTasks = [],
     toggleTaskStatus,
     setSelectedTask,
     setShowViewModal,
@@ -27,6 +28,48 @@ export default function ScheduleModal({
     const [selectedDate, setSelectedDate] = useState(
         new Date().toISOString().split("T")[0]
     );
+    const [selectedDateTasks, setSelectedDateTasks] = useState([]);
+
+    // Get tasks for a specific date from weeklyTasks
+    const getTasksForDate = (date) => {
+        // Filter weekly tasks for the specific date
+        const tasksForDate = weeklyTasks.filter((task) => {
+            if (!task.due_date) return false;
+            const taskDate = new Date(task.due_date)
+                .toISOString()
+                .split("T")[0];
+            return taskDate === date;
+        });
+
+        // Sort tasks by time - all-day tasks first, then by time
+        return tasksForDate.sort((a, b) => {
+            // All-day tasks come first
+            if (a.is_all_day && !b.is_all_day) return -1;
+            if (!a.is_all_day && b.is_all_day) return 1;
+
+            // If both are all-day, sort by priority
+            if (a.is_all_day && b.is_all_day) {
+                const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
+                return priorityOrder[b.priority] - priorityOrder[a.priority];
+            }
+
+            // If both have times, sort by start time (or end time if no start time)
+            const aTime = a.start_time || a.end_time;
+            const bTime = b.start_time || b.end_time;
+            if (aTime && bTime) {
+                return aTime.localeCompare(bTime);
+            }
+
+            return 0;
+        });
+    };
+
+    // Update tasks when selected date changes
+    useEffect(() => {
+        if (selectedDate && show) {
+            setSelectedDateTasks(getTasksForDate(selectedDate));
+        }
+    }, [selectedDate, show, weeklyTasks]);
 
     if (!show) return null;
 
@@ -56,45 +99,6 @@ export default function ScheduleModal({
             default:
                 return <Circle className="h-5 w-5 text-gray-400" />;
         }
-    };
-
-    const getTasksForDate = (date) => {
-        const allTasks = [
-            ...currentTasks,
-            ...todayTasks,
-            ...overdueTasks,
-            ...upcomingTasks,
-        ];
-
-        const tasksForDate = allTasks.filter((task) => {
-            if (!task.due_date) return false;
-            const taskDate = new Date(task.due_date)
-                .toISOString()
-                .split("T")[0];
-            return taskDate === date;
-        });
-
-        // Sort tasks by time - all-day tasks first, then by time
-        return tasksForDate.sort((a, b) => {
-            // All-day tasks come first
-            if (a.is_all_day && !b.is_all_day) return -1;
-            if (!a.is_all_day && b.is_all_day) return 1;
-
-            // If both are all-day, sort by priority
-            if (a.is_all_day && b.is_all_day) {
-                const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
-                return priorityOrder[b.priority] - priorityOrder[a.priority];
-            }
-
-            // If both have times, sort by start time (or end time if no start time)
-            const aTime = a.start_time || a.end_time;
-            const bTime = b.start_time || b.end_time;
-            if (aTime && bTime) {
-                return aTime.localeCompare(bTime);
-            }
-
-            return 0;
-        });
     };
 
     const formatTaskTime = (task) => {
@@ -180,14 +184,62 @@ export default function ScheduleModal({
                             <label className="block text-sm font-medium text-adaptive-secondary mb-2">
                                 Jump to Date
                             </label>
-                            <input
-                                type="date"
-                                value={selectedDate}
-                                onChange={(e) =>
-                                    setSelectedDate(e.target.value)
-                                }
-                                className="input-primary w-48"
-                            />
+                            <div className="flex flex-wrap items-center gap-3">
+                                <input
+                                    type="date"
+                                    value={selectedDate}
+                                    onChange={(e) =>
+                                        setSelectedDate(e.target.value)
+                                    }
+                                    className="input-primary w-48"
+                                />
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() =>
+                                            setSelectedDate(
+                                                new Date()
+                                                    .toISOString()
+                                                    .split("T")[0]
+                                            )
+                                        }
+                                        className="btn-secondary text-xs py-1 px-2"
+                                    >
+                                        Today
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            const tomorrow = new Date();
+                                            tomorrow.setDate(
+                                                tomorrow.getDate() + 1
+                                            );
+                                            setSelectedDate(
+                                                tomorrow
+                                                    .toISOString()
+                                                    .split("T")[0]
+                                            );
+                                        }}
+                                        className="btn-secondary text-xs py-1 px-2"
+                                    >
+                                        Tomorrow
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            const nextWeek = new Date();
+                                            nextWeek.setDate(
+                                                nextWeek.getDate() + 7
+                                            );
+                                            setSelectedDate(
+                                                nextWeek
+                                                    .toISOString()
+                                                    .split("T")[0]
+                                            );
+                                        }}
+                                        className="btn-secondary text-xs py-1 px-2"
+                                    >
+                                        Next Week
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Next 7 Days View */}
@@ -305,8 +357,7 @@ export default function ScheduleModal({
                                     })}
                                 </h3>
                                 <div className="space-y-3">
-                                    {getTasksForDate(selectedDate).length ===
-                                    0 ? (
+                                    {selectedDateTasks.length === 0 ? (
                                         <div className="text-center py-8 card">
                                             <Calendar className="mx-auto h-12 w-12 text-light-muted dark:text-dark-muted" />
                                             <h4 className="mt-2 text-sm font-medium text-adaptive-primary">
@@ -317,105 +368,101 @@ export default function ScheduleModal({
                                             </p>
                                         </div>
                                     ) : (
-                                        getTasksForDate(selectedDate).map(
-                                            (task) => (
-                                                <div
-                                                    key={task.id}
-                                                    className="card p-4"
-                                                >
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center space-x-3 flex-1">
-                                                            <button
-                                                                onClick={() =>
-                                                                    toggleTaskStatus(
+                                        selectedDateTasks.map((task) => (
+                                            <div
+                                                key={task.id}
+                                                className="card p-4"
+                                            >
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center space-x-3 flex-1">
+                                                        <button
+                                                            onClick={() =>
+                                                                toggleTaskStatus(
+                                                                    task
+                                                                )
+                                                            }
+                                                            className="flex-shrink-0"
+                                                        >
+                                                            {getStatusIcon(
+                                                                task.status
+                                                            )}
+                                                        </button>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center justify-between">
+                                                                <h4 className="text-sm font-medium text-adaptive-primary">
+                                                                    {task.title}
+                                                                </h4>
+                                                                <span className="text-sm font-medium text-primary-600 dark:text-primary-400">
+                                                                    {formatTaskTime(
                                                                         task
-                                                                    )
-                                                                }
-                                                                className="flex-shrink-0"
-                                                            >
-                                                                {getStatusIcon(
-                                                                    task.status
-                                                                )}
-                                                            </button>
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className="flex items-center justify-between">
-                                                                    <h4 className="text-sm font-medium text-adaptive-primary">
-                                                                        {
-                                                                            task.title
-                                                                        }
-                                                                    </h4>
-                                                                    <span className="text-sm font-medium text-primary-600 dark:text-primary-400">
-                                                                        {formatTaskTime(
-                                                                            task
-                                                                        )}
-                                                                    </span>
-                                                                </div>
-                                                                {task.description && (
-                                                                    <p className="text-xs text-adaptive-muted mt-1">
-                                                                        {
-                                                                            task.description
-                                                                        }
-                                                                    </p>
-                                                                )}
-                                                                <div className="flex items-center space-x-2 mt-2">
-                                                                    <span
-                                                                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(
-                                                                            task.priority
-                                                                        )}`}
-                                                                    >
-                                                                        {task.priority
-                                                                            .charAt(
-                                                                                0
-                                                                            )
-                                                                            .toUpperCase() +
-                                                                            task.priority.slice(
-                                                                                1
-                                                                            )}
-                                                                    </span>
-                                                                    {task.category && (
-                                                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-secondary-100 text-secondary-700 dark:bg-secondary-900/20 dark:text-secondary-300">
-                                                                            {
-                                                                                task
-                                                                                    .category
-                                                                                    .name
-                                                                            }
-                                                                        </span>
                                                                     )}
-                                                                </div>
+                                                                </span>
+                                                            </div>
+                                                            {task.description && (
+                                                                <p className="text-xs text-adaptive-muted mt-1">
+                                                                    {
+                                                                        task.description
+                                                                    }
+                                                                </p>
+                                                            )}
+                                                            <div className="flex items-center space-x-2 mt-2">
+                                                                <span
+                                                                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(
+                                                                        task.priority
+                                                                    )}`}
+                                                                >
+                                                                    {task.priority
+                                                                        .charAt(
+                                                                            0
+                                                                        )
+                                                                        .toUpperCase() +
+                                                                        task.priority.slice(
+                                                                            1
+                                                                        )}
+                                                                </span>
+                                                                {task.category && (
+                                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-secondary-100 text-secondary-700 dark:bg-secondary-900/20 dark:text-secondary-300">
+                                                                        {
+                                                                            task
+                                                                                .category
+                                                                                .name
+                                                                        }
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-center space-x-2">
-                                                            <button
-                                                                onClick={() => {
-                                                                    setSelectedTask(
-                                                                        task
-                                                                    );
-                                                                    setShowViewModal(
-                                                                        true
-                                                                    );
-                                                                }}
-                                                                className="btn-secondary p-2"
-                                                            >
-                                                                <Eye className="h-4 w-4" />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => {
-                                                                    setSelectedTask(
-                                                                        task
-                                                                    );
-                                                                    setShowEditModal(
-                                                                        true
-                                                                    );
-                                                                }}
-                                                                className="btn-accent p-2"
-                                                            >
-                                                                <Edit className="h-4 w-4" />
-                                                            </button>
-                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center space-x-2">
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedTask(
+                                                                    task
+                                                                );
+                                                                setShowViewModal(
+                                                                    true
+                                                                );
+                                                            }}
+                                                            className="btn-secondary p-2"
+                                                        >
+                                                            <Eye className="h-4 w-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedTask(
+                                                                    task
+                                                                );
+                                                                setShowEditModal(
+                                                                    true
+                                                                );
+                                                            }}
+                                                            className="btn-accent p-2"
+                                                        >
+                                                            <Edit className="h-4 w-4" />
+                                                        </button>
                                                     </div>
                                                 </div>
-                                            )
-                                        )
+                                            </div>
+                                        ))
                                     )}
                                 </div>
                             </div>

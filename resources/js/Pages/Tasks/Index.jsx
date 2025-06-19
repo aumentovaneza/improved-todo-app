@@ -31,10 +31,12 @@ import {
     Trash2,
     GripVertical,
     Eye,
+    ListTodo,
 } from "lucide-react";
 import TaskModal from "@/Components/TaskModal";
 import TaskViewModal from "@/Components/TaskViewModal";
 import TaskEditModal from "@/Components/TaskEditModal";
+import QuickSubtaskModal from "@/Components/QuickSubtaskModal";
 import Toast from "@/Components/Toast";
 import { toast } from "react-toastify";
 
@@ -48,6 +50,7 @@ function SortableTask({
     setSelectedTask,
     setShowViewModal,
     setShowEditModal,
+    setShowSubtaskModal,
 }) {
     const {
         attributes,
@@ -243,9 +246,20 @@ function SortableTask({
                     <button
                         onClick={() => {
                             setSelectedTask(task);
+                            setShowSubtaskModal(true);
+                        }}
+                        className="p-1 sm:p-2 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
+                        title="Add Subtask"
+                    >
+                        <ListTodo className="h-4 w-4" />
+                    </button>
+                    <button
+                        onClick={() => {
+                            setSelectedTask(task);
                             setShowViewModal(true);
                         }}
                         className="p-1 sm:p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                        title="View Task"
                     >
                         <Eye className="h-4 w-4" />
                     </button>
@@ -255,6 +269,7 @@ function SortableTask({
                             setShowEditModal(true);
                         }}
                         className="p-1 sm:p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                        title="Edit Task"
                     >
                         <Edit className="h-4 w-4" />
                     </button>
@@ -283,6 +298,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
     const [showTaskModal, setShowTaskModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [showSubtaskModal, setShowSubtaskModal] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
     const [isTaskSubmitting, setIsTaskSubmitting] = useState(false);
 
@@ -809,6 +825,9 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                                             setShowEditModal={
                                                                 setShowEditModal
                                                             }
+                                                            setShowSubtaskModal={
+                                                                setShowSubtaskModal
+                                                            }
                                                         />
                                                     );
                                                 }
@@ -872,6 +891,12 @@ export default function Index({ categorizedTasks, categories, filters }) {
                 task={selectedTask}
                 categories={categories}
                 onTaskUpdate={handleTaskUpdate}
+            />
+
+            <QuickSubtaskModal
+                show={showSubtaskModal}
+                onClose={() => setShowSubtaskModal(false)}
+                task={selectedTask}
             />
 
             <Toast />

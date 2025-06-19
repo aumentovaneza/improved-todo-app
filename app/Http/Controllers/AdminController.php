@@ -28,7 +28,7 @@ class AdminController extends Controller
 
         $recent_activities = ActivityLog::with('user')
             ->latest()
-            ->take(10)
+            ->take(5)
             ->get();
 
         return Inertia::render('Admin/Dashboard', [

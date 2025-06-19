@@ -1,64 +1,229 @@
 import TodoLayout from "@/Layouts/TodoLayout";
 import { Head, Link } from "@inertiajs/react";
 import { useState } from "react";
+import {
+    ArrowLeft,
+    Edit,
+    FolderOpen,
+    CheckSquare,
+    Circle,
+    Eye,
+} from "lucide-react";
 import TaskViewModal from "@/Components/TaskViewModal";
 
 export default function Show({ category }) {
     const [showViewModal, setShowViewModal] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
 
+    const getStatusIcon = (status) => {
+        switch (status) {
+            case "completed":
+                return <CheckSquare className="h-4 w-4 text-green-500" />;
+            case "in_progress":
+                return <Circle className="h-4 w-4 text-blue-500" />;
+            case "cancelled":
+                return <Circle className="h-4 w-4 text-red-500" />;
+            default:
+                return <Circle className="h-4 w-4 text-gray-400" />;
+        }
+    };
+
+    const getPriorityColor = (priority) => {
+        switch (priority) {
+            case "urgent":
+                return "text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/20";
+            case "high":
+                return "text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/20";
+            case "medium":
+                return "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/20";
+            case "low":
+                return "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/20";
+            default:
+                return "text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/20";
+        }
+    };
+
     return (
-        <TodoLayout header="Category Details">
-            <Head title={category.name} />
-            <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-6 rounded shadow space-y-4">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                    {category.name}
-                </h2>
-                <div className="text-gray-600 dark:text-gray-300 mb-2">
-                    {category.description}
-                </div>
-                <div className="mb-2">
-                    <span
-                        className="px-2 py-1 rounded"
-                        style={{ backgroundColor: category.color }}
-                    >
-                        Color: {category.color}
-                    </span>
-                </div>
-                {category.tasks && category.tasks.length > 0 && (
-                    <div>
-                        <h3 className="font-semibold mb-1">
-                            Tasks in this category
-                        </h3>
-                        <ul className="list-disc ml-6">
-                            {category.tasks.map((task) => (
-                                <li key={task.id}>
-                                    <button
-                                        onClick={() => {
-                                            setSelectedTask(task);
-                                            setShowViewModal(true);
-                                        }}
-                                        className="text-blue-600 hover:underline"
-                                    >
-                                        {task.title}
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
+        <TodoLayout
+            header={
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <div className="flex items-center gap-3">
+                        <Link
+                            href={route("categories.index")}
+                            className="inline-flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
+                        >
+                            <ArrowLeft className="h-4 w-4" />
+                        </Link>
+                        <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 truncate">
+                            {category.name}
+                        </h2>
                     </div>
-                )}
-                <div className="mt-6 flex gap-2">
                     <Link
                         href={route("categories.edit", category.id)}
-                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                        className="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
                     >
+                        <Edit className="mr-2 h-4 w-4" />
                         Edit
+                    </Link>
+                </div>
+            }
+        >
+            <Head title={category.name} />
+            <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
+                {/* Category Info Card */}
+                <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-sm">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div
+                            className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg flex items-center justify-center"
+                            style={{ backgroundColor: `${category.color}20` }}
+                        >
+                            <FolderOpen
+                                className="w-6 h-6 sm:w-8 sm:h-8"
+                                style={{ color: category.color }}
+                            />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                                {category.name}
+                            </h3>
+                            {category.description && (
+                                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-3">
+                                    {category.description}
+                                </p>
+                            )}
+                            <div className="flex flex-wrap items-center gap-3">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                                        Color:
+                                    </span>
+                                    <div
+                                        className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600"
+                                        style={{
+                                            backgroundColor: category.color,
+                                        }}
+                                    />
+                                    <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 font-mono">
+                                        {category.color}
+                                    </span>
+                                </div>
+                                <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                                    {category.tasks?.length || 0} task
+                                    {(category.tasks?.length || 0) !== 1
+                                        ? "s"
+                                        : ""}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Tasks in Category */}
+                {category.tasks && category.tasks.length > 0 ? (
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                        <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                            <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100">
+                                Tasks in this category
+                            </h3>
+                        </div>
+                        <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                            {category.tasks.map((task) => (
+                                <div
+                                    key={task.id}
+                                    className="p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                            {getStatusIcon(task.status)}
+                                            <div className="flex-1 min-w-0">
+                                                <h4
+                                                    className={`text-sm sm:text-base font-medium truncate ${
+                                                        task.status ===
+                                                        "completed"
+                                                            ? "text-gray-500 dark:text-gray-400 line-through"
+                                                            : "text-gray-900 dark:text-gray-100"
+                                                    }`}
+                                                >
+                                                    {task.title}
+                                                </h4>
+                                                {task.description && (
+                                                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
+                                                        {task.description}
+                                                    </p>
+                                                )}
+                                                <div className="flex flex-wrap items-center gap-2 mt-2">
+                                                    <span
+                                                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(
+                                                            task.priority
+                                                        )}`}
+                                                    >
+                                                        {task.priority
+                                                            .charAt(0)
+                                                            .toUpperCase() +
+                                                            task.priority.slice(
+                                                                1
+                                                            )}
+                                                    </span>
+                                                    {task.due_date && (
+                                                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                            Due:{" "}
+                                                            {new Date(
+                                                                task.due_date
+                                                            ).toLocaleDateString()}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                setSelectedTask(task);
+                                                setShowViewModal(true);
+                                            }}
+                                            className="p-1 sm:p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors ml-2"
+                                        >
+                                            <Eye className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-lg shadow-sm text-center">
+                        <div className="text-gray-400 dark:text-gray-500 mb-4">
+                            <CheckSquare className="mx-auto h-10 w-10 sm:h-12 sm:w-12" />
+                        </div>
+                        <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                            No tasks in this category
+                        </h3>
+                        <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mb-4">
+                            Start organizing your work by adding tasks to this
+                            category.
+                        </p>
+                        <Link
+                            href={route("tasks.index")}
+                            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                        >
+                            View All Tasks
+                        </Link>
+                    </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                    <Link
+                        href={route("categories.edit", category.id)}
+                        className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                    >
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit Category
                     </Link>
                     <Link
                         href={route("categories.index")}
-                        className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+                        className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
                     >
-                        Back to List
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Back to Categories
                     </Link>
                 </div>
             </div>

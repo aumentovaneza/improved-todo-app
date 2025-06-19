@@ -22,6 +22,7 @@ import {
 import TaskModal from "@/Components/TaskModal";
 import TaskViewModal from "@/Components/TaskViewModal";
 import TaskEditModal from "@/Components/TaskEditModal";
+import ScheduleModal from "@/Components/ScheduleModal";
 
 export default function Dashboard({
     currentTasks,
@@ -39,7 +40,9 @@ export default function Dashboard({
     const [showTaskModal, setShowTaskModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [showScheduleModal, setShowScheduleModal] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
+
     const [quickTask, setQuickTask] = useState({
         title: "",
         description: "",
@@ -170,21 +173,21 @@ export default function Dashboard({
         <TodoLayout header="Dashboard">
             <Head title="Dashboard" />
 
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-                        <div className="p-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                    <div className="card">
+                        <div className="p-4 sm:p-5">
                             <div className="flex items-center">
                                 <div className="flex-shrink-0">
-                                    <CheckSquare className="h-6 w-6 text-blue-500" />
+                                    <CheckSquare className="h-5 w-5 sm:h-6 sm:w-6 text-primary-500" />
                                 </div>
-                                <div className="ml-5 w-0 flex-1">
+                                <div className="ml-4 sm:ml-5 w-0 flex-1">
                                     <dl>
-                                        <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                        <dt className="text-xs sm:text-sm font-medium text-adaptive-muted truncate">
                                             Total Tasks
                                         </dt>
-                                        <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                        <dd className="text-base sm:text-lg font-medium text-adaptive-primary">
                                             {stats.total_tasks}
                                         </dd>
                                     </dl>
@@ -193,18 +196,18 @@ export default function Dashboard({
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-                        <div className="p-5">
+                    <div className="card">
+                        <div className="p-4 sm:p-5">
                             <div className="flex items-center">
                                 <div className="flex-shrink-0">
-                                    <CheckCircle className="h-6 w-6 text-green-500" />
+                                    <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-500" />
                                 </div>
-                                <div className="ml-5 w-0 flex-1">
+                                <div className="ml-4 sm:ml-5 w-0 flex-1">
                                     <dl>
-                                        <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                        <dt className="text-xs sm:text-sm font-medium text-adaptive-muted truncate">
                                             Completed
                                         </dt>
-                                        <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                        <dd className="text-base sm:text-lg font-medium text-adaptive-primary">
                                             {stats.completed_tasks}
                                         </dd>
                                     </dl>
@@ -213,18 +216,18 @@ export default function Dashboard({
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-                        <div className="p-5">
+                    <div className="card">
+                        <div className="p-4 sm:p-5">
                             <div className="flex items-center">
                                 <div className="flex-shrink-0">
-                                    <Clock className="h-6 w-6 text-yellow-500" />
+                                    <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-secondary-500" />
                                 </div>
-                                <div className="ml-5 w-0 flex-1">
+                                <div className="ml-4 sm:ml-5 w-0 flex-1">
                                     <dl>
-                                        <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                        <dt className="text-xs sm:text-sm font-medium text-adaptive-muted truncate">
                                             Pending
                                         </dt>
-                                        <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                        <dd className="text-base sm:text-lg font-medium text-adaptive-primary">
                                             {stats.pending_tasks}
                                         </dd>
                                     </dl>
@@ -233,18 +236,18 @@ export default function Dashboard({
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-                        <div className="p-5">
+                    <div className="card">
+                        <div className="p-4 sm:p-5">
                             <div className="flex items-center">
                                 <div className="flex-shrink-0">
-                                    <TrendingUp className="h-6 w-6 text-purple-500" />
+                                    <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-accent-500" />
                                 </div>
-                                <div className="ml-5 w-0 flex-1">
+                                <div className="ml-4 sm:ml-5 w-0 flex-1">
                                     <dl>
-                                        <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                        <dt className="text-xs sm:text-sm font-medium text-adaptive-muted truncate">
                                             Completion Rate
                                         </dt>
-                                        <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                        <dd className="text-base sm:text-lg font-medium text-adaptive-primary">
                                             {stats.completion_rate}%
                                         </dd>
                                     </dl>
@@ -255,18 +258,34 @@ export default function Dashboard({
                 </div>
 
                 {/* Quick Actions */}
-                <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                <div className="card p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+                        <h2 className="text-base sm:text-lg font-medium text-adaptive-primary">
                             Quick Actions
                         </h2>
-                        <button
-                            onClick={() => setShowQuickTask(!showQuickTask)}
-                            className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                        >
-                            <Plus className="mr-2 h-4 w-4" />
-                            Quick Task
-                        </button>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setShowTaskModal(true)}
+                                className="btn-accent"
+                            >
+                                <Plus className="mr-2 h-4 w-4" />
+                                New Task
+                            </button>
+                            <button
+                                onClick={() => setShowQuickTask(!showQuickTask)}
+                                className="btn-primary"
+                            >
+                                <Zap className="mr-2 h-4 w-4" />
+                                Quick Task
+                            </button>
+                            <button
+                                className="btn-secondary"
+                                onClick={() => setShowScheduleModal(true)}
+                            >
+                                <Calendar className="mr-2 h-4 w-4" />
+                                Schedule
+                            </button>
+                        </div>
                     </div>
 
                     {showQuickTask && (
@@ -304,7 +323,7 @@ export default function Dashboard({
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                     <select
                                         value={quickTask.category_id}
                                         onChange={(e) =>
@@ -382,14 +401,14 @@ export default function Dashboard({
                         </div>
                     )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <button
                             onClick={() => setShowTaskModal(true)}
                             className="flex items-center p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
                         >
                             <Plus className="h-5 w-5 text-blue-500 mr-3" />
                             <div>
-                                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                <h3 className="text-sm text-left font-medium text-gray-900 dark:text-gray-100">
                                     Create Task
                                 </h3>
                                 <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -431,15 +450,15 @@ export default function Dashboard({
                 </div>
 
                 {/* Current Tasks */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     {/* Current Tasks */}
-                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
-                        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                    <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg">
+                        <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                            <h2 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100">
                                 Current Tasks
                             </h2>
                         </div>
-                        <div className="p-6">
+                        <div className="p-4 sm:p-6">
                             {localCurrentTasks.length === 0 ? (
                                 <div className="text-center py-8">
                                     <CheckCircle className="mx-auto h-12 w-12 text-gray-400" />
@@ -537,13 +556,13 @@ export default function Dashboard({
                     </div>
 
                     {/* Today's Tasks */}
-                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
-                        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                    <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg">
+                        <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                            <h2 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100">
                                 Today's Tasks
                             </h2>
                         </div>
-                        <div className="p-6">
+                        <div className="p-4 sm:p-6">
                             {localTodayTasks.length === 0 ? (
                                 <div className="text-center py-8">
                                     <CalendarDays className="mx-auto h-12 w-12 text-gray-400" />
@@ -766,6 +785,19 @@ export default function Dashboard({
                 }}
                 task={selectedTask}
                 categories={categories}
+            />
+
+            <ScheduleModal
+                show={showScheduleModal}
+                onClose={() => setShowScheduleModal(false)}
+                currentTasks={localCurrentTasks}
+                todayTasks={localTodayTasks}
+                overdueTasks={localOverdueTasks}
+                upcomingTasks={localUpcomingTasks}
+                toggleTaskStatus={toggleTaskStatus}
+                setSelectedTask={setSelectedTask}
+                setShowViewModal={setShowViewModal}
+                setShowEditModal={setShowEditModal}
             />
         </TodoLayout>
     );

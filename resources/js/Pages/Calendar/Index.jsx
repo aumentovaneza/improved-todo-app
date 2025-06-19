@@ -10,7 +10,7 @@ import {
     Plus,
     Eye,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Index({
     tasks,
@@ -20,6 +20,18 @@ export default function Index({
     monthName,
 }) {
     const [selectedDate, setSelectedDate] = useState(null);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 640);
+        };
+
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+
+        return () => window.removeEventListener("resize", checkMobile);
+    }, []);
 
     // Generate calendar days
     const generateCalendarDays = () => {
@@ -93,25 +105,25 @@ export default function Index({
         <TodoLayout header="Calendar">
             <Head title="Calendar" />
 
-            <div className="flex gap-6 h-full">
+            <div className="flex flex-col lg:flex-row gap-6">
                 {/* Main Calendar */}
-                <div className="flex-1">
+                <div className="flex-1 order-2 lg:order-1">
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
                         {/* Calendar Header */}
-                        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-                            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 gap-4">
+                            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
                                 {monthName}
                             </h2>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center justify-center sm:justify-end space-x-2">
                                 <button
                                     onClick={() => navigateMonth(-1)}
-                                    className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
+                                    className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors"
                                 >
                                     <ChevronLeft className="w-5 h-5" />
                                 </button>
                                 <button
                                     onClick={() => navigateMonth(1)}
-                                    className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
+                                    className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors"
                                 >
                                     <ChevronRight className="w-5 h-5" />
                                 </button>
@@ -119,7 +131,7 @@ export default function Index({
                                     onClick={() =>
                                         router.get(route("calendar.index"))
                                     }
-                                    className="ml-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                                    className="ml-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
                                 >
                                     Today
                                 </button>
@@ -127,7 +139,7 @@ export default function Index({
                         </div>
 
                         {/* Calendar Grid */}
-                        <div className="p-6">
+                        <div className="p-3 sm:p-6">
                             {/* Day Headers */}
                             <div className="grid grid-cols-7 gap-px mb-4">
                                 {[
@@ -141,7 +153,7 @@ export default function Index({
                                 ].map((day) => (
                                     <div
                                         key={day}
-                                        className="py-2 text-center text-sm font-medium text-gray-500 dark:text-gray-400"
+                                        className="py-2 text-center text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400"
                                     >
                                         {day}
                                     </div>
@@ -153,13 +165,13 @@ export default function Index({
                                 {calendarDays.map((day, index) => (
                                     <div
                                         key={index}
-                                        className={`min-h-[120px] p-2 border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+                                        className={`min-h-[80px] sm:min-h-[120px] p-1 sm:p-2 border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
                                             !day.isCurrentMonth
-                                                ? "bg-gray-50 dark:bg-gray-800"
+                                                ? "bg-gray-50 dark:bg-gray-900/50"
                                                 : "bg-white dark:bg-gray-800"
                                         } ${
                                             day.isToday
-                                                ? "ring-2 ring-blue-500"
+                                                ? "ring-2 ring-blue-500 dark:ring-blue-400"
                                                 : ""
                                         }`}
                                         onClick={() =>
@@ -167,9 +179,9 @@ export default function Index({
                                         }
                                     >
                                         <div
-                                            className={`text-sm font-medium mb-2 ${
+                                            className={`text-xs sm:text-sm font-medium mb-1 sm:mb-2 ${
                                                 !day.isCurrentMonth
-                                                    ? "text-gray-400 dark:text-gray-600"
+                                                    ? "text-gray-400 dark:text-gray-500"
                                                     : day.isToday
                                                     ? "text-blue-600 dark:text-blue-400"
                                                     : "text-gray-900 dark:text-gray-100"
@@ -181,7 +193,7 @@ export default function Index({
                                         {/* Tasks for this day */}
                                         <div className="space-y-1">
                                             {day.tasks
-                                                .slice(0, 3)
+                                                .slice(0, isMobile ? 2 : 3)
                                                 .map((task) => (
                                                     <div
                                                         key={task.id}
@@ -193,9 +205,13 @@ export default function Index({
                                                         {task.title}
                                                     </div>
                                                 ))}
-                                            {day.tasks.length > 3 && (
+                                            {day.tasks.length >
+                                                (isMobile ? 2 : 3) && (
                                                 <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                    +{day.tasks.length - 3} more
+                                                    +
+                                                    {day.tasks.length -
+                                                        (isMobile ? 2 : 3)}{" "}
+                                                    more
                                                 </div>
                                             )}
                                         </div>
@@ -207,10 +223,10 @@ export default function Index({
                 </div>
 
                 {/* Sidebar */}
-                <div className="w-80 space-y-6">
+                <div className="w-full lg:w-80 space-y-6 order-1 lg:order-2">
                     {/* Quick Actions */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                             Quick Actions
                         </h3>
                         <div className="space-y-3">
@@ -233,10 +249,10 @@ export default function Index({
 
                     {/* Overdue Tasks */}
                     {overdueTasks.length > 0 && (
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
                             <div className="flex items-center mb-4">
-                                <AlertTriangle className="w-5 h-5 text-red-500 mr-2" />
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                <AlertTriangle className="w-4 sm:w-5 h-4 sm:h-5 text-red-500 mr-2" />
+                                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
                                     Overdue Tasks ({overdueTasks.length})
                                 </h3>
                             </div>
@@ -270,10 +286,10 @@ export default function Index({
                     )}
 
                     {/* Upcoming Tasks */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
                         <div className="flex items-center mb-4">
-                            <Clock className="w-5 h-5 text-blue-500 mr-2" />
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            <Clock className="w-4 sm:w-5 h-4 sm:h-5 text-blue-500 mr-2" />
+                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
                                 Upcoming Tasks ({upcomingTasks.length})
                             </h3>
                         </div>

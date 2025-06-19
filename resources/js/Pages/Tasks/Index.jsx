@@ -226,13 +226,13 @@ export default function Index({ tasks, categories, filters }) {
     return (
         <TodoLayout
             header={
-                <div className="flex items-center justify-between gap-4">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
                         My Tasks
                     </h2>
                     <button
                         onClick={() => setShowTaskModal(true)}
-                        className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                        className="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
                         <Plus className="mr-2 h-4 w-4" />
                         New Task
@@ -242,9 +242,9 @@ export default function Index({ tasks, categories, filters }) {
         >
             <Head title="Tasks" />
 
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
                 {/* Search and Filters */}
-                <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 sm:p-6">
                     <div className="flex flex-col sm:flex-row gap-4">
                         {/* Search */}
                         <div className="flex-1">
@@ -257,7 +257,7 @@ export default function Index({ tasks, categories, filters }) {
                                     onChange={(e) =>
                                         handleSearch(e.target.value)
                                     }
-                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
                                 />
                             </div>
                         </div>
@@ -265,7 +265,7 @@ export default function Index({ tasks, categories, filters }) {
                         {/* Filter Toggle */}
                         <button
                             onClick={() => setShowFilters(!showFilters)}
-                            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
                             <Filter className="mr-2 h-4 w-4" />
                             Filters
@@ -274,7 +274,7 @@ export default function Index({ tasks, categories, filters }) {
 
                     {/* Filter Options */}
                     {showFilters && (
-                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                             {/* Status Filter */}
                             <select
                                 value={statusFilter}
@@ -343,16 +343,16 @@ export default function Index({ tasks, categories, filters }) {
                 </div>
 
                 {/* Tasks List */}
-                <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
+                <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg">
                     {taskList.length === 0 ? (
-                        <div className="p-8 text-center">
+                        <div className="p-6 sm:p-8 text-center">
                             <div className="text-gray-400 dark:text-gray-500 mb-4">
-                                <CheckCircle className="mx-auto h-12 w-12" />
+                                <CheckCircle className="mx-auto h-10 w-10 sm:h-12 sm:w-12" />
                             </div>
-                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                            <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                                 No tasks found
                             </h3>
-                            <p className="text-gray-500 dark:text-gray-400 mb-4">
+                            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mb-4">
                                 {search ||
                                 statusFilter ||
                                 priorityFilter ||
@@ -394,20 +394,20 @@ export default function Index({ tasks, categories, filters }) {
                                                     <div
                                                         ref={provided.innerRef}
                                                         {...provided.draggableProps}
-                                                        className={`p-6 transition-colors duration-150 ${
+                                                        className={`p-4 sm:p-6 transition-colors duration-150 ${
                                                             snapshot.isDragging
                                                                 ? "bg-gray-50 dark:bg-gray-700"
                                                                 : "hover:bg-gray-50 dark:hover:bg-gray-700"
                                                         }`}
                                                     >
-                                                        <div className="flex items-start justify-between">
-                                                            <div className="flex items-start space-x-4 flex-1">
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center space-x-3 flex-1 min-w-0">
                                                                 {/* Drag Handle */}
                                                                 <div
-                                                                    className="flex-shrink-0 mt-1"
                                                                     {...provided.dragHandleProps}
+                                                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab active:cursor-grabbing"
                                                                 >
-                                                                    <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
+                                                                    <GripVertical className="h-4 w-4 sm:h-5 sm:w-5" />
                                                                 </div>
 
                                                                 {/* Status Icon */}
@@ -417,7 +417,7 @@ export default function Index({ tasks, categories, filters }) {
                                                                             task
                                                                         )
                                                                     }
-                                                                    className="flex-shrink-0 mt-1 cursor-pointer hover:scale-110 transition-transform"
+                                                                    className="flex-shrink-0 hover:scale-110 transition-transform"
                                                                 >
                                                                     {getStatusIcon(
                                                                         task.status
@@ -426,47 +426,54 @@ export default function Index({ tasks, categories, filters }) {
 
                                                                 {/* Task Content */}
                                                                 <div className="flex-1 min-w-0">
-                                                                    <div className="flex items-center space-x-2 mb-2">
-                                                                        <h3
-                                                                            className={`text-lg font-medium ${
-                                                                                task.status ===
-                                                                                "completed"
-                                                                                    ? "text-gray-500 dark:text-gray-400 line-through"
-                                                                                    : "text-gray-900 dark:text-gray-100"
-                                                                            }`}
-                                                                        >
-                                                                            {
-                                                                                task.title
-                                                                            }
-                                                                        </h3>
-                                                                        {task.is_recurring && (
-                                                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
-                                                                                Recurring
+                                                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <h3
+                                                                                className={`text-sm sm:text-base font-medium truncate ${
+                                                                                    task.status ===
+                                                                                    "completed"
+                                                                                        ? "text-gray-500 dark:text-gray-400 line-through"
+                                                                                        : "text-gray-900 dark:text-gray-100"
+                                                                                }`}
+                                                                            >
+                                                                                {
+                                                                                    task.title
+                                                                                }
+                                                                            </h3>
+                                                                            {task.description && (
+                                                                                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
+                                                                                    {
+                                                                                        task.description
+                                                                                    }
+                                                                                </p>
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="flex items-center space-x-2">
+                                                                            {/* Priority Badge */}
+                                                                            <span
+                                                                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(
+                                                                                    task.priority
+                                                                                )}`}
+                                                                            >
+                                                                                {task.priority
+                                                                                    .charAt(
+                                                                                        0
+                                                                                    )
+                                                                                    .toUpperCase() +
+                                                                                    task.priority.slice(
+                                                                                        1
+                                                                                    )}
                                                                             </span>
-                                                                        )}
+                                                                        </div>
                                                                     </div>
 
-                                                                    {task.description && (
-                                                                        <p
-                                                                            className={`text-sm mb-3 ${
-                                                                                task.status ===
-                                                                                "completed"
-                                                                                    ? "text-gray-400 dark:text-gray-500"
-                                                                                    : "text-gray-600 dark:text-gray-300"
-                                                                            }`}
-                                                                        >
-                                                                            {
-                                                                                task.description
-                                                                            }
-                                                                        </p>
-                                                                    )}
-
-                                                                    <div className="flex items-center space-x-4 text-sm">
+                                                                    {/* Task Meta Info */}
+                                                                    <div className="flex flex-wrap items-center gap-2 mt-2">
                                                                         {/* Category */}
                                                                         {task.category && (
                                                                             <div className="flex items-center space-x-1">
                                                                                 <div
-                                                                                    className="w-3 h-3 rounded-full"
+                                                                                    className="w-2 h-2 rounded-full"
                                                                                     style={{
                                                                                         backgroundColor:
                                                                                             task
@@ -474,7 +481,7 @@ export default function Index({ tasks, categories, filters }) {
                                                                                                 .color,
                                                                                     }}
                                                                                 />
-                                                                                <span className="text-gray-600 dark:text-gray-400">
+                                                                                <span className="text-xs text-gray-500 dark:text-gray-400">
                                                                                     {
                                                                                         task
                                                                                             .category
@@ -484,22 +491,6 @@ export default function Index({ tasks, categories, filters }) {
                                                                             </div>
                                                                         )}
 
-                                                                        {/* Priority */}
-                                                                        <span
-                                                                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(
-                                                                                task.priority
-                                                                            )}`}
-                                                                        >
-                                                                            {task.priority
-                                                                                .charAt(
-                                                                                    0
-                                                                                )
-                                                                                .toUpperCase() +
-                                                                                task.priority.slice(
-                                                                                    1
-                                                                                )}
-                                                                        </span>
-
                                                                         {/* Due Date */}
                                                                         {task.due_date && (
                                                                             <div
@@ -508,56 +499,39 @@ export default function Index({ tasks, categories, filters }) {
                                                                                         task.due_date
                                                                                     )
                                                                                         ? "text-red-600 dark:text-red-400"
-                                                                                        : "text-gray-600 dark:text-gray-400"
+                                                                                        : "text-gray-500 dark:text-gray-400"
                                                                                 }`}
                                                                             >
-                                                                                <Calendar className="h-4 w-4" />
-                                                                                <span>
-                                                                                    {isOverdue(
+                                                                                <Calendar className="h-3 w-3" />
+                                                                                <span className="text-xs">
+                                                                                    {new Date(
                                                                                         task.due_date
-                                                                                    )
-                                                                                        ? "Overdue"
-                                                                                        : new Date(
-                                                                                              task.due_date
-                                                                                          ).toLocaleDateString()}
+                                                                                    ).toLocaleDateString()}
                                                                                 </span>
                                                                             </div>
                                                                         )}
 
-                                                                        {/* Subtasks */}
-                                                                        {task.subtasks &&
-                                                                            task
-                                                                                .subtasks
-                                                                                .length >
-                                                                                0 && (
-                                                                                <div className="flex items-center space-x-1 text-gray-600 dark:text-gray-400">
-                                                                                    <CheckCircle className="h-4 w-4" />
-                                                                                    <span>
-                                                                                        {
-                                                                                            task.subtasks.filter(
-                                                                                                (
-                                                                                                    st
-                                                                                                ) =>
-                                                                                                    st.is_completed
-                                                                                            )
-                                                                                                .length
-                                                                                        }
+                                                                        {/* Subtasks count */}
+                                                                        {task.subtasks_count >
+                                                                            0 && (
+                                                                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                                                {
+                                                                                    task.completed_subtasks_count
+                                                                                }
 
-                                                                                        /
-                                                                                        {
-                                                                                            task
-                                                                                                .subtasks
-                                                                                                .length
-                                                                                        }
-                                                                                    </span>
-                                                                                </div>
-                                                                            )}
+                                                                                /
+                                                                                {
+                                                                                    task.subtasks_count
+                                                                                }{" "}
+                                                                                subtasks
+                                                                            </span>
+                                                                        )}
                                                                     </div>
                                                                 </div>
                                                             </div>
 
-                                                            {/* Actions */}
-                                                            <div className="flex items-center space-x-2">
+                                                            {/* Action Buttons */}
+                                                            <div className="flex items-center space-x-1 sm:space-x-2 ml-2">
                                                                 <button
                                                                     onClick={() => {
                                                                         setSelectedTask(
@@ -567,7 +541,7 @@ export default function Index({ tasks, categories, filters }) {
                                                                             true
                                                                         );
                                                                     }}
-                                                                    className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                                                    className="p-1 sm:p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                                                                 >
                                                                     <Eye className="h-4 w-4" />
                                                                 </button>
@@ -580,28 +554,9 @@ export default function Index({ tasks, categories, filters }) {
                                                                             true
                                                                         );
                                                                     }}
-                                                                    className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                                                    className="p-1 sm:p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                                                                 >
                                                                     <Edit className="h-4 w-4" />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => {
-                                                                        if (
-                                                                            confirm(
-                                                                                "Are you sure you want to delete this task?"
-                                                                            )
-                                                                        ) {
-                                                                            router.delete(
-                                                                                route(
-                                                                                    "tasks.destroy",
-                                                                                    task.id
-                                                                                )
-                                                                            );
-                                                                        }
-                                                                    }}
-                                                                    className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -609,6 +564,7 @@ export default function Index({ tasks, categories, filters }) {
                                                 )}
                                             </Draggable>
                                         ))}
+                                        {provided.placeholder}
                                     </div>
                                 )}
                             </Droppable>
@@ -618,57 +574,49 @@ export default function Index({ tasks, categories, filters }) {
 
                 {/* Pagination */}
                 {tasks.links && tasks.links.length > 3 && (
-                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
-                        <div className="flex items-center justify-between">
-                            <div className="text-sm text-gray-700 dark:text-gray-300">
-                                Showing {tasks.from} to {tasks.to} of{" "}
-                                {tasks.total} results
-                            </div>
-                            <div className="flex space-x-2">
-                                {tasks.links.map((link, index) => (
-                                    <Link
-                                        key={index}
-                                        href={link.url}
-                                        className={`px-3 py-2 text-sm font-medium rounded-md ${
-                                            link.active
-                                                ? "bg-blue-600 text-white"
-                                                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-                                        } ${
-                                            !link.url &&
-                                            "opacity-50 cursor-not-allowed"
-                                        }`}
-                                        dangerouslySetInnerHTML={{
-                                            __html: link.label,
-                                        }}
-                                    />
-                                ))}
-                            </div>
+                    <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 sm:p-6">
+                        <div className="flex flex-wrap justify-center gap-1 sm:gap-2">
+                            {tasks.links.map((link, index) => (
+                                <Link
+                                    key={index}
+                                    href={link.url || "#"}
+                                    className={`px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
+                                        link.active
+                                            ? "bg-blue-600 text-white"
+                                            : link.url
+                                            ? "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                            : "text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                                    }`}
+                                    dangerouslySetInnerHTML={{
+                                        __html: link.label,
+                                    }}
+                                />
+                            ))}
                         </div>
                     </div>
                 )}
             </div>
+
+            {/* Modals */}
             <TaskModal
                 show={showTaskModal}
                 onClose={() => setShowTaskModal(false)}
+                categories={categories}
             />
+
             <TaskViewModal
                 show={showViewModal}
-                onClose={() => {
-                    setShowViewModal(false);
-                    setSelectedTask(null);
-                }}
+                onClose={() => setShowViewModal(false)}
                 task={selectedTask}
             />
+
             <TaskEditModal
                 show={showEditModal}
-                onClose={() => {
-                    setShowEditModal(false);
-                    setSelectedTask(null);
-                }}
+                onClose={() => setShowEditModal(false)}
                 task={selectedTask}
                 categories={categories}
             />
-            {/* Toast Notification */}
+
             <Toast />
         </TodoLayout>
     );

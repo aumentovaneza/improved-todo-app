@@ -1,3 +1,115 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Global dark mode styles */
+@layer base {
+    html {
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    
+    html.dark {
+        color-scheme: dark;
+    }
+    
+    /* Light mode body styling */
+    body {
+        background-color: #FDFDFD;
+        color: #334155;
+    }
+    
+    /* Dark mode body styling */
+    .dark body {
+        background-color: #121212;
+        color: #E0E0E0;
+    }
+    
+    /* Scrollbar styling for light mode */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #F1F5F9;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: #CBD5E1;
+        border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: #94A3B8;
+    }
+    
+    /* Scrollbar styling for dark mode */
+    .dark ::-webkit-scrollbar-track {
+        background: #1E1E2F;
+    }
+    
+    .dark ::-webkit-scrollbar-thumb {
+        background: #404040;
+        border-radius: 4px;
+    }
+    
+    .dark ::-webkit-scrollbar-thumb:hover {
+        background: #505050;
+    }
+}
+
+/* Custom component styles */
+@layer components {
+    /* Card styles with light and dark mode support */
+    .card {
+        @apply bg-light-card dark:bg-dark-card shadow-sm rounded-lg border border-light-border dark:border-dark-border;
+    }
+    
+    .card-hover {
+        @apply card hover:shadow-md hover:bg-light-hover dark:hover:bg-dark-hover transition-all duration-200;
+    }
+    
+    /* Button variants with custom colors */
+    .btn-primary {
+        @apply bg-primary-500 hover:bg-primary-600 focus:bg-primary-600 active:bg-primary-700 text-white px-4 py-2 rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+    }
+    
+    .btn-secondary {
+        @apply bg-secondary-200 hover:bg-secondary-300 focus:bg-secondary-300 active:bg-secondary-400 text-secondary-800 dark:bg-secondary-600 dark:hover:bg-secondary-700 dark:text-white px-4 py-2 rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2;
+    }
+    
+    .btn-accent {
+        @apply bg-accent-200 hover:bg-accent-300 focus:bg-accent-300 active:bg-accent-400 text-accent-800 dark:bg-accent-600 dark:hover:bg-accent-700 dark:text-white px-4 py-2 rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2;
+    }
+    
+    /* Input styles with light and dark mode */
+    .input-primary {
+        @apply border-light-border dark:border-dark-border bg-light-card dark:bg-dark-card text-light-primary dark:text-dark-primary focus:border-primary-500 focus:ring-primary-500 rounded-md transition-colors duration-200;
+    }
+    
+    /* Text color utilities for both modes */
+    .text-adaptive-primary {
+        @apply text-light-primary dark:text-dark-primary;
+    }
+    
+    .text-adaptive-secondary {
+        @apply text-light-secondary dark:text-dark-secondary;
+    }
+    
+    .text-adaptive-muted {
+        @apply text-light-muted dark:text-dark-muted;
+    }
+    
+    /* Background utilities */
+    .bg-adaptive-primary {
+        @apply bg-light-primary dark:bg-dark-primary;
+    }
+    
+    .bg-adaptive-secondary {
+        @apply bg-light-secondary dark:bg-dark-secondary;
+    }
+    
+    .bg-adaptive-card {
+        @apply bg-light-card dark:bg-dark-card;
+    }
+}

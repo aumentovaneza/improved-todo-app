@@ -113,6 +113,26 @@ export default function Show({ category }) {
                                         : ""}
                                 </div>
                             </div>
+                            {category.tags && category.tags.length > 0 && (
+                                <div className="mt-3">
+                                    <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 block mb-2">
+                                        Tags:
+                                    </span>
+                                    <div className="flex flex-wrap gap-2">
+                                        {category.tags.map((tag) => (
+                                            <span
+                                                key={tag.id}
+                                                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white"
+                                                style={{
+                                                    backgroundColor: tag.color,
+                                                }}
+                                            >
+                                                {tag.name}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -171,6 +191,30 @@ export default function Show({ category }) {
                                                             ).toLocaleDateString()}
                                                         </span>
                                                     )}
+                                                    {task.tags &&
+                                                        task.tags.length >
+                                                            0 && (
+                                                            <div className="flex flex-wrap gap-1 mt-1">
+                                                                {task.tags.map(
+                                                                    (tag) => (
+                                                                        <span
+                                                                            key={
+                                                                                tag.id
+                                                                            }
+                                                                            className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium text-white"
+                                                                            style={{
+                                                                                backgroundColor:
+                                                                                    tag.color,
+                                                                            }}
+                                                                        >
+                                                                            {
+                                                                                tag.name
+                                                                            }
+                                                                        </span>
+                                                                    )
+                                                                )}
+                                                            </div>
+                                                        )}
                                                 </div>
                                             </div>
                                         </div>

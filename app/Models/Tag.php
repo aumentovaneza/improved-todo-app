@@ -4,10 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-class Category extends Model
+class Tag extends Model
 {
     use HasFactory;
 
@@ -22,13 +21,18 @@ class Category extends Model
         'is_active' => 'boolean',
     ];
 
-    public function tasks(): HasMany
+    public function categories(): BelongsToMany
     {
-        return $this->hasMany(Task::class);
+        return $this->belongsToMany(Category::class);
     }
 
-    public function tags(): BelongsToMany
+    public function tasks(): BelongsToMany
     {
-        return $this->belongsToMany(Tag::class);
+        return $this->belongsToMany(Task::class);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 }

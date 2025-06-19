@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\TagController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\ReminderController;
@@ -35,6 +36,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Categories
     Route::resource('categories', CategoryController::class);
+
+    // Tags
+    Route::resource('tags', TagController::class);
+    Route::get('api/tags', [TagController::class, 'getAllTags'])->name('api.tags');
 
     // Subtasks
     Route::post('subtasks', [SubtaskController::class, 'store'])->name('subtasks.store');

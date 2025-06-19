@@ -73,6 +73,7 @@ class AdminController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|in:member,admin',
+            'timezone' => 'required|string|timezone',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
@@ -107,6 +108,7 @@ class AdminController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'role' => 'required|in:member,admin',
+            'timezone' => 'required|string|timezone',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
 

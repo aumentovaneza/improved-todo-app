@@ -23,6 +23,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'timezone',
     ];
 
     /**
@@ -71,5 +72,20 @@ class User extends Authenticatable
     public function isMember(): bool
     {
         return $this->role === 'member';
+    }
+
+    public function getTimezone(): string
+    {
+        return $this->timezone ?? 'UTC';
+    }
+
+    public function toUserTimezone($date)
+    {
+        return $date ? $date->setTimezone($this->getTimezone()) : null;
+    }
+
+    public function todayInUserTimezone()
+    {
+        return now()->setTimezone($this->getTimezone())->startOfDay();
     }
 }

@@ -63,8 +63,31 @@ class Task extends Model
         return $query->where('status', 'completed');
     }
 
-    public function scopeOverdue($query)
+    public function scopeOverdue($query, $user = null)
     {
-        return $query->where('due_date', '<', now())->where('status', '!=', 'completed');
+        if ($user) {
+            $userToday = $user->todayInUserTimezone();
+            return $query->where('due_date', '<', $userToday)->where('status', '!=', 'completed');
+        }
+
+        return $query->whereDate('due_date', '<', today())->where('status', '!=', 'completed');
+    }
+
+    public function scopeOverdueForUser($query, $user)
+    {
+        $userToday = $user->todayInUserTimezone();
+        return $query->where('user_id', $user->id)
+            ->where('due_date', '<', $userToday)
+            ->where('status', '!=', 'completed');
+    }
+
+    public function scopeDueTodayForUser($query, $user)
+    {
+        $userToday = $user->todayInUserTimezone();
+        $userTomorrow = $userToday->copy()->addDay();
+        return $query->where('user_id', $user->id)
+            ->where('due_date', '>=', $userToday)
+            ->where('due_date', '<', $userTomorrow)
+            ->where('status', '!=', 'completed');
     }
 }

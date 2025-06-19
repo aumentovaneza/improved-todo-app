@@ -13,6 +13,7 @@ export default function Create() {
         password: "",
         password_confirmation: "",
         role: "member",
+        timezone: "UTC",
     });
 
     const handleSubmit = (e) => {
@@ -122,6 +123,58 @@ export default function Create() {
                                     ? "Administrators have full access to all features and can manage other users."
                                     : "Members have access to personal task management features."}
                             </p>
+                        </div>
+
+                        {/* Timezone Field */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Timezone
+                            </label>
+                            <select
+                                value={data.timezone}
+                                onChange={(e) =>
+                                    setData("timezone", e.target.value)
+                                }
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                required
+                            >
+                                <option value="UTC">UTC</option>
+                                <option value="America/New_York">
+                                    Eastern Time (US & Canada)
+                                </option>
+                                <option value="America/Chicago">
+                                    Central Time (US & Canada)
+                                </option>
+                                <option value="America/Denver">
+                                    Mountain Time (US & Canada)
+                                </option>
+                                <option value="America/Los_Angeles">
+                                    Pacific Time (US & Canada)
+                                </option>
+                                <option value="Europe/London">London</option>
+                                <option value="Europe/Paris">Paris</option>
+                                <option value="Europe/Berlin">Berlin</option>
+                                <option value="Asia/Tokyo">Tokyo</option>
+                                <option value="Asia/Shanghai">Shanghai</option>
+                                <option value="Asia/Singapore">
+                                    Singapore
+                                </option>
+                                <option value="Asia/Manila">Manila</option>
+                                <option value="Asia/Dubai">Dubai</option>
+                                <option value="Asia/Kolkata">Mumbai</option>
+                                <option value="Australia/Sydney">Sydney</option>
+                                <option value="Australia/Melbourne">
+                                    Melbourne
+                                </option>
+                                <option value="Pacific/Auckland">
+                                    Auckland
+                                </option>
+                            </select>
+                            {errors.timezone && (
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                                    {errors.timezone}
+                                </p>
+                            )}
                         </div>
 
                         {/* Password Field */}

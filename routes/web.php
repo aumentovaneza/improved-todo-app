@@ -52,8 +52,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Analytics
     Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
 
-    // Admin routes
-    Route::prefix('admin')->name('admin.')->group(function () {
+    // Admin routes - only accessible by admin users
+    Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
         Route::get('users', [AdminController::class, 'users'])->name('users.index');
         Route::get('users/create', [AdminController::class, 'createUser'])->name('users.create');
@@ -61,7 +61,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('users/{user}/edit', [AdminController::class, 'editUser'])->name('users.edit');
         Route::put('users/{user}', [AdminController::class, 'updateUser'])->name('users.update');
         Route::delete('users/{user}', [AdminController::class, 'deleteUser'])->name('users.destroy');
-        Route::get('categories', [AdminController::class, 'categories'])->name('categories.index');
         Route::get('activity-logs', [AdminController::class, 'activityLogs'])->name('activity-logs.index');
     });
 });

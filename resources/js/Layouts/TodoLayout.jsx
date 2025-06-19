@@ -95,12 +95,6 @@ export default function TodoLayout({ header, children }) {
             current: route().current("admin.users.*"),
         },
         {
-            name: "Categories",
-            href: route("admin.categories.index"),
-            icon: FolderOpen,
-            current: route().current("admin.categories.index"),
-        },
-        {
             name: "Activity Logs",
             href: route("admin.activity-logs.index"),
             icon: Activity,

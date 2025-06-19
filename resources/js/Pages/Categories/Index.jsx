@@ -84,7 +84,7 @@ export default function Index({ categories }) {
                                             : ""}
                                     </div>
                                 </div>
-                                
+
                                 <div className="flex items-center space-x-1 sm:space-x-2 mt-3 sm:mt-0 sm:ml-4">
                                     <Link
                                         href={route(
@@ -104,6 +104,7 @@ export default function Index({ categories }) {
                                     >
                                         <Edit className="h-4 w-4" />
                                     </Link>
+
                                     <button
                                         onClick={() => handleDelete(category)}
                                         className="p-1 sm:p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"

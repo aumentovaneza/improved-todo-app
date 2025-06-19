@@ -1,30 +1,91 @@
 import { useForm, usePage } from "@inertiajs/react";
+import { useEffect, useState } from "react";
 import Modal from "./Modal";
 import SecondaryButton from "./SecondaryButton";
 import PrimaryButton from "./PrimaryButton";
 
-export default function TaskModal({ show, onClose }) {
+export default function TaskModal({ show, onClose, onSubmitting }) {
     const { categories } = usePage().props;
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const initialFormData = {
         title: "",
         description: "",
         category_id: "",
         priority: "medium",
         due_date: "",
-    });
+    };
+
+    const { data, setData, post, processing, errors, reset, clearErrors } =
+        useForm(initialFormData);
+
+    // Force complete form reset when modal opens
+    useEffect(() => {
+        if (show) {
+            // Force reset all form fields manually
+            setData({
+                title: "",
+                description: "",
+                category_id: "",
+                priority: "medium",
+                due_date: "",
+            });
+            clearErrors();
+            setIsSubmitting(false);
+        }
+    }, [show]);
+
+    // Notify parent about submission state
+    useEffect(() => {
+        if (onSubmitting) {
+            onSubmitting(processing || isSubmitting);
+        }
+    }, [processing, isSubmitting, onSubmitting]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
+
         post(route("tasks.store"), {
             onSuccess: () => {
-                reset();
+                // Force complete form reset
+                setData({
+                    title: "",
+                    description: "",
+                    category_id: "",
+                    priority: "medium",
+                    due_date: "",
+                });
+                clearErrors();
+                setIsSubmitting(false);
                 onClose();
+            },
+            onError: () => {
+                // Keep form data on error so user doesn't lose their input
+                setIsSubmitting(false);
+            },
+            onFinish: () => {
+                setIsSubmitting(false);
             },
         });
     };
 
+    const handleClose = () => {
+        // Force complete form reset
+        setData({
+            title: "",
+            description: "",
+            category_id: "",
+            priority: "medium",
+            due_date: "",
+        });
+        clearErrors();
+        setIsSubmitting(false);
+        onClose();
+    };
+
     return (
-        <Modal show={show} onClose={onClose} maxWidth="2xl">
+        <Modal show={show} onClose={handleClose} maxWidth="2xl">
             <div className="max-h-[70vh] overflow-y-auto">
                 <form onSubmit={handleSubmit} className="p-6">
                     <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
@@ -126,11 +187,16 @@ export default function TaskModal({ show, onClose }) {
                     </div>
 
                     <div className="mt-6 flex justify-end gap-3">
-                        <SecondaryButton onClick={onClose}>
+                        <SecondaryButton onClick={handleClose}>
                             Cancel
                         </SecondaryButton>
-                        <PrimaryButton type="submit" disabled={processing}>
-                            Create Task
+                        <PrimaryButton
+                            type="submit"
+                            disabled={processing || isSubmitting}
+                        >
+                            {processing || isSubmitting
+                                ? "Creating..."
+                                : "Create Task"}
                         </PrimaryButton>
                     </div>
                 </form>

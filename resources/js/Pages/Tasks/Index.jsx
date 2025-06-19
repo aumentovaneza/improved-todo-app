@@ -43,6 +43,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
     const [showViewModal, setShowViewModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
+    const [isTaskSubmitting, setIsTaskSubmitting] = useState(false);
 
     useEffect(() => {
         setCategorizedTaskList(categorizedTasks || []);
@@ -253,7 +254,8 @@ export default function Index({ categorizedTasks, categories, filters }) {
                     </h2>
                     <button
                         onClick={() => setShowTaskModal(true)}
-                        className="inline-flex items-center justify-center w-auto px-3 py-2 sm:px-2 sm:py-1.5 md:px-4 md:py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs sm:text-xs md:text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                        disabled={isTaskSubmitting}
+                        className="inline-flex items-center justify-center w-auto px-3 py-2 sm:px-2 sm:py-1.5 md:px-4 md:py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs sm:text-xs md:text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <Plus className="mr-1 sm:mr-2 h-4 w-4 sm:h-3 sm:w-3 md:h-4 md:w-4" />
                         <span className="hidden sm:inline">New Task</span>
@@ -390,7 +392,8 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                 !dueDateFilter && (
                                     <button
                                         onClick={() => setShowTaskModal(true)}
-                                        className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                        disabled={isTaskSubmitting}
+                                        className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <Plus className="mr-2 h-4 w-4" />
                                         Create Task
@@ -658,6 +661,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
             <TaskModal
                 show={showTaskModal}
                 onClose={() => setShowTaskModal(false)}
+                onSubmitting={setIsTaskSubmitting}
                 categories={categories}
             />
 

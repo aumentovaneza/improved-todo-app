@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -54,11 +55,9 @@ class CalendarController extends Controller
         $upcomingTasks = $upcomingTaskOccurrences->where('status', 'pending');
 
         // Get overdue tasks (only regular tasks can be overdue)
-        $overdueTasks = $user->tasks()
-            ->with(['category', 'subtasks', 'tags'])
-            ->where('status', 'pending')
+        $overdueTasks = Task::with(['category', 'subtasks', 'tags'])
+            ->overdueForUser($user)
             ->where('is_recurring', false)
-            ->where('due_date', '<', $userNow)
             ->orderByDateTime()
             ->get();
 

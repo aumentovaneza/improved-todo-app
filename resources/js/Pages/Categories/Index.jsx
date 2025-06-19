@@ -1,8 +1,18 @@
 import TodoLayout from "@/Layouts/TodoLayout";
-import { Head, Link, usePage } from "@inertiajs/react";
-import { Plus, Eye, Edit, FolderOpen } from "lucide-react";
+import { Head, Link, usePage, router } from "@inertiajs/react";
+import { Plus, Eye, Edit, FolderOpen, Trash2 } from "lucide-react";
 
 export default function Index({ categories }) {
+    const handleDelete = (category) => {
+        if (
+            confirm(
+                `Are you sure you want to delete the category "${category.name}"? This action cannot be undone.`
+            )
+        ) {
+            router.delete(route("categories.destroy", category.id));
+        }
+    };
+
     return (
         <TodoLayout
             header={
@@ -74,27 +84,32 @@ export default function Index({ categories }) {
                                             : ""}
                                     </div>
                                 </div>
-                                <div className="flex gap-2 mt-3 sm:mt-0 sm:ml-4">
+                                
+                                <div className="flex items-center space-x-1 sm:space-x-2 mt-3 sm:mt-0 sm:ml-4">
                                     <Link
                                         href={route(
                                             "categories.show",
                                             category.id
                                         )}
-                                        className="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-md transition-colors duration-200"
+                                        className="p-1 sm:p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                                     >
-                                        <Eye className="mr-1 h-3 w-3" />
-                                        View
+                                        <Eye className="h-4 w-4" />
                                     </Link>
                                     <Link
                                         href={route(
                                             "categories.edit",
                                             category.id
                                         )}
-                                        className="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md transition-colors duration-200"
+                                        className="p-1 sm:p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                                     >
-                                        <Edit className="mr-1 h-3 w-3" />
-                                        Edit
+                                        <Edit className="h-4 w-4" />
                                     </Link>
+                                    <button
+                                        onClick={() => handleDelete(category)}
+                                        className="p-1 sm:p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </button>
                                 </div>
                             </div>
                         ))

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -38,7 +38,7 @@ class CategoryController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): JsonResponse
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:categories,name',
@@ -60,10 +60,7 @@ class CategoryController extends Controller
             'user_agent' => $request->userAgent(),
         ]);
 
-        return response()->json([
-            'message' => 'Category created successfully',
-            'category' => $category,
-        ]);
+        return redirect()->route('categories.index')->with('message', 'Category created successfully');
     }
 
     /**
@@ -91,7 +88,7 @@ class CategoryController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Category $category): JsonResponse
+    public function update(Request $request, Category $category): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
@@ -116,16 +113,13 @@ class CategoryController extends Controller
             'user_agent' => $request->userAgent(),
         ]);
 
-        return response()->json([
-            'message' => 'Category updated successfully',
-            'category' => $category,
-        ]);
+        return redirect()->route('categories.index')->with('message', 'Category updated successfully');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Category $category): JsonResponse
+    public function destroy(Category $category): RedirectResponse
     {
         $categoryName = $category->name;
         $category->delete();
@@ -141,8 +135,6 @@ class CategoryController extends Controller
             'user_agent' => request()->userAgent(),
         ]);
 
-        return response()->json([
-            'message' => 'Category deleted successfully',
-        ]);
+        return redirect()->route('categories.index')->with('message', 'Category deleted successfully');
     }
 }

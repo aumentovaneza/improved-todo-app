@@ -7,6 +7,8 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\AnalyticsController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -44,6 +46,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Reminders
     Route::resource('reminders', ReminderController::class);
 
+    // Calendar
+    Route::get('calendar', [CalendarController::class, 'index'])->name('calendar.index');
+
+    // Analytics
+    Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+
     // Admin routes
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
@@ -59,7 +67,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });

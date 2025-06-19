@@ -14,6 +14,30 @@ use Inertia\Response;
 class ProfileController extends Controller
 {
     /**
+     * Display the user's profile.
+     */
+    public function show(Request $request): Response
+    {
+        $user = $request->user();
+
+        // Get some basic stats for the user
+        $stats = [
+            'total_tasks' => $user->tasks()->count(),
+            'completed_tasks' => $user->tasks()->where('status', 'completed')->count(),
+            'pending_tasks' => $user->tasks()->where('status', 'pending')->count(),
+            'overdue_tasks' => $user->tasks()
+                ->where('status', 'pending')
+                ->where('due_date', '<', now())
+                ->count(),
+        ];
+
+        return Inertia::render('Profile/Show', [
+            'user' => $user,
+            'stats' => $stats,
+        ]);
+    }
+
+    /**
      * Display the user's profile form.
      */
     public function edit(Request $request): Response

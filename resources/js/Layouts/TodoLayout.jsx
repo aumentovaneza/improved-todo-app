@@ -48,8 +48,18 @@ export default function TodoLayout({ header, children }) {
             icon: FolderOpen,
             current: route().current("categories.*"),
         },
-        { name: "Calendar", href: "#", icon: Calendar, current: false },
-        { name: "Analytics", href: "#", icon: BarChart3, current: false },
+        {
+            name: "Calendar",
+            href: route("calendar.index"),
+            icon: Calendar,
+            current: route().current("calendar.*"),
+        },
+        {
+            name: "Analytics",
+            href: route("analytics.index"),
+            icon: BarChart3,
+            current: route().current("analytics.*"),
+        },
     ];
 
     const adminNavigation = [
@@ -173,35 +183,42 @@ export default function TodoLayout({ header, children }) {
                                     {user.email}
                                 </p>
                             </div>
-                            <Dropdown>
-                                <Dropdown.Trigger>
-                                    <button className="p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                                        <svg
-                                            className="h-4 w-4"
-                                            fill="currentColor"
-                                            viewBox="0 0 20 20"
-                                        >
-                                            <path
-                                                fillRule="evenodd"
-                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                clipRule="evenodd"
-                                            />
-                                        </svg>
-                                    </button>
-                                </Dropdown.Trigger>
-                                <Dropdown.Content>
-                                    <Dropdown.Link href={route("profile.edit")}>
-                                        Profile
-                                    </Dropdown.Link>
-                                    <Dropdown.Link
-                                        href={route("logout")}
-                                        method="post"
-                                        as="button"
+                            <div className="relative">
+                                <Dropdown>
+                                    <Dropdown.Trigger>
+                                        <button className="p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                                            <svg
+                                                className="h-4 w-4"
+                                                fill="currentColor"
+                                                viewBox="0 0 20 20"
+                                            >
+                                                <path
+                                                    fillRule="evenodd"
+                                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                    clipRule="evenodd"
+                                                />
+                                            </svg>
+                                        </button>
+                                    </Dropdown.Trigger>
+                                    <Dropdown.Content
+                                        align="right"
+                                        className="bottom-full mb-2"
                                     >
-                                        Log Out
-                                    </Dropdown.Link>
-                                </Dropdown.Content>
-                            </Dropdown>
+                                        <Dropdown.Link
+                                            href={route("profile.show")}
+                                        >
+                                            Profile
+                                        </Dropdown.Link>
+                                        <Dropdown.Link
+                                            href={route("logout")}
+                                            method="post"
+                                            as="button"
+                                        >
+                                            Log Out
+                                        </Dropdown.Link>
+                                    </Dropdown.Content>
+                                </Dropdown>
+                            </div>
                         </div>
                     </div>
                 </div>

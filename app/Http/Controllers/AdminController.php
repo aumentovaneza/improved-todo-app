@@ -17,10 +17,6 @@ class AdminController extends Controller
 {
     public function dashboard(): Response
     {
-        if (!Auth::user() || !Auth::user()->isAdmin()) {
-            abort(403, 'Access denied. Admin privileges required.');
-        }
-
         $stats = [
             'total_users' => User::count(),
             'total_tasks' => Task::count(),
@@ -32,7 +28,7 @@ class AdminController extends Controller
 
         $recent_activities = ActivityLog::with('user')
             ->latest()
-            ->take(10)
+            ->take(5)
             ->get();
 
         return Inertia::render('Admin/Dashboard', [
@@ -43,10 +39,6 @@ class AdminController extends Controller
 
     public function users(Request $request): Response
     {
-        if (!Auth::user() || !Auth::user()->isAdmin()) {
-            abort(403, 'Access denied. Admin privileges required.');
-        }
-
         $query = User::withCount(['tasks', 'activityLogs']);
 
         if ($request->filled('search')) {
@@ -71,19 +63,11 @@ class AdminController extends Controller
 
     public function createUser(): Response
     {
-        if (!Auth::user() || !Auth::user()->isAdmin()) {
-            abort(403, 'Access denied. Admin privileges required.');
-        }
-
         return Inertia::render('Admin/Users/Create');
     }
 
-    public function storeUser(Request $request): JsonResponse
+    public function storeUser(Request $request)
     {
-        if (!Auth::user() || !Auth::user()->isAdmin()) {
-            abort(403, 'Access denied. Admin privileges required.');
-        }
-
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
@@ -95,29 +79,30 @@ class AdminController extends Controller
 
         $user = User::create($validated);
 
-        return response()->json([
-            'message' => 'User created successfully',
-            'user' => $user,
+        // Log activity
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'action' => 'create',
+            'model_type' => 'User',
+            'model_id' => $user->id,
+            'new_values' => $validated,
+            'description' => "Created user: {$user->name}",
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
         ]);
+
+        return redirect()->route('admin.users.index')->with('message', 'User created successfully');
     }
 
     public function editUser(User $user): Response
     {
-        if (!Auth::user() || !Auth::user()->isAdmin()) {
-            abort(403, 'Access denied. Admin privileges required.');
-        }
-
         return Inertia::render('Admin/Users/Edit', [
             'user' => $user,
         ]);
     }
 
-    public function updateUser(Request $request, User $user): JsonResponse
+    public function updateUser(Request $request, User $user)
     {
-        if (!Auth::user() || !Auth::user()->isAdmin()) {
-            abort(403, 'Access denied. Admin privileges required.');
-        }
-
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
@@ -125,7 +110,9 @@ class AdminController extends Controller
             'password' => 'nullable|string|min:8|confirmed',
         ]);
 
-        if (isset($validated['password'])) {
+        $oldValues = $user->toArray();
+
+        if (isset($validated['password']) && !empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
         } else {
             unset($validated['password']);
@@ -133,59 +120,55 @@ class AdminController extends Controller
 
         $user->update($validated);
 
-        return response()->json([
-            'message' => 'User updated successfully',
-            'user' => $user,
+        // Log activity
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'action' => 'update',
+            'model_type' => 'User',
+            'model_id' => $user->id,
+            'old_values' => $oldValues,
+            'new_values' => $validated,
+            'description' => "Updated user: {$user->name}",
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
         ]);
+
+        return redirect()->route('admin.users.index')->with('message', 'User updated successfully');
     }
 
-    public function deleteUser(User $user): JsonResponse
+    public function deleteUser(User $user)
     {
-        if (!Auth::user() || !Auth::user()->isAdmin()) {
-            abort(403, 'Access denied. Admin privileges required.');
+        if ($user->id === Auth::id()) {
+            return redirect()->back()->withErrors(['message' => 'Cannot delete your own account']);
         }
 
-        if ($user->id === Auth::id()) {
-            return response()->json([
-                'message' => 'Cannot delete your own account',
-            ], 422);
-        }
+        $userName = $user->name;
+
+        // Log activity before deletion
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'action' => 'delete',
+            'model_type' => 'User',
+            'model_id' => $user->id,
+            'old_values' => $user->toArray(),
+            'description' => "Deleted user: {$userName}",
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
 
         $user->delete();
 
-        return response()->json([
-            'message' => 'User deleted successfully',
-        ]);
-    }
-
-    public function categories(Request $request): Response
-    {
-        if (!Auth::user() || !Auth::user()->isAdmin()) {
-            abort(403, 'Access denied. Admin privileges required.');
-        }
-
-        $query = Category::withCount('tasks');
-
-        if ($request->filled('search')) {
-            $search = $request->get('search');
-            $query->where('name', 'like', "%{$search}%");
-        }
-
-        $categories = $query->orderBy('name')->paginate(20);
-
-        return Inertia::render('Admin/Categories/Index', [
-            'categories' => $categories,
-            'filters' => $request->only(['search']),
-        ]);
+        return redirect()->route('admin.users.index')->with('message', 'User deleted successfully');
     }
 
     public function activityLogs(Request $request): Response
     {
-        if (!Auth::user() || !Auth::user()->isAdmin()) {
-            abort(403, 'Access denied. Admin privileges required.');
-        }
-
         $query = ActivityLog::with('user');
+
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where('description', 'like', "%{$search}%");
+        }
 
         if ($request->filled('user_id')) {
             $query->where('user_id', $request->get('user_id'));
@@ -199,14 +182,14 @@ class AdminController extends Controller
             $query->where('model_type', $request->get('model_type'));
         }
 
-        $logs = $query->latest()->paginate(50);
+        $logs = $query->latest()->paginate(10);
 
         $users = User::select('id', 'name')->get();
 
         return Inertia::render('Admin/ActivityLogs/Index', [
             'logs' => $logs,
             'users' => $users,
-            'filters' => $request->only(['user_id', 'action', 'model_type']),
+            'filters' => $request->only(['search', 'user_id', 'action', 'model_type']),
         ]);
     }
 }

@@ -14,7 +14,12 @@ export default function TagInput({
     const inputRef = useRef(null);
 
     useEffect(() => {
-        setTags(value);
+        // Ensure existing tags are properly marked as not new
+        const processedTags = value.map((tag) => ({
+            ...tag,
+            is_new: tag.is_new !== undefined ? tag.is_new : false, // Default existing tags to not new
+        }));
+        setTags(processedTags);
     }, [value]);
 
     const generateTagColor = (tagName) => {

@@ -22,7 +22,7 @@ class DashboardController extends Controller
             ->whereIn('status', ['pending', 'in_progress'])
             ->orderBy('due_date', 'asc')
             ->orderBy('priority', 'desc')
-            ->take(10)
+            ->take(3)
             ->get();
 
         // Get today's tasks
@@ -30,6 +30,7 @@ class DashboardController extends Controller
             ->where('user_id', $user->id)
             ->whereDate('due_date', Carbon::today())
             ->orderBy('priority', 'desc')
+            ->take(5)
             ->get();
 
         // Get overdue tasks

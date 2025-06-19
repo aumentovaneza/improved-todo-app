@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import Modal from "./Modal";
 import SecondaryButton from "./SecondaryButton";
 import PrimaryButton from "./PrimaryButton";
+import TagInput from "./TagInput";
+import CategoryTagSelector from "./CategoryTagSelector";
 
 export default function TaskModal({ show, onClose, onSubmitting }) {
     const { categories } = usePage().props;
@@ -20,6 +22,7 @@ export default function TaskModal({ show, onClose, onSubmitting }) {
         is_recurring: false,
         recurrence_type: "",
         recurring_until: "",
+        tags: [],
     };
 
     const { data, setData, post, processing, errors, reset, clearErrors } =
@@ -41,6 +44,7 @@ export default function TaskModal({ show, onClose, onSubmitting }) {
                 is_recurring: false,
                 recurrence_type: "",
                 recurring_until: "",
+                tags: [],
             });
             clearErrors();
             setIsSubmitting(false);
@@ -73,6 +77,7 @@ export default function TaskModal({ show, onClose, onSubmitting }) {
                     is_recurring: false,
                     recurrence_type: "",
                     recurring_until: "",
+                    tags: [],
                 });
                 clearErrors();
                 setIsSubmitting(false);
@@ -102,6 +107,7 @@ export default function TaskModal({ show, onClose, onSubmitting }) {
             is_recurring: false,
             recurrence_type: "",
             recurring_until: "",
+            tags: [],
         });
         clearErrors();
         setIsSubmitting(false);
@@ -194,6 +200,30 @@ export default function TaskModal({ show, onClose, onSubmitting }) {
                                 <option value="medium">Medium</option>
                                 <option value="low">Low</option>
                             </select>
+                        </div>
+
+                        <CategoryTagSelector
+                            categoryId={data.category_id}
+                            categories={categories}
+                            selectedTags={data.tags}
+                            onChange={(tags) => setData("tags", tags)}
+                        />
+
+                        <div>
+                            <label className="block text-sm font-medium mb-1">
+                                Add Custom Tags (Optional)
+                            </label>
+                            <TagInput
+                                value={data.tags}
+                                onChange={(tags) => setData("tags", tags)}
+                                placeholder="Type tag names and press space or comma to add..."
+                                maxTags={5}
+                            />
+                            {errors.tags && (
+                                <div className="text-red-500 text-xs mt-1">
+                                    {errors.tags}
+                                </div>
+                            )}
                         </div>
                         <div className="flex items-center">
                             <input

@@ -1,12 +1,14 @@
 import TodoLayout from "@/Layouts/TodoLayout";
 import { Head, useForm, Link } from "@inertiajs/react";
 import { ArrowLeft, Save, Edit3 } from "lucide-react";
+import TagInput from "@/Components/TagInput";
 
 export default function Edit({ category }) {
     const { data, setData, put, processing, errors } = useForm({
         name: category.name || "",
         description: category.description || "",
         color: category.color || "#3B82F6",
+        tags: category.tags || [],
     });
 
     const handleSubmit = (e) => {
@@ -106,6 +108,23 @@ export default function Edit({ category }) {
                             {errors.description && (
                                 <div className="text-red-500 text-xs mt-1">
                                     {errors.description}
+                                </div>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Tags (Optional)
+                            </label>
+                            <TagInput
+                                value={data.tags}
+                                onChange={(tags) => setData("tags", tags)}
+                                placeholder="Type tag names and press space or comma to add..."
+                                maxTags={5}
+                            />
+                            {errors.tags && (
+                                <div className="text-red-500 text-xs mt-1">
+                                    {errors.tags}
                                 </div>
                             )}
                         </div>

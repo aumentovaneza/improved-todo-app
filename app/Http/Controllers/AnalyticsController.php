@@ -101,7 +101,7 @@ class AnalyticsController extends Controller
         $tasksThisWeek = $user->tasks()
             ->where('status', 'pending')
             ->whereBetween('due_date', [now()->startOfWeek(), now()->endOfWeek()])
-            ->with(['category', 'subtasks'])
+            ->with(['category', 'subtasks', 'tags'])
             ->orderBy('due_date')
             ->get();
 

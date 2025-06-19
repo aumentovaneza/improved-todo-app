@@ -1,12 +1,14 @@
 import TodoLayout from "@/Layouts/TodoLayout";
 import { Head, useForm, Link } from "@inertiajs/react";
 import { ArrowLeft, Save, FolderPlus } from "lucide-react";
+import TagInput from "@/Components/TagInput";
 
 export default function Create() {
     const { data, setData, post, processing, errors } = useForm({
         name: "",
         description: "",
         color: "#3B82F6", // Default blue color
+        tags: [],
     });
 
     const handleSubmit = (e) => {
@@ -28,7 +30,7 @@ export default function Create() {
     ];
 
     return (
-        <TodoLayout 
+        <TodoLayout
             header={
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="flex items-center gap-3">
@@ -71,7 +73,9 @@ export default function Create() {
                                 type="text"
                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
                                 value={data.name}
-                                onChange={(e) => setData("name", e.target.value)}
+                                onChange={(e) =>
+                                    setData("name", e.target.value)
+                                }
                                 placeholder="Enter category name..."
                                 required
                             />
@@ -90,12 +94,31 @@ export default function Create() {
                                 rows={3}
                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
                                 value={data.description}
-                                onChange={(e) => setData("description", e.target.value)}
+                                onChange={(e) =>
+                                    setData("description", e.target.value)
+                                }
                                 placeholder="Enter category description..."
                             />
                             {errors.description && (
                                 <div className="text-red-500 text-xs mt-1">
                                     {errors.description}
+                                </div>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Tags (Optional)
+                            </label>
+                            <TagInput
+                                value={data.tags}
+                                onChange={(tags) => setData("tags", tags)}
+                                placeholder="Type tag names and press space or comma to add..."
+                                maxTags={5}
+                            />
+                            {errors.tags && (
+                                <div className="text-red-500 text-xs mt-1">
+                                    {errors.tags}
                                 </div>
                             )}
                         </div>

@@ -121,6 +121,24 @@ function SortableTask({
                                         {task.priority.charAt(0).toUpperCase() +
                                             task.priority.slice(1)}
                                     </span>
+
+                                    {/* Tags */}
+                                    {task.tags && task.tags.length > 0 && (
+                                        <div className="flex flex-wrap gap-1">
+                                            {task.tags.map((tag) => (
+                                                <span
+                                                    key={tag.id}
+                                                    className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white"
+                                                    style={{
+                                                        backgroundColor:
+                                                            tag.color,
+                                                    }}
+                                                >
+                                                    {tag.name}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {task.description && (

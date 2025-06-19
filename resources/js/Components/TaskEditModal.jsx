@@ -3,6 +3,8 @@ import Modal from "./Modal";
 import SecondaryButton from "./SecondaryButton";
 import PrimaryButton from "./PrimaryButton";
 import SubtaskManager from "./SubtaskManager";
+import TagInput from "./TagInput";
+import CategoryTagSelector from "./CategoryTagSelector";
 import { useEffect } from "react";
 
 export default function TaskEditModal({
@@ -26,6 +28,7 @@ export default function TaskEditModal({
         recurrence_type: "",
         recurrence_config: {},
         recurring_until: "",
+        tags: [],
     });
 
     useEffect(() => {
@@ -58,6 +61,12 @@ export default function TaskEditModal({
                 recurring_until: task.recurring_until
                     ? new Date(task.recurring_until).toISOString().split("T")[0]
                     : "",
+                tags: task.tags
+                    ? task.tags.map((tag) => ({
+                          ...tag,
+                          is_new: false,
+                      }))
+                    : [],
             });
         }
     }, [task]);
@@ -192,6 +201,30 @@ export default function TaskEditModal({
                                         </option>
                                     </select>
                                 </div>
+                            </div>
+
+                            <CategoryTagSelector
+                                categoryId={data.category_id}
+                                categories={categories}
+                                selectedTags={data.tags}
+                                onChange={(tags) => setData("tags", tags)}
+                            />
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">
+                                    Add Custom Tags (Optional)
+                                </label>
+                                <TagInput
+                                    value={data.tags}
+                                    onChange={(tags) => setData("tags", tags)}
+                                    placeholder="Type tag names and press space or comma to add..."
+                                    maxTags={5}
+                                />
+                                {errors.tags && (
+                                    <div className="text-red-500 text-xs mt-1">
+                                        {errors.tags}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="flex items-center">

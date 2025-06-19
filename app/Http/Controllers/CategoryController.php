@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Tag;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -44,9 +45,37 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255|unique:categories,name',
             'color' => 'required|string|regex:/^#[0-9A-F]{6}$/i',
             'description' => 'nullable|string',
+            'tags' => 'nullable|array',
+            'tags.*.name' => 'required|string|max:255',
+            'tags.*.color' => 'required|string|regex:/^#[0-9A-F]{6}$/i',
+            'tags.*.is_new' => 'boolean',
         ]);
 
         $category = Category::create($validated);
+
+        // Handle tags
+        if (isset($validated['tags'])) {
+            $tagIds = [];
+            foreach ($validated['tags'] as $tagData) {
+                if (isset($tagData['is_new']) && $tagData['is_new']) {
+                    // Create new tag
+                    $tag = Tag::firstOrCreate(
+                        ['name' => $tagData['name']],
+                        [
+                            'color' => $tagData['color'],
+                            'description' => $tagData['description'] ?? null,
+                        ]
+                    );
+                    $tagIds[] = $tag->id;
+                } else {
+                    // Existing tag (if we have an id)
+                    if (isset($tagData['id'])) {
+                        $tagIds[] = $tagData['id'];
+                    }
+                }
+            }
+            $category->tags()->attach($tagIds);
+        }
 
         // Log activity
         ActivityLog::create([
@@ -71,7 +100,7 @@ class CategoryController extends Controller
         return Inertia::render('Categories/Show', [
             'category' => $category->load(['tasks' => function ($query) {
                 $query->where('user_id', Auth::id());
-            }]),
+            }, 'tags']),
         ]);
     }
 
@@ -80,8 +109,29 @@ class CategoryController extends Controller
      */
     public function edit(Category $category): Response
     {
+        // Load category with tags
+        $category->load('tags');
+
+        // Prepare category data with properly structured tags for frontend
+        $categoryData = $category->toArray();
+
+        // Ensure tags have the proper structure for the TagInput component
+        if ($category->tags) {
+            $categoryData['tags'] = $category->tags->map(function ($tag) {
+                return [
+                    'id' => $tag->id,
+                    'name' => $tag->name,
+                    'color' => $tag->color,
+                    'description' => $tag->description,
+                    'is_new' => false, // Mark existing tags as not new
+                ];
+            })->toArray();
+        } else {
+            $categoryData['tags'] = [];
+        }
+
         return Inertia::render('Categories/Edit', [
-            'category' => $category,
+            'category' => $categoryData,
         ]);
     }
 
@@ -95,10 +145,53 @@ class CategoryController extends Controller
             'color' => 'required|string|regex:/^#[0-9A-F]{6}$/i',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
+            'tags' => 'nullable|array',
+            'tags.*.name' => 'required|string|max:255',
+            'tags.*.color' => 'required|string|regex:/^#[0-9A-F]{6}$/i',
+            'tags.*.is_new' => 'boolean',
+            'tags.*.id' => 'nullable|exists:tags,id',
         ]);
 
         $oldValues = $category->toArray();
         $category->update($validated);
+
+        // Handle tags
+        if (isset($validated['tags'])) {
+            $tagIds = [];
+            foreach ($validated['tags'] as $tagData) {
+                if (isset($tagData['is_new']) && $tagData['is_new'] === true) {
+                    // Create new tag
+                    $tag = Tag::firstOrCreate(
+                        ['name' => $tagData['name']],
+                        [
+                            'color' => $tagData['color'],
+                            'description' => $tagData['description'] ?? null,
+                        ]
+                    );
+                    $tagIds[] = $tag->id;
+                } elseif (isset($tagData['id'])) {
+                    // Existing tag with ID
+                    $tagIds[] = $tagData['id'];
+                } else {
+                    // Fallback: try to find existing tag by name
+                    $existingTag = Tag::where('name', $tagData['name'])->first();
+                    if ($existingTag) {
+                        $tagIds[] = $existingTag->id;
+                    } else {
+                        // Create as new tag if not found
+                        $tag = Tag::create([
+                            'name' => $tagData['name'],
+                            'color' => $tagData['color'],
+                            'description' => $tagData['description'] ?? null,
+                        ]);
+                        $tagIds[] = $tag->id;
+                    }
+                }
+            }
+            $category->tags()->sync($tagIds);
+        } else {
+            $category->tags()->detach();
+        }
 
         // Log activity
         ActivityLog::create([

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use App\Models\Category;
+use App\Models\Tag;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +20,7 @@ class TaskController extends Controller
      */
     public function index(Request $request): Response
     {
-        $baseQuery = Task::with(['category', 'subtasks'])
+        $baseQuery = Task::with(['category', 'subtasks', 'tags'])
             ->where('user_id', Auth::id());
 
         // Apply filters to base query
@@ -27,6 +28,9 @@ class TaskController extends Controller
 
         // Get all active categories for the user
         $categories = Category::where('is_active', true)->get();
+
+        // Get all active tags
+        $tags = Tag::active()->get();
 
         // Get categorized tasks with pagination
         $categorizedTasks = [];
@@ -65,7 +69,8 @@ class TaskController extends Controller
 
         return Inertia::render('Tasks/Index', [
             'categorizedTasks' => $categorizedTasks,
-            'categories' => $categories,
+            'categories' => $categories->load('tags'),
+            'tags' => $tags,
             'filters' => $request->only(['search', 'status', 'priority', 'category_id', 'due_date_filter']),
         ]);
     }
@@ -137,6 +142,11 @@ class TaskController extends Controller
             'recurrence_type' => 'nullable|in:daily,weekly,monthly,yearly',
             'recurrence_config' => 'nullable|array',
             'recurring_until' => 'nullable|date',
+            'tags' => 'nullable|array',
+            'tags.*.id' => 'nullable|exists:tags,id',
+            'tags.*.name' => 'nullable|string|max:255',
+            'tags.*.color' => 'nullable|string|regex:/^#[0-9A-F]{6}$/i',
+            'tags.*.is_new' => 'nullable|boolean',
         ]);
 
         // Validate recurring task logic
@@ -190,6 +200,33 @@ class TaskController extends Controller
 
         $task = Task::create($validated);
 
+        // Handle tags
+        if (isset($validated['tags'])) {
+            $tagIds = [];
+            foreach ($validated['tags'] as $tagData) {
+                if (isset($tagData['is_new']) && $tagData['is_new']) {
+                    // Create new tag - validate required fields
+                    if (empty($tagData['name']) || empty($tagData['color'])) {
+                        continue; // Skip invalid new tags
+                    }
+                    $tag = Tag::firstOrCreate(
+                        ['name' => $tagData['name']],
+                        [
+                            'color' => $tagData['color'],
+                            'description' => $tagData['description'] ?? null,
+                        ]
+                    );
+                    $tagIds[] = $tag->id;
+                } else {
+                    // Existing tag (if we have an id)
+                    if (isset($tagData['id']) && !empty($tagData['id'])) {
+                        $tagIds[] = $tagData['id'];
+                    }
+                }
+            }
+            $task->tags()->attach($tagIds);
+        }
+
         // Log activity
         ActivityLog::create([
             'user_id' => Auth::id(),
@@ -228,6 +265,11 @@ class TaskController extends Controller
             'recurrence_type' => 'nullable|in:daily,weekly,monthly,yearly',
             'recurrence_config' => 'nullable|array',
             'recurring_until' => 'nullable|date',
+            'tags' => 'nullable|array',
+            'tags.*.id' => 'nullable|exists:tags,id',
+            'tags.*.name' => 'nullable|string|max:255',
+            'tags.*.color' => 'nullable|string|regex:/^#[0-9A-F]{6}$/i',
+            'tags.*.is_new' => 'nullable|boolean',
         ]);
 
         // Validate recurring task logic
@@ -286,6 +328,35 @@ class TaskController extends Controller
         }
 
         $task->update($validated);
+
+        // Handle tags
+        if (isset($validated['tags'])) {
+            $tagIds = [];
+            foreach ($validated['tags'] as $tagData) {
+                if (isset($tagData['is_new']) && $tagData['is_new']) {
+                    // Create new tag - validate required fields
+                    if (empty($tagData['name']) || empty($tagData['color'])) {
+                        continue; // Skip invalid new tags
+                    }
+                    $tag = Tag::firstOrCreate(
+                        ['name' => $tagData['name']],
+                        [
+                            'color' => $tagData['color'],
+                            'description' => $tagData['description'] ?? null,
+                        ]
+                    );
+                    $tagIds[] = $tag->id;
+                } else {
+                    // Existing tag (if we have an id)
+                    if (isset($tagData['id']) && !empty($tagData['id'])) {
+                        $tagIds[] = $tagData['id'];
+                    }
+                }
+            }
+            $task->tags()->sync($tagIds);
+        } else {
+            $task->tags()->detach();
+        }
 
         // Log activity
         ActivityLog::create([

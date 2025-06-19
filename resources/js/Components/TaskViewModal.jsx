@@ -228,6 +228,26 @@ export default function TaskViewModal({ show, onClose, task, onTaskUpdate }) {
                         </div>
                     </div>
 
+                    {/* Tags */}
+                    {task.tags && task.tags.length > 0 && (
+                        <div className="mb-6">
+                            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                                Tags
+                            </h3>
+                            <div className="flex flex-wrap gap-2">
+                                {task.tags.map((tag) => (
+                                    <span
+                                        key={tag.id}
+                                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white"
+                                        style={{ backgroundColor: tag.color }}
+                                    >
+                                        {tag.name}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Subtasks */}
                     <SubtaskManager
                         key={`view-${task.id}-${task.updated_at}`}

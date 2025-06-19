@@ -147,7 +147,7 @@ export default function TodoLayout({ header, children }) {
                             {/* Sidebar Header */}
                             <div className="flex items-center justify-between h-16 px-4 border-b border-light-border dark:border-dark-border">
                                 <Link href="/" className="flex items-center">
-                                    <ApplicationLogo className="h-8 w-auto fill-current text-light-primary dark:text-dark-primary" />
+                                    <ApplicationLogo className="h-8 w-auto text-light-primary dark:text-dark-primary" />
                                     <span className="ml-2 text-lg font-semibold text-light-primary dark:text-dark-primary">
                                         FocusFlow
                                     </span>
@@ -305,7 +305,7 @@ export default function TodoLayout({ header, children }) {
                 {/* Sidebar Header */}
                 <div className="flex items-center justify-between h-16 px-4 border-b border-light-border dark:border-dark-border">
                     <Link href="/" className="flex items-center">
-                        <ApplicationLogo className="h-8 w-auto fill-current text-light-primary dark:text-dark-primary" />
+                        <ApplicationLogo className="h-8 w-auto text-light-primary dark:text-dark-primary" />
                         <span className="ml-2 text-lg font-semibold text-light-primary dark:text-dark-primary">
                             FocusFlow
                         </span>
@@ -436,7 +436,7 @@ export default function TodoLayout({ header, children }) {
             <div className="flex-1 flex flex-col min-h-screen w-full lg:w-auto">
                 {/* Top Navigation Bar */}
                 <header className="sticky top-0 z-10 bg-light-secondary dark:bg-dark-secondary border-b border-light-border dark:border-dark-border">
-                    <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between min-h-14 h-auto py-3 sm:h-16 sm:py-0 px-2 sm:px-6 lg:px-8">
                         <div className="flex items-center">
                             <button
                                 onClick={() => setSidebarOpen(true)}
@@ -445,9 +445,9 @@ export default function TodoLayout({ header, children }) {
                                 <Menu className="h-5 w-5" />
                             </button>
                             {header && (
-                                <h1 className="ml-4 lg:ml-0 text-lg font-semibold text-light-primary dark:text-dark-primary">
+                                <div className="ml-4 lg:ml-0 text-lg font-semibold text-light-primary dark:text-dark-primary">
                                     {header}
-                                </h1>
+                                </div>
                             )}
                         </div>
                         <div className="flex items-center space-x-4">

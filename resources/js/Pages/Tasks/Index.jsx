@@ -226,16 +226,17 @@ export default function Index({ tasks, categories, filters }) {
     return (
         <TodoLayout
             header={
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
+                <div className="flex flex-row items-center justify-between gap-2 md:gap-4">
+                    <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100 flex-shrink-0">
                         My Tasks
                     </h2>
                     <button
                         onClick={() => setShowTaskModal(true)}
-                        className="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                        className="inline-flex items-center justify-center w-auto px-3 py-2 sm:px-2 sm:py-1.5 md:px-4 md:py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs sm:text-xs md:text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
-                        <Plus className="mr-2 h-4 w-4" />
-                        New Task
+                        <Plus className="mr-1 sm:mr-2 h-4 w-4 sm:h-3 sm:w-3 md:h-4 md:w-4" />
+                        <span className="hidden sm:inline">New Task</span>
+                        <span className="sm:hidden">Add</span>
                     </button>
                 </div>
             }

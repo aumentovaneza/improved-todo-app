@@ -6,16 +6,17 @@ export default function Index({ categories }) {
     return (
         <TodoLayout
             header={
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
+                <div className="flex flex-row items-center justify-between gap-2 md:gap-4">
+                    <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100 flex-shrink-0">
                         Categories
                     </h2>
                     <Link
                         href={route("categories.create")}
-                        className="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                        className="inline-flex items-center justify-center w-auto px-3 py-2 sm:px-2 sm:py-1.5 md:px-4 md:py-2 bg-blue-600 text-white text-xs sm:text-xs md:text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
                     >
-                        <Plus className="mr-2 h-4 w-4" />
-                        New Category
+                        <Plus className="mr-1 sm:mr-2 h-4 w-4 sm:h-3 sm:w-3 md:h-4 md:w-4" />
+                        <span className="hidden sm:inline">New Category</span>
+                        <span className="sm:hidden">Add</span>
                     </Link>
                 </div>
             }
@@ -37,7 +38,7 @@ export default function Index({ categories }) {
                             </p>
                             <Link
                                 href={route("categories.create")}
-                                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                                className="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2.5 sm:px-4 sm:py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
                             >
                                 <Plus className="mr-2 h-4 w-4" />
                                 Create Category

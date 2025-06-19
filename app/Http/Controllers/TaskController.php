@@ -130,10 +130,38 @@ class TaskController extends Controller
             'category_id' => 'nullable|exists:categories,id',
             'priority' => 'required|in:low,medium,high,urgent',
             'due_date' => 'nullable|date',
+            'start_time' => 'nullable|date_format:H:i',
+            'end_time' => 'nullable|date_format:H:i',
+            'is_all_day' => 'boolean',
             'is_recurring' => 'boolean',
             'recurrence_type' => 'nullable|in:daily,weekly,monthly,yearly',
             'recurrence_config' => 'nullable|array',
         ]);
+
+        // Set is_all_day to true if no times are provided
+        if (!isset($validated['is_all_day'])) {
+            $validated['is_all_day'] = empty($validated['start_time']) && empty($validated['end_time']);
+        }
+
+        // Clear times if is_all_day is true
+        if ($validated['is_all_day']) {
+            $validated['start_time'] = null;
+            $validated['end_time'] = null;
+        } else {
+            // For timed tasks, require both start and end time
+            if (empty($validated['start_time']) || empty($validated['end_time'])) {
+                return redirect()->back()->withErrors([
+                    'time' => 'Both start time and end time are required for timed tasks.'
+                ])->withInput();
+            }
+
+            // Validate that start time is before end time
+            if ($validated['start_time'] >= $validated['end_time']) {
+                return redirect()->back()->withErrors([
+                    'time' => 'Start time must be before end time.'
+                ])->withInput();
+            }
+        }
 
         $validated['user_id'] = Auth::id();
         $validated['position'] = Task::where('user_id', Auth::id())->max('position') + 1;
@@ -171,10 +199,38 @@ class TaskController extends Controller
             'priority' => 'required|in:low,medium,high,urgent',
             'status' => 'required|in:pending,in_progress,completed,cancelled',
             'due_date' => 'nullable|date',
+            'start_time' => 'nullable|date_format:H:i',
+            'end_time' => 'nullable|date_format:H:i',
+            'is_all_day' => 'boolean',
             'is_recurring' => 'boolean',
             'recurrence_type' => 'nullable|in:daily,weekly,monthly,yearly',
             'recurrence_config' => 'nullable|array',
         ]);
+
+        // Set is_all_day to true if no times are provided
+        if (!isset($validated['is_all_day'])) {
+            $validated['is_all_day'] = empty($validated['start_time']) && empty($validated['end_time']);
+        }
+
+        // Clear times if is_all_day is true
+        if ($validated['is_all_day']) {
+            $validated['start_time'] = null;
+            $validated['end_time'] = null;
+        } else {
+            // For timed tasks, require both start and end time
+            if (empty($validated['start_time']) || empty($validated['end_time'])) {
+                return redirect()->back()->withErrors([
+                    'time' => 'Both start time and end time are required for timed tasks.'
+                ])->withInput();
+            }
+
+            // Validate that start time is before end time
+            if ($validated['start_time'] >= $validated['end_time']) {
+                return redirect()->back()->withErrors([
+                    'time' => 'Start time must be before end time.'
+                ])->withInput();
+            }
+        }
 
         $oldValues = $task->toArray();
 

@@ -26,7 +26,7 @@ class CalendarController extends Controller
         $tasks = $user->tasks()
             ->with(['category', 'subtasks'])
             ->whereBetween('due_date', [$startOfMonth, $endOfMonth])
-            ->orderBy('due_date')
+            ->orderByDateTime()
             ->get()
             ->groupBy(function ($task) {
                 return Carbon::parse($task->due_date)->format('Y-m-d');
@@ -38,7 +38,7 @@ class CalendarController extends Controller
             ->where('status', 'pending')
             ->where('due_date', '>=', now())
             ->where('due_date', '<=', now()->addDays(7))
-            ->orderBy('due_date')
+            ->orderByDateTime()
             ->get();
 
         // Get overdue tasks
@@ -46,7 +46,7 @@ class CalendarController extends Controller
             ->with(['category', 'subtasks'])
             ->where('status', 'pending')
             ->where('due_date', '<', now())
-            ->orderBy('due_date')
+            ->orderByDateTime()
             ->get();
 
         return Inertia::render('Calendar/Index', [

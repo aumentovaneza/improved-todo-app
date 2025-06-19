@@ -30,14 +30,14 @@ class DashboardController extends Controller
         // Get today's tasks (in user's timezone)
         $todayTasks = Task::with(['category', 'subtasks'])
             ->dueTodayForUser($user)
-            ->orderBy('priority', 'desc')
+            ->orderByDateTime()
             ->take(5)
             ->get();
 
         // Get overdue tasks (tasks due before today in user's timezone)
         $overdueTasks = Task::with(['category', 'subtasks'])
             ->overdueForUser($user)
-            ->orderBy('due_date', 'asc')
+            ->orderByDateTime()
             ->take(5)
             ->get();
 
@@ -47,7 +47,7 @@ class DashboardController extends Controller
             ->where('due_date', '>=', $userTomorrow)
             ->where('due_date', '<', $userToday->copy()->addDays(8))
             ->where('status', '!=', 'completed')
-            ->orderBy('due_date', 'asc')
+            ->orderByDateTime()
             ->take(5)
             ->get();
 

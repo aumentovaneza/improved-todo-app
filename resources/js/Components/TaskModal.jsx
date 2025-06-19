@@ -14,6 +14,9 @@ export default function TaskModal({ show, onClose, onSubmitting }) {
         category_id: "",
         priority: "medium",
         due_date: "",
+        start_time: "",
+        end_time: "",
+        is_all_day: true,
     };
 
     const { data, setData, post, processing, errors, reset, clearErrors } =
@@ -29,6 +32,9 @@ export default function TaskModal({ show, onClose, onSubmitting }) {
                 category_id: "",
                 priority: "medium",
                 due_date: "",
+                start_time: "",
+                end_time: "",
+                is_all_day: true,
             });
             clearErrors();
             setIsSubmitting(false);
@@ -55,6 +61,9 @@ export default function TaskModal({ show, onClose, onSubmitting }) {
                     category_id: "",
                     priority: "medium",
                     due_date: "",
+                    start_time: "",
+                    end_time: "",
+                    is_all_day: true,
                 });
                 clearErrors();
                 setIsSubmitting(false);
@@ -78,6 +87,9 @@ export default function TaskModal({ show, onClose, onSubmitting }) {
             category_id: "",
             priority: "medium",
             due_date: "",
+            start_time: "",
+            end_time: "",
+            is_all_day: true,
         });
         clearErrors();
         setIsSubmitting(false);
@@ -183,7 +195,97 @@ export default function TaskModal({ show, onClose, onSubmitting }) {
                                     setData("due_date", e.target.value)
                                 }
                             />
+                            {errors.due_date && (
+                                <div className="text-red-500 text-xs mt-1">
+                                    {errors.due_date}
+                                </div>
+                            )}
                         </div>
+
+                        {/* Time Section */}
+                        {data.due_date && (
+                            <div className="space-y-3">
+                                <div className="flex items-center space-x-2">
+                                    <input
+                                        type="checkbox"
+                                        id="is_all_day"
+                                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                        checked={data.is_all_day}
+                                        onChange={(e) => {
+                                            setData(
+                                                "is_all_day",
+                                                e.target.checked
+                                            );
+                                            if (e.target.checked) {
+                                                setData("start_time", "");
+                                                setData("end_time", "");
+                                            }
+                                        }}
+                                    />
+                                    <label
+                                        htmlFor="is_all_day"
+                                        className="text-sm font-medium"
+                                    >
+                                        All day task
+                                    </label>
+                                </div>
+
+                                {!data.is_all_day && (
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1">
+                                                Start Time
+                                            </label>
+                                            <input
+                                                type="time"
+                                                className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                                value={data.start_time}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        "start_time",
+                                                        e.target.value
+                                                    )
+                                                }
+                                                required={!data.is_all_day}
+                                            />
+                                            {errors.start_time && (
+                                                <div className="text-red-500 text-xs mt-1">
+                                                    {errors.start_time}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1">
+                                                End Time
+                                            </label>
+                                            <input
+                                                type="time"
+                                                className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                                value={data.end_time}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        "end_time",
+                                                        e.target.value
+                                                    )
+                                                }
+                                                required={!data.is_all_day}
+                                            />
+                                            {errors.end_time && (
+                                                <div className="text-red-500 text-xs mt-1">
+                                                    {errors.end_time}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {errors.time && (
+                                    <div className="text-red-500 text-xs mt-1">
+                                        {errors.time}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div className="mt-6 flex justify-end gap-3">

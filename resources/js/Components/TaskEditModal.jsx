@@ -13,6 +13,9 @@ export default function TaskEditModal({ show, onClose, task, categories }) {
         priority: "medium",
         status: "pending",
         due_date: "",
+        start_time: "",
+        end_time: "",
+        is_all_day: true,
         is_recurring: false,
         recurrence_type: "",
         recurrence_config: {},
@@ -26,7 +29,22 @@ export default function TaskEditModal({ show, onClose, task, categories }) {
                 category_id: task.category_id || "",
                 priority: task.priority || "medium",
                 status: task.status || "pending",
-                due_date: task.due_date || "",
+                due_date: task.due_date
+                    ? new Date(task.due_date).toISOString().split("T")[0]
+                    : "",
+                start_time: task.start_time
+                    ? task.start_time.includes("T") ||
+                      task.start_time.includes(" ")
+                        ? new Date(task.start_time).toTimeString().slice(0, 5)
+                        : task.start_time.slice(0, 5)
+                    : "",
+                end_time: task.end_time
+                    ? task.end_time.includes("T") || task.end_time.includes(" ")
+                        ? new Date(task.end_time).toTimeString().slice(0, 5)
+                        : task.end_time.slice(0, 5)
+                    : "",
+                is_all_day:
+                    task.is_all_day !== undefined ? task.is_all_day : true,
                 is_recurring: task.is_recurring || false,
                 recurrence_type: task.recurrence_type || "",
                 recurrence_config: task.recurrence_config || {},
@@ -178,7 +196,97 @@ export default function TaskEditModal({ show, onClose, task, categories }) {
                                         setData("due_date", e.target.value)
                                     }
                                 />
+                                {errors.due_date && (
+                                    <div className="text-red-500 text-xs mt-1">
+                                        {errors.due_date}
+                                    </div>
+                                )}
                             </div>
+
+                            {/* Time Section */}
+                            {data.due_date && (
+                                <div className="space-y-3">
+                                    <div className="flex items-center space-x-2">
+                                        <input
+                                            type="checkbox"
+                                            id="is_all_day_edit"
+                                            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                            checked={data.is_all_day}
+                                            onChange={(e) => {
+                                                setData(
+                                                    "is_all_day",
+                                                    e.target.checked
+                                                );
+                                                if (e.target.checked) {
+                                                    setData("start_time", "");
+                                                    setData("end_time", "");
+                                                }
+                                            }}
+                                        />
+                                        <label
+                                            htmlFor="is_all_day_edit"
+                                            className="text-sm font-medium"
+                                        >
+                                            All day task
+                                        </label>
+                                    </div>
+
+                                    {!data.is_all_day && (
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1">
+                                                    Start Time
+                                                </label>
+                                                <input
+                                                    type="time"
+                                                    className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                                    value={data.start_time}
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            "start_time",
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    required={!data.is_all_day}
+                                                />
+                                                {errors.start_time && (
+                                                    <div className="text-red-500 text-xs mt-1">
+                                                        {errors.start_time}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1">
+                                                    End Time
+                                                </label>
+                                                <input
+                                                    type="time"
+                                                    className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                                    value={data.end_time}
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            "end_time",
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    required={!data.is_all_day}
+                                                />
+                                                {errors.end_time && (
+                                                    <div className="text-red-500 text-xs mt-1">
+                                                        {errors.end_time}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {errors.time && (
+                                        <div className="text-red-500 text-xs mt-1">
+                                            {errors.time}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             <div className="flex items-center">
                                 <input

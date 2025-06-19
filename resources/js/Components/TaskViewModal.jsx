@@ -91,27 +91,110 @@ export default function TaskViewModal({ show, onClose, task }) {
                             </span>
                         </div>
 
-                        {/* Due Date */}
+                        {/* Due Date and Time */}
                         <div>
                             <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                Due Date
+                                Due Date & Time
                             </h3>
                             {task.due_date ? (
                                 <div
-                                    className={`flex items-center space-x-1 ${
+                                    className={`flex flex-col space-y-1 ${
                                         isOverdue(task.due_date)
                                             ? "text-red-600 dark:text-red-400"
                                             : "text-gray-900 dark:text-gray-100"
                                     }`}
                                 >
-                                    <Calendar className="h-4 w-4" />
-                                    <span>
-                                        {isOverdue(task.due_date)
-                                            ? "Overdue"
-                                            : new Date(
-                                                  task.due_date
-                                              ).toLocaleDateString()}
-                                    </span>
+                                    <div className="flex items-center space-x-1">
+                                        <Calendar className="h-4 w-4" />
+                                        <span>
+                                            {isOverdue(task.due_date)
+                                                ? "Overdue - "
+                                                : ""}
+                                            {new Date(
+                                                task.due_date
+                                            ).toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center space-x-1 ml-5">
+                                        <Clock className="h-3 w-3" />
+                                        <span className="text-sm">
+                                            {task.is_all_day ||
+                                            (!task.start_time && !task.end_time)
+                                                ? "All day"
+                                                : (() => {
+                                                      const formatTime = (
+                                                          timeStr
+                                                      ) => {
+                                                          if (!timeStr)
+                                                              return "";
+                                                          // Handle both time formats (HH:MM and full datetime)
+                                                          if (
+                                                              timeStr.includes(
+                                                                  "T"
+                                                              ) ||
+                                                              timeStr.includes(
+                                                                  " "
+                                                              )
+                                                          ) {
+                                                              const date =
+                                                                  new Date(
+                                                                      timeStr
+                                                                  );
+                                                              return date.toLocaleTimeString(
+                                                                  [],
+                                                                  {
+                                                                      hour: "numeric",
+                                                                      minute: "2-digit",
+                                                                      hour12: true,
+                                                                  }
+                                                              );
+                                                          }
+                                                          // Just time string like "14:30:00" or "14:30"
+                                                          const [
+                                                              hours,
+                                                              minutes,
+                                                          ] =
+                                                              timeStr.split(
+                                                                  ":"
+                                                              );
+                                                          const hour =
+                                                              parseInt(hours);
+                                                          const ampm =
+                                                              hour >= 12
+                                                                  ? "PM"
+                                                                  : "AM";
+                                                          const displayHour =
+                                                              hour % 12 || 12;
+                                                          return `${displayHour}:${minutes} ${ampm}`;
+                                                      };
+
+                                                      const startTime =
+                                                          task.start_time
+                                                              ? formatTime(
+                                                                    task.start_time
+                                                                )
+                                                              : "";
+                                                      const endTime =
+                                                          task.end_time
+                                                              ? formatTime(
+                                                                    task.end_time
+                                                                )
+                                                              : "";
+
+                                                      if (
+                                                          startTime &&
+                                                          endTime
+                                                      ) {
+                                                          return `${startTime} - ${endTime}`;
+                                                      } else if (startTime) {
+                                                          return `From ${startTime}`;
+                                                      } else if (endTime) {
+                                                          return `Until ${endTime}`;
+                                                      }
+                                                      return "All day";
+                                                  })()}
+                                        </span>
+                                    </div>
                                 </div>
                             ) : (
                                 <span className="text-gray-500 dark:text-gray-400">

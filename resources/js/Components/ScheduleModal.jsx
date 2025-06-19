@@ -66,13 +66,73 @@ export default function ScheduleModal({
             ...upcomingTasks,
         ];
 
-        return allTasks.filter((task) => {
+        const tasksForDate = allTasks.filter((task) => {
             if (!task.due_date) return false;
             const taskDate = new Date(task.due_date)
                 .toISOString()
                 .split("T")[0];
             return taskDate === date;
         });
+
+        // Sort tasks by time - all-day tasks first, then by time
+        return tasksForDate.sort((a, b) => {
+            // All-day tasks come first
+            if (a.is_all_day && !b.is_all_day) return -1;
+            if (!a.is_all_day && b.is_all_day) return 1;
+
+            // If both are all-day, sort by priority
+            if (a.is_all_day && b.is_all_day) {
+                const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
+                return priorityOrder[b.priority] - priorityOrder[a.priority];
+            }
+
+            // If both have times, sort by start time (or end time if no start time)
+            const aTime = a.start_time || a.end_time;
+            const bTime = b.start_time || b.end_time;
+            if (aTime && bTime) {
+                return aTime.localeCompare(bTime);
+            }
+
+            return 0;
+        });
+    };
+
+    const formatTaskTime = (task) => {
+        if (task.is_all_day || (!task.start_time && !task.end_time)) {
+            return "All day";
+        }
+
+        const formatTime = (timeStr) => {
+            if (!timeStr) return "";
+            // Handle both time formats (HH:MM and full datetime)
+            if (timeStr.includes("T") || timeStr.includes(" ")) {
+                const date = new Date(timeStr);
+                return date.toLocaleTimeString([], {
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                });
+            }
+            // Just time string like "14:30:00" or "14:30"
+            const [hours, minutes] = timeStr.split(":");
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? "PM" : "AM";
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        };
+
+        const startTime = task.start_time ? formatTime(task.start_time) : "";
+        const endTime = task.end_time ? formatTime(task.end_time) : "";
+
+        if (startTime && endTime) {
+            return `${startTime} - ${endTime}`;
+        } else if (startTime) {
+            return `From ${startTime}`;
+        } else if (endTime) {
+            return `Until ${endTime}`;
+        }
+
+        return "All day";
     };
 
     const getNext7Days = () => {
@@ -186,15 +246,22 @@ export default function ScheduleModal({
                                                                 <p className="text-xs font-medium text-adaptive-primary truncate">
                                                                     {task.title}
                                                                 </p>
-                                                                <span
-                                                                    className={`inline-flex items-center px-1 py-0.5 rounded text-xs font-medium ${getPriorityColor(
-                                                                        task.priority
-                                                                    )}`}
-                                                                >
-                                                                    {
-                                                                        task.priority
-                                                                    }
-                                                                </span>
+                                                                <div className="flex items-center space-x-1 mt-1">
+                                                                    <span
+                                                                        className={`inline-flex items-center px-1 py-0.5 rounded text-xs font-medium ${getPriorityColor(
+                                                                            task.priority
+                                                                        )}`}
+                                                                    >
+                                                                        {
+                                                                            task.priority
+                                                                        }
+                                                                    </span>
+                                                                    <span className="text-xs text-adaptive-muted">
+                                                                        {formatTaskTime(
+                                                                            task
+                                                                        )}
+                                                                    </span>
+                                                                </div>
                                                             </div>
                                                             <button
                                                                 onClick={() => {
@@ -271,9 +338,18 @@ export default function ScheduleModal({
                                                                 )}
                                                             </button>
                                                             <div className="flex-1 min-w-0">
-                                                                <h4 className="text-sm font-medium text-adaptive-primary">
-                                                                    {task.title}
-                                                                </h4>
+                                                                <div className="flex items-center justify-between">
+                                                                    <h4 className="text-sm font-medium text-adaptive-primary">
+                                                                        {
+                                                                            task.title
+                                                                        }
+                                                                    </h4>
+                                                                    <span className="text-sm font-medium text-primary-600 dark:text-primary-400">
+                                                                        {formatTaskTime(
+                                                                            task
+                                                                        )}
+                                                                    </span>
+                                                                </div>
                                                                 {task.description && (
                                                                     <p className="text-xs text-adaptive-muted mt-1">
                                                                         {

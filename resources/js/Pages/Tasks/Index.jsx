@@ -542,7 +542,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
 
                                                                                     {/* Task Meta Info */}
                                                                                     <div className="flex flex-wrap items-center gap-2 mt-2">
-                                                                                        {/* Due Date */}
+                                                                                        {/* Due Date and Time */}
                                                                                         {task.due_date && (
                                                                                             <div
                                                                                                 className={`flex items-center space-x-1 ${
@@ -558,6 +558,98 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                                                                                     {new Date(
                                                                                                         task.due_date
                                                                                                     ).toLocaleDateString()}
+                                                                                                    {!task.is_all_day &&
+                                                                                                        (task.start_time ||
+                                                                                                            task.end_time) && (
+                                                                                                            <span className="ml-1 font-medium">
+                                                                                                                {(() => {
+                                                                                                                    const formatTime =
+                                                                                                                        (
+                                                                                                                            timeStr
+                                                                                                                        ) => {
+                                                                                                                            if (
+                                                                                                                                !timeStr
+                                                                                                                            )
+                                                                                                                                return "";
+                                                                                                                            // Handle both time formats (HH:MM and full datetime)
+                                                                                                                            if (
+                                                                                                                                timeStr.includes(
+                                                                                                                                    "T"
+                                                                                                                                ) ||
+                                                                                                                                timeStr.includes(
+                                                                                                                                    " "
+                                                                                                                                )
+                                                                                                                            ) {
+                                                                                                                                const date =
+                                                                                                                                    new Date(
+                                                                                                                                        timeStr
+                                                                                                                                    );
+                                                                                                                                return date.toLocaleTimeString(
+                                                                                                                                    [],
+                                                                                                                                    {
+                                                                                                                                        hour: "numeric",
+                                                                                                                                        minute: "2-digit",
+                                                                                                                                        hour12: true,
+                                                                                                                                    }
+                                                                                                                                );
+                                                                                                                            }
+                                                                                                                            // Just time string like "14:30:00" or "14:30"
+                                                                                                                            const [
+                                                                                                                                hours,
+                                                                                                                                minutes,
+                                                                                                                            ] =
+                                                                                                                                timeStr.split(
+                                                                                                                                    ":"
+                                                                                                                                );
+                                                                                                                            const hour =
+                                                                                                                                parseInt(
+                                                                                                                                    hours
+                                                                                                                                );
+                                                                                                                            const ampm =
+                                                                                                                                hour >=
+                                                                                                                                12
+                                                                                                                                    ? "PM"
+                                                                                                                                    : "AM";
+                                                                                                                            const displayHour =
+                                                                                                                                hour %
+                                                                                                                                    12 ||
+                                                                                                                                12;
+                                                                                                                            return `${displayHour}:${minutes} ${ampm}`;
+                                                                                                                        };
+
+                                                                                                                    const startTime =
+                                                                                                                        formatTime(
+                                                                                                                            task.start_time
+                                                                                                                        );
+                                                                                                                    const endTime =
+                                                                                                                        formatTime(
+                                                                                                                            task.end_time
+                                                                                                                        );
+
+                                                                                                                    if (
+                                                                                                                        startTime &&
+                                                                                                                        endTime
+                                                                                                                    ) {
+                                                                                                                        return `${startTime} - ${endTime}`;
+                                                                                                                    } else if (
+                                                                                                                        startTime
+                                                                                                                    ) {
+                                                                                                                        return `From ${startTime}`;
+                                                                                                                    } else if (
+                                                                                                                        endTime
+                                                                                                                    ) {
+                                                                                                                        return `Until ${endTime}`;
+                                                                                                                    }
+                                                                                                                    return "";
+                                                                                                                })()}
+                                                                                                            </span>
+                                                                                                        )}
+                                                                                                    {task.is_all_day && (
+                                                                                                        <span className="ml-1 text-gray-400">
+                                                                                                            (All
+                                                                                                            day)
+                                                                                                        </span>
+                                                                                                    )}
                                                                                                 </span>
                                                                                             </div>
                                                                                         )}

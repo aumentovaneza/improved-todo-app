@@ -15,6 +15,8 @@ class DashboardController extends Controller
     public function index(): Response
     {
         $user = Auth::user();
+        $userToday = $user->todayInUserTimezone();
+        $userTomorrow = $userToday->copy()->addDay();
 
         // Get current tasks (pending and in progress)
         $currentTasks = Task::with(['category', 'subtasks'])
@@ -25,42 +27,41 @@ class DashboardController extends Controller
             ->take(3)
             ->get();
 
-        // Get today's tasks
+        // Get today's tasks (in user's timezone)
         $todayTasks = Task::with(['category', 'subtasks'])
-            ->where('user_id', $user->id)
-            ->whereDate('due_date', Carbon::today())
-            ->orderBy('priority', 'desc')
+            ->dueTodayForUser($user)
+            ->orderByDateTime()
             ->take(5)
             ->get();
 
-        // Get overdue tasks
+        // Get overdue tasks (tasks due before today in user's timezone)
         $overdueTasks = Task::with(['category', 'subtasks'])
-            ->where('user_id', $user->id)
-            ->where('due_date', '<', Carbon::now())
-            ->where('status', '!=', 'completed')
-            ->orderBy('due_date', 'asc')
+            ->overdueForUser($user)
+            ->orderByDateTime()
             ->take(5)
             ->get();
 
-        // Get upcoming tasks (next 7 days)
+        // Get upcoming tasks (next 7 days in user's timezone)
         $upcomingTasks = Task::with(['category', 'subtasks'])
             ->where('user_id', $user->id)
-            ->whereBetween('due_date', [Carbon::tomorrow(), Carbon::now()->addDays(7)])
+            ->where('due_date', '>=', $userTomorrow)
+            ->where('due_date', '<', $userToday->copy()->addDays(8))
             ->where('status', '!=', 'completed')
-            ->orderBy('due_date', 'asc')
+            ->orderByDateTime()
             ->take(5)
             ->get();
 
         // Get quick stats
+        $totalTasks = Task::where('user_id', $user->id)->count();
+        $completedTasks = Task::where('user_id', $user->id)->where('status', 'completed')->count();
+
         $stats = [
-            'total_tasks' => Task::where('user_id', $user->id)->count(),
-            'completed_tasks' => Task::where('user_id', $user->id)->where('status', 'completed')->count(),
+            'total_tasks' => $totalTasks,
+            'completed_tasks' => $completedTasks,
             'pending_tasks' => Task::where('user_id', $user->id)->where('status', 'pending')->count(),
             'overdue_tasks' => $overdueTasks->count(),
             'today_tasks' => $todayTasks->count(),
-            'completion_rate' => Task::where('user_id', $user->id)->count() > 0
-                ? round((Task::where('user_id', $user->id)->where('status', 'completed')->count() / Task::where('user_id', $user->id)->count()) * 100, 1)
-                : 0,
+            'completion_rate' => $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0,
         ];
 
         // Get categories for quick task creation

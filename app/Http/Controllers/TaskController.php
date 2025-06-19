@@ -136,7 +136,29 @@ class TaskController extends Controller
             'is_recurring' => 'boolean',
             'recurrence_type' => 'nullable|in:daily,weekly,monthly,yearly',
             'recurrence_config' => 'nullable|array',
+            'recurring_until' => 'nullable|date',
         ]);
+
+        // Validate recurring task logic
+        if ($validated['is_recurring']) {
+            if (empty($validated['recurring_until'])) {
+                return redirect()->back()->withErrors([
+                    'recurring_until' => 'Recurring until date is required for recurring tasks.'
+                ])->withInput();
+            }
+            if (empty($validated['recurrence_type'])) {
+                return redirect()->back()->withErrors([
+                    'recurrence_type' => 'Recurrence type is required for recurring tasks.'
+                ])->withInput();
+            }
+            // Clear due_date for recurring tasks
+            $validated['due_date'] = null;
+        } else {
+            // Clear recurring fields for non-recurring tasks
+            $validated['recurring_until'] = null;
+            $validated['recurrence_type'] = null;
+            $validated['recurrence_config'] = null;
+        }
 
         // Set is_all_day to true if no times are provided
         if (!isset($validated['is_all_day'])) {
@@ -205,7 +227,29 @@ class TaskController extends Controller
             'is_recurring' => 'boolean',
             'recurrence_type' => 'nullable|in:daily,weekly,monthly,yearly',
             'recurrence_config' => 'nullable|array',
+            'recurring_until' => 'nullable|date',
         ]);
+
+        // Validate recurring task logic
+        if ($validated['is_recurring']) {
+            if (empty($validated['recurring_until'])) {
+                return redirect()->back()->withErrors([
+                    'recurring_until' => 'Recurring until date is required for recurring tasks.'
+                ])->withInput();
+            }
+            if (empty($validated['recurrence_type'])) {
+                return redirect()->back()->withErrors([
+                    'recurrence_type' => 'Recurrence type is required for recurring tasks.'
+                ])->withInput();
+            }
+            // Clear due_date for recurring tasks
+            $validated['due_date'] = null;
+        } else {
+            // Clear recurring fields for non-recurring tasks
+            $validated['recurring_until'] = null;
+            $validated['recurrence_type'] = null;
+            $validated['recurrence_config'] = null;
+        }
 
         // Set is_all_day to true if no times are provided
         if (!isset($validated['is_all_day'])) {

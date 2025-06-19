@@ -23,28 +23,36 @@ class CalendarController extends Controller
         $startOfMonth = $date->copy()->startOfMonth();
         $endOfMonth = $date->copy()->endOfMonth();
 
-        $tasks = $user->tasks()
+        // Get all tasks (both regular and recurring)
+        $allTasks = $user->tasks()
             ->with(['category', 'subtasks'])
-            ->whereBetween('due_date', [$startOfMonth, $endOfMonth])
-            ->orderByDateTime()
-            ->get()
-            ->groupBy(function ($task) {
-                return Carbon::parse($task->due_date)->format('Y-m-d');
-            });
-
-        // Get upcoming tasks (next 7 days)
-        $upcomingTasks = $user->tasks()
-            ->with(['category', 'subtasks'])
-            ->where('status', 'pending')
-            ->where('due_date', '>=', now())
-            ->where('due_date', '<=', now()->addDays(7))
-            ->orderByDateTime()
             ->get();
 
-        // Get overdue tasks
+        // Generate task occurrences for the month
+        $taskOccurrences = collect();
+        foreach ($allTasks as $task) {
+            $occurrences = $task->getOccurrencesInRange($startOfMonth, $endOfMonth);
+            $taskOccurrences = $taskOccurrences->merge($occurrences);
+        }
+
+        // Group tasks by date
+        $tasks = $taskOccurrences->groupBy(function ($task) {
+            return Carbon::parse($task->due_date)->format('Y-m-d');
+        });
+
+        // Get upcoming tasks (next 7 days) - both regular and recurring
+        $upcomingTaskOccurrences = collect();
+        foreach ($allTasks as $task) {
+            $occurrences = $task->getOccurrencesInRange(now(), now()->addDays(7));
+            $upcomingTaskOccurrences = $upcomingTaskOccurrences->merge($occurrences);
+        }
+        $upcomingTasks = $upcomingTaskOccurrences->where('status', 'pending');
+
+        // Get overdue tasks (only regular tasks can be overdue)
         $overdueTasks = $user->tasks()
             ->with(['category', 'subtasks'])
             ->where('status', 'pending')
+            ->where('is_recurring', false)
             ->where('due_date', '<', now())
             ->orderByDateTime()
             ->get();

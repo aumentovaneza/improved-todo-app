@@ -17,7 +17,7 @@ import {
 export default function Welcome({ auth }) {
     return (
         <>
-            <Head title="Welcome to TodoApp - Organize Your Life" />
+            <Head title="Welcome to FocusFlow - — A Smart, ADHD-Friendly To-Do App" />
             <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
                 {/* Navigation */}
                 <nav className="relative px-4 sm:px-6 py-4">
@@ -25,7 +25,7 @@ export default function Welcome({ auth }) {
                         <div className="flex items-center space-x-2">
                             <CheckSquare className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
                             <span className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-                                TodoApp
+                                FocusFlow
                             </span>
                         </div>
 
@@ -49,18 +49,18 @@ export default function Welcome({ auth }) {
                                     >
                                         Sign In
                                     </Link>
-                                        <Link
+                                    <Link
                                         href={route("register")}
                                         className="inline-flex items-center px-3 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm sm:text-base"
-                                        >
+                                    >
                                         Get Started
                                         <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-                                        </Link>
+                                    </Link>
                                 </div>
                             )}
                         </div>
                     </div>
-                            </nav>
+                </nav>
 
                 {/* Hero Section */}
                 <section className="px-4 sm:px-6 py-12 sm:py-20">
@@ -72,10 +72,10 @@ export default function Welcome({ auth }) {
                             </span>
                         </h1>
                         <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 sm:mb-12 max-w-3xl mx-auto px-4">
-                            Stay productive and never miss a deadline. TodoApp
-                            helps you manage tasks, collaborate with teams, and
-                            track your progress with powerful features designed
-                            for modern productivity.
+                            Stay productive and never miss a deadline. helps you
+                            manage tasks, collaborate with teams, and track your
+                            progress with powerful features designed for modern
+                            productivity.
                         </p>
 
                         {!auth.user && (
@@ -93,9 +93,9 @@ export default function Welcome({ auth }) {
                                 >
                                     Sign In
                                 </Link>
-                                    </div>
+                            </div>
                         )}
-                                            </div>
+                    </div>
                 </section>
 
                 {/* Features Section */}
@@ -104,12 +104,12 @@ export default function Welcome({ auth }) {
                         <div className="text-center mb-12 sm:mb-16">
                             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
                                 Everything You Need to Stay Organized
-                                                </h2>
+                            </h2>
                             <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto px-4">
                                 Powerful features designed to help you manage
                                 tasks efficiently and boost your productivity.
-                                                </p>
-                                            </div>
+                            </p>
+                        </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                             {/* Feature 1 */}
@@ -125,13 +125,13 @@ export default function Welcome({ auth }) {
                                     subtasks, due dates, and custom categories.
                                     Drag and drop to reorder your priorities.
                                 </p>
-                                        </div>
+                            </div>
 
                             {/* Feature 2 */}
                             <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 sm:p-8 hover:shadow-lg transition-shadow duration-200">
                                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
                                     <FolderOpen className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 dark:text-green-400" />
-                                    </div>
+                                </div>
                                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
                                     Custom Categories
                                 </h3>
@@ -140,7 +140,7 @@ export default function Welcome({ auth }) {
                                     Create custom workflows that match your
                                     personal or business needs.
                                 </p>
-                                    </div>
+                            </div>
 
                             {/* Feature 3 */}
                             <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 sm:p-8 hover:shadow-lg transition-shadow duration-200">
@@ -154,8 +154,8 @@ export default function Welcome({ auth }) {
                                     Never miss a deadline with smart due date
                                     tracking, overdue alerts, and calendar
                                     integration for better planning.
-                                        </p>
-                                    </div>
+                                </p>
+                            </div>
 
                             {/* Feature 4 */}
                             <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 sm:p-8 hover:shadow-lg transition-shadow duration-200">
@@ -170,7 +170,7 @@ export default function Welcome({ auth }) {
                                     analytics, completion rates, and insights to
                                     optimize your workflow.
                                 </p>
-                                    </div>
+                            </div>
 
                             {/* Feature 5 */}
                             <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 sm:p-8 hover:shadow-lg transition-shadow duration-200">
@@ -184,8 +184,8 @@ export default function Welcome({ auth }) {
                                     Share tasks and collaborate with team
                                     members. Assign tasks, track progress, and
                                     stay synchronized with your team.
-                                        </p>
-                                    </div>
+                                </p>
+                            </div>
 
                             {/* Feature 6 */}
                             <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 sm:p-8 hover:shadow-lg transition-shadow duration-200">
@@ -202,7 +202,7 @@ export default function Welcome({ auth }) {
                                 </p>
                             </div>
                         </div>
-                                    </div>
+                    </div>
                 </section>
 
                 {/* Stats Section */}
@@ -211,12 +211,12 @@ export default function Welcome({ auth }) {
                         <div className="text-center mb-16">
                             <h2 className="text-4xl font-bold text-white mb-4">
                                 Trusted by Productive People
-                                        </h2>
+                            </h2>
                             <p className="text-xl text-blue-100 max-w-2xl mx-auto">
                                 Join thousands of users who have transformed
-                                their productivity with TodoApp.
-                                        </p>
-                                    </div>
+                                their productivity with FocusFlow.
+                            </p>
+                        </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
                             <div>
@@ -283,18 +283,20 @@ export default function Welcome({ auth }) {
                             <div className="flex items-center space-x-2 mb-4 md:mb-0">
                                 <CheckSquare className="h-8 w-8 text-blue-400" />
                                 <span className="text-2xl font-bold">
-                                    TodoApp
+                                    FocusFlow
                                 </span>
                             </div>
 
                             <div className="text-gray-400 text-center md:text-right">
-                                <p>&copy; 2024 TodoApp. All rights reserved.</p>
+                                <p>
+                                    &copy; 2024 FocusFlow. All rights reserved.
+                                </p>
                                 <p className="text-sm mt-1">
                                     Built with Laravel & React
                                 </p>
                             </div>
+                        </div>
                     </div>
-                </div>
                 </footer>
             </div>
         </>

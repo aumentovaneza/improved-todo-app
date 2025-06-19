@@ -149,7 +149,7 @@ export default function TodoLayout({ header, children }) {
                                 <Link href="/" className="flex items-center">
                                     <ApplicationLogo className="h-8 w-auto fill-current text-light-primary dark:text-dark-primary" />
                                     <span className="ml-2 text-lg font-semibold text-light-primary dark:text-dark-primary">
-                                        TodoApp
+                                        FocusFlow
                                     </span>
                                 </Link>
                             </div>
@@ -307,7 +307,7 @@ export default function TodoLayout({ header, children }) {
                     <Link href="/" className="flex items-center">
                         <ApplicationLogo className="h-8 w-auto fill-current text-light-primary dark:text-dark-primary" />
                         <span className="ml-2 text-lg font-semibold text-light-primary dark:text-dark-primary">
-                            TodoApp
+                            FocusFlow
                         </span>
                     </Link>
                 </div>

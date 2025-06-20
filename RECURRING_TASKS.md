@@ -131,6 +131,8 @@ php artisan tasks:reset-recurring
 ## Notes
 
 -   Tasks only reset if they haven't exceeded their `recurring_until` date
+-   **Special case**: Tasks can reset even on the final day of their recurrence period (if `recurring_until` is today)
 -   If a user misses multiple occurrences, the task will reset to the current date
 -   Subtasks are automatically reset when the parent task resets
 -   The system respects user timezones for accurate reset timing
+-   Date comparisons use date strings to avoid timezone-related issues

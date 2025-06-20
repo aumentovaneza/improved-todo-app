@@ -79,13 +79,33 @@ class ResetRecurringTasks extends Command
 
         // Calculate the next occurrence date based on recurrence type
         $nextOccurrenceDate = $this->getNextOccurrenceDate($task, $completedDate);
+        if ($nextOccurrenceDate) {
+            // Ensure the next occurrence date is in the same timezone as userToday
+            $nextOccurrenceDate = $nextOccurrenceDate->setTimezone($userToday->timezone)->startOfDay();
+        }
 
         if (!$nextOccurrenceDate) {
             return false;
         }
 
+        // Check if the next occurrence date is within the recurrence period
+        $recurringUntilDate = $task->recurring_until->startOfDay();
+
+        // If the next occurrence would be after the recurrence end date, don't reset
+        if ($nextOccurrenceDate->greaterThan($recurringUntilDate)) {
+            return false;
+        }
+
         // Check if today matches or is past the next occurrence date
-        return $userToday->greaterThanOrEqualTo($nextOccurrenceDate);
+        // Use date strings for comparison to avoid timezone issues
+        $todayDateString = $userToday->format('Y-m-d');
+        $nextOccurrenceDateString = $nextOccurrenceDate->format('Y-m-d');
+        $recurringUntilDateString = $recurringUntilDate->format('Y-m-d');
+
+        $condition1 = $todayDateString >= $nextOccurrenceDateString;
+        $condition2 = ($todayDateString === $recurringUntilDateString) && ($nextOccurrenceDateString === $todayDateString);
+
+        return $condition1 || $condition2;
     }
 
     /**

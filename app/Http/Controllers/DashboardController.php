@@ -51,7 +51,7 @@ class DashboardController extends Controller
         $currentTasks = Task::with(['category', 'subtasks', 'tags'])
             ->where('user_id', $user->id)
             ->where('is_recurring', false)
-            ->whereIn('status', ['pending', 'in_progress'])
+            ->whereIn('status', ['in_progress'])
             ->orderBy('due_date', 'asc')
             ->orderBy('priority', 'desc')
             ->take(3)

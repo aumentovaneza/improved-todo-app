@@ -370,9 +370,6 @@ export default function Index({ categorizedTasks, categories, filters }) {
         filters.due_date_filter || ""
     );
     const [showFilters, setShowFilters] = useState(false);
-    const [hideCompleted, setHideCompleted] = useState(
-        filters.hide_completed === "1" || filters.hide_completed === true
-    );
     const [showTaskModal, setShowTaskModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
@@ -627,7 +624,6 @@ export default function Index({ categorizedTasks, categories, filters }) {
                 priority: priorityFilter,
                 category_id: categoryFilter,
                 due_date_filter: dueDateFilter,
-                hide_completed: hideCompleted ? "1" : "0",
             },
             {
                 preserveState: true,
@@ -670,7 +666,6 @@ export default function Index({ categorizedTasks, categories, filters }) {
                 priority: newPriorityFilter,
                 category_id: newCategoryFilter,
                 due_date_filter: newDueDateFilter,
-                hide_completed: hideCompleted ? "1" : "0",
             },
             {
                 preserveState: true,
@@ -791,68 +786,6 @@ export default function Index({ categorizedTasks, categories, filters }) {
                         My Tasks
                     </h2>
                     <div className="flex items-center gap-2">
-                        {/* Hide Completed Toggle */}
-                        <button
-                            onClick={() => {
-                                const newHideCompleted = !hideCompleted;
-                                setHideCompleted(newHideCompleted);
-
-                                router.get(
-                                    route("tasks.index"),
-                                    {
-                                        search,
-                                        status: statusFilter,
-                                        priority: priorityFilter,
-                                        category_id: categoryFilter,
-                                        due_date_filter: dueDateFilter,
-                                        hide_completed: newHideCompleted
-                                            ? "1"
-                                            : "0",
-                                    },
-                                    {
-                                        preserveState: true,
-                                        replace: true,
-                                    }
-                                );
-                            }}
-                            className={`inline-flex items-center justify-center px-2 py-1 sm:px-3 sm:py-1.5 rounded-md font-medium text-xs transition-all duration-300 border-2 transform hover:scale-105 active:scale-95 ${
-                                hideCompleted
-                                    ? "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-600 shadow-md hover:bg-orange-200 dark:hover:bg-orange-900/50 hover:shadow-lg ring-2 ring-orange-200 dark:ring-orange-800"
-                                    : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600 shadow-sm hover:bg-green-200 dark:hover:bg-green-900/50 hover:shadow-md ring-2 ring-green-200 dark:ring-green-800"
-                            }`}
-                            title={
-                                hideCompleted
-                                    ? "🔶 ACTIVE: Hiding completed tasks - Click to show them"
-                                    : "🟢 ACTIVE: Showing completed tasks - Click to hide them"
-                            }
-                        >
-                            {hideCompleted ? (
-                                <>
-                                    <Eye className="mr-1 h-3 w-3" />
-                                    <span className="hidden sm:inline">
-                                        Show Completed
-                                    </span>
-                                    <span className="sm:hidden">Show</span>
-                                </>
-                            ) : (
-                                <>
-                                    <CheckCircle className="mr-1 h-3 w-3" />
-                                    <span className="hidden sm:inline">
-                                        Hide Completed
-                                    </span>
-                                    <span className="sm:hidden">Hide</span>
-                                </>
-                            )}
-                            {/* Active indicator dot */}
-                            <div
-                                className={`ml-1 w-2 h-2 rounded-full transition-colors ${
-                                    hideCompleted
-                                        ? "bg-orange-500 dark:bg-orange-400"
-                                        : "bg-green-500 dark:bg-green-400"
-                                }`}
-                            />
-                        </button>
-
                         <button
                             onClick={() => setShowTaskModal(true)}
                             disabled={isTaskSubmitting}
@@ -977,7 +910,6 @@ export default function Index({ categorizedTasks, categories, filters }) {
                 <div className="space-y-6">
                     {filteredCategorizedTaskList.filter((group) => {
                         // Show empty categories unless there are active filters (search, status, priority, category, due date)
-                        // but always show categories when just hiding completed tasks
                         const hasActiveFilters =
                             search ||
                             statusFilter ||
@@ -1002,8 +934,6 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                 categoryFilter ||
                                 dueDateFilter
                                     ? "Try adjusting your filters or search terms."
-                                    : hideCompleted
-                                    ? "All tasks are completed! Toggle 'Show Completed' to see them, or create a new task."
                                     : "Get started by creating your first task."}
                             </p>
                             {!search &&

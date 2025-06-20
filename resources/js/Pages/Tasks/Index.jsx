@@ -370,7 +370,9 @@ export default function Index({ categorizedTasks, categories, filters }) {
         filters.due_date_filter || ""
     );
     const [showFilters, setShowFilters] = useState(false);
-    const [hideCompleted, setHideCompleted] = useState(false);
+    const [hideCompleted, setHideCompleted] = useState(
+        filters.hide_completed === "1" || filters.hide_completed === true
+    );
     const [showTaskModal, setShowTaskModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
@@ -481,20 +483,8 @@ export default function Index({ categorizedTasks, categories, filters }) {
         })
     );
 
-    // Filter tasks based on hideCompleted setting
-    const filteredCategorizedTaskList = categorizedTaskList.map((group) => ({
-        ...group,
-        tasks: {
-            ...group.tasks,
-            data: hideCompleted
-                ? group.tasks.data.filter((task) => task.status !== "completed")
-                : group.tasks.data,
-            total: hideCompleted
-                ? group.tasks.data.filter((task) => task.status !== "completed")
-                      .length
-                : group.tasks.total,
-        },
-    }));
+    // No need for client-side filtering since it's handled on the server
+    const filteredCategorizedTaskList = categorizedTaskList;
 
     useEffect(() => {
         setCategorizedTaskList(categorizedTasks || []);
@@ -637,6 +627,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
                 priority: priorityFilter,
                 category_id: categoryFilter,
                 due_date_filter: dueDateFilter,
+                hide_completed: hideCompleted ? "1" : "0",
             },
             {
                 preserveState: true,
@@ -679,6 +670,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
                 priority: newPriorityFilter,
                 category_id: newCategoryFilter,
                 due_date_filter: newDueDateFilter,
+                hide_completed: hideCompleted ? "1" : "0",
             },
             {
                 preserveState: true,
@@ -801,7 +793,28 @@ export default function Index({ categorizedTasks, categories, filters }) {
                     <div className="flex items-center gap-2">
                         {/* Hide Completed Toggle */}
                         <button
-                            onClick={() => setHideCompleted(!hideCompleted)}
+                            onClick={() => {
+                                const newHideCompleted = !hideCompleted;
+                                setHideCompleted(newHideCompleted);
+
+                                router.get(
+                                    route("tasks.index"),
+                                    {
+                                        search,
+                                        status: statusFilter,
+                                        priority: priorityFilter,
+                                        category_id: categoryFilter,
+                                        due_date_filter: dueDateFilter,
+                                        hide_completed: newHideCompleted
+                                            ? "1"
+                                            : "0",
+                                    },
+                                    {
+                                        preserveState: true,
+                                        replace: true,
+                                    }
+                                );
+                            }}
                             className={`inline-flex items-center justify-center px-2 py-1 sm:px-3 sm:py-1.5 rounded-md font-medium text-xs transition-all duration-300 border-2 transform hover:scale-105 active:scale-95 ${
                                 hideCompleted
                                     ? "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-600 shadow-md hover:bg-orange-200 dark:hover:bg-orange-900/50 hover:shadow-lg ring-2 ring-orange-200 dark:ring-orange-800"

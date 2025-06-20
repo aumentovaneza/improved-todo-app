@@ -2,6 +2,7 @@ import ApplicationLogo from "@/Components/ApplicationLogo";
 import Dropdown from "@/Components/Dropdown";
 import NavLink from "@/Components/NavLink";
 import ResponsiveNavLink from "@/Components/ResponsiveNavLink";
+import { FloatingPomodoroWidget, FocusMode } from "@/Components/Pomodoro";
 import { Link, usePage } from "@inertiajs/react";
 import { useState } from "react";
 
@@ -195,6 +196,10 @@ export default function AuthenticatedLayout({ header, children }) {
             )}
 
             <main>{children}</main>
+
+            {/* Pomodoro Components */}
+            <FloatingPomodoroWidget />
+            <FocusMode />
         </div>
     );
 }

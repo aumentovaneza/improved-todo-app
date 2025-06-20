@@ -39,6 +39,8 @@ function SortableSubtask({
     onSaveEdit,
     onCancelEdit,
     onDelete,
+    isLoading = false,
+    isDeleting = false,
 }) {
     const {
         attributes,
@@ -49,7 +51,7 @@ function SortableSubtask({
         isDragging,
     } = useSortable({
         id: subtask.id.toString(),
-        disabled: !canEdit,
+        disabled: !canEdit || isLoading || isDeleting,
     });
 
     const style = {
@@ -65,6 +67,8 @@ function SortableSubtask({
             className={`flex items-center space-x-3 p-2 rounded-lg transition-colors ${
                 isDragging
                     ? "bg-gray-100 dark:bg-gray-600"
+                    : isDeleting
+                    ? "bg-red-50 dark:bg-red-900/20 opacity-50"
                     : "bg-gray-50 dark:bg-gray-700"
             }`}
         >
@@ -77,7 +81,12 @@ function SortableSubtask({
             <button
                 type="button"
                 onClick={() => onToggle(subtask)}
-                className="flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
+                disabled={isLoading}
+                className={`flex-shrink-0 transition-transform ${
+                    isLoading
+                        ? "cursor-not-allowed opacity-50"
+                        : "cursor-pointer hover:scale-110"
+                }`}
             >
                 {subtask.is_completed ? (
                     <Check className="h-4 w-4 text-green-500 bg-green-100 dark:bg-green-900 rounded-full p-0.5" />
@@ -132,14 +141,24 @@ function SortableSubtask({
                     <button
                         type="button"
                         onClick={() => onStartEdit(subtask)}
-                        className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                        disabled={isLoading || isDeleting}
+                        className={`p-1 ${
+                            isLoading || isDeleting
+                                ? "text-gray-300 cursor-not-allowed"
+                                : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                        }`}
                     >
                         <Edit className="h-3 w-3" />
                     </button>
                     <button
                         type="button"
                         onClick={() => onDelete(subtask)}
-                        className="p-1 text-red-400 hover:text-red-600 dark:hover:text-red-300"
+                        disabled={isLoading || isDeleting}
+                        className={`p-1 ${
+                            isLoading || isDeleting
+                                ? "text-gray-300 cursor-not-allowed"
+                                : "text-red-400 hover:text-red-600 dark:hover:text-red-300"
+                        }`}
                     >
                         <Trash2 className="h-3 w-3" />
                     </button>
@@ -166,6 +185,8 @@ export default function SubtaskManager({
     const [isAddingSubtask, setIsAddingSubtask] = useState(false);
     const [editingSubtask, setEditingSubtask] = useState(null);
     const [editTitle, setEditTitle] = useState("");
+    const [loadingSubtasks, setLoadingSubtasks] = useState(new Set());
+    const [deletingSubtasks, setDeletingSubtasks] = useState(new Set());
 
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -222,7 +243,15 @@ export default function SubtaskManager({
     };
 
     const handleToggleSubtask = (subtask) => {
+        // Prevent multiple simultaneous requests for the same subtask
+        if (loadingSubtasks.has(subtask.id)) {
+            return;
+        }
+
         const newStatus = !subtask.is_completed;
+
+        // Add subtask to loading state
+        setLoadingSubtasks((prev) => new Set(prev).add(subtask.id));
 
         setSubtasks(
             subtasks.map((s) =>
@@ -246,6 +275,13 @@ export default function SubtaskManager({
                 preserveState: true,
                 only: [], // Don't reload any data
                 onSuccess: () => {
+                    // Remove subtask from loading state
+                    setLoadingSubtasks((prev) => {
+                        const newSet = new Set(prev);
+                        newSet.delete(subtask.id);
+                        return newSet;
+                    });
+
                     // Update parent component's task data if callback provided
                     if (onTaskUpdate) {
                         onTaskUpdate({
@@ -260,6 +296,13 @@ export default function SubtaskManager({
                     );
                 },
                 onError: () => {
+                    // Remove subtask from loading state
+                    setLoadingSubtasks((prev) => {
+                        const newSet = new Set(prev);
+                        newSet.delete(subtask.id);
+                        return newSet;
+                    });
+
                     setSubtasks(
                         subtasks.map((s) =>
                             s.id === subtask.id
@@ -326,12 +369,27 @@ export default function SubtaskManager({
     const handleDeleteSubtask = (subtask) => {
         if (!confirm("Are you sure you want to delete this subtask?")) return;
 
+        // Prevent multiple delete requests for the same subtask
+        if (deletingSubtasks.has(subtask.id)) {
+            return;
+        }
+
+        // Add subtask to deleting state
+        setDeletingSubtasks((prev) => new Set(prev).add(subtask.id));
+
         // Don't update UI optimistically for delete - wait for server confirmation
         router.delete(route("subtasks.destroy", subtask.id), {
             preserveScroll: true,
             preserveState: true,
             only: [], // Don't reload any data
             onSuccess: () => {
+                // Remove subtask from deleting state
+                setDeletingSubtasks((prev) => {
+                    const newSet = new Set(prev);
+                    newSet.delete(subtask.id);
+                    return newSet;
+                });
+
                 // Update parent component's task data if callback provided
                 if (onTaskUpdate) {
                     onTaskUpdate({
@@ -342,6 +400,12 @@ export default function SubtaskManager({
                 toast.success("Subtask deleted successfully");
             },
             onError: () => {
+                // Remove subtask from deleting state
+                setDeletingSubtasks((prev) => {
+                    const newSet = new Set(prev);
+                    newSet.delete(subtask.id);
+                    return newSet;
+                });
                 toast.error("Failed to delete subtask");
             },
         });
@@ -496,6 +560,10 @@ export default function SubtaskManager({
                                     onSaveEdit={handleEditSubtask}
                                     onCancelEdit={cancelEdit}
                                     onDelete={handleDeleteSubtask}
+                                    isLoading={loadingSubtasks.has(subtask.id)}
+                                    isDeleting={deletingSubtasks.has(
+                                        subtask.id
+                                    )}
                                 />
                             ))}
                         </div>

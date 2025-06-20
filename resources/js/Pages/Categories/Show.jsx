@@ -1,5 +1,5 @@
 import TodoLayout from "@/Layouts/TodoLayout";
-import { Head, Link } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 import { useState } from "react";
 import {
     ArrowLeft,
@@ -8,23 +8,73 @@ import {
     CheckSquare,
     Circle,
     Eye,
+    Clock,
+    AlertTriangle,
+    CheckCircle,
+    Calendar,
 } from "lucide-react";
 import TaskViewModal from "@/Components/TaskViewModal";
+import { toast } from "react-toastify";
 
 export default function Show({ category }) {
     const [showViewModal, setShowViewModal] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
+    const [tasks, setTasks] = useState(category.tasks || []);
+
+    const toggleTaskStatus = (task) => {
+        const newStatus = task.status === "completed" ? "pending" : "completed";
+
+        // Update local state immediately for instant feedback
+        setTasks((prevTasks) =>
+            prevTasks.map((t) =>
+                t.id === task.id
+                    ? {
+                          ...t,
+                          status: newStatus,
+                          completed_at:
+                              newStatus === "completed" ? new Date() : null,
+                      }
+                    : t
+            )
+        );
+
+        router.post(
+            route("tasks.toggle-status", task.id),
+            { status: newStatus },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                only: [],
+                onSuccess: () => {
+                    toast.success(
+                        `Task marked as ${
+                            newStatus === "completed" ? "completed" : "pending"
+                        }`
+                    );
+                },
+                onError: () => {
+                    // Revert the optimistic update
+                    setTasks((prevTasks) =>
+                        prevTasks.map((t) =>
+                            t.id === task.id ? { ...t, status: task.status } : t
+                        )
+                    );
+                    toast.error("Failed to update task status");
+                },
+            }
+        );
+    };
 
     const getStatusIcon = (status) => {
         switch (status) {
             case "completed":
-                return <CheckSquare className="h-4 w-4 text-green-500" />;
+                return <CheckCircle className="h-5 w-5 text-green-500" />;
             case "in_progress":
-                return <Circle className="h-4 w-4 text-blue-500" />;
+                return <Clock className="h-5 w-5 text-blue-500" />;
             case "cancelled":
-                return <Circle className="h-4 w-4 text-red-500" />;
+                return <AlertTriangle className="h-5 w-5 text-red-500" />;
             default:
-                return <Circle className="h-4 w-4 text-gray-400" />;
+                return <Circle className="h-5 w-5 text-gray-400" />;
         }
     };
 
@@ -41,6 +91,14 @@ export default function Show({ category }) {
             default:
                 return "text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/20";
         }
+    };
+
+    const isOverdue = (dueDate) => {
+        if (!dueDate) return false;
+        return (
+            new Date(dueDate) < new Date() &&
+            new Date(dueDate).toDateString() !== new Date().toDateString()
+        );
     };
 
     return (
@@ -107,10 +165,8 @@ export default function Show({ category }) {
                                     </span>
                                 </div>
                                 <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                                    {category.tasks?.length || 0} task
-                                    {(category.tasks?.length || 0) !== 1
-                                        ? "s"
-                                        : ""}
+                                    {tasks?.length || 0} task
+                                    {(tasks?.length || 0) !== 1 ? "s" : ""}
                                 </div>
                             </div>
                             {category.tags && category.tags.length > 0 && (
@@ -138,7 +194,7 @@ export default function Show({ category }) {
                 </div>
 
                 {/* Tasks in Category */}
-                {category.tasks && category.tasks.length > 0 ? (
+                {tasks && tasks.length > 0 ? (
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
                         <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                             <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100">
@@ -146,75 +202,196 @@ export default function Show({ category }) {
                             </h3>
                         </div>
                         <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                            {category.tasks.map((task) => (
+                            {tasks.map((task) => (
                                 <div
                                     key={task.id}
                                     className="p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
                                 >
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                            {getStatusIcon(task.status)}
+                                            {/* Status Icon */}
+                                            <button
+                                                onClick={() =>
+                                                    toggleTaskStatus(task)
+                                                }
+                                                className="flex-shrink-0 hover:scale-110 transition-transform"
+                                                title={`Mark task as ${
+                                                    task.status === "completed"
+                                                        ? "pending"
+                                                        : "completed"
+                                                }`}
+                                            >
+                                                {getStatusIcon(task.status)}
+                                            </button>
+
+                                            {/* Task Content */}
                                             <div className="flex-1 min-w-0">
-                                                <h4
-                                                    className={`text-sm sm:text-base font-medium truncate ${
-                                                        task.status ===
-                                                        "completed"
-                                                            ? "text-gray-500 dark:text-gray-400 line-through"
-                                                            : "text-gray-900 dark:text-gray-100"
-                                                    }`}
-                                                >
-                                                    {task.title}
-                                                </h4>
-                                                {task.description && (
-                                                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
-                                                        {task.description}
-                                                    </p>
-                                                )}
-                                                <div className="flex flex-wrap items-center gap-2 mt-2">
-                                                    <span
-                                                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(
-                                                            task.priority
-                                                        )}`}
-                                                    >
-                                                        {task.priority
-                                                            .charAt(0)
-                                                            .toUpperCase() +
-                                                            task.priority.slice(
-                                                                1
-                                                            )}
-                                                    </span>
-                                                    {task.due_date && (
-                                                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                            Due:{" "}
-                                                            {new Date(
-                                                                task.due_date
-                                                            ).toLocaleDateString()}
-                                                        </span>
-                                                    )}
-                                                    {task.tags &&
-                                                        task.tags.length >
-                                                            0 && (
-                                                            <div className="flex flex-wrap gap-1 mt-1">
-                                                                {task.tags.map(
-                                                                    (tag) => (
-                                                                        <span
-                                                                            key={
-                                                                                tag.id
-                                                                            }
-                                                                            className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium text-white"
-                                                                            style={{
-                                                                                backgroundColor:
-                                                                                    tag.color,
-                                                                            }}
-                                                                        >
-                                                                            {
-                                                                                tag.name
-                                                                            }
-                                                                        </span>
-                                                                    )
+                                                <div className="flex flex-col sm:flex-row sm:items-center">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex flex-row items-center gap-2">
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedTask(
+                                                                        task
+                                                                    );
+                                                                    setShowViewModal(
+                                                                        true
+                                                                    );
+                                                                }}
+                                                                className={`text-sm sm:text-base font-medium truncate text-left hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 cursor-pointer underline-offset-2 hover:underline hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded px-1 py-0.5 -mx-1 -my-0.5 ${
+                                                                    task.status ===
+                                                                    "completed"
+                                                                        ? "text-gray-500 dark:text-gray-400 line-through hover:text-blue-500 dark:hover:text-blue-400"
+                                                                        : "text-gray-900 dark:text-gray-100"
+                                                                }`}
+                                                                title="Click to view task details"
+                                                            >
+                                                                {task.title}
+                                                            </button>
+                                                            {/* Priority Badge */}
+                                                            <span
+                                                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(
+                                                                    task.priority
+                                                                )}`}
+                                                            >
+                                                                {task.priority
+                                                                    .charAt(0)
+                                                                    .toUpperCase() +
+                                                                    task.priority.slice(
+                                                                        1
+                                                                    )}
+                                                            </span>
+
+                                                            {/* Tags */}
+                                                            {task.tags &&
+                                                                task.tags
+                                                                    .length >
+                                                                    0 && (
+                                                                    <div className="flex flex-wrap gap-1">
+                                                                        {task.tags.map(
+                                                                            (
+                                                                                tag
+                                                                            ) => (
+                                                                                <span
+                                                                                    key={
+                                                                                        tag.id
+                                                                                    }
+                                                                                    className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white"
+                                                                                    style={{
+                                                                                        backgroundColor:
+                                                                                            tag.color,
+                                                                                    }}
+                                                                                >
+                                                                                    {
+                                                                                        tag.name
+                                                                                    }
+                                                                                </span>
+                                                                            )
+                                                                        )}
+                                                                    </div>
                                                                 )}
-                                                            </div>
+                                                        </div>
+
+                                                        {task.description && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedTask(
+                                                                        task
+                                                                    );
+                                                                    setShowViewModal(
+                                                                        true
+                                                                    );
+                                                                }}
+                                                                className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 truncate text-left hover:text-blue-500 dark:hover:text-blue-400 transition-all duration-200 cursor-pointer underline-offset-2 hover:underline w-full hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded px-1 py-0.5 -mx-1 -my-0.5"
+                                                                title="Click to view task details"
+                                                            >
+                                                                {
+                                                                    task.description
+                                                                }
+                                                            </button>
                                                         )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Task Meta Info */}
+                                                <div className="flex flex-wrap items-center gap-2 mt-2">
+                                                    {/* Due Date and Time */}
+                                                    {task.due_date && (
+                                                        <div
+                                                            className={`flex items-center space-x-1 ${
+                                                                isOverdue(
+                                                                    task.due_date
+                                                                )
+                                                                    ? "text-red-600 dark:text-red-400"
+                                                                    : "text-gray-500 dark:text-gray-400"
+                                                            }`}
+                                                        >
+                                                            <Calendar className="h-3 w-3" />
+                                                            <span className="text-xs">
+                                                                {new Date(
+                                                                    task.due_date
+                                                                ).toLocaleDateString()}
+                                                                {!task.is_all_day &&
+                                                                    (task.start_time ||
+                                                                        task.end_time) && (
+                                                                        <span className="ml-1 font-medium">
+                                                                            {(() => {
+                                                                                const formatTime =
+                                                                                    (
+                                                                                        timeStr
+                                                                                    ) => {
+                                                                                        if (
+                                                                                            !timeStr
+                                                                                        )
+                                                                                            return "";
+                                                                                        // Handle both time formats (HH:MM and full datetime)
+                                                                                        if (
+                                                                                            timeStr.includes(
+                                                                                                "T"
+                                                                                            )
+                                                                                        ) {
+                                                                                            return new Date(
+                                                                                                timeStr
+                                                                                            ).toLocaleTimeString(
+                                                                                                [],
+                                                                                                {
+                                                                                                    hour: "2-digit",
+                                                                                                    minute: "2-digit",
+                                                                                                }
+                                                                                            );
+                                                                                        }
+                                                                                        return timeStr;
+                                                                                    };
+
+                                                                                if (
+                                                                                    task.start_time &&
+                                                                                    task.end_time
+                                                                                ) {
+                                                                                    return `${formatTime(
+                                                                                        task.start_time
+                                                                                    )} - ${formatTime(
+                                                                                        task.end_time
+                                                                                    )}`;
+                                                                                } else if (
+                                                                                    task.end_time
+                                                                                ) {
+                                                                                    return `Due: ${formatTime(
+                                                                                        task.end_time
+                                                                                    )}`;
+                                                                                } else if (
+                                                                                    task.start_time
+                                                                                ) {
+                                                                                    return `From: ${formatTime(
+                                                                                        task.start_time
+                                                                                    )}`;
+                                                                                }
+                                                                                return "";
+                                                                            })()}
+                                                                        </span>
+                                                                    )}
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>

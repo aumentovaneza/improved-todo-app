@@ -18,7 +18,9 @@ class CategoryController extends Controller
      */
     public function index(): Response
     {
-        $categories = Category::withCount('tasks')
+        $categories = Category::withCount(['tasks' => function ($query) {
+            $query->where('user_id', Auth::id());
+        }])
             ->where('is_active', true)
             ->orderBy('name')
             ->get();
@@ -99,7 +101,28 @@ class CategoryController extends Controller
     {
         return Inertia::render('Categories/Show', [
             'category' => $category->load(['tasks' => function ($query) {
-                $query->where('user_id', Auth::id());
+                $query->where('user_id', Auth::id())
+                    ->with('tags')
+                    ->orderByRaw("
+                        CASE 
+                            WHEN status = 'pending' THEN 1
+                            WHEN status = 'in_progress' THEN 2
+                            WHEN status = 'completed' THEN 3
+                            WHEN status = 'cancelled' THEN 4
+                            ELSE 5
+                        END
+                    ")
+                    ->orderByRaw("
+                        CASE priority
+                            WHEN 'urgent' THEN 1
+                            WHEN 'high' THEN 2
+                            WHEN 'medium' THEN 3
+                            WHEN 'low' THEN 4
+                            ELSE 5
+                        END
+                    ")
+                    ->orderBy('position')
+                    ->orderBy('created_at', 'desc');
             }, 'tags']),
         ]);
     }

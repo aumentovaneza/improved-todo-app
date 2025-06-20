@@ -112,7 +112,7 @@ class TaskController extends Controller
             'categorizedTasks' => $categorizedTasks,
             'categories' => $categories->load('tags'),
             'tags' => $tags,
-            'filters' => $request->only(['search', 'status', 'priority', 'category_id', 'due_date_filter']),
+            'filters' => $request->only(['search', 'status', 'priority', 'category_id', 'due_date_filter', 'hide_completed']),
         ]);
     }
 
@@ -162,6 +162,11 @@ class TaskController extends Controller
                     $query->overdue();
                     break;
             }
+        }
+
+        // Filter to hide completed tasks
+        if ($request->filled('hide_completed') && $request->get('hide_completed') === '1') {
+            $query->where('status', '!=', 'completed');
         }
     }
 

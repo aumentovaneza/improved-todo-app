@@ -47,25 +47,22 @@ const NewsWidget = () => {
             setLoading(true);
             setError(null);
 
-            const apiKey = import.meta.env.VITE_NEWS_ORG_API;
+            const apiKey = import.meta.env.VITE_GNEWS_API;
             if (!apiKey) {
                 throw new Error("News API key not found");
             }
 
             const response = await fetch(
-                `https://newsapi.org/v2/top-headlines?category=${newsCategory}&pageSize=5&apiKey=${apiKey}`
+                `https://gnews.io/api/v4/top-headlines?category=${newsCategory}&max=5&lang=en&apikey=${apiKey}`
             );
 
             if (!response.ok) {
-                throw new Error(`News API error: ${response.status}`);
+                throw new Error(`GNews API error: ${response.status}`);
             }
 
             const data = await response.json();
 
-            if (data.status === "error") {
-                throw new Error(data.message || "Failed to fetch news");
-            }
-
+            // GNews API returns articles directly in the articles array
             setArticles(data.articles || []);
 
             // Cache articles in localStorage for better UX
@@ -110,16 +107,18 @@ const NewsWidget = () => {
         const colors = {
             general:
                 "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200",
+            world: "bg-cyan-100 dark:bg-cyan-900 text-cyan-800 dark:text-cyan-200",
+            nation: "bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200",
             business:
                 "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200",
-            entertainment:
-                "bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200",
-            health: "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200",
-            science:
-                "bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200",
-            sports: "bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200",
             technology:
                 "bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200",
+            entertainment:
+                "bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200",
+            sports: "bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200",
+            science:
+                "bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200",
+            health: "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200",
         };
         return colors[cat] || colors.general;
     };
@@ -258,10 +257,10 @@ const NewsWidget = () => {
                                     className="block"
                                 >
                                     <div className="flex items-start space-x-3">
-                                        {article.urlToImage && (
+                                        {article.image && (
                                             <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700">
                                                 <img
-                                                    src={article.urlToImage}
+                                                    src={article.image}
                                                     alt={article.title}
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                                                     onError={(e) => {

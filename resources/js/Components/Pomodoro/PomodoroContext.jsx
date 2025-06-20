@@ -20,7 +20,7 @@ const TIMER_STATES = {
 
 // Default timer durations (in seconds)
 const DEFAULT_DURATIONS = {
-    WORK: 25 * 60, // 25 minutes
+    WORK: 20 * 60, // 20 minutes
     SHORT_BREAK: 5 * 60, // 5 minutes
     LONG_BREAK: 15 * 60, // 15 minutes
 };

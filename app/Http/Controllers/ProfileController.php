@@ -84,4 +84,33 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
+
+    /**
+     * Get the user's news category preference.
+     */
+    public function getNewsCategory(Request $request)
+    {
+        return response()->json([
+            'news_category' => $request->user()->news_category ?? 'general'
+        ]);
+    }
+
+    /**
+     * Update the user's news category preference.
+     */
+    public function updateNewsCategory(Request $request)
+    {
+        $request->validate([
+            'news_category' => 'required|string|in:business,entertainment,general,health,science,sports,technology'
+        ]);
+
+        $request->user()->update([
+            'news_category' => $request->news_category
+        ]);
+
+        return response()->json([
+            'message' => 'News category updated successfully',
+            'news_category' => $request->news_category
+        ]);
+    }
 }

@@ -24,6 +24,7 @@ class User extends Authenticatable
         'password',
         'role',
         'timezone',
+        'news_category',
     ];
 
     /**

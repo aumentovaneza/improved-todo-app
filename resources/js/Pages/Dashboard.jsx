@@ -24,7 +24,7 @@ import TaskViewModal from "@/Components/TaskViewModal";
 import TaskEditModal from "@/Components/TaskEditModal";
 import ScheduleModal from "@/Components/ScheduleModal";
 import WeatherWidget from "@/Components/widgets/WeatherWidget";
-import NewsWidgetPlaceholder from "@/Components/widgets/NewsWidgetPlaceholder";
+import NewsWidget from "@/Components/widgets/NewsWidget";
 
 export default function Dashboard({
     currentTasks = [],
@@ -285,7 +285,7 @@ export default function Dashboard({
                 {/* Widgets Section */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     <WeatherWidget />
-                    <NewsWidgetPlaceholder />
+                    <NewsWidget />
                 </div>
 
                 {/* Quick Actions */}

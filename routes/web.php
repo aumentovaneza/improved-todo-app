@@ -41,6 +41,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('tags', TagController::class);
     Route::get('api/tags', [TagController::class, 'getAllTags'])->name('api.tags');
 
+    // News Category API
+    Route::get('api/user/news-category', [ProfileController::class, 'getNewsCategory'])->name('api.user.news-category');
+    Route::post('api/user/news-category', [ProfileController::class, 'updateNewsCategory'])->name('api.user.news-category.update');
+
     // Subtasks
     Route::post('subtasks', [SubtaskController::class, 'store'])->name('subtasks.store');
     Route::put('subtasks/{subtask}', [SubtaskController::class, 'update'])->name('subtasks.update');

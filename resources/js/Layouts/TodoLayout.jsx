@@ -1,6 +1,7 @@
 import ApplicationLogo from "@/Components/ApplicationLogo";
 import Dropdown from "@/Components/Dropdown";
 import Toast from "@/Components/Toast";
+import { FloatingPomodoroWidget, FocusMode } from "@/Components/Pomodoro";
 import { Link, usePage } from "@inertiajs/react";
 import { useState, useEffect } from "react";
 import {
@@ -476,6 +477,10 @@ export default function TodoLayout({ header, children }) {
 
             {/* Toast Notification */}
             <Toast />
+
+            {/* Pomodoro Components */}
+            <FloatingPomodoroWidget />
+            <FocusMode />
         </div>
     );
 }

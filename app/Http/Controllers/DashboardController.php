@@ -84,13 +84,13 @@ class DashboardController extends Controller
         }
 
         return Inertia::render('Dashboard', [
-            'currentTasks' => $currentTasks,
-            'todayTasks' => $todayTasks,
-            'overdueTasks' => $overdueTasks,
-            'upcomingTasks' => $upcomingTasks,
+            'currentTasks' => $currentTasks->values()->all(),
+            'todayTasks' => $todayTasks->values()->all(),
+            'overdueTasks' => $overdueTasks->values()->all(),
+            'upcomingTasks' => $upcomingTasks->values()->all(),
             'weeklyTasks' => $weeklyTaskOccurrences->values()->all(),
             'stats' => $stats,
-            'categories' => $categories,
+            'categories' => $categories->values()->all(),
         ]);
     }
 }

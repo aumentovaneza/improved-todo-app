@@ -21,6 +21,12 @@ class TaskController extends Controller
     public function index(Request $request): Response
     {
         $baseQuery = Task::with(['category', 'subtasks', 'tags'])
+            ->withCount([
+                'subtasks',
+                'subtasks as completed_subtasks_count' => function ($query) {
+                    $query->where('is_completed', true);
+                }
+            ])
             ->where('user_id', Auth::id());
 
         // Apply filters to base query
@@ -35,25 +41,60 @@ class TaskController extends Controller
         // Get categorized tasks with pagination
         $categorizedTasks = [];
 
-        // Handle tasks with categories
+        // Handle tasks with categories - include all categories, even empty ones
         foreach ($categories as $category) {
             $categoryQuery = clone $baseQuery;
             $categoryQuery->where('category_id', $category->id);
 
-            $paginatedTasks = $categoryQuery->orderBy('position')->paginate(5, ['*'], "category_{$category->id}_page");
+            // Order by status (in_progress first, then pending, then cancelled, then completed) 
+            // then by priority (urgent to low) then by position
+            $paginatedTasks = $categoryQuery
+                ->orderByRaw("CASE 
+                    WHEN status = 'in_progress' THEN 1 
+                    WHEN status = 'pending' THEN 2 
+                    WHEN status = 'cancelled' THEN 3 
+                    WHEN status = 'completed' THEN 4 
+                    ELSE 5 
+                END")
+                ->orderByRaw("CASE 
+                    WHEN priority = 'urgent' THEN 1 
+                    WHEN priority = 'high' THEN 2 
+                    WHEN priority = 'medium' THEN 3 
+                    WHEN priority = 'low' THEN 4 
+                    ELSE 5 
+                END")
+                ->orderBy('position')
+                ->paginate(5, ['*'], "category_{$category->id}_page");
 
-            if ($paginatedTasks->total() > 0) {
-                $categorizedTasks[] = [
-                    'category' => $category,
-                    'tasks' => $paginatedTasks
-                ];
-            }
+            // Include all categories, regardless of whether they have tasks
+            $categorizedTasks[] = [
+                'category' => $category,
+                'tasks' => $paginatedTasks
+            ];
         }
 
         // Handle uncategorized tasks
         $uncategorizedQuery = clone $baseQuery;
         $uncategorizedQuery->whereNull('category_id');
-        $uncategorizedTasks = $uncategorizedQuery->orderBy('position')->paginate(5, ['*'], 'uncategorized_page');
+
+        // Apply same ordering logic to uncategorized tasks
+        $uncategorizedTasks = $uncategorizedQuery
+            ->orderByRaw("CASE 
+                WHEN status = 'in_progress' THEN 1 
+                WHEN status = 'pending' THEN 2 
+                WHEN status = 'cancelled' THEN 3 
+                WHEN status = 'completed' THEN 4 
+                ELSE 5 
+            END")
+            ->orderByRaw("CASE 
+                WHEN priority = 'urgent' THEN 1 
+                WHEN priority = 'high' THEN 2 
+                WHEN priority = 'medium' THEN 3 
+                WHEN priority = 'low' THEN 4 
+                ELSE 5 
+            END")
+            ->orderBy('position')
+            ->paginate(5, ['*'], 'uncategorized_page');
 
         if ($uncategorizedTasks->total() > 0) {
             $categorizedTasks[] = [
@@ -417,16 +458,27 @@ class TaskController extends Controller
         $oldPosition = $task->position;
         $newPosition = $validated['newPosition'];
 
+        // Only allow reordering within the same category, status, and priority group
+        // to maintain the new sorting logic (active tasks first, then by priority)
+        $baseQuery = Task::where('user_id', Auth::id())
+            ->where('status', $task->status)
+            ->where('priority', $task->priority);
+
+        // Include category filter (both null and specific category)
+        if ($task->category_id) {
+            $baseQuery->where('category_id', $task->category_id);
+        } else {
+            $baseQuery->whereNull('category_id');
+        }
+
         if ($oldPosition < $newPosition) {
             // Moving down: decrement positions of tasks between old and new position
-            Task::where('user_id', Auth::id())
-                ->where('position', '>', $oldPosition)
+            $baseQuery->where('position', '>', $oldPosition)
                 ->where('position', '<=', $newPosition)
                 ->decrement('position');
         } else {
             // Moving up: increment positions of tasks between new and old position
-            Task::where('user_id', Auth::id())
-                ->where('position', '>=', $newPosition)
+            $baseQuery->where('position', '>=', $newPosition)
                 ->where('position', '<', $oldPosition)
                 ->increment('position');
         }
@@ -449,16 +501,40 @@ class TaskController extends Controller
         return back()->with('message', 'Task reordered successfully');
     }
 
-    public function toggleStatus(Task $task): RedirectResponse
+    public function toggleStatus(Request $request, Task $task): RedirectResponse
     {
         if ($task->user_id !== Auth::id()) {
             abort(403);
         }
 
-        $newStatus = $task->status === 'completed' ? 'pending' : 'completed';
+        // If a specific status is provided, use it; otherwise toggle between completed/pending
+        if ($request->has('status')) {
+            $validated = $request->validate([
+                'status' => 'required|in:pending,in_progress,completed,cancelled'
+            ]);
+            $newStatus = $validated['status'];
+        } else {
+            $newStatus = $task->status === 'completed' ? 'pending' : 'completed';
+        }
+
+        $oldStatus = $task->status;
+
         $task->update([
             'status' => $newStatus,
             'completed_at' => $newStatus === 'completed' ? Carbon::now() : null,
+        ]);
+
+        // Log activity
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'action' => 'status_change',
+            'model_type' => 'Task',
+            'model_id' => $task->id,
+            'old_values' => ['status' => $oldStatus],
+            'new_values' => ['status' => $newStatus],
+            'description' => "Changed task status from {$oldStatus} to {$newStatus}: {$task->title}",
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
         ]);
 
         return back()->with('status', 'Task status updated successfully');

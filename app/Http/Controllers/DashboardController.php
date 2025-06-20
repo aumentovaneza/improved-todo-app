@@ -20,6 +20,12 @@ class DashboardController extends Controller
 
         // Get all user tasks
         $allTasks = Task::with(['category', 'subtasks', 'tags'])
+            ->withCount([
+                'subtasks',
+                'subtasks as completed_subtasks_count' => function ($query) {
+                    $query->where('is_completed', true);
+                }
+            ])
             ->where('user_id', $user->id)
             ->get();
 
@@ -33,6 +39,12 @@ class DashboardController extends Controller
 
         // Get overdue tasks (only non-recurring tasks can be overdue)
         $overdueTasks = Task::with(['category', 'subtasks', 'tags'])
+            ->withCount([
+                'subtasks',
+                'subtasks as completed_subtasks_count' => function ($query) {
+                    $query->where('is_completed', true);
+                }
+            ])
             ->overdueForUser($user)
             ->where('is_recurring', false)
             ->orderByDateTime()
@@ -49,6 +61,12 @@ class DashboardController extends Controller
 
         // Get current tasks (pending and in progress, non-recurring only for simplicity)
         $currentTasks = Task::with(['category', 'subtasks', 'tags'])
+            ->withCount([
+                'subtasks',
+                'subtasks as completed_subtasks_count' => function ($query) {
+                    $query->where('is_completed', true);
+                }
+            ])
             ->where('user_id', $user->id)
             ->where('is_recurring', false)
             ->whereIn('status', ['in_progress'])

@@ -6,14 +6,19 @@ import PrimaryButton from "./PrimaryButton";
 import TagInput from "./TagInput";
 import CategoryTagSelector from "./CategoryTagSelector";
 
-export default function TaskModal({ show, onClose, onSubmitting }) {
+export default function TaskModal({
+    show,
+    onClose,
+    onSubmitting,
+    defaultCategoryId = null,
+}) {
     const { categories } = usePage().props;
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const initialFormData = {
         title: "",
         description: "",
-        category_id: "",
+        category_id: defaultCategoryId || "",
         priority: "medium",
         due_date: "",
         start_time: "",
@@ -35,7 +40,7 @@ export default function TaskModal({ show, onClose, onSubmitting }) {
             setData({
                 title: "",
                 description: "",
-                category_id: "",
+                category_id: defaultCategoryId || "",
                 priority: "medium",
                 due_date: "",
                 start_time: "",
@@ -49,7 +54,7 @@ export default function TaskModal({ show, onClose, onSubmitting }) {
             clearErrors();
             setIsSubmitting(false);
         }
-    }, [show]);
+    }, [show, defaultCategoryId]);
 
     // Notify parent about submission state
     useEffect(() => {

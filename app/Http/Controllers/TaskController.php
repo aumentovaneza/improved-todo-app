@@ -21,6 +21,7 @@ class TaskController extends Controller
     public function index(Request $request): Response
     {
         $baseQuery = Task::with(['category', 'subtasks', 'tags'])
+            ->where('status', '!=', 'completed')
             ->withCount([
                 'subtasks',
                 'subtasks as completed_subtasks_count' => function ($query) {
@@ -112,7 +113,7 @@ class TaskController extends Controller
             'categorizedTasks' => $categorizedTasks,
             'categories' => $categories->load('tags'),
             'tags' => $tags,
-            'filters' => $request->only(['search', 'status', 'priority', 'category_id', 'due_date_filter', 'hide_completed']),
+            'filters' => $request->only(['search', 'status', 'priority', 'category_id', 'due_date_filter']),
         ]);
     }
 
@@ -162,11 +163,6 @@ class TaskController extends Controller
                     $query->overdue();
                     break;
             }
-        }
-
-        // Filter to hide completed tasks
-        if ($request->filled('hide_completed') && $request->get('hide_completed') === '1') {
-            $query->where('status', '!=', 'completed');
         }
     }
 

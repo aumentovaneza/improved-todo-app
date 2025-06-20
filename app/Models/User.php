@@ -88,4 +88,9 @@ class User extends Authenticatable
     {
         return now()->setTimezone($this->getTimezone())->startOfDay();
     }
+
+    public function nowInUserTimezone()
+    {
+        return now()->setTimezone($this->getTimezone());
+    }
 }

@@ -25,18 +25,24 @@ import TaskEditModal from "@/Components/TaskEditModal";
 import ScheduleModal from "@/Components/ScheduleModal";
 
 export default function Dashboard({
-    currentTasks,
-    todayTasks,
-    overdueTasks,
-    upcomingTasks,
-    weeklyTasks,
-    stats,
-    categories,
+    currentTasks = [],
+    todayTasks = [],
+    overdueTasks = [],
+    upcomingTasks = [],
+    weeklyTasks = [],
+    stats = {},
+    categories = [],
 }) {
-    const [localCurrentTasks, setLocalCurrentTasks] = useState(currentTasks);
-    const [localTodayTasks, setLocalTodayTasks] = useState(todayTasks);
-    const [localOverdueTasks, setLocalOverdueTasks] = useState(overdueTasks);
-    const [localUpcomingTasks, setLocalUpcomingTasks] = useState(upcomingTasks);
+    const [localCurrentTasks, setLocalCurrentTasks] = useState(
+        currentTasks || []
+    );
+    const [localTodayTasks, setLocalTodayTasks] = useState(todayTasks || []);
+    const [localOverdueTasks, setLocalOverdueTasks] = useState(
+        overdueTasks || []
+    );
+    const [localUpcomingTasks, setLocalUpcomingTasks] = useState(
+        upcomingTasks || []
+    );
     const [showQuickTask, setShowQuickTask] = useState(false);
     const [showTaskModal, setShowTaskModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
@@ -69,10 +75,10 @@ export default function Dashboard({
     });
 
     useEffect(() => {
-        setLocalCurrentTasks(currentTasks);
-        setLocalTodayTasks(todayTasks);
-        setLocalOverdueTasks(overdueTasks);
-        setLocalUpcomingTasks(upcomingTasks);
+        setLocalCurrentTasks(currentTasks || []);
+        setLocalTodayTasks(todayTasks || []);
+        setLocalOverdueTasks(overdueTasks || []);
+        setLocalUpcomingTasks(upcomingTasks || []);
     }, [currentTasks, todayTasks, overdueTasks, upcomingTasks]);
 
     const handleQuickTaskSubmit = (e) => {
@@ -354,7 +360,7 @@ export default function Dashboard({
                                         <option value="">
                                             Select Category
                                         </option>
-                                        {categories.map((category) => (
+                                        {(categories || []).map((category) => (
                                             <option
                                                 key={category.id}
                                                 value={category.id}

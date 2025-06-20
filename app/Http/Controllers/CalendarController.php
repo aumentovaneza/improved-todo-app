@@ -28,6 +28,12 @@ class CalendarController extends Controller
         // Get all tasks (both regular and recurring)
         $allTasks = $user->tasks()
             ->with(['category', 'subtasks', 'tags'])
+            ->withCount([
+                'subtasks',
+                'subtasks as completed_subtasks_count' => function ($query) {
+                    $query->where('is_completed', true);
+                }
+            ])
             ->get();
 
         // Generate task occurrences for the month
@@ -56,6 +62,12 @@ class CalendarController extends Controller
 
         // Get overdue tasks (only regular tasks can be overdue)
         $overdueTasks = Task::with(['category', 'subtasks', 'tags'])
+            ->withCount([
+                'subtasks',
+                'subtasks as completed_subtasks_count' => function ($query) {
+                    $query->where('is_completed', true);
+                }
+            ])
             ->overdueForUser($user)
             ->where('is_recurring', false)
             ->orderByDateTime()

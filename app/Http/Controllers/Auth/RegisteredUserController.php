@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\InviteCode;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,15 +33,28 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'invite_code' => 'required|string',
         ]);
+
+        // Validate invite code
+        $inviteCode = InviteCode::where('code', $request->invite_code)->first();
+
+        if (!$inviteCode || !$inviteCode->isValid()) {
+            return back()->withErrors([
+                'invite_code' => 'The invite code is invalid, expired, or has been exhausted.'
+            ])->withInput($request->except('password', 'password_confirmation'));
+        }
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+
+        // Mark invite code as used
+        $inviteCode->markAsUsed();
 
         event(new Registered($user));
 

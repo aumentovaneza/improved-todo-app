@@ -96,6 +96,12 @@ export default function TodoLayout({ header, children }) {
             current: route().current("admin.users.*"),
         },
         {
+            name: "Invite Codes",
+            href: route("admin.invite-codes.index"),
+            icon: Users,
+            current: route().current("admin.invite-codes.*"),
+        },
+        {
             name: "Activity Logs",
             href: route("admin.activity-logs.index"),
             icon: Activity,
@@ -296,7 +302,7 @@ export default function TodoLayout({ header, children }) {
             )}
 
             {/* Desktop Sidebar */}
-            <aside className="hidden lg:flex w-64 min-h-screen bg-light-secondary dark:bg-dark-secondary shadow-lg flex-col">
+            <aside className="hidden lg:flex w-64 h-screen bg-light-secondary dark:bg-dark-secondary shadow-lg flex-col fixed left-0 top-0 z-30">
                 {/* Sidebar Header */}
                 <div className="flex items-center justify-between h-16 px-4 border-b border-light-border dark:border-dark-border">
                     <Link href="/" className="flex items-center">
@@ -428,7 +434,7 @@ export default function TodoLayout({ header, children }) {
                 </div>
             </aside>
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-h-screen w-full lg:w-auto">
+            <div className="flex-1 flex flex-col min-h-screen w-full lg:ml-64">
                 {/* Top Navigation Bar */}
                 <header className="sticky top-0 z-10 bg-light-secondary dark:bg-dark-secondary border-b border-light-border dark:border-dark-border">
                     <div className="flex items-center justify-between min-h-14 h-auto py-3 sm:h-16 sm:py-0 px-2 sm:px-6 lg:px-8">

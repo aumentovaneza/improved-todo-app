@@ -20,6 +20,8 @@ Route::get('/', function () {
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
+        'status' => session('status'),
+        'canResetPassword' => Route::has('password.request'),
     ]);
 });
 
@@ -71,6 +73,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('users/{user}', [AdminController::class, 'updateUser'])->name('users.update');
         Route::delete('users/{user}', [AdminController::class, 'deleteUser'])->name('users.destroy');
         Route::get('activity-logs', [AdminController::class, 'activityLogs'])->name('activity-logs.index');
+
+        // Invite codes
+        Route::get('invite-codes', [AdminController::class, 'inviteCodes'])->name('invite-codes.index');
+        Route::get('invite-codes/create', [AdminController::class, 'createInviteCode'])->name('invite-codes.create');
+        Route::post('invite-codes', [AdminController::class, 'storeInviteCode'])->name('invite-codes.store');
+        Route::patch('invite-codes/{inviteCode}/deactivate', [AdminController::class, 'deactivateInviteCode'])->name('invite-codes.deactivate');
+        Route::patch('invite-codes/{inviteCode}/reactivate', [AdminController::class, 'reactivateInviteCode'])->name('invite-codes.reactivate');
     });
 });
 

@@ -1,4 +1,5 @@
-import { Head, Link } from "@inertiajs/react";
+import { Head, Link, useForm } from "@inertiajs/react";
+import { useState } from "react";
 import {
     CheckSquare,
     Calendar,
@@ -29,9 +30,535 @@ import {
     Star,
     MapPin,
     Rocket,
+    X,
+    Mail,
+    Lock,
+    EyeOff,
+    User,
 } from "lucide-react";
 
-export default function Welcome({ auth }) {
+// Login Modal Component
+function LoginModal({
+    isOpen,
+    onClose,
+    status,
+    canResetPassword,
+    openRegisterModal,
+}) {
+    const [showPassword, setShowPassword] = useState(false);
+    const { data, setData, post, processing, errors, reset } = useForm({
+        email: "",
+        password: "",
+        remember: false,
+    });
+
+    const submit = (e) => {
+        e.preventDefault();
+        post(route("login"), {
+            onFinish: () => reset("password"),
+            onSuccess: () => onClose(),
+        });
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex min-h-screen items-center justify-center p-4">
+                {/* Backdrop */}
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+                    onClick={onClose}
+                ></div>
+
+                {/* Modal */}
+                <div className="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-8 shadow-2xl transition-all">
+                    {/* Close Button */}
+                    <button
+                        onClick={onClose}
+                        className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    >
+                        <X className="h-6 w-6" />
+                    </button>
+
+                    {/* Header */}
+                    <div className="text-center mb-8">
+                        <div className="flex items-center justify-center mb-4">
+                            <CheckSquare className="h-10 w-10 text-blue-600" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                            Welcome Back
+                        </h2>
+                        <p className="text-gray-600 dark:text-gray-300 mt-2">
+                            Sign in to your FocusFlow account
+                        </p>
+                    </div>
+
+                    {/* Status Message */}
+                    {status && (
+                        <div className="mb-4 p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                            <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                                {status}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Login Form */}
+                    <form onSubmit={submit} className="space-y-6">
+                        {/* Email Field */}
+                        <div>
+                            <label
+                                htmlFor="email"
+                                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                            >
+                                Email Address
+                            </label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Mail className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    id="email"
+                                    type="email"
+                                    name="email"
+                                    value={data.email}
+                                    onChange={(e) =>
+                                        setData("email", e.target.value)
+                                    }
+                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors"
+                                    placeholder="Enter your email"
+                                    autoComplete="username"
+                                    required
+                                />
+                            </div>
+                            {errors.email && (
+                                <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                                    {errors.email}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Password Field */}
+                        <div>
+                            <label
+                                htmlFor="password"
+                                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                            >
+                                Password
+                            </label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Lock className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    id="password"
+                                    type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    value={data.password}
+                                    onChange={(e) =>
+                                        setData("password", e.target.value)
+                                    }
+                                    className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors"
+                                    placeholder="Enter your password"
+                                    autoComplete="current-password"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setShowPassword(!showPassword)
+                                    }
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="h-5 w-5" />
+                                    ) : (
+                                        <Eye className="h-5 w-5" />
+                                    )}
+                                </button>
+                            </div>
+                            {errors.password && (
+                                <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                                    {errors.password}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Remember Me & Forgot Password */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                                <input
+                                    id="remember"
+                                    name="remember"
+                                    type="checkbox"
+                                    checked={data.remember}
+                                    onChange={(e) =>
+                                        setData("remember", e.target.checked)
+                                    }
+                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700"
+                                />
+                                <label
+                                    htmlFor="remember"
+                                    className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+                                >
+                                    Remember me
+                                </label>
+                            </div>
+
+                            {canResetPassword && (
+                                <Link
+                                    href={route("password.request")}
+                                    className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+                                >
+                                    Forgot password?
+                                </Link>
+                            )}
+                        </div>
+
+                        {/* Submit Button */}
+                        <button
+                            type="submit"
+                            disabled={processing}
+                            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            {processing ? (
+                                <div className="flex items-center">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                    Signing in...
+                                </div>
+                            ) : (
+                                "Sign In"
+                            )}
+                        </button>
+                    </form>
+
+                    {/* Register Link */}
+                    <div className="mt-6 text-center">
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                            Don't have an account?{" "}
+                            <button
+                                onClick={() => {
+                                    onClose();
+                                    openRegisterModal();
+                                }}
+                                className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                            >
+                                Sign up for free
+                            </button>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// Register Modal Component
+function RegisterModal({ isOpen, onClose, openLoginModal }) {
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const { data, setData, post, processing, errors, reset } = useForm({
+        name: "",
+        email: "",
+        password: "",
+        password_confirmation: "",
+        invite_code: "",
+    });
+
+    const submit = (e) => {
+        e.preventDefault();
+        post(route("register"), {
+            onFinish: () => reset("password", "password_confirmation"),
+            onSuccess: () => onClose(),
+        });
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex min-h-screen items-center justify-center p-4">
+                {/* Backdrop */}
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+                    onClick={onClose}
+                ></div>
+
+                {/* Modal */}
+                <div className="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-8 shadow-2xl transition-all">
+                    {/* Close Button */}
+                    <button
+                        onClick={onClose}
+                        className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    >
+                        <X className="h-6 w-6" />
+                    </button>
+
+                    {/* Header */}
+                    <div className="text-center mb-8">
+                        <div className="flex items-center justify-center mb-4">
+                            <CheckSquare className="h-10 w-10 text-blue-600" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                            Join FocusFlow
+                        </h2>
+                        <p className="text-gray-600 dark:text-gray-300 mt-2">
+                            Create your account to get started
+                        </p>
+                    </div>
+
+                    {/* Register Form */}
+                    <form onSubmit={submit} className="space-y-6">
+                        {/* Name Field */}
+                        <div>
+                            <label
+                                htmlFor="name"
+                                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                            >
+                                Full Name
+                            </label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <User className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    id="name"
+                                    type="text"
+                                    name="name"
+                                    value={data.name}
+                                    onChange={(e) =>
+                                        setData("name", e.target.value)
+                                    }
+                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors"
+                                    placeholder="Enter your full name"
+                                    autoComplete="name"
+                                    required
+                                />
+                            </div>
+                            {errors.name && (
+                                <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                                    {errors.name}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Email Field */}
+                        <div>
+                            <label
+                                htmlFor="register-email"
+                                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                            >
+                                Email Address
+                            </label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Mail className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    id="register-email"
+                                    type="email"
+                                    name="email"
+                                    value={data.email}
+                                    onChange={(e) =>
+                                        setData("email", e.target.value)
+                                    }
+                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors"
+                                    placeholder="Enter your email"
+                                    autoComplete="username"
+                                    required
+                                />
+                            </div>
+                            {errors.email && (
+                                <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                                    {errors.email}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Password Field */}
+                        <div>
+                            <label
+                                htmlFor="register-password"
+                                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                            >
+                                Password
+                            </label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Lock className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    id="register-password"
+                                    type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    value={data.password}
+                                    onChange={(e) =>
+                                        setData("password", e.target.value)
+                                    }
+                                    className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors"
+                                    placeholder="Create a password"
+                                    autoComplete="new-password"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setShowPassword(!showPassword)
+                                    }
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="h-5 w-5" />
+                                    ) : (
+                                        <Eye className="h-5 w-5" />
+                                    )}
+                                </button>
+                            </div>
+                            {errors.password && (
+                                <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                                    {errors.password}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Confirm Password Field */}
+                        <div>
+                            <label
+                                htmlFor="password_confirmation"
+                                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                            >
+                                Confirm Password
+                            </label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Lock className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    id="password_confirmation"
+                                    type={
+                                        showConfirmPassword
+                                            ? "text"
+                                            : "password"
+                                    }
+                                    name="password_confirmation"
+                                    value={data.password_confirmation}
+                                    onChange={(e) =>
+                                        setData(
+                                            "password_confirmation",
+                                            e.target.value
+                                        )
+                                    }
+                                    className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors"
+                                    placeholder="Confirm your password"
+                                    autoComplete="new-password"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setShowConfirmPassword(
+                                            !showConfirmPassword
+                                        )
+                                    }
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                >
+                                    {showConfirmPassword ? (
+                                        <EyeOff className="h-5 w-5" />
+                                    ) : (
+                                        <Eye className="h-5 w-5" />
+                                    )}
+                                </button>
+                            </div>
+                            {errors.password_confirmation && (
+                                <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                                    {errors.password_confirmation}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Invite Code Field */}
+                        <div>
+                            <label
+                                htmlFor="invite_code"
+                                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                            >
+                                Invite Code
+                            </label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Users className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    id="invite_code"
+                                    type="text"
+                                    name="invite_code"
+                                    value={data.invite_code}
+                                    onChange={(e) =>
+                                        setData("invite_code", e.target.value)
+                                    }
+                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors"
+                                    placeholder="Enter your invite code"
+                                    required
+                                />
+                            </div>
+                            {errors.invite_code && (
+                                <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                                    {errors.invite_code}
+                                </p>
+                            )}
+                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                You need a valid invite code to register during
+                                the testing phase.
+                            </p>
+                        </div>
+
+                        {/* Submit Button */}
+                        <button
+                            type="submit"
+                            disabled={processing}
+                            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            {processing ? (
+                                <div className="flex items-center">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                    Creating account...
+                                </div>
+                            ) : (
+                                "Create Account"
+                            )}
+                        </button>
+                    </form>
+
+                    {/* Login Link */}
+                    <div className="mt-6 text-center">
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                            Already have an account?{" "}
+                            <button
+                                onClick={() => {
+                                    onClose();
+                                    openLoginModal();
+                                }}
+                                className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                            >
+                                Sign in here
+                            </button>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export default function Welcome({ auth, status, canResetPassword }) {
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+    const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+
+    const openLoginModal = () => setIsLoginModalOpen(true);
+    const closeLoginModal = () => setIsLoginModalOpen(false);
+    const openRegisterModal = () => setIsRegisterModalOpen(true);
+    const closeRegisterModal = () => setIsRegisterModalOpen(false);
+
     return (
         <>
             <Head title="Welcome to FocusFlow - A Smart, ADHD-Friendly To-Do App" />
@@ -60,19 +587,19 @@ export default function Welcome({ auth }) {
                                 </Link>
                             ) : (
                                 <div className="flex items-center space-x-2 sm:space-x-4">
-                                    <Link
-                                        href={route("login")}
+                                    <button
+                                        onClick={openLoginModal}
                                         className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 dark:text-gray-300 dark:hover:text-blue-400 text-sm sm:text-base"
                                     >
                                         Sign In
-                                    </Link>
-                                    <Link
-                                        href={route("register")}
+                                    </button>
+                                    <button
+                                        onClick={openRegisterModal}
                                         className="inline-flex items-center px-3 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm sm:text-base"
                                     >
                                         Get Started
                                         <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-                                    </Link>
+                                    </button>
                                 </div>
                             )}
                         </div>
@@ -97,19 +624,19 @@ export default function Welcome({ auth }) {
 
                         {!auth.user && (
                             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
-                                <Link
-                                    href={route("register")}
+                                <button
+                                    onClick={openRegisterModal}
                                     className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 text-base sm:text-lg w-full sm:w-auto justify-center"
                                 >
                                     Start Free Today
                                     <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
-                                </Link>
-                                <Link
-                                    href={route("login")}
+                                </button>
+                                <button
+                                    onClick={openLoginModal}
                                     className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:border-blue-600 hover:text-blue-600 transition-colors duration-200 text-base sm:text-lg dark:border-gray-600 dark:text-gray-300 dark:hover:border-blue-400 dark:hover:text-blue-400 w-full sm:w-auto justify-center"
                                 >
                                     Sign In
-                                </Link>
+                                </button>
                             </div>
                         )}
                     </div>
@@ -701,13 +1228,13 @@ export default function Welcome({ auth }) {
                                     our development priorities.
                                 </p>
                                 {!auth.user && (
-                                    <Link
-                                        href={route("register")}
+                                    <button
+                                        onClick={openRegisterModal}
                                         className="inline-flex items-center px-8 py-4 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors duration-200 text-lg"
                                     >
                                         Start Your Journey
                                         <ArrowRight className="ml-2 h-5 w-5" />
-                                    </Link>
+                                    </button>
                                 )}
                             </div>
                         </div>
@@ -767,19 +1294,19 @@ export default function Welcome({ auth }) {
                             </p>
 
                             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                                <Link
-                                    href={route("register")}
+                                <button
+                                    onClick={openRegisterModal}
                                     className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 text-lg"
                                 >
                                     Get Started Free
                                     <ArrowRight className="ml-2 h-5 w-5" />
-                                </Link>
-                                <Link
-                                    href={route("login")}
+                                </button>
+                                <button
+                                    onClick={openLoginModal}
                                     className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200 dark:text-blue-400 dark:hover:text-blue-300"
                                 >
                                     Already have an account? Sign in
-                                </Link>
+                                </button>
                             </div>
                         </div>
                     </section>
@@ -807,6 +1334,22 @@ export default function Welcome({ auth }) {
                         </div>
                     </div>
                 </footer>
+
+                {/* Login Modal */}
+                <LoginModal
+                    isOpen={isLoginModalOpen}
+                    onClose={closeLoginModal}
+                    status={status}
+                    canResetPassword={canResetPassword}
+                    openRegisterModal={openRegisterModal}
+                />
+
+                {/* Register Modal */}
+                <RegisterModal
+                    isOpen={isRegisterModalOpen}
+                    onClose={closeRegisterModal}
+                    openLoginModal={openLoginModal}
+                />
             </div>
         </>
     );

@@ -176,10 +176,10 @@ export default function FocusMode() {
                         style={{ animation: "float 3s ease-in-out infinite" }}
                     >
                         {currentSession === "work"
-                            ? "🎯"
+                            ? "Focus"
                             : currentSession === "short_break"
-                            ? "☕"
-                            : "🏖️"}{" "}
+                            ? "Break"
+                            : "Focus"}{" "}
                         {sessionInfo.title}
                     </h1>
                     <p
@@ -265,7 +265,7 @@ export default function FocusMode() {
                             }}
                         >
                             <span className="inline-flex items-center gap-2">
-                                ▶️ Start Timer
+                                Start Timer
                             </span>
                         </button>
                     )}
@@ -276,7 +276,7 @@ export default function FocusMode() {
                             className="bg-white/20 hover:bg-white/30 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold transition-all duration-200 hover:scale-110 backdrop-blur-sm shadow-lg hover:shadow-2xl"
                         >
                             <span className="inline-flex items-center gap-2">
-                                ⏸️ Pause
+                                Pause
                             </span>
                         </button>
                     )}
@@ -290,7 +290,7 @@ export default function FocusMode() {
                             }}
                         >
                             <span className="inline-flex items-center gap-2">
-                                ▶️ Resume
+                                Resume
                             </span>
                         </button>
                     )}
@@ -301,7 +301,7 @@ export default function FocusMode() {
                             className="bg-white/10 hover:bg-white/20 text-white/80 hover:text-white px-5 sm:px-6 py-3 sm:py-4 rounded-full text-sm sm:text-base font-semibold transition-all duration-200 hover:scale-110 backdrop-blur-sm shadow-lg hover:shadow-2xl"
                         >
                             <span className="inline-flex items-center gap-2">
-                                🔄 Reset
+                                Reset
                             </span>
                         </button>
                     )}

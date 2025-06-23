@@ -190,10 +190,10 @@ export default function FloatingPomodoroWidget() {
                                         className="flex-1 bg-purple-600 hover:bg-purple-700 text-sm sm:text-base py-2 sm:py-2.5 justify-center hover:scale-105 transition-transform duration-200"
                                     >
                                         <span className="hidden sm:inline inline-flex items-center">
-                                            🎯 Focus Mode
+                                            Focus Mode
                                         </span>
                                         <span className="sm:hidden inline-flex items-center">
-                                            🎯 Focus
+                                            Focus
                                         </span>
                                     </PrimaryButton>
                                 </div>
@@ -208,7 +208,7 @@ export default function FloatingPomodoroWidget() {
                                         className="flex-1 text-sm sm:text-base py-2 sm:py-2.5 justify-center hover:scale-105 transition-transform duration-200"
                                     >
                                         <span className="inline-flex items-center">
-                                            ⏸️ Pause
+                                            Pause
                                         </span>
                                     </SecondaryButton>
                                     <PrimaryButton
@@ -216,10 +216,10 @@ export default function FloatingPomodoroWidget() {
                                         className="flex-1 bg-purple-600 hover:bg-purple-700 text-sm sm:text-base py-2 sm:py-2.5 justify-center hover:scale-105 transition-transform duration-200"
                                     >
                                         <span className="hidden sm:inline inline-flex items-center">
-                                            🎯 Focus Mode
+                                            Focus Mode
                                         </span>
                                         <span className="sm:hidden inline-flex items-center">
-                                            🎯 Focus
+                                            Focus
                                         </span>
                                     </PrimaryButton>
                                 </div>
@@ -234,7 +234,7 @@ export default function FloatingPomodoroWidget() {
                                         className="flex-1 text-sm sm:text-base py-2 sm:py-2.5 justify-center hover:scale-105 transition-transform duration-200"
                                     >
                                         <span className="inline-flex items-center">
-                                            ▶️ Resume
+                                            Resume
                                         </span>
                                     </PrimaryButton>
                                     <PrimaryButton
@@ -242,10 +242,10 @@ export default function FloatingPomodoroWidget() {
                                         className="flex-1 bg-purple-600 hover:bg-purple-700 text-sm sm:text-base py-2 sm:py-2.5 justify-center hover:scale-105 transition-transform duration-200"
                                     >
                                         <span className="hidden sm:inline inline-flex items-center">
-                                            🎯 Focus Mode
+                                            Focus Mode
                                         </span>
                                         <span className="sm:hidden inline-flex items-center">
-                                            🎯 Focus
+                                            Focus
                                         </span>
                                     </PrimaryButton>
                                 </div>
@@ -259,7 +259,7 @@ export default function FloatingPomodoroWidget() {
                                     className="px-4 sm:px-6 text-sm sm:text-base py-2 sm:py-2.5 justify-center hover:scale-105 transition-transform duration-200"
                                 >
                                     <span className="inline-flex items-center">
-                                        🔄 Reset
+                                        Reset
                                     </span>
                                 </DangerButton>
                             </div>

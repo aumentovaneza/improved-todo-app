@@ -126,9 +126,9 @@ function SortableTask({
                                     >
                                         {task.title}
                                     </button>
-                                    {/* Priority Badge */}
+                                    {/* Priority Badge - Hidden on mobile */}
                                     <span
-                                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(
+                                        className={`hidden sm:inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(
                                             task.priority
                                         )}`}
                                     >

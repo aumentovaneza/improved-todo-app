@@ -11,6 +11,7 @@ export default function Register() {
         email: "",
         password: "",
         password_confirmation: "",
+        invite_code: "",
     });
 
     const submit = (e) => {
@@ -58,6 +59,28 @@ export default function Register() {
                     />
 
                     <InputError message={errors.email} className="mt-2" />
+                </div>
+
+                <div className="mt-4">
+                    <InputLabel htmlFor="invite_code" value="Invite Code" />
+
+                    <TextInput
+                        id="invite_code"
+                        type="text"
+                        name="invite_code"
+                        value={data.invite_code}
+                        className="mt-1 block w-full"
+                        onChange={(e) => setData("invite_code", e.target.value)}
+                        placeholder="Enter your invite code"
+                        required
+                    />
+
+                    <InputError message={errors.invite_code} className="mt-2" />
+
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        You need a valid invite code to register during the
+                        testing phase.
+                    </p>
                 </div>
 
                 <div className="mt-4">

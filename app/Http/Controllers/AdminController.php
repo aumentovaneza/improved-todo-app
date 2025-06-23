@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Category;
 use App\Models\Task;
 use App\Models\ActivityLog;
+use App\Models\InviteCode;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -193,5 +194,118 @@ class AdminController extends Controller
             'users' => $users,
             'filters' => $request->only(['search', 'user_id', 'action', 'model_type']),
         ]);
+    }
+
+    public function inviteCodes(Request $request): Response
+    {
+        $query = InviteCode::with('creator');
+
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where('code', 'like', "%{$search}%");
+        }
+
+        if ($request->filled('status')) {
+            $status = $request->get('status');
+            if ($status === 'active') {
+                $query->where('is_active', true);
+            } elseif ($status === 'inactive') {
+                $query->where('is_active', false);
+            } elseif ($status === 'expired') {
+                $query->where('expires_at', '<', now());
+            } elseif ($status === 'exhausted') {
+                $query->whereColumn('used_count', '>=', 'max_uses');
+            }
+        }
+
+        $inviteCodes = $query->latest()->paginate(20);
+
+        return Inertia::render('Admin/InviteCodes/Index', [
+            'inviteCodes' => $inviteCodes,
+            'filters' => $request->only(['search', 'status']),
+        ]);
+    }
+
+    public function createInviteCode(): Response
+    {
+        return Inertia::render('Admin/InviteCodes/Create');
+    }
+
+    public function storeInviteCode(Request $request)
+    {
+        $validated = $request->validate([
+            'max_uses' => 'required|integer|min:1|max:1000',
+            'expires_at' => 'nullable|date|after:now',
+        ]);
+
+        $inviteCode = InviteCode::create([
+            'code' => InviteCode::generateUniqueCode(),
+            'max_uses' => $validated['max_uses'],
+            'expires_at' => $validated['expires_at'] ?? null,
+            'created_by' => Auth::id(),
+        ]);
+
+        // Log activity
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'action' => 'create',
+            'model_type' => 'InviteCode',
+            'model_id' => $inviteCode->id,
+            'new_values' => $inviteCode->toArray(),
+            'description' => "Created invite code: {$inviteCode->code}",
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        return redirect()->route('admin.invite-codes.index')->with('message', 'Invite code created successfully');
+    }
+
+    public function deactivateInviteCode(InviteCode $inviteCode)
+    {
+        $inviteCode->update(['is_active' => false]);
+
+        // Log activity
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'action' => 'update',
+            'model_type' => 'InviteCode',
+            'model_id' => $inviteCode->id,
+            'old_values' => ['is_active' => true],
+            'new_values' => ['is_active' => false],
+            'description' => "Deactivated invite code: {$inviteCode->code}",
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
+
+        return redirect()->route('admin.invite-codes.index')->with('message', 'Invite code deactivated successfully');
+    }
+
+    public function reactivateInviteCode(InviteCode $inviteCode)
+    {
+        // Only reactivate if not exhausted and not expired
+        if ($inviteCode->isExhausted()) {
+            return redirect()->back()->withErrors(['message' => 'Cannot reactivate an exhausted invite code']);
+        }
+
+        if ($inviteCode->isExpired()) {
+            return redirect()->back()->withErrors(['message' => 'Cannot reactivate an expired invite code']);
+        }
+
+        $inviteCode->update(['is_active' => true]);
+
+        // Log activity
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'action' => 'update',
+            'model_type' => 'InviteCode',
+            'model_id' => $inviteCode->id,
+            'old_values' => ['is_active' => false],
+            'new_values' => ['is_active' => true],
+            'description' => "Reactivated invite code: {$inviteCode->code}",
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
+
+        return redirect()->route('admin.invite-codes.index')->with('message', 'Invite code reactivated successfully');
     }
 }

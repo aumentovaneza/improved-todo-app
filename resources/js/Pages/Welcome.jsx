@@ -262,6 +262,7 @@ function RegisterModal({ isOpen, onClose, openLoginModal }) {
         email: "",
         password: "",
         password_confirmation: "",
+        invite_code: "",
     });
 
     const submit = (e) => {
@@ -473,6 +474,42 @@ function RegisterModal({ isOpen, onClose, openLoginModal }) {
                                     {errors.password_confirmation}
                                 </p>
                             )}
+                        </div>
+
+                        {/* Invite Code Field */}
+                        <div>
+                            <label
+                                htmlFor="invite_code"
+                                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                            >
+                                Invite Code
+                            </label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Users className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    id="invite_code"
+                                    type="text"
+                                    name="invite_code"
+                                    value={data.invite_code}
+                                    onChange={(e) =>
+                                        setData("invite_code", e.target.value)
+                                    }
+                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors"
+                                    placeholder="Enter your invite code"
+                                    required
+                                />
+                            </div>
+                            {errors.invite_code && (
+                                <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                                    {errors.invite_code}
+                                </p>
+                            )}
+                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                You need a valid invite code to register during
+                                the testing phase.
+                            </p>
                         </div>
 
                         {/* Submit Button */}

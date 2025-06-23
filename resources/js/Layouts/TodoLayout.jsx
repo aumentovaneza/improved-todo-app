@@ -96,6 +96,12 @@ export default function TodoLayout({ header, children }) {
             current: route().current("admin.users.*"),
         },
         {
+            name: "Invite Codes",
+            href: route("admin.invite-codes.index"),
+            icon: Users,
+            current: route().current("admin.invite-codes.*"),
+        },
+        {
             name: "Activity Logs",
             href: route("admin.activity-logs.index"),
             icon: Activity,

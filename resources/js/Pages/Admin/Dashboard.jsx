@@ -296,6 +296,27 @@ export default function Dashboard({ stats, recent_activities }) {
                             </Link>
 
                             <Link
+                                href={route("admin.invite-codes.create")}
+                                className="relative rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 dark:hover:border-gray-500 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                            >
+                                <div className="flex-shrink-0">
+                                    <Users className="h-6 w-6 text-indigo-600" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <span
+                                        className="absolute inset-0"
+                                        aria-hidden="true"
+                                    />
+                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                        Generate Invite Code
+                                    </p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                                        Create registration codes
+                                    </p>
+                                </div>
+                            </Link>
+
+                            <Link
                                 href={route("categories.index")}
                                 className="relative rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 dark:hover:border-gray-500 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
                             >

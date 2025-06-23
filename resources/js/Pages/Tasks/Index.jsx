@@ -136,9 +136,9 @@ function SortableTask({
                                             task.priority.slice(1)}
                                     </span>
 
-                                    {/* Tags */}
+                                    {/* Tags - Hidden on mobile */}
                                     {task.tags && task.tags.length > 0 && (
-                                        <div className="flex flex-wrap gap-1">
+                                        <div className="hidden sm:flex flex-wrap gap-1">
                                             {task.tags.map((tag) => (
                                                 <span
                                                     key={tag.id}

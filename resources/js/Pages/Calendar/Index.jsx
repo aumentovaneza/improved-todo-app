@@ -11,6 +11,10 @@ import {
     Eye,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import DayTasksModal from "@/Components/DayTasksModal";
+import TaskViewModal from "@/Components/TaskViewModal";
+import TaskEditModal from "@/Components/TaskEditModal";
+import { toast } from "react-toastify";
 
 export default function Index({
     tasks,
@@ -18,9 +22,14 @@ export default function Index({
     overdueTasks,
     currentDate,
     monthName,
+    categories,
 }) {
     const [selectedDate, setSelectedDate] = useState(null);
     const [isMobile, setIsMobile] = useState(false);
+    const [showDayTasksModal, setShowDayTasksModal] = useState(false);
+    const [showViewModal, setShowViewModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [selectedTask, setSelectedTask] = useState(null);
 
     useEffect(() => {
         const checkMobile = () => {
@@ -120,6 +129,62 @@ export default function Index({
         });
     };
 
+    const handleDayClick = (day) => {
+        setSelectedDate(day.dateStr);
+        setShowDayTasksModal(true);
+    };
+
+    const handleTaskView = (task) => {
+        setSelectedTask(task);
+        setShowViewModal(true);
+    };
+
+    const handleTaskEdit = (task) => {
+        setSelectedTask(task);
+        setShowEditModal(true);
+    };
+
+    const handleTaskStatusToggle = async (task) => {
+        const newStatus = task.status === "completed" ? "pending" : "completed";
+
+        try {
+            await router.patch(
+                route("tasks.update", task.id),
+                {
+                    status: newStatus,
+                },
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        toast.success(
+                            `Task ${
+                                newStatus === "completed"
+                                    ? "completed"
+                                    : "reopened"
+                            } successfully!`
+                        );
+                    },
+                    onError: () => {
+                        toast.error("Failed to update task status");
+                    },
+                }
+            );
+        } catch (error) {
+            toast.error("Failed to update task status");
+        }
+    };
+
+    const handleTaskUpdate = () => {
+        // Refresh the page data after task update
+        router.reload({ preserveState: true, preserveScroll: true });
+    };
+
+    const getSelectedDateTasks = () => {
+        if (!selectedDate) return [];
+        return tasks[selectedDate] || [];
+    };
+
     return (
         <TodoLayout header="Calendar">
             <Head title="Calendar" />
@@ -193,9 +258,7 @@ export default function Index({
                                                 ? "ring-2 ring-blue-500 dark:ring-blue-400"
                                                 : ""
                                         }`}
-                                        onClick={() =>
-                                            setSelectedDate(day.dateStr)
-                                        }
+                                        onClick={() => handleDayClick(day)}
                                     >
                                         <div
                                             className={`text-xs sm:text-sm font-medium mb-1 sm:mb-2 ${
@@ -521,6 +584,41 @@ export default function Index({
                     </div>
                 </div>
             </div>
+
+            {/* Modals */}
+            <DayTasksModal
+                show={showDayTasksModal}
+                onClose={() => {
+                    setShowDayTasksModal(false);
+                    setSelectedDate(null);
+                }}
+                selectedDate={selectedDate}
+                tasks={getSelectedDateTasks()}
+                onTaskView={handleTaskView}
+                onTaskEdit={handleTaskEdit}
+                onTaskStatusToggle={handleTaskStatusToggle}
+            />
+
+            <TaskViewModal
+                show={showViewModal}
+                onClose={() => {
+                    setShowViewModal(false);
+                    setSelectedTask(null);
+                }}
+                task={selectedTask}
+                onTaskUpdate={handleTaskUpdate}
+            />
+
+            <TaskEditModal
+                show={showEditModal}
+                onClose={() => {
+                    setShowEditModal(false);
+                    setSelectedTask(null);
+                }}
+                task={selectedTask}
+                categories={categories}
+                onTaskUpdate={handleTaskUpdate}
+            />
         </TodoLayout>
     );
 }

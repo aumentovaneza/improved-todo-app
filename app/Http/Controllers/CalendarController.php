@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -73,12 +74,16 @@ class CalendarController extends Controller
             ->orderByDateTime()
             ->get();
 
+        // Get categories
+        $categories = Category::where('is_active', true)->orderBy('name')->get();
+
         return Inertia::render('Calendar/Index', [
             'tasks' => $tasks,
             'upcomingTasks' => $upcomingTasks,
             'overdueTasks' => $overdueTasks,
             'currentDate' => $date->format('Y-m-d'),
             'monthName' => $date->format('F Y'),
+            'categories' => $categories,
         ]);
     }
 }

@@ -997,9 +997,16 @@ export default function Index({
                                         key={task.id}
                                         className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800"
                                     >
-                                        <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm">
-                                            {task.title}
-                                        </h4>
+                                        <div className="flex items-center space-x-2 mb-1">
+                                            <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm">
+                                                {task.title}
+                                            </h4>
+                                            {task.is_recurring && (
+                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
+                                                    Recurring
+                                                </span>
+                                            )}
+                                        </div>
                                         <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                                             Due: {formatDate(task.due_date)}
                                         </p>

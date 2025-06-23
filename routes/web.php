@@ -20,6 +20,8 @@ Route::get('/', function () {
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
+        'status' => session('status'),
+        'canResetPassword' => Route::has('password.request'),
     ]);
 });
 

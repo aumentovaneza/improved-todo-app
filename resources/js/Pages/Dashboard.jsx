@@ -765,9 +765,16 @@ export default function Dashboard({
                                                     {getStatusIcon(task.status)}
                                                 </button>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                        {task.title}
-                                                    </p>
+                                                    <div className="flex items-center space-x-2">
+                                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                            {task.title}
+                                                        </p>
+                                                        {task.is_recurring && (
+                                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
+                                                                Recurring
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                                         Due:{" "}
                                                         {formatDate(

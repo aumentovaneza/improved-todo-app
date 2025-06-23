@@ -55,7 +55,13 @@ class DashboardController extends Controller
         $upcomingTaskOccurrences = collect();
         foreach ($allTasks as $task) {
             $occurrences = $task->getOccurrencesInRange($userTomorrow, $userToday->copy()->addDays(8));
-            $upcomingTaskOccurrences = $upcomingTaskOccurrences->merge($occurrences);
+
+            // For recurring tasks, only show the first (next) occurrence
+            if ($task->is_recurring && $occurrences->count() > 0) {
+                $upcomingTaskOccurrences->push($occurrences->first());
+            } else {
+                $upcomingTaskOccurrences = $upcomingTaskOccurrences->merge($occurrences);
+            }
         }
         $upcomingTasks = $upcomingTaskOccurrences->where('status', '!=', 'completed')->take(5);
 

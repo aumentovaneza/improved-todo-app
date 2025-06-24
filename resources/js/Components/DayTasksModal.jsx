@@ -84,7 +84,11 @@ export default function DayTasksModal({
     const getStatusIcon = (status) => {
         switch (status) {
             case "completed":
-                return <CheckCircle className="h-5 w-5 text-green-500" />;
+                return <CheckCircle className="h-5 w-5 text-gray-500" />;
+            case "in_progress":
+                return <Clock className="h-5 w-5 text-green-500" />;
+            case "cancelled":
+                return <AlertTriangle className="h-5 w-5 text-red-500" />;
             case "pending":
             default:
                 return <Circle className="h-5 w-5 text-gray-400" />;
@@ -135,7 +139,7 @@ export default function DayTasksModal({
                                     key={task.id}
                                     className={`p-4 border rounded-lg transition-all duration-200 hover:shadow-md ${
                                         task.status === "completed"
-                                            ? "bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800"
+                                            ? "bg-gray-50 dark:bg-gray-900/10 border-gray-200 dark:border-gray-700"
                                             : isOverdue(task)
                                             ? "bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800"
                                             : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
@@ -210,9 +214,12 @@ export default function DayTasksModal({
                                                                 className="w-3 h-3 rounded-full"
                                                                 style={{
                                                                     backgroundColor:
-                                                                        task
-                                                                            .category
-                                                                            .color,
+                                                                        task.status ===
+                                                                        "completed"
+                                                                            ? "#6B7280"
+                                                                            : task
+                                                                                  .category
+                                                                                  .color,
                                                                 }}
                                                             />
                                                             <span className="text-xs text-gray-600 dark:text-gray-400">

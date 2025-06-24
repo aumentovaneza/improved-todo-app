@@ -12,17 +12,28 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // First, add the user_id column to the categories table
+        Schema::table('categories', function (Blueprint $table) {
+            $table->unsignedBigInteger('user_id')->nullable()->after('id');
+        });
+
         // Fix any invalid user_id values by assigning them to the first user
         $firstUser = \App\Models\User::first();
         if ($firstUser) {
+            // Update any categories with null or invalid user_id values
+            DB::table('categories')
+                ->whereNull('user_id')
+                ->update(['user_id' => $firstUser->id]);
+
             // Update any categories with invalid user_id values
             DB::table('categories')
                 ->whereNotIn('user_id', DB::table('users')->pluck('id'))
                 ->update(['user_id' => $firstUser->id]);
         }
 
-        // Add the foreign key constraint
+        // Make the user_id column not nullable and add the foreign key constraint
         Schema::table('categories', function (Blueprint $table) {
+            $table->unsignedBigInteger('user_id')->nullable(false)->change();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }

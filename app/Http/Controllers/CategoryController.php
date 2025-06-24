@@ -21,6 +21,7 @@ class CategoryController extends Controller
         $categories = Category::withCount(['tasks' => function ($query) {
             $query->where('user_id', Auth::id());
         }])
+            ->where('user_id', Auth::id())
             ->where('is_active', true)
             ->orderBy('name')
             ->get();
@@ -44,7 +45,7 @@ class CategoryController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name',
+            'name' => 'required|string|max:255|unique:categories,name,NULL,id,user_id,' . Auth::id(),
             'color' => 'required|string|regex:/^#[0-9A-F]{6}$/i',
             'description' => 'nullable|string',
             'tags' => 'nullable|array',
@@ -53,6 +54,7 @@ class CategoryController extends Controller
             'tags.*.is_new' => 'boolean',
         ]);
 
+        $validated['user_id'] = Auth::id();
         $category = Category::create($validated);
 
         // Handle tags
@@ -99,6 +101,11 @@ class CategoryController extends Controller
      */
     public function show(Category $category): Response
     {
+        // Ensure user owns the category
+        if ($category->user_id !== Auth::id()) {
+            abort(403);
+        }
+
         return Inertia::render('Categories/Show', [
             'category' => $category->load(['tasks' => function ($query) {
                 $query->where('user_id', Auth::id())
@@ -132,6 +139,11 @@ class CategoryController extends Controller
      */
     public function edit(Category $category): Response
     {
+        // Ensure user owns the category
+        if ($category->user_id !== Auth::id()) {
+            abort(403);
+        }
+
         // Load category with tags
         $category->load('tags');
 
@@ -163,8 +175,13 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category): RedirectResponse
     {
+        // Ensure user owns the category
+        if ($category->user_id !== Auth::id()) {
+            abort(403);
+        }
+
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
+            'name' => 'required|string|max:255|unique:categories,name,' . $category->id . ',id,user_id,' . Auth::id(),
             'color' => 'required|string|regex:/^#[0-9A-F]{6}$/i',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
@@ -237,6 +254,11 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category): RedirectResponse
     {
+        // Ensure user owns the category
+        if ($category->user_id !== Auth::id()) {
+            abort(403);
+        }
+
         $categoryName = $category->name;
         $category->delete();
 

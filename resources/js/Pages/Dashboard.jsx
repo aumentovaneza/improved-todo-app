@@ -74,6 +74,13 @@ export default function Dashboard({
         category_id: "",
         priority: "medium",
         due_date: "",
+        start_time: "",
+        end_time: "",
+        is_all_day: true,
+        is_recurring: false,
+        recurrence_type: "",
+        recurring_until: "",
+        tags: [],
     });
 
     useEffect(() => {
@@ -93,6 +100,13 @@ export default function Dashboard({
                     category_id: "",
                     priority: "medium",
                     due_date: "",
+                    start_time: "",
+                    end_time: "",
+                    is_all_day: true,
+                    is_recurring: false,
+                    recurrence_type: "",
+                    recurring_until: "",
+                    tags: [],
                 });
                 setShowQuickTask(false);
                 toast.success("Task created successfully!");

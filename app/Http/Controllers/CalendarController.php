@@ -75,7 +75,10 @@ class CalendarController extends Controller
             ->get();
 
         // Get categories
-        $categories = Category::where('is_active', true)->orderBy('name')->get();
+        $categories = Category::where('is_active', true)
+            ->where('user_id', Auth::id())
+            ->orderBy('name')
+            ->get();
 
         return Inertia::render('Calendar/Index', [
             'tasks' => $tasks,

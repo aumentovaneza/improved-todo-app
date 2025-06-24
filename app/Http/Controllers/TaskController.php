@@ -34,7 +34,9 @@ class TaskController extends Controller
         $this->applyFilters($baseQuery, $request);
 
         // Get all active categories for the user
-        $categories = Category::where('is_active', true)->get();
+        $categories = Category::where('is_active', true)
+            ->where('user_id', Auth::id())
+            ->get();
 
         // Get all active tags
         $tags = Tag::active()->get();
@@ -174,7 +176,7 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'category_id' => 'nullable|exists:categories,id',
+            'category_id' => 'nullable|exists:categories,id,user_id,' . Auth::id(),
             'priority' => 'required|in:low,medium,high,urgent',
             'due_date' => 'nullable|date',
             'start_time' => 'nullable|date_format:H:i',
@@ -192,7 +194,7 @@ class TaskController extends Controller
         ]);
 
         // Validate recurring task logic
-        if ($validated['is_recurring']) {
+        if (isset($validated['is_recurring']) && $validated['is_recurring']) {
             if (empty($validated['recurring_until'])) {
                 return redirect()->back()->withErrors([
                     'recurring_until' => 'Recurring until date is required for recurring tasks.'
@@ -296,7 +298,7 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'category_id' => 'nullable|exists:categories,id',
+            'category_id' => 'nullable|exists:categories,id,user_id,' . Auth::id(),
             'priority' => 'required|in:low,medium,high,urgent',
             'status' => 'required|in:pending,in_progress,completed,cancelled',
             'due_date' => 'nullable|date',

@@ -32,7 +32,7 @@ class ProductionShowcaseSeeder extends Seeder
         ]);
 
         // Create comprehensive categories if they don't exist
-        $this->createCategories();
+        $this->createCategories($showcaseUser);
 
         // Create comprehensive tags if they don't exist
         $this->createTags();
@@ -45,7 +45,7 @@ class ProductionShowcaseSeeder extends Seeder
         $this->command->info('Password: showcase2024');
     }
 
-    private function createCategories()
+    private function createCategories(User $user)
     {
         $categories = [
             ['name' => 'Work', 'color' => '#3B82F6', 'description' => 'Professional tasks and projects'],
@@ -59,8 +59,9 @@ class ProductionShowcaseSeeder extends Seeder
         ];
 
         foreach ($categories as $categoryData) {
+            $categoryData['user_id'] = $user->id;
             Category::firstOrCreate(
-                ['name' => $categoryData['name']],
+                ['name' => $categoryData['name'], 'user_id' => $user->id],
                 $categoryData
             );
         }
@@ -91,14 +92,14 @@ class ProductionShowcaseSeeder extends Seeder
 
     private function createShowcaseTasks(User $user)
     {
-        $workCategory = Category::where('name', 'Work')->first();
-        $personalCategory = Category::where('name', 'Personal')->first();
-        $healthCategory = Category::where('name', 'Health & Fitness')->first();
-        $learningCategory = Category::where('name', 'Learning')->first();
-        $homeCategory = Category::where('name', 'Home & Family')->first();
-        $financeCategory = Category::where('name', 'Finance')->first();
-        $creativeCategory = Category::where('name', 'Creative')->first();
-        $travelCategory = Category::where('name', 'Travel')->first();
+        $workCategory = Category::where('name', 'Work')->where('user_id', $user->id)->first();
+        $personalCategory = Category::where('name', 'Personal')->where('user_id', $user->id)->first();
+        $healthCategory = Category::where('name', 'Health & Fitness')->where('user_id', $user->id)->first();
+        $learningCategory = Category::where('name', 'Learning')->where('user_id', $user->id)->first();
+        $homeCategory = Category::where('name', 'Home & Family')->where('user_id', $user->id)->first();
+        $financeCategory = Category::where('name', 'Finance')->where('user_id', $user->id)->first();
+        $creativeCategory = Category::where('name', 'Creative')->where('user_id', $user->id)->first();
+        $travelCategory = Category::where('name', 'Travel')->where('user_id', $user->id)->first();
 
         // Get tags for assignment
         $urgentTag = Tag::where('name', 'urgent')->first();

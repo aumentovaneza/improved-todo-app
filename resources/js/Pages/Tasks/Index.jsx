@@ -176,7 +176,7 @@ function SortableTask({
                             {task.due_date && (
                                 <div
                                     className={`flex items-center space-x-1 ${
-                                        isOverdue(task.due_date)
+                                        isOverdue(task.due_date, task.status)
                                             ? "text-red-600 dark:text-red-400"
                                             : "text-gray-500 dark:text-gray-400"
                                     }`}
@@ -702,8 +702,8 @@ export default function Index({ categorizedTasks, categories, filters }) {
         }
     };
 
-    const isOverdue = (dueDate) => {
-        if (!dueDate) return false;
+    const isOverdue = (dueDate, status) => {
+        if (!dueDate || status === "completed") return false;
         return (
             new Date(dueDate) < new Date() &&
             new Date(dueDate).toDateString() !== new Date().toDateString()

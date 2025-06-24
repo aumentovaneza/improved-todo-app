@@ -119,6 +119,8 @@ export default function Index({
     const getTaskStatusColor = (status) => {
         switch (status) {
             case "completed":
+                return "bg-gray-500";
+            case "in_progress":
                 return "bg-green-500";
             case "pending":
                 return "bg-blue-500";
@@ -485,9 +487,12 @@ export default function Index({
                                                                 className="inline-block text-xs px-2 py-1 rounded-full text-white"
                                                                 style={{
                                                                     backgroundColor:
-                                                                        task
-                                                                            .category
-                                                                            .color,
+                                                                        task.status ===
+                                                                        "completed"
+                                                                            ? "#6B7280"
+                                                                            : task
+                                                                                  .category
+                                                                                  .color,
                                                                 }}
                                                             >
                                                                 {
@@ -970,7 +975,11 @@ export default function Index({
                                                 className="inline-block text-xs px-2 py-1 rounded-full text-white mt-2"
                                                 style={{
                                                     backgroundColor:
-                                                        task.category.color,
+                                                        task.status ===
+                                                        "completed"
+                                                            ? "#6B7280"
+                                                            : task.category
+                                                                  .color,
                                                 }}
                                             >
                                                 {task.category.name}
@@ -1015,7 +1024,11 @@ export default function Index({
                                                 className="inline-block text-xs px-2 py-1 rounded-full text-white mt-2"
                                                 style={{
                                                     backgroundColor:
-                                                        task.category.color,
+                                                        task.status ===
+                                                        "completed"
+                                                            ? "#6B7280"
+                                                            : task.category
+                                                                  .color,
                                                 }}
                                             >
                                                 {task.category.name}

@@ -67,10 +67,6 @@ class SetupShowcaseUser extends Command
         $this->newLine();
         $this->info('🎉 Showcase setup completed successfully!');
         $this->newLine();
-        $this->line('You can now log in with:');
-        $this->line('📧 Email: showcase@todoapp.com');
-        $this->line('🔑 Password: showcase2024');
-        $this->newLine();
         $this->line('This user has been created with:');
         $this->line('• Diverse task categories (Work, Personal, Health, Learning, etc.)');
         $this->line('• Tasks with different priorities and statuses');

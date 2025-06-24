@@ -109,7 +109,13 @@ class CategoryController extends Controller
         return Inertia::render('Categories/Show', [
             'category' => $category->load(['tasks' => function ($query) {
                 $query->where('user_id', Auth::id())
-                    ->with('tags')
+                    ->with(['tags', 'subtasks'])
+                    ->withCount([
+                        'subtasks',
+                        'subtasks as completed_subtasks_count' => function ($query) {
+                            $query->where('is_completed', true);
+                        }
+                    ])
                     ->orderByRaw("
                         CASE 
                             WHEN status = 'pending' THEN 1

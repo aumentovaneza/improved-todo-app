@@ -12,6 +12,7 @@ import {
     AlertTriangle,
     CheckCircle,
     Calendar,
+    ListTodo,
 } from "lucide-react";
 import TaskViewModal from "@/Components/TaskViewModal";
 import { toast } from "react-toastify";
@@ -93,8 +94,8 @@ export default function Show({ category }) {
         }
     };
 
-    const isOverdue = (dueDate) => {
-        if (!dueDate) return false;
+    const isOverdue = (dueDate, status) => {
+        if (!dueDate || status === "completed") return false;
         return (
             new Date(dueDate) < new Date() &&
             new Date(dueDate).toDateString() !== new Date().toDateString()
@@ -320,7 +321,8 @@ export default function Show({ category }) {
                                                         <div
                                                             className={`flex items-center space-x-1 ${
                                                                 isOverdue(
-                                                                    task.due_date
+                                                                    task.due_date,
+                                                                    task.status
                                                                 )
                                                                     ? "text-red-600 dark:text-red-400"
                                                                     : "text-gray-500 dark:text-gray-400"
@@ -392,7 +394,85 @@ export default function Show({ category }) {
                                                             </span>
                                                         </div>
                                                     )}
+
+                                                    {/* Subtasks count */}
+                                                    {(task.subtasks_count > 0 ||
+                                                        (task.subtasks &&
+                                                            task.subtasks
+                                                                .length >
+                                                                0)) && (
+                                                        <div className="flex items-center space-x-1">
+                                                            <ListTodo className="h-3 w-3 text-gray-400" />
+                                                            <span
+                                                                className={`text-xs font-medium ${
+                                                                    task.subtasks_count >
+                                                                        0 ||
+                                                                    (task.subtasks &&
+                                                                        task
+                                                                            .subtasks
+                                                                            .length >
+                                                                            0)
+                                                                        ? "text-blue-600 dark:text-blue-400"
+                                                                        : "text-gray-500 dark:text-gray-400"
+                                                                }`}
+                                                            >
+                                                                {task.completed_subtasks_count ||
+                                                                    0}
+                                                                /
+                                                                {task.subtasks_count ||
+                                                                    (task.subtasks
+                                                                        ? task
+                                                                              .subtasks
+                                                                              .length
+                                                                        : 0)}
+                                                            </span>
+                                                            <span className="text-xs text-gray-400">
+                                                                subtasks
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                 </div>
+
+                                                {/* Subtasks Display */}
+                                                {task.subtasks &&
+                                                    task.subtasks.length >
+                                                        0 && (
+                                                        <div className="mt-3 pl-6 border-l-2 border-gray-200 dark:border-gray-700">
+                                                            <div className="space-y-1">
+                                                                {task.subtasks.map(
+                                                                    (
+                                                                        subtask
+                                                                    ) => (
+                                                                        <div
+                                                                            key={
+                                                                                subtask.id
+                                                                            }
+                                                                            className="flex items-center space-x-2 text-xs"
+                                                                        >
+                                                                            <div className="flex-shrink-0">
+                                                                                {subtask.is_completed ? (
+                                                                                    <CheckCircle className="h-3 w-3 text-green-500" />
+                                                                                ) : (
+                                                                                    <Circle className="h-3 w-3 text-gray-400" />
+                                                                                )}
+                                                                            </div>
+                                                                            <span
+                                                                                className={`text-xs ${
+                                                                                    subtask.is_completed
+                                                                                        ? "line-through text-gray-500 dark:text-gray-400"
+                                                                                        : "text-gray-700 dark:text-gray-300"
+                                                                                }`}
+                                                                            >
+                                                                                {
+                                                                                    subtask.title
+                                                                                }
+                                                                            </span>
+                                                                        </div>
+                                                                    )
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
                                             </div>
                                         </div>
                                         <button
@@ -455,6 +535,14 @@ export default function Show({ category }) {
                     setSelectedTask(null);
                 }}
                 task={selectedTask}
+                onTaskUpdate={(updatedTask) => {
+                    // Update the task in the local state
+                    setTasks((prevTasks) =>
+                        prevTasks.map((t) =>
+                            t.id === updatedTask.id ? updatedTask : t
+                        )
+                    );
+                }}
             />
         </TodoLayout>
     );

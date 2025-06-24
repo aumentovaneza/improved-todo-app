@@ -200,8 +200,8 @@ export default function Dashboard({
         return new Date(date).toLocaleDateString();
     };
 
-    const isOverdue = (dueDate) => {
-        if (!dueDate) return false;
+    const isOverdue = (dueDate, status) => {
+        if (!dueDate || status === "completed") return false;
         return (
             new Date(dueDate) < new Date() &&
             new Date(dueDate).toDateString() !== new Date().toDateString()

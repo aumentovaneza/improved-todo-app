@@ -21,8 +21,8 @@ export default function TaskViewModal({ show, onClose, task, onTaskUpdate }) {
         }
     };
 
-    const isOverdue = (dueDate) => {
-        if (!dueDate) return false;
+    const isOverdue = (dueDate, status) => {
+        if (!dueDate || status === "completed") return false;
         return (
             new Date(dueDate) < new Date() &&
             new Date(dueDate).toDateString() !== new Date().toDateString()
@@ -99,7 +99,7 @@ export default function TaskViewModal({ show, onClose, task, onTaskUpdate }) {
                             {task.due_date ? (
                                 <div
                                     className={`flex flex-col space-y-1 ${
-                                        isOverdue(task.due_date)
+                                        isOverdue(task.due_date, task.status)
                                             ? "text-red-600 dark:text-red-400"
                                             : "text-gray-900 dark:text-gray-100"
                                     }`}
@@ -107,7 +107,10 @@ export default function TaskViewModal({ show, onClose, task, onTaskUpdate }) {
                                     <div className="flex items-center space-x-1">
                                         <Calendar className="h-4 w-4" />
                                         <span>
-                                            {isOverdue(task.due_date)
+                                            {isOverdue(
+                                                task.due_date,
+                                                task.status
+                                            )
                                                 ? "Overdue - "
                                                 : ""}
                                             {new Date(

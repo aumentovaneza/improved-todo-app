@@ -16,7 +16,30 @@ class TodoSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create categories
+        // Get users to assign tasks to
+        $demoUser = User::where('email', 'demo@example.com')->first();
+        $testUser = User::where('email', 'test@example.com')->first();
+        $adminUser = User::where('email', 'admin@example.com')->first();
+
+        // Create categories for each user and their tasks
+        if ($demoUser) {
+            $this->createCategoriesForUser($demoUser);
+            $this->createTasksForUser($demoUser);
+        }
+
+        if ($testUser) {
+            $this->createCategoriesForUser($testUser);
+            $this->createTasksForUser($testUser, true); // fewer tasks
+        }
+
+        if ($adminUser) {
+            $this->createCategoriesForUser($adminUser);
+            $this->createAdminTasks($adminUser);
+        }
+    }
+
+    private function createCategoriesForUser(User $user)
+    {
         $categories = [
             ['name' => 'Work', 'color' => '#3B82F6', 'description' => 'Work-related tasks'],
             ['name' => 'Personal', 'color' => '#10B981', 'description' => 'Personal tasks and goals'],
@@ -26,38 +49,26 @@ class TodoSeeder extends Seeder
         ];
 
         foreach ($categories as $categoryData) {
+            $categoryData['user_id'] = $user->id;
             Category::create($categoryData);
-        }
-
-        // Get users to assign tasks to
-        $demoUser = User::where('email', 'demo@example.com')->first();
-        $testUser = User::where('email', 'test@example.com')->first();
-        $adminUser = User::where('email', 'admin@example.com')->first();
-
-        // Create sample tasks for demo user
-        if ($demoUser) {
-            $this->createTasksForUser($demoUser);
-        }
-
-        // Create some tasks for test user
-        if ($testUser) {
-            $this->createTasksForUser($testUser, true); // fewer tasks
-        }
-
-        // Create admin tasks
-        if ($adminUser) {
-            $this->createAdminTasks($adminUser);
         }
     }
 
     private function createTasksForUser(User $user, bool $minimal = false)
     {
+        // Get user's categories
+        $workCategory = Category::where('name', 'Work')->where('user_id', $user->id)->first();
+        $personalCategory = Category::where('name', 'Personal')->where('user_id', $user->id)->first();
+        $healthCategory = Category::where('name', 'Health')->where('user_id', $user->id)->first();
+        $learningCategory = Category::where('name', 'Learning')->where('user_id', $user->id)->first();
+        $homeCategory = Category::where('name', 'Home')->where('user_id', $user->id)->first();
+
         // Regular non-recurring tasks
         $tasks = [
             [
                 'title' => 'Complete project proposal',
                 'description' => 'Finish the quarterly project proposal for the new client',
-                'category_id' => Category::where('name', 'Work')->first()->id,
+                'category_id' => $workCategory->id,
                 'priority' => 'high',
                 'status' => 'in_progress',
                 'due_date' => Carbon::today()->addDays(2),
@@ -66,7 +77,7 @@ class TodoSeeder extends Seeder
             [
                 'title' => 'Grocery shopping',
                 'description' => 'Buy groceries for the week',
-                'category_id' => Category::where('name', 'Home')->first()->id,
+                'category_id' => $homeCategory->id,
                 'priority' => 'low',
                 'status' => 'pending',
                 'due_date' => Carbon::today()->addDays(1),
@@ -75,7 +86,7 @@ class TodoSeeder extends Seeder
             [
                 'title' => 'Review quarterly reports',
                 'description' => 'Review and approve quarterly financial reports',
-                'category_id' => Category::where('name', 'Work')->first()->id,
+                'category_id' => $workCategory->id,
                 'priority' => 'urgent',
                 'status' => 'pending',
                 'due_date' => Carbon::today()->subDays(1), // Overdue
@@ -88,7 +99,7 @@ class TodoSeeder extends Seeder
             [
                 'title' => 'Daily Morning Workout',
                 'description' => '30-minute cardio and strength training every morning',
-                'category_id' => Category::where('name', 'Health')->first()->id,
+                'category_id' => $healthCategory->id,
                 'priority' => 'medium',
                 'status' => 'pending',
                 'is_recurring' => true,
@@ -101,7 +112,7 @@ class TodoSeeder extends Seeder
             [
                 'title' => 'Weekly Team Meeting',
                 'description' => 'Weekly standup meeting with the development team',
-                'category_id' => Category::where('name', 'Work')->first()->id,
+                'category_id' => $workCategory->id,
                 'priority' => 'high',
                 'status' => 'pending',
                 'is_recurring' => true,
@@ -114,7 +125,7 @@ class TodoSeeder extends Seeder
             [
                 'title' => 'Monthly Budget Review',
                 'description' => 'Review monthly expenses and budget planning',
-                'category_id' => Category::where('name', 'Personal')->first()->id,
+                'category_id' => $personalCategory->id,
                 'priority' => 'medium',
                 'status' => 'pending',
                 'is_recurring' => true,
@@ -125,7 +136,7 @@ class TodoSeeder extends Seeder
             [
                 'title' => 'Annual Health Checkup',
                 'description' => 'Comprehensive annual health examination',
-                'category_id' => Category::where('name', 'Health')->first()->id,
+                'category_id' => $healthCategory->id,
                 'priority' => 'high',
                 'status' => 'pending',
                 'is_recurring' => true,
@@ -141,7 +152,7 @@ class TodoSeeder extends Seeder
                 [
                     'title' => 'Learn React hooks',
                     'description' => 'Study advanced React hooks and custom hooks',
-                    'category_id' => Category::where('name', 'Learning')->first()->id,
+                    'category_id' => $learningCategory->id,
                     'priority' => 'medium',
                     'status' => 'pending',
                     'due_date' => Carbon::today()->addDays(5),
@@ -150,7 +161,7 @@ class TodoSeeder extends Seeder
                 [
                     'title' => 'Call mom',
                     'description' => 'Weekly check-in call with mom',
-                    'category_id' => Category::where('name', 'Personal')->first()->id,
+                    'category_id' => $personalCategory->id,
                     'priority' => 'medium',
                     'status' => 'completed',
                     'due_date' => Carbon::yesterday(),
@@ -160,7 +171,7 @@ class TodoSeeder extends Seeder
                 [
                     'title' => 'Plan weekend trip',
                     'description' => 'Research and plan the upcoming weekend getaway',
-                    'category_id' => Category::where('name', 'Personal')->first()->id,
+                    'category_id' => $personalCategory->id,
                     'priority' => 'low',
                     'status' => 'pending',
                     'due_date' => Carbon::today()->addDays(7),
@@ -169,7 +180,7 @@ class TodoSeeder extends Seeder
                 [
                     'title' => 'Update portfolio',
                     'description' => 'Add recent projects to personal portfolio',
-                    'category_id' => Category::where('name', 'Work')->first()->id,
+                    'category_id' => $workCategory->id,
                     'priority' => 'medium',
                     'status' => 'pending',
                     'due_date' => Carbon::today()->addDays(3),
@@ -190,11 +201,14 @@ class TodoSeeder extends Seeder
 
     private function createAdminTasks(User $adminUser)
     {
+        // Get admin user's work category
+        $workCategory = Category::where('name', 'Work')->where('user_id', $adminUser->id)->first();
+
         $adminTasks = [
             [
                 'title' => 'System Maintenance',
                 'description' => 'Perform routine system maintenance and updates',
-                'category_id' => Category::where('name', 'Work')->first()->id,
+                'category_id' => $workCategory->id,
                 'priority' => 'high',
                 'status' => 'pending',
                 'due_date' => Carbon::today()->addDays(1),
@@ -203,7 +217,7 @@ class TodoSeeder extends Seeder
             [
                 'title' => 'User Access Review',
                 'description' => 'Review user permissions and access levels',
-                'category_id' => Category::where('name', 'Work')->first()->id,
+                'category_id' => $workCategory->id,
                 'priority' => 'medium',
                 'status' => 'pending',
                 'due_date' => Carbon::today()->addDays(3),
@@ -212,7 +226,7 @@ class TodoSeeder extends Seeder
             [
                 'title' => 'Weekly Server Backup',
                 'description' => 'Automated weekly server backup verification',
-                'category_id' => Category::where('name', 'Work')->first()->id,
+                'category_id' => $workCategory->id,
                 'priority' => 'high',
                 'status' => 'pending',
                 'is_recurring' => true,
@@ -225,7 +239,7 @@ class TodoSeeder extends Seeder
             [
                 'title' => 'Monthly Security Audit',
                 'description' => 'Comprehensive security audit and vulnerability assessment',
-                'category_id' => Category::where('name', 'Work')->first()->id,
+                'category_id' => $workCategory->id,
                 'priority' => 'urgent',
                 'status' => 'pending',
                 'is_recurring' => true,

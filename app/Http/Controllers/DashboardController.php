@@ -95,7 +95,10 @@ class DashboardController extends Controller
         ];
 
         // Get categories for quick task creation
-        $categories = Category::where('is_active', true)->with('tags')->get();
+        $categories = Category::where('is_active', true)
+            ->where('user_id', Auth::id())
+            ->with('tags')
+            ->get();
 
         // Generate a week's worth of task occurrences for the schedule modal
         $weekStart = $userToday->copy();

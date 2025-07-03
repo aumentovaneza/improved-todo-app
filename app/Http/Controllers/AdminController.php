@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Category;
-use App\Models\Task;
-use App\Models\ActivityLog;
 use App\Models\InviteCode;
+use App\Models\ActivityLog;
+use App\Services\UserService;
+use App\Services\ActivityLogService;
+use App\Services\TaskService;
+use App\Services\CategoryService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -16,21 +18,22 @@ use Inertia\Response;
 
 class AdminController extends Controller
 {
+    public function __construct(
+        private UserService $userService,
+        private ActivityLogService $activityLogService,
+        private TaskService $taskService,
+        private CategoryService $categoryService
+    ) {}
+
     public function dashboard(): Response
     {
-        $stats = [
-            'total_users' => User::count(),
-            'total_tasks' => Task::count(),
-            'total_categories' => Category::count(),
-            'completed_tasks' => Task::where('status', 'completed')->count(),
-            'pending_tasks' => Task::where('status', 'pending')->count(),
-            'overdue_tasks' => Task::overdue()->count(),
-        ];
+        $userStats = $this->userService->getUserStatistics();
+        $taskStats = $this->taskService->getGlobalTaskStats();
+        $categoryStats = $this->categoryService->getGlobalCategoryStats();
 
-        $recent_activities = ActivityLog::with('user')
-            ->latest()
-            ->take(5)
-            ->get();
+        $stats = array_merge($userStats, $taskStats, $categoryStats);
+
+        $recent_activities = $this->activityLogService->getRecentActivityLogs(5);
 
         return Inertia::render('Admin/Dashboard', [
             'stats' => $stats,
@@ -40,25 +43,12 @@ class AdminController extends Controller
 
     public function users(Request $request): Response
     {
-        $query = User::withCount(['tasks', 'activityLogs']);
-
-        if ($request->filled('search')) {
-            $search = $request->get('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('role')) {
-            $query->where('role', $request->get('role'));
-        }
-
-        $users = $query->orderBy('created_at', 'desc')->paginate(20);
+        $filters = $request->only(['search', 'role']);
+        $users = $this->userService->getAllUsers($filters);
 
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,
-            'filters' => $request->only(['search', 'role']),
+            'filters' => $filters,
         ]);
     }
 
@@ -71,29 +61,20 @@ class AdminController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'required|string|email|max:255',
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|in:member,admin',
             'timezone' => 'required|string|timezone',
         ]);
 
-        $validated['password'] = Hash::make($validated['password']);
-
-        $user = User::create($validated);
-
-        // Log activity
-        ActivityLog::create([
-            'user_id' => Auth::id(),
-            'action' => 'create',
-            'model_type' => 'User',
-            'model_id' => $user->id,
-            'new_values' => $validated,
-            'description' => "Created user: {$user->name}",
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
-
-        return redirect()->route('admin.users.index')->with('message', 'User created successfully');
+        try {
+            $this->userService->createUser($validated, Auth::id());
+            return redirect()->route('admin.users.index')->with('message', 'User created successfully');
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->back()->withErrors(['error' => $e->getMessage()])->withInput();
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Failed to create user. Please try again.'])->withInput();
+        }
     }
 
     public function editUser(User $user): Response
@@ -107,92 +88,45 @@ class AdminController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'required|string|email|max:255',
             'role' => 'required|in:member,admin',
             'timezone' => 'required|string|timezone',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
 
-        $oldValues = $user->toArray();
-
-        if (isset($validated['password']) && !empty($validated['password'])) {
-            $validated['password'] = Hash::make($validated['password']);
-        } else {
-            unset($validated['password']);
+        try {
+            $this->userService->updateUser($user, $validated, Auth::id());
+            return redirect()->route('admin.users.index')->with('message', 'User updated successfully');
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->back()->withErrors(['error' => $e->getMessage()])->withInput();
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Failed to update user. Please try again.'])->withInput();
         }
-
-        $user->update($validated);
-
-        // Log activity
-        ActivityLog::create([
-            'user_id' => Auth::id(),
-            'action' => 'update',
-            'model_type' => 'User',
-            'model_id' => $user->id,
-            'old_values' => $oldValues,
-            'new_values' => $validated,
-            'description' => "Updated user: {$user->name}",
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
-
-        return redirect()->route('admin.users.index')->with('message', 'User updated successfully');
     }
 
     public function deleteUser(User $user)
     {
-        if ($user->id === Auth::id()) {
-            return redirect()->back()->withErrors(['message' => 'Cannot delete your own account']);
+        try {
+            $this->userService->deleteUser($user, Auth::id());
+            return redirect()->route('admin.users.index')->with('message', 'User deleted successfully');
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Failed to delete user. Please try again.']);
         }
-
-        $userName = $user->name;
-
-        // Log activity before deletion
-        ActivityLog::create([
-            'user_id' => Auth::id(),
-            'action' => 'delete',
-            'model_type' => 'User',
-            'model_id' => $user->id,
-            'old_values' => $user->toArray(),
-            'description' => "Deleted user: {$userName}",
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
-
-        $user->delete();
-
-        return redirect()->route('admin.users.index')->with('message', 'User deleted successfully');
     }
 
     public function activityLogs(Request $request): Response
     {
-        $query = ActivityLog::with('user');
-
-        if ($request->filled('search')) {
-            $search = $request->get('search');
-            $query->where('description', 'like', "%{$search}%");
-        }
-
-        if ($request->filled('user_id')) {
-            $query->where('user_id', $request->get('user_id'));
-        }
-
-        if ($request->filled('action')) {
-            $query->where('action', $request->get('action'));
-        }
-
-        if ($request->filled('model_type')) {
-            $query->where('model_type', $request->get('model_type'));
-        }
-
-        $logs = $query->latest()->paginate(10);
+        $filters = $request->only(['search', 'user_id', 'action', 'model_type']);
+        $logs = $this->activityLogService->getActivityLogs($filters, 10);
 
         $users = User::select('id', 'name')->get();
 
         return Inertia::render('Admin/ActivityLogs/Index', [
             'logs' => $logs,
             'users' => $users,
-            'filters' => $request->only(['search', 'user_id', 'action', 'model_type']),
+            'filters' => $filters,
         ]);
     }
 

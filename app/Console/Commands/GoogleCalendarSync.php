@@ -3,12 +3,8 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Google\Client;
-use Google\Service\Calendar;
-use App\Models\Task;
+use App\Services\GoogleCalendarService;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
-
 
 class GoogleCalendarSync extends Command
 {
@@ -17,45 +13,67 @@ class GoogleCalendarSync extends Command
      *
      * @var string
      */
-    protected $signature = 'app:google-calendar-sync';
+    protected $signature = 'app:google-calendar-sync {--user-id= : Sync for specific user ID}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Sync Google Calendar with tasks';
+    protected $description = 'Sync Google Calendar with tasks for all users or specific user';
+
+    public function __construct(
+        private GoogleCalendarService $googleCalendarService
+    ) {
+        parent::__construct();
+    }
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $client = new Client();
-        $client->setClientId(config('services.google.client_id'));
-        $client->setClientSecret(config('services.google.client_secret'));
-        $client->setAccessToken(decrypt(Auth::user()->google_token));
-        
-        $service = new Calendar($client);
-        
-        $events = $service->events->listEvents('primary', [
-            'timeMin' => now()->toRfc3339String(),
-            'singleEvents' => true,
-            'orderBy' => 'startTime',
-        ]);
-        
-        foreach ($events->getItems() as $event) {
-            Task::updateOrCreate(
-                ['google_event_id' => $event->getId()],
-                [
-                    'user_id' => Auth::user()->id,
-                    'title' => $event->getSummary(),
-                    'description' => $event->getDescription(),
-                    'start_time' => $event->getStart()->getDateTime(),
-                    'end_time' => $event->getEnd()->getDateTime(),
-                    'is_from_google' => true,
-                ]
-            );
+        $userId = $this->option('user-id');
+
+        if ($userId) {
+            // Sync for specific user
+            $user = User::find($userId);
+            if (!$user) {
+                $this->error("User with ID {$userId} not found.");
+                return 1;
+            }
+
+            $this->syncForUser($user);
+        } else {
+            // Sync for all users with Google Calendar connected
+            $users = User::whereNotNull('google_token')
+                ->whereNotNull('google_token_expires')
+                ->where('google_token_expires', '>', now())
+                ->get();
+
+            $this->info("Found {$users->count()} users with Google Calendar connected.");
+
+            foreach ($users as $user) {
+                $this->syncForUser($user);
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Sync Google Calendar for a specific user
+     */
+    private function syncForUser(User $user): void
+    {
+        $this->info("Syncing Google Calendar for user: {$user->name} ({$user->email})");
+
+        $result = $this->googleCalendarService->syncFromCalendar($user);
+
+        if ($result['success']) {
+            $this->info("✓ {$result['message']}");
+        } else {
+            $this->error("✗ Failed to sync for {$user->name}: {$result['message']}");
         }
     }
 }

@@ -137,6 +137,7 @@ function SortableTask({
                         )}
                     </button>
 
+
                     {/* Task Title */}
                     <div className="flex-1 min-w-0">
                         <button
@@ -151,7 +152,7 @@ function SortableTask({
                             }`}
                             title={task.title}
                         >
-                            {task.title.length > 30 ? `${task.title.substring(0, 30)}...` : task.title}
+                            {task.title.length > 100 ? `${task.title.substring(0, 100)}...` : task.title}
                         </button>
                         {task.description && (
                             <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-1">

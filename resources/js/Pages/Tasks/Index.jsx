@@ -144,14 +144,14 @@ function SortableTask({
                                 setSelectedTask(task);
                                 setShowViewModal(true);
                             }}
-                            className={`text-left font-medium truncate hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${
+                            className={`text-left font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${
                                 task.status === "completed"
                                     ? "text-gray-500 dark:text-gray-400 line-through"
                                     : "text-gray-900 dark:text-gray-100"
                             }`}
                             title={task.title}
                         >
-                            {task.title}
+                            {task.title.length > 30 ? `${task.title.substring(0, 30)}...` : task.title}
                         </button>
                         {task.description && (
                             <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-1">

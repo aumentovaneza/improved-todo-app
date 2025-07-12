@@ -136,6 +136,7 @@ function SortableTask({
                             <Square className="h-5 w-5 text-gray-400 hover:text-green-500" />
                         )}
                     </button>
+                    
 
                     {/* Task Title */}
                     <div className="flex-1 min-w-0">

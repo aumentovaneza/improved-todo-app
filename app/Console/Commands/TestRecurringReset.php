@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\Task;
 use App\Models\User;
+use App\Services\TaskService;
 use Carbon\Carbon;
 
 class TestRecurringReset extends Command
@@ -22,6 +23,12 @@ class TestRecurringReset extends Command
      * @var string
      */
     protected $description = 'Test the recurring task reset functionality by creating and resetting a sample task';
+
+    public function __construct(
+        private TaskService $taskService
+    ) {
+        parent::__construct();
+    }
 
     /**
      * Execute the console command.
@@ -73,7 +80,8 @@ class TestRecurringReset extends Command
 
         // Now run the reset command
         $this->info("\nRunning recurring task reset...");
-        $this->call('tasks:reset-recurring');
+        $resetCount = $this->taskService->resetRecurringTasks();
+        $this->info("Reset {$resetCount} recurring tasks.");
 
         // Refresh the task from database
         $task->refresh();

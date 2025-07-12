@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Task;
-use App\Models\Category;
+use App\Services\TaskService;
+use App\Services\CategoryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -12,110 +12,39 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        private TaskService $taskService,
+        private CategoryService $categoryService
+    ) {}
     public function index(): Response
     {
+        $userId = Auth::id();
         $user = Auth::user();
         $userToday = $user->todayInUserTimezone();
-        $userTomorrow = $userToday->copy()->addDay();
 
-        // Get all user tasks
-        $allTasks = Task::with(['category', 'subtasks', 'tags'])
-            ->withCount([
-                'subtasks',
-                'subtasks as completed_subtasks_count' => function ($query) {
-                    $query->where('is_completed', true);
-                }
-            ])
-            ->where('user_id', $user->id)
-            ->get();
+        // Get dashboard data using services
+        $todayTasks = $this->taskService->getTodayTasksForUser($userId, 5);
+        $overdueTasks = $this->taskService->getOverdueTasksForUser($userId, 5);
+        $upcomingTasks = $this->taskService->getUpcomingTasksForUser($userId, 5);
+        $currentTasks = $this->taskService->getInProgressTasksForUser($userId, 3);
 
-        // Generate today's tasks (including recurring instances)
-        $todayTaskOccurrences = collect();
-        foreach ($allTasks as $task) {
-            $occurrences = $task->getOccurrencesInRange($userToday, $userToday->copy()->endOfDay());
-            $todayTaskOccurrences = $todayTaskOccurrences->merge($occurrences);
-        }
-        $todayTasks = $todayTaskOccurrences->where('status', '!=', 'completed')->take(5);
-
-        // Get overdue tasks (only non-recurring tasks can be overdue)
-        $overdueTasks = Task::with(['category', 'subtasks', 'tags'])
-            ->withCount([
-                'subtasks',
-                'subtasks as completed_subtasks_count' => function ($query) {
-                    $query->where('is_completed', true);
-                }
-            ])
-            ->overdueForUser($user)
-            ->where('is_recurring', false)
-            ->orderByDateTime()
-            ->take(5)
-            ->get();
-
-        // Get upcoming tasks (next 7 days including recurring instances)
-        $upcomingTaskOccurrences = collect();
-        foreach ($allTasks as $task) {
-            $occurrences = $task->getOccurrencesInRange($userTomorrow, $userToday->copy()->addDays(8));
-
-            // For recurring tasks, only show the first (next) occurrence
-            if ($task->is_recurring && $occurrences->count() > 0) {
-                $upcomingTaskOccurrences->push($occurrences->first());
-            } else {
-                $upcomingTaskOccurrences = $upcomingTaskOccurrences->merge($occurrences);
-            }
-        }
-        $upcomingTasks = $upcomingTaskOccurrences->where('status', '!=', 'completed')->take(5);
-
-        // Get current tasks (pending and in progress, non-recurring only for simplicity)
-        $currentTasks = Task::with(['category', 'subtasks', 'tags'])
-            ->withCount([
-                'subtasks',
-                'subtasks as completed_subtasks_count' => function ($query) {
-                    $query->where('is_completed', true);
-                }
-            ])
-            ->where('user_id', $user->id)
-            ->where('is_recurring', false)
-            ->whereIn('status', ['in_progress'])
-            ->orderBy('due_date', 'asc')
-            ->orderBy('priority', 'desc')
-            ->take(3)
-            ->get();
-
-        // Get quick stats (only count non-recurring tasks for stats to avoid confusion)
-        $totalTasks = Task::where('user_id', $user->id)->count();
-        $completedTasks = Task::where('user_id', $user->id)->where('status', 'completed')->count();
-
-        $stats = [
-            'total_tasks' => $totalTasks,
-            'completed_tasks' => $completedTasks,
-            'pending_tasks' => Task::where('user_id', $user->id)->where('status', 'pending')->count(),
-            'overdue_tasks' => $overdueTasks->count(),
-            'today_tasks' => $todayTasks->count(),
-            'completion_rate' => $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0,
-        ];
+        // Get task statistics
+        $stats = $this->taskService->getTaskStatsForUser($userId);
 
         // Get categories for quick task creation
-        $categories = Category::where('is_active', true)
-            ->where('user_id', Auth::id())
-            ->with('tags')
-            ->get();
+        $categories = $this->categoryService->getActiveCategoriesForUser($userId);
 
-        // Generate a week's worth of task occurrences for the schedule modal
+        // Get weekly tasks for schedule modal
         $weekStart = $userToday->copy();
         $weekEnd = $userToday->copy()->addDays(7);
-
-        $weeklyTaskOccurrences = collect();
-        foreach ($allTasks as $task) {
-            $occurrences = $task->getOccurrencesInRange($weekStart, $weekEnd);
-            $weeklyTaskOccurrences = $weeklyTaskOccurrences->merge($occurrences);
-        }
+        $weeklyTasks = $this->taskService->getTasksInDateRange($userId, $weekStart, $weekEnd);
 
         return Inertia::render('Dashboard', [
             'currentTasks' => $currentTasks->values()->all(),
             'todayTasks' => $todayTasks->values()->all(),
             'overdueTasks' => $overdueTasks->values()->all(),
             'upcomingTasks' => $upcomingTasks->values()->all(),
-            'weeklyTasks' => $weeklyTaskOccurrences->values()->all(),
+            'weeklyTasks' => $weeklyTasks->values()->all(),
             'stats' => $stats,
             'categories' => $categories->values()->all(),
         ]);

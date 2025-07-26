@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -69,6 +70,25 @@ class User extends Authenticatable
     public function categories(): HasMany
     {
         return $this->hasMany(Category::class);
+    }
+
+    public function organizedWorkspaces(): HasMany
+    {
+        return $this->hasMany(Workspace::class, 'organizer_id');
+    }
+
+    public function collaboratingWorkspaces(): BelongsToMany
+    {
+        return $this->belongsToMany(Workspace::class, 'workspace_collaborators')
+            ->withPivot('role', 'joined_at')
+            ->withTimestamps();
+    }
+
+    public function collaboratingBoards(): BelongsToMany
+    {
+        return $this->belongsToMany(Board::class, 'board_collaborators')
+            ->withPivot('role', 'joined_at')
+            ->withTimestamps();
     }
 
     public function isAdmin(): bool

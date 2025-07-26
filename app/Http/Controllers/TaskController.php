@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
-use App\Models\Category;
-use App\Models\Tag;
-use App\Models\ActivityLog;
+use App\Services\TaskService;
+use App\Services\CategoryService;
+use App\Services\TagService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -15,11 +15,20 @@ use Illuminate\Http\RedirectResponse;
 
 class TaskController extends Controller
 {
+    public function __construct(
+        private TaskService $taskService,
+        private CategoryService $categoryService,
+        private TagService $tagService
+    ) {}
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request): Response
     {
+
+        $filters = $request->only(['search', 'status', 'priority', 'category_id', 'due_date_filter']);
+
         $baseQuery = Task::with(['category', 'subtasks', 'tags'])
             ->where('status', '!=', 'completed')
             ->where('board_id', null)
@@ -71,104 +80,29 @@ class TaskController extends Controller
                 ->orderBy('position')
                 ->paginate(5, ['*'], "category_{$category->id}_page");
 
-            // Include all categories, regardless of whether they have tasks
-            $categorizedTasks[] = [
-                'category' => $category,
-                'tasks' => $paginatedTasks
-            ];
+
+        // Add default filter to exclude completed tasks if not explicitly requested
+        if (empty($filters['status'])) {
+            $filters['status'] = 'not_completed';
         }
 
-        // Handle uncategorized tasks
-        $uncategorizedQuery = clone $baseQuery;
-        $uncategorizedQuery->whereNull('category_id');
+        $categorizedTasks = $this->taskService->getCategorizedTasksForUser(Auth::id(), $filters);
 
-        // Apply same ordering logic to uncategorized tasks
-        $uncategorizedTasks = $uncategorizedQuery
-            ->orderByRaw("CASE 
-                WHEN status = 'in_progress' THEN 1 
-                WHEN status = 'pending' THEN 2 
-                WHEN status = 'cancelled' THEN 3 
-                WHEN status = 'completed' THEN 4 
-                ELSE 5 
-            END")
-            ->orderByRaw("CASE 
-                WHEN priority = 'urgent' THEN 1 
-                WHEN priority = 'high' THEN 2 
-                WHEN priority = 'medium' THEN 3 
-                WHEN priority = 'low' THEN 4 
-                ELSE 5 
-            END")
-            ->orderBy('position')
-            ->paginate(5, ['*'], 'uncategorized_page');
+        // Get all active categories for the user
+        $categories = $this->categoryService->getActiveCategoriesForUser(Auth::id());
 
-        if ($uncategorizedTasks->total() > 0) {
-            $categorizedTasks[] = [
-                'category' => (object) [
-                    'id' => null,
-                    'name' => 'Uncategorized',
-                    'color' => '#6B7280',
-                    'is_active' => true
-                ],
-                'tasks' => $uncategorizedTasks
-            ];
-        }
+        // Get all active tags
+        $tags = $this->tagService->getAllTags();
 
         return Inertia::render('Tasks/Index', [
             'categorizedTasks' => $categorizedTasks,
-            'categories' => $categories->load('tags'),
+            'categories' => $categories,
             'tags' => $tags,
             'filters' => $request->only(['search', 'status', 'priority', 'category_id', 'due_date_filter']),
         ]);
     }
 
-    /**
-     * Apply filters to the task query
-     */
-    private function applyFilters($query, Request $request)
-    {
-        // Search functionality
-        if ($request->filled('search')) {
-            $search = $request->get('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
 
-        // Filter by status
-        if ($request->filled('status')) {
-            $query->where('status', $request->get('status'));
-        }
-
-        // Filter by priority
-        if ($request->filled('priority')) {
-            $query->where('priority', $request->get('priority'));
-        }
-
-        // Filter by category
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->get('category_id'));
-        }
-
-        // Filter by due date
-        if ($request->filled('due_date_filter')) {
-            $filter = $request->get('due_date_filter');
-            switch ($filter) {
-                case 'today':
-                    $query->whereDate('due_date', Carbon::today());
-                    break;
-                case 'tomorrow':
-                    $query->whereDate('due_date', Carbon::tomorrow());
-                    break;
-                case 'this_week':
-                    $query->whereBetween('due_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
-                    break;
-                case 'overdue':
-                    $query->overdue();
-                    break;
-            }
-        }
-    }
 
     /**
      * Store a newly created resource in storage.
@@ -195,22 +129,8 @@ class TaskController extends Controller
             'tags.*.is_new' => 'nullable|boolean',
         ]);
 
-        // Validate recurring task logic
-        if (isset($validated['is_recurring']) && $validated['is_recurring']) {
-            if (empty($validated['recurring_until'])) {
-                return redirect()->back()->withErrors([
-                    'recurring_until' => 'Recurring until date is required for recurring tasks.'
-                ])->withInput();
-            }
-            if (empty($validated['recurrence_type'])) {
-                return redirect()->back()->withErrors([
-                    'recurrence_type' => 'Recurrence type is required for recurring tasks.'
-                ])->withInput();
-            }
-            // Clear due_date for recurring tasks
-            $validated['due_date'] = null;
-        } else {
-            // Clear recurring fields for non-recurring tasks
+        // Clear recurring fields for non-recurring tasks
+        if (!isset($validated['is_recurring']) || !$validated['is_recurring']) {
             $validated['recurring_until'] = null;
             $validated['recurrence_type'] = null;
             $validated['recurrence_config'] = null;
@@ -225,67 +145,16 @@ class TaskController extends Controller
         if ($validated['is_all_day']) {
             $validated['start_time'] = null;
             $validated['end_time'] = null;
-        } else {
-            // For timed tasks, require both start and end time
-            if (empty($validated['start_time']) || empty($validated['end_time'])) {
-                return redirect()->back()->withErrors([
-                    'time' => 'Both start time and end time are required for timed tasks.'
-                ])->withInput();
-            }
-
-            // Validate that start time is before end time
-            if ($validated['start_time'] >= $validated['end_time']) {
-                return redirect()->back()->withErrors([
-                    'time' => 'Start time must be before end time.'
-                ])->withInput();
-            }
         }
 
-        $validated['user_id'] = Auth::id();
-        $validated['position'] = Task::where('user_id', Auth::id())->max('position') + 1;
-
-        $task = Task::create($validated);
-
-        // Handle tags
-        if (isset($validated['tags'])) {
-            $tagIds = [];
-            foreach ($validated['tags'] as $tagData) {
-                if (isset($tagData['is_new']) && $tagData['is_new']) {
-                    // Create new tag - validate required fields
-                    if (empty($tagData['name']) || empty($tagData['color'])) {
-                        continue; // Skip invalid new tags
-                    }
-                    $tag = Tag::firstOrCreate(
-                        ['name' => $tagData['name']],
-                        [
-                            'color' => $tagData['color'],
-                            'description' => $tagData['description'] ?? null,
-                        ]
-                    );
-                    $tagIds[] = $tag->id;
-                } else {
-                    // Existing tag (if we have an id)
-                    if (isset($tagData['id']) && !empty($tagData['id'])) {
-                        $tagIds[] = $tagData['id'];
-                    }
-                }
-            }
-            $task->tags()->attach($tagIds);
+        try {
+            $task = $this->taskService->createTask($validated, Auth::id());
+            return redirect()->back()->with('message', 'Task created successfully');
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->back()->withErrors(['error' => $e->getMessage()])->withInput();
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Failed to create task. Please try again.'])->withInput();
         }
-
-        // Log activity
-        ActivityLog::create([
-            'user_id' => Auth::id(),
-            'action' => 'create',
-            'model_type' => 'Task',
-            'model_id' => $task->id,
-            'new_values' => $validated,
-            'description' => "Created task: {$task->title}",
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
-
-        return redirect()->back()->with('message', 'Task created successfully');
     }
 
     /**
@@ -293,10 +162,6 @@ class TaskController extends Controller
      */
     public function update(Request $request, Task $task): RedirectResponse
     {
-        if ($task->user_id !== Auth::id()) {
-            abort(403);
-        }
-
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -318,22 +183,8 @@ class TaskController extends Controller
             'tags.*.is_new' => 'nullable|boolean',
         ]);
 
-        // Validate recurring task logic
-        if ($validated['is_recurring']) {
-            if (empty($validated['recurring_until'])) {
-                return redirect()->back()->withErrors([
-                    'recurring_until' => 'Recurring until date is required for recurring tasks.'
-                ])->withInput();
-            }
-            if (empty($validated['recurrence_type'])) {
-                return redirect()->back()->withErrors([
-                    'recurrence_type' => 'Recurrence type is required for recurring tasks.'
-                ])->withInput();
-            }
-            // Clear due_date for recurring tasks
-            $validated['due_date'] = null;
-        } else {
-            // Clear recurring fields for non-recurring tasks
+        // Clear recurring fields for non-recurring tasks
+        if (!isset($validated['is_recurring']) || !$validated['is_recurring']) {
             $validated['recurring_until'] = null;
             $validated['recurrence_type'] = null;
             $validated['recurrence_config'] = null;
@@ -348,76 +199,16 @@ class TaskController extends Controller
         if ($validated['is_all_day']) {
             $validated['start_time'] = null;
             $validated['end_time'] = null;
-        } else {
-            // For timed tasks, require both start and end time
-            if (empty($validated['start_time']) || empty($validated['end_time'])) {
-                return redirect()->back()->withErrors([
-                    'time' => 'Both start time and end time are required for timed tasks.'
-                ])->withInput();
-            }
-
-            // Validate that start time is before end time
-            if ($validated['start_time'] >= $validated['end_time']) {
-                return redirect()->back()->withErrors([
-                    'time' => 'Start time must be before end time.'
-                ])->withInput();
-            }
         }
 
-        $oldValues = $task->toArray();
-
-        // Set completed_at if status is completed
-        if ($validated['status'] === 'completed' && $task->status !== 'completed') {
-            $validated['completed_at'] = Carbon::now();
-        } elseif ($validated['status'] !== 'completed') {
-            $validated['completed_at'] = null;
+        try {
+            $updatedTask = $this->taskService->updateTask($task, $validated, Auth::id());
+            return redirect()->back()->with('message', 'Task updated successfully');
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->back()->withErrors(['error' => $e->getMessage()])->withInput();
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Failed to update task. Please try again.'])->withInput();
         }
-
-        $task->update($validated);
-
-        // Handle tags
-        if (isset($validated['tags'])) {
-            $tagIds = [];
-            foreach ($validated['tags'] as $tagData) {
-                if (isset($tagData['is_new']) && $tagData['is_new']) {
-                    // Create new tag - validate required fields
-                    if (empty($tagData['name']) || empty($tagData['color'])) {
-                        continue; // Skip invalid new tags
-                    }
-                    $tag = Tag::firstOrCreate(
-                        ['name' => $tagData['name']],
-                        [
-                            'color' => $tagData['color'],
-                            'description' => $tagData['description'] ?? null,
-                        ]
-                    );
-                    $tagIds[] = $tag->id;
-                } else {
-                    // Existing tag (if we have an id)
-                    if (isset($tagData['id']) && !empty($tagData['id'])) {
-                        $tagIds[] = $tagData['id'];
-                    }
-                }
-            }
-            $task->tags()->sync($tagIds);
-        } else {
-            $task->tags()->detach();
-        }
-
-        // Log activity
-        ActivityLog::create([
-            'user_id' => Auth::id(),
-            'action' => 'update',
-            'model_type' => 'Task',
-            'model_id' => $task->id,
-            'old_values' => $oldValues,
-            'new_values' => $validated,
-            'description' => "Updated task: {$task->title}",
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
-
-        return redirect()->back()->with('message', 'Task updated successfully');
     }
 
     /**
@@ -425,93 +216,31 @@ class TaskController extends Controller
      */
     public function destroy(Task $task): RedirectResponse
     {
-        if ($task->user_id !== Auth::id()) {
-            abort(403);
+        try {
+            $this->taskService->deleteTask($task, Auth::id());
+            return back()->with('status', 'Task deleted successfully');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Failed to delete task. Please try again.']);
         }
-
-        $taskTitle = $task->title;
-        $task->delete();
-
-        // Log activity
-        ActivityLog::create([
-            'user_id' => Auth::id(),
-            'action' => 'delete',
-            'model_type' => 'Task',
-            'model_id' => $task->id,
-            'description' => "Deleted task: {$taskTitle}",
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
-
-        return back()->with('status', 'Task deleted successfully');
     }
 
     public function reorder(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'taskId' => 'required|exists:tasks,id',
-            'newPosition' => 'required|integer|min:0',
+            'taskIds' => 'required|array',
+            'taskIds.*' => 'exists:tasks,id',
         ]);
 
-        $task = Task::findOrFail($validated['taskId']);
-
-        // Ensure user owns the task
-        if ($task->user_id !== Auth::id()) {
-            abort(403);
+        try {
+            $this->taskService->reorderTasks($validated['taskIds'], Auth::id());
+            return back()->with('message', 'Tasks reordered successfully');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Failed to reorder tasks. Please try again.']);
         }
-
-        $oldPosition = $task->position;
-        $newPosition = $validated['newPosition'];
-
-        // Only allow reordering within the same category, status, and priority group
-        // to maintain the new sorting logic (active tasks first, then by priority)
-        $baseQuery = Task::where('user_id', Auth::id())
-            ->where('status', $task->status)
-            ->where('priority', $task->priority);
-
-        // Include category filter (both null and specific category)
-        if ($task->category_id) {
-            $baseQuery->where('category_id', $task->category_id);
-        } else {
-            $baseQuery->whereNull('category_id');
-        }
-
-        if ($oldPosition < $newPosition) {
-            // Moving down: decrement positions of tasks between old and new position
-            $baseQuery->where('position', '>', $oldPosition)
-                ->where('position', '<=', $newPosition)
-                ->decrement('position');
-        } else {
-            // Moving up: increment positions of tasks between new and old position
-            $baseQuery->where('position', '>=', $newPosition)
-                ->where('position', '<', $oldPosition)
-                ->increment('position');
-        }
-
-        $task->update(['position' => $newPosition]);
-
-        // Log activity
-        ActivityLog::create([
-            'user_id' => Auth::id(),
-            'action' => 'reorder',
-            'model_type' => 'Task',
-            'model_id' => $task->id,
-            'old_values' => ['position' => $oldPosition],
-            'new_values' => ['position' => $newPosition],
-            'description' => "Reordered task: {$task->title}",
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
-
-        return back()->with('message', 'Task reordered successfully');
     }
 
     public function toggleStatus(Request $request, Task $task): RedirectResponse
     {
-        if ($task->user_id !== Auth::id()) {
-            abort(403);
-        }
-
         // If a specific status is provided, use it; otherwise toggle between completed/pending
         if ($request->has('status')) {
             $validated = $request->validate([
@@ -522,26 +251,11 @@ class TaskController extends Controller
             $newStatus = $task->status === 'completed' ? 'pending' : 'completed';
         }
 
-        $oldStatus = $task->status;
-
-        $task->update([
-            'status' => $newStatus,
-            'completed_at' => $newStatus === 'completed' ? Carbon::now() : null,
-        ]);
-
-        // Log activity
-        ActivityLog::create([
-            'user_id' => Auth::id(),
-            'action' => 'status_change',
-            'model_type' => 'Task',
-            'model_id' => $task->id,
-            'old_values' => ['status' => $oldStatus],
-            'new_values' => ['status' => $newStatus],
-            'description' => "Changed task status from {$oldStatus} to {$newStatus}: {$task->title}",
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
-
-        return back()->with('status', 'Task status updated successfully');
+        try {
+            $this->taskService->toggleTaskStatus($task, $newStatus, Auth::id());
+            return back()->with('status', 'Task status updated successfully');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Failed to update task status. Please try again.']);
+        }
     }
 }

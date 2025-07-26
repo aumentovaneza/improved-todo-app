@@ -69,6 +69,13 @@ export default function TodoLayout({ header, children }) {
             current: route().current("categories.*"),
         },
         {
+            name: "Workspaces",
+            href: route("workspaces.index"),
+            icon: Users,
+            current:
+                route().current("workspaces.*") || route().current("boards.*"),
+        },
+        {
             name: "Calendar",
             href: route("calendar.index"),
             icon: Calendar,

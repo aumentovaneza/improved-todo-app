@@ -26,7 +26,60 @@ class TaskController extends Controller
      */
     public function index(Request $request): Response
     {
+
         $filters = $request->only(['search', 'status', 'priority', 'category_id', 'due_date_filter']);
+
+        $baseQuery = Task::with(['category', 'subtasks', 'tags'])
+            ->where('status', '!=', 'completed')
+            ->where('board_id', null)
+            ->where('swimlane_id', null)
+            ->withCount([
+                'subtasks',
+                'subtasks as completed_subtasks_count' => function ($query) {
+                    $query->where('is_completed', true);
+                }
+            ])
+            ->where('user_id', Auth::id());
+
+        // Apply filters to base query
+        $this->applyFilters($baseQuery, $request);
+
+        // Get all active categories for the user
+        $categories = Category::where('is_active', true)
+            ->where('user_id', Auth::id())
+            ->get();
+
+        // Get all active tags
+        $tags = Tag::active()->get();
+
+        // Get categorized tasks with pagination
+        $categorizedTasks = [];
+
+        // Handle tasks with categories - include all categories, even empty ones
+        foreach ($categories as $category) {
+            $categoryQuery = clone $baseQuery;
+            $categoryQuery->where('category_id', $category->id);
+
+            // Order by status (in_progress first, then pending, then cancelled, then completed) 
+            // then by priority (urgent to low) then by position
+            $paginatedTasks = $categoryQuery
+                ->orderByRaw("CASE 
+                    WHEN status = 'in_progress' THEN 1 
+                    WHEN status = 'pending' THEN 2 
+                    WHEN status = 'cancelled' THEN 3 
+                    WHEN status = 'completed' THEN 4 
+                    ELSE 5 
+                END")
+                ->orderByRaw("CASE 
+                    WHEN priority = 'urgent' THEN 1 
+                    WHEN priority = 'high' THEN 2 
+                    WHEN priority = 'medium' THEN 3 
+                    WHEN priority = 'low' THEN 4 
+                    ELSE 5 
+                END")
+                ->orderBy('position')
+                ->paginate(5, ['*'], "category_{$category->id}_page");
+
 
         // Add default filter to exclude completed tasks if not explicitly requested
         if (empty($filters['status'])) {

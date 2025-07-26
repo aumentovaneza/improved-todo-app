@@ -16,6 +16,8 @@ class Task extends Model
     protected $fillable = [
         'user_id',
         'category_id',
+        'board_id',
+        'swimlane_id',
         'title',
         'description',
         'priority',
@@ -64,6 +66,16 @@ class Task extends Model
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class);
+    }
+
+    public function board(): BelongsTo
+    {
+        return $this->belongsTo(Board::class);
+    }
+
+    public function swimlane(): BelongsTo
+    {
+        return $this->belongsTo(Swimlane::class);
     }
 
     public function scopePending($query)

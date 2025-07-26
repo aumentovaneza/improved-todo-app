@@ -13,6 +13,8 @@ export default function TaskEditModal({
     task,
     categories,
     onTaskUpdate,
+    workspace = null,
+    board = null,
 }) {
     const { data, setData, put, processing, errors, reset } = useForm({
         title: "",
@@ -29,6 +31,7 @@ export default function TaskEditModal({
         recurrence_config: {},
         recurring_until: "",
         tags: [],
+        assigned_to: "",
     });
 
     useEffect(() => {
@@ -67,6 +70,7 @@ export default function TaskEditModal({
                           is_new: false,
                       }))
                     : [],
+                assigned_to: task.user_id || "",
             });
         }
     }, [task]);
@@ -75,10 +79,23 @@ export default function TaskEditModal({
         e.preventDefault();
         if (!task) return;
 
-        put(route("tasks.update", task.id), {
+        // Use workspace task update route if we're in a workspace context
+        const updateRoute =
+            workspace && board
+                ? route("boards.tasks.update", [
+                      workspace.id,
+                      board.id,
+                      task.id,
+                  ])
+                : route("tasks.update", task.id);
+
+        put(updateRoute, {
             onSuccess: () => {
                 reset();
                 onClose();
+                if (onTaskUpdate) {
+                    onTaskUpdate();
+                }
             },
         });
     };
@@ -202,6 +219,47 @@ export default function TaskEditModal({
                                     </select>
                                 </div>
                             </div>
+
+                            {/* Assignment field - only show in workspace context */}
+                            {workspace && board && (
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">
+                                        Assign To
+                                    </label>
+                                    <select
+                                        className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                        value={data.assigned_to}
+                                        onChange={(e) =>
+                                            setData(
+                                                "assigned_to",
+                                                e.target.value
+                                            )
+                                        }
+                                    >
+                                        <option value="">Unassigned</option>
+                                        <option value={workspace.organizer.id}>
+                                            {workspace.organizer.name}{" "}
+                                            (Organizer)
+                                        </option>
+                                        {board.collaborators?.map(
+                                            (collaborator) => (
+                                                <option
+                                                    key={collaborator.id}
+                                                    value={collaborator.id}
+                                                >
+                                                    {collaborator.name} (
+                                                    {collaborator.pivot.role})
+                                                </option>
+                                            )
+                                        )}
+                                    </select>
+                                    {errors.assigned_to && (
+                                        <div className="text-red-500 text-xs mt-1">
+                                            {errors.assigned_to}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             <CategoryTagSelector
                                 categoryId={data.category_id}

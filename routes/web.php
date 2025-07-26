@@ -11,6 +11,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\GoogleCalendarController;
+use App\Http\Controllers\WorkspaceController;
+use App\Http\Controllers\BoardController;
+use App\Http\Controllers\SwimlaneController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -63,6 +66,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Analytics
     Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+
+    // Workspaces
+    Route::resource('workspaces', WorkspaceController::class)->except(['create', 'edit']);
+    Route::post('workspaces/{workspace}/collaborators', [WorkspaceController::class, 'addCollaborator'])->name('workspaces.collaborators.store');
+    Route::delete('workspaces/{workspace}/collaborators/{user}', [WorkspaceController::class, 'removeCollaborator'])->name('workspaces.collaborators.destroy');
+
+    // Boards
+    Route::get('workspaces/{workspace}/boards/{board}', [BoardController::class, 'show'])->name('boards.show');
+    Route::post('workspaces/{workspace}/boards', [BoardController::class, 'store'])->name('boards.store');
+    Route::put('workspaces/{workspace}/boards/{board}', [BoardController::class, 'update'])->name('boards.update');
+    Route::delete('workspaces/{workspace}/boards/{board}', [BoardController::class, 'destroy'])->name('boards.destroy');
+    Route::post('workspaces/{workspace}/boards/{board}/move-task', [BoardController::class, 'moveTask'])->name('boards.move-task');
+    Route::post('workspaces/{workspace}/boards/{board}/tasks', [BoardController::class, 'storeTask'])->name('boards.tasks.store');
+    Route::put('workspaces/{workspace}/boards/{board}/tasks/{task}', [BoardController::class, 'updateTask'])->name('boards.tasks.update');
+    Route::post('workspaces/{workspace}/boards/{board}/collaborators', [BoardController::class, 'addCollaborator'])->name('boards.collaborators.store');
+    Route::delete('workspaces/{workspace}/boards/{board}/collaborators/{user}', [BoardController::class, 'removeCollaborator'])->name('boards.collaborators.destroy');
+
+    // Swimlanes
+    Route::post('workspaces/{workspace}/boards/{board}/swimlanes', [SwimlaneController::class, 'store'])->name('swimlanes.store');
+    Route::put('workspaces/{workspace}/boards/{board}/swimlanes/{swimlane}', [SwimlaneController::class, 'update'])->name('swimlanes.update');
+    Route::delete('workspaces/{workspace}/boards/{board}/swimlanes/{swimlane}', [SwimlaneController::class, 'destroy'])->name('swimlanes.destroy');
+    Route::post('workspaces/{workspace}/boards/{board}/swimlanes/reorder', [SwimlaneController::class, 'reorder'])->name('swimlanes.reorder');
 
     // Admin routes - only accessible by admin users
     Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {

@@ -80,6 +80,8 @@ class TaskController extends Controller
                 ->orderBy('position')
                 ->paginate(5, ['*'], "category_{$category->id}_page");
 
+            $categorizedTasks[$category->id] = $paginatedTasks;
+        }
 
         // Add default filter to exclude completed tasks if not explicitly requested
         if (empty($filters['status'])) {

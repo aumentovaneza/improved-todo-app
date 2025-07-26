@@ -262,4 +262,45 @@ class TaskController extends Controller
             return back()->withErrors(['error' => 'Failed to update task status. Please try again.']);
         }
     }
+
+    private function applyFilters($query, Request $request)
+    {
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('title', 'like', '%' . $request->search . '%')
+                    ->orWhere('description', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        if ($request->filled('status') && $request->status !== 'not_completed') {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('priority')) {
+            $query->where('priority', $request->priority);
+        }
+
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        if ($request->filled('due_date_filter')) {
+            $today = Carbon::today();
+            switch ($request->due_date_filter) {
+                case 'overdue':
+                    $query->where('due_date', '<', $today)
+                        ->where('status', '!=', 'completed');
+                    break;
+                case 'today':
+                    $query->whereDate('due_date', $today);
+                    break;
+                case 'tomorrow':
+                    $query->whereDate('due_date', $today->copy()->addDay());
+                    break;
+                case 'this_week':
+                    $query->whereBetween('due_date', [$today, $today->copy()->endOfWeek()]);
+                    break;
+            }
+        }
+    }
 }

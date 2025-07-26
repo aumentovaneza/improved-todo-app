@@ -22,6 +22,8 @@ class TaskController extends Controller
     {
         $baseQuery = Task::with(['category', 'subtasks', 'tags'])
             ->where('status', '!=', 'completed')
+            ->where('board_id', null)
+            ->where('swimlane_id', null)
             ->withCount([
                 'subtasks',
                 'subtasks as completed_subtasks_count' => function ($query) {

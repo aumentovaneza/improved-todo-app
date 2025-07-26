@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use App\Models\Category;
+use App\Models\Tag;
 use App\Services\TaskService;
 use App\Services\CategoryService;
 use App\Services\TagService;

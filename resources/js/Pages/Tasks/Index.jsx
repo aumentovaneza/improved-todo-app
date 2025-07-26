@@ -34,6 +34,18 @@ import {
     ListTodo,
     ChevronDown,
     ChevronRight,
+    Star,
+    User,
+    Tag as TagIcon,
+    CalendarDays,
+    Clock3,
+    Flag,
+    CheckSquare,
+    Square,
+    Play,
+    Pause,
+    XCircle,
+    FolderOpen,
 } from "lucide-react";
 import TaskModal from "@/Components/TaskModal";
 import TaskViewModal from "@/Components/TaskViewModal";
@@ -47,6 +59,7 @@ function SortableTask({
     globalIndex,
     getPriorityColor,
     getStatusIcon,
+    getStatusColor,
     isOverdue,
     toggleTaskStatus,
     handleTaskStatusChange,
@@ -72,29 +85,42 @@ function SortableTask({
         opacity: isDragging ? 0.5 : 1,
     };
 
+    const getPriorityIcon = (priority) => {
+        switch (priority) {
+            case "urgent":
+                return <Flag className="h-3 w-3 text-red-500" />;
+            case "high":
+                return <Flag className="h-3 w-3 text-orange-500" />;
+            case "medium":
+                return <Flag className="h-3 w-3 text-yellow-500" />;
+            case "low":
+                return <Flag className="h-3 w-3 text-green-500" />;
+            default:
+                return <Flag className="h-3 w-3 text-gray-400" />;
+        }
+    };
+
     return (
         <div
             ref={setNodeRef}
             style={style}
-            className={`p-4 sm:p-6 transition-colors duration-150 ${
-                isDragging
-                    ? "bg-gray-50 dark:bg-gray-700"
-                    : "hover:bg-gray-50 dark:hover:bg-gray-700"
+            className={`group relative bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 ${
+                isDragging ? "shadow-lg z-10" : ""
             }`}
         >
-            <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3 flex-1 min-w-0">
-                    {/* Drag Handle */}
+            <div className="flex items-center px-4 py-3">
+                {/* Drag Handle */}
+                <div className="flex items-center space-x-3 min-w-0 flex-1">
                     <div
                         {...attributes}
                         {...listeners}
-                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab active:cursor-grabbing"
-                        title="Drag to reorder task within same priority group"
+                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Drag to reorder"
                     >
-                        <GripVertical className="h-4 w-4 sm:h-5 sm:w-5" />
+                        <GripVertical className="h-4 w-4" />
                     </div>
 
-                    {/* Status Icon */}
+                    {/* Status Checkbox */}
                     <button
                         onClick={() => toggleTaskStatus(task)}
                         className="flex-shrink-0 hover:scale-110 transition-transform"
@@ -104,250 +130,193 @@ function SortableTask({
                                 : "completed"
                         }`}
                     >
-                        {getStatusIcon(task.status)}
+                        {task.status === "completed" ? (
+                            <CheckSquare className="h-5 w-5 text-green-500" />
+                        ) : (
+                            <Square className="h-5 w-5 text-gray-400 hover:text-green-500" />
+                        )}
                     </button>
 
-                    {/* Task Content */}
+
+                    {/* Task Title */}
                     <div className="flex-1 min-w-0">
-                        <div className="flex flex-col sm:flex-row sm:items-center">
-                            <div className="flex-1 min-w-0">
-                                <div className="flex flex-row items-center gap-2">
-                                    <button
-                                        onClick={() => {
-                                            setSelectedTask(task);
-                                            setShowViewModal(true);
-                                        }}
-                                        className={`text-sm sm:text-base font-medium truncate text-left hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 cursor-pointer underline-offset-2 hover:underline hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded px-1 py-0.5 -mx-1 -my-0.5 ${
-                                            task.status === "completed"
-                                                ? "text-gray-500 dark:text-gray-400 line-through hover:text-blue-500 dark:hover:text-blue-400"
-                                                : "text-gray-900 dark:text-gray-100"
-                                        }`}
-                                        title="Click to view task details"
-                                    >
-                                        {task.title}
-                                    </button>
-                                    {/* Priority Badge - Hidden on mobile */}
-                                    <span
-                                        className={`hidden sm:inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(
-                                            task.priority
-                                        )}`}
-                                    >
-                                        {task.priority.charAt(0).toUpperCase() +
-                                            task.priority.slice(1)}
-                                    </span>
-
-                                    {/* Tags - Hidden on mobile */}
-                                    {task.tags && task.tags.length > 0 && (
-                                        <div className="hidden sm:flex flex-wrap gap-1">
-                                            {task.tags.map((tag) => (
-                                                <span
-                                                    key={tag.id}
-                                                    className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white"
-                                                    style={{
-                                                        backgroundColor:
-                                                            tag.color,
-                                                    }}
-                                                >
-                                                    {tag.name}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {task.description && (
-                                    <button
-                                        onClick={() => {
-                                            setSelectedTask(task);
-                                            setShowViewModal(true);
-                                        }}
-                                        className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 truncate text-left hover:text-blue-500 dark:hover:text-blue-400 transition-all duration-200 cursor-pointer underline-offset-2 hover:underline w-full hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded px-1 py-0.5 -mx-1 -my-0.5"
-                                        title="Click to view task details"
-                                    >
-                                        {task.description}
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Task Meta Info */}
-                        <div className="flex flex-wrap items-center gap-2 mt-2">
-                            {/* Due Date and Time */}
-                            {task.due_date && (
-                                <div
-                                    className={`flex items-center space-x-1 ${
-                                        isOverdue(task.due_date, task.status)
-                                            ? "text-red-600 dark:text-red-400"
-                                            : "text-gray-500 dark:text-gray-400"
-                                    }`}
-                                >
-                                    <Calendar className="h-3 w-3" />
-                                    <span className="text-xs">
-                                        {new Date(
-                                            task.due_date
-                                        ).toLocaleDateString()}
-                                        {!task.is_all_day &&
-                                            (task.start_time ||
-                                                task.end_time) && (
-                                                <span className="ml-1 font-medium">
-                                                    {(() => {
-                                                        const formatTime = (
-                                                            timeStr
-                                                        ) => {
-                                                            if (!timeStr)
-                                                                return "";
-                                                            // Handle both time formats (HH:MM and full datetime)
-                                                            if (
-                                                                timeStr.includes(
-                                                                    "T"
-                                                                ) ||
-                                                                timeStr.includes(
-                                                                    " "
-                                                                )
-                                                            ) {
-                                                                const date =
-                                                                    new Date(
-                                                                        timeStr
-                                                                    );
-                                                                return date.toLocaleTimeString(
-                                                                    [],
-                                                                    {
-                                                                        hour: "numeric",
-                                                                        minute: "2-digit",
-                                                                        hour12: true,
-                                                                    }
-                                                                );
-                                                            }
-                                                            // Just time string like "14:30:00" or "14:30"
-                                                            const [
-                                                                hours,
-                                                                minutes,
-                                                            ] =
-                                                                timeStr.split(
-                                                                    ":"
-                                                                );
-                                                            const hour =
-                                                                parseInt(hours);
-                                                            const ampm =
-                                                                hour >= 12
-                                                                    ? "PM"
-                                                                    : "AM";
-                                                            const displayHour =
-                                                                hour % 12 || 12;
-                                                            return `${displayHour}:${minutes} ${ampm}`;
-                                                        };
-
-                                                        const startTime =
-                                                            formatTime(
-                                                                task.start_time
-                                                            );
-                                                        const endTime =
-                                                            formatTime(
-                                                                task.end_time
-                                                            );
-
-                                                        if (
-                                                            startTime &&
-                                                            endTime
-                                                        ) {
-                                                            return `${startTime} - ${endTime}`;
-                                                        } else if (startTime) {
-                                                            return `From ${startTime}`;
-                                                        } else if (endTime) {
-                                                            return `Until ${endTime}`;
-                                                        }
-                                                        return "";
-                                                    })()}
-                                                </span>
-                                            )}
-                                        {task.is_all_day && (
-                                            <span className="ml-1 text-gray-400">
-                                                (All day)
-                                            </span>
-                                        )}
-                                    </span>
-                                </div>
-                            )}
-
-                            {/* Subtasks count */}
-                            <div className="flex items-center space-x-1">
-                                <ListTodo className="h-3 w-3 text-gray-400" />
-                                <span
-                                    className={`text-xs font-medium ${
-                                        task.subtasks_count > 0
-                                            ? "text-blue-600 dark:text-blue-400"
-                                            : "text-gray-500 dark:text-gray-400"
-                                    }`}
-                                >
-                                    {task.completed_subtasks_count || 0}/
-                                    {task.subtasks_count || 0}
-                                </span>
-                                <span className="text-xs text-gray-400">
-                                    subtasks
-                                </span>
-                            </div>
-                        </div>
+                        <button
+                            onClick={() => {
+                                setSelectedTask(task);
+                                setShowViewModal(true);
+                            }}
+                            className={`text-left font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${
+                                task.status === "completed"
+                                    ? "text-gray-500 dark:text-gray-400 line-through"
+                                    : "text-gray-900 dark:text-gray-100"
+                            }`}
+                            title={task.title}
+                        >
+                            {task.title.length > 100 ? `${task.title.substring(0, 100)}...` : task.title}
+                        </button>
+                        {task.description && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-1">
+                                {task.description}
+                            </p>
+                        )}
                     </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex items-center space-x-1 sm:space-x-2 ml-2">
-                    {/* Status Dropdown - Hidden on mobile */}
-                    <div className="relative hidden sm:block">
-                        <select
-                            value={task.status}
-                            onChange={(e) =>
-                                handleTaskStatusChange(task, e.target.value)
-                            }
-                            className="text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md pl-2 pr-6 py-1 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors cursor-pointer min-w-[85px]"
+                {/* Category */}
+                <div className="flex items-center space-x-4 min-w-0">
+                    <div className="flex items-center space-x-2 min-w-0">
+                        <div
+                            className="w-3 h-3 rounded-full flex-shrink-0"
                             style={{
-                                appearance: "none",
-                                WebkitAppearance: "none",
-                                MozAppearance: "none",
-                                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                                backgroundPosition: "right 0.5rem center",
-                                backgroundRepeat: "no-repeat",
-                                backgroundSize: "1rem 1rem",
+                                backgroundColor: task.category?.color || "#6B7280",
                             }}
-                            title="Change task status"
-                        >
-                            <option value="pending">Pending</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
+                        />
+                        <span className="text-xs text-gray-600 dark:text-gray-300 truncate max-w-24">
+                            {task.category?.name || "Uncategorized"}
+                        </span>
                     </div>
 
-                    <button
-                        onClick={() => {
-                            setSelectedTask(task);
-                            setShowSubtaskModal(true);
-                        }}
-                        className="p-1 sm:p-2 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
-                        title="Add Subtask"
-                    >
-                        <ListTodo className="h-4 w-4" />
-                    </button>
-                    <button
-                        onClick={() => {
-                            setSelectedTask(task);
-                            setShowViewModal(true);
-                        }}
-                        className="p-1 sm:p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                        title="View Task"
-                    >
-                        <Eye className="h-4 w-4" />
-                    </button>
-                    <button
-                        onClick={() => {
-                            setSelectedTask(task);
-                            setShowEditModal(true);
-                        }}
-                        className="p-1 sm:p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                        title="Edit Task"
-                    >
-                        <Edit className="h-4 w-4" />
-                    </button>
+                    {/* Status */}
+                    <div className="flex items-center space-x-2">
+                        <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                            {task.status === "in_progress" && <Play className="h-3 w-3 mr-1" />}
+                            {task.status === "pending" && <Clock className="h-3 w-3 mr-1" />}
+                            {task.status === "completed" && <CheckCircle className="h-3 w-3 mr-1" />}
+                            {task.status === "cancelled" && <XCircle className="h-3 w-3 mr-1" />}
+                            {task.status.replace("_", " ").charAt(0).toUpperCase() + task.status.replace("_", " ").slice(1)}
+                        </div>
+                    </div>
+
+                    {/* Priority */}
+                    <div className="flex items-center space-x-1" title={`Priority: ${task.priority}`}>
+                        {getPriorityIcon(task.priority)}
+                        <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline">
+                            {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                        </span>
+                    </div>
+
+                    {/* Due Date */}
+                    {task.due_date && (
+                        <div className={`flex items-center space-x-1 ${
+                            isOverdue(task.due_date, task.status)
+                                ? "text-red-600 dark:text-red-400"
+                                : "text-gray-500 dark:text-gray-400"
+                        }`}>
+                            <CalendarDays className="h-4 w-4" />
+                            <span className="text-xs hidden sm:inline">
+                                {new Date(task.due_date).toLocaleDateString()}
+                            </span>
+                            <span className="text-xs sm:hidden">
+                                {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Time */}
+                    {task.due_date && !task.is_all_day && (task.start_time || task.end_time) && (
+                        <div className="flex items-center space-x-1 text-gray-500 dark:text-gray-400">
+                            <Clock3 className="h-4 w-4" />
+                            <span className="text-xs hidden sm:inline">
+                                {(() => {
+                                    const formatTime = (timeStr) => {
+                                        if (!timeStr) return "";
+                                        if (timeStr.includes("T") || timeStr.includes(" ")) {
+                                            const date = new Date(timeStr);
+                                            return date.toLocaleTimeString([], {
+                                                hour: "numeric",
+                                                minute: "2-digit",
+                                                hour12: true,
+                                            });
+                                        }
+                                        const [hours, minutes] = timeStr.split(":");
+                                        const hour = parseInt(hours);
+                                        const ampm = hour >= 12 ? "PM" : "AM";
+                                        const displayHour = hour % 12 || 12;
+                                        return `${displayHour}:${minutes} ${ampm}`;
+                                    };
+
+                                    const startTime = formatTime(task.start_time);
+                                    const endTime = formatTime(task.end_time);
+
+                                    if (startTime && endTime) {
+                                        return `${startTime} - ${endTime}`;
+                                    } else if (startTime) {
+                                        return startTime;
+                                    } else if (endTime) {
+                                        return endTime;
+                                    }
+                                    return "";
+                                })()}
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Subtasks */}
+                    {task.subtasks_count > 0 && (
+                        <div className="flex items-center space-x-1 text-gray-500 dark:text-gray-400">
+                            <ListTodo className="h-4 w-4" />
+                            <span className="text-xs">
+                                {task.completed_subtasks_count || 0}/{task.subtasks_count || 0}
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Tags */}
+                    {task.tags && task.tags.length > 0 && (
+                        <div className="flex items-center space-x-1">
+                            <TagIcon className="h-4 w-4 text-gray-400" />
+                            <div className="flex space-x-1">
+                                {task.tags.slice(0, 2).map((tag) => (
+                                    <span
+                                        key={tag.id}
+                                        className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium text-white"
+                                        style={{ backgroundColor: tag.color }}
+                                    >
+                                        {tag.name}
+                                    </span>
+                                ))}
+                                {task.tags.length > 2 && (
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                        +{task.tags.length - 2}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                            onClick={() => {
+                                setSelectedTask(task);
+                                setShowSubtaskModal(true);
+                            }}
+                            className="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
+                            title="Add Subtask"
+                        >
+                            <ListTodo className="h-4 w-4" />
+                        </button>
+                        <button
+                            onClick={() => {
+                                setSelectedTask(task);
+                                setShowViewModal(true);
+                            }}
+                            className="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                            title="View Task"
+                        >
+                            <Eye className="h-4 w-4" />
+                        </button>
+                        <button
+                            onClick={() => {
+                                setSelectedTask(task);
+                                setShowEditModal(true);
+                            }}
+                            className="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                            title="Edit Task"
+                        >
+                            <Edit className="h-4 w-4" />
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -355,9 +324,7 @@ function SortableTask({
 }
 
 export default function Index({ categorizedTasks, categories, filters }) {
-    const [categorizedTaskList, setCategorizedTaskList] = useState(
-        categorizedTasks || []
-    );
+    const [allTasks, setAllTasks] = useState([]);
     const [search, setSearch] = useState(filters.search || "");
     const [statusFilter, setStatusFilter] = useState(filters.status || "");
     const [priorityFilter, setPriorityFilter] = useState(
@@ -378,25 +345,27 @@ export default function Index({ categorizedTasks, categories, filters }) {
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [isTaskSubmitting, setIsTaskSubmitting] = useState(false);
 
-    // Category collapse states - initialize all categories as expanded
-    const [collapsedCategories, setCollapsedCategories] = useState(new Set());
-
-    // Toggle category collapse state
-    const toggleCategoryCollapse = (categoryId) => {
-        setCollapsedCategories((prev) => {
-            const newSet = new Set(prev);
-            if (newSet.has(categoryId)) {
-                newSet.delete(categoryId);
-            } else {
-                newSet.add(categoryId);
-            }
-            return newSet;
-        });
-    };
+    // Flatten all tasks from categorized structure
+    useEffect(() => {
+        const flattenedTasks = [];
+        if (categorizedTasks) {
+            categorizedTasks.forEach((group) => {
+                if (group.tasks && group.tasks.data) {
+                    group.tasks.data.forEach((task) => {
+                        flattenedTasks.push({
+                            ...task,
+                            category: group.category,
+                        });
+                    });
+                }
+            });
+        }
+        setAllTasks(flattenedTasks);
+    }, [categorizedTasks]);
 
     // Handle quick add task for specific category
     const handleQuickAddTask = (categoryId, event) => {
-        event.stopPropagation(); // Prevent category toggle when clicking the + button
+        event.stopPropagation();
         setSelectedCategory(categoryId);
         setShowTaskModal(true);
     };
@@ -404,25 +373,19 @@ export default function Index({ categorizedTasks, categories, filters }) {
     // Handle task status change
     const handleTaskStatusChange = (task, newStatus) => {
         // Optimistically update the task status in the UI
-        setCategorizedTaskList(
-            categorizedTaskList.map((group) => ({
-                ...group,
-                tasks: {
-                    ...group.tasks,
-                    data: group.tasks.data.map((t) =>
-                        t.id === task.id
-                            ? {
-                                  ...t,
-                                  status: newStatus,
-                                  completed_at:
-                                      newStatus === "completed"
-                                          ? new Date().toISOString()
-                                          : null,
-                              }
-                            : t
-                    ),
-                },
-            }))
+        setAllTasks(
+            allTasks.map((t) =>
+                t.id === task.id
+                    ? {
+                          ...t,
+                          status: newStatus,
+                          completed_at:
+                              newStatus === "completed"
+                                  ? new Date().toISOString()
+                                  : null,
+                      }
+                    : t
+            )
         );
 
         // Send the status change to the server
@@ -439,16 +402,10 @@ export default function Index({ categorizedTasks, categories, filters }) {
                 },
                 onError: () => {
                     // Revert the optimistic update on error
-                    setCategorizedTaskList(
-                        categorizedTaskList.map((group) => ({
-                            ...group,
-                            tasks: {
-                                ...group.tasks,
-                                data: group.tasks.data.map((t) =>
-                                    t.id === task.id ? task : t
-                                ),
-                            },
-                        }))
+                    setAllTasks(
+                        allTasks.map((t) =>
+                            t.id === task.id ? task : t
+                        )
                     );
                     toast.error("Failed to update task status");
                 },
@@ -459,17 +416,11 @@ export default function Index({ categorizedTasks, categories, filters }) {
     // Handle task updates from modals
     const handleTaskUpdate = (updatedTask) => {
         setSelectedTask(updatedTask);
-        // Also update the task in the categorized task list
-        setCategorizedTaskList(
-            categorizedTaskList.map((group) => ({
-                ...group,
-                tasks: {
-                    ...group.tasks,
-                    data: group.tasks.data.map((t) =>
-                        t.id === updatedTask.id ? updatedTask : t
-                    ),
-                },
-            }))
+        // Also update the task in the all tasks list
+        setAllTasks(
+            allTasks.map((t) =>
+                t.id === updatedTask.id ? updatedTask : t
+            )
         );
     };
 
@@ -480,40 +431,6 @@ export default function Index({ categorizedTasks, categories, filters }) {
         })
     );
 
-    // No need for client-side filtering since it's handled on the server
-    const filteredCategorizedTaskList = categorizedTaskList;
-
-    useEffect(() => {
-        setCategorizedTaskList(categorizedTasks || []);
-
-        // Auto-expand categories that contain tasks when search results change
-        if (search && categorizedTasks && categorizedTasks.length > 0) {
-            const categoriesToExpand = new Set();
-
-            categorizedTasks.forEach((group) => {
-                if (group.tasks.data && group.tasks.data.length > 0) {
-                    categoriesToExpand.add(
-                        group.category.id || "uncategorized"
-                    );
-                }
-            });
-
-            // Update collapsed categories to exclude categories with search results
-            setCollapsedCategories((prev) => {
-                const newSet = new Set(prev);
-                categoriesToExpand.forEach((categoryId) => {
-                    newSet.delete(categoryId);
-                });
-                return newSet;
-            });
-        }
-    }, [categorizedTasks, search]);
-
-    // Get all tasks from all categories for operations that need the full list
-    const getAllTasks = () => {
-        return categorizedTaskList.flatMap((group) => group.tasks.data || []);
-    };
-
     const handleDragEnd = (event) => {
         const { active, over } = event;
 
@@ -521,75 +438,40 @@ export default function Index({ categorizedTasks, categories, filters }) {
             return;
         }
 
-        // Find which category contains both the dragged task and target
-        let sourceGroup = null;
-        let sourceTaskIndex = -1;
-        let targetTaskIndex = -1;
-        let targetGroup = null;
+        const activeIndex = allTasks.findIndex(
+            (task) => task.id.toString() === active.id
+        );
+        const overIndex = allTasks.findIndex(
+            (task) => task.id.toString() === over.id
+        );
 
-        for (const group of categorizedTaskList) {
-            const activeIndex = group.tasks.data.findIndex(
-                (task) => task.id.toString() === active.id
-            );
-            const overIndex = group.tasks.data.findIndex(
-                (task) => task.id.toString() === over.id
-            );
-
-            if (activeIndex !== -1) {
-                sourceGroup = group;
-                sourceTaskIndex = activeIndex;
-            }
-            if (overIndex !== -1) {
-                targetGroup = group;
-                targetTaskIndex = overIndex;
-            }
+        if (activeIndex === -1 || overIndex === -1) {
+            return;
         }
 
-        // Get the actual tasks being moved
-        const sourceTask = sourceGroup?.tasks.data[sourceTaskIndex];
-        const targetTask = targetGroup?.tasks.data[targetTaskIndex];
+        const activeTask = allTasks[activeIndex];
+        const overTask = allTasks[overIndex];
 
-        // Only allow reordering within the same category, status, and priority group
-        // to maintain the new sorting logic (active tasks first, then by priority)
+        // Only allow reordering within the same status and priority group
         if (
-            !sourceGroup ||
-            !targetGroup ||
-            sourceGroup !== targetGroup ||
-            sourceTaskIndex === -1 ||
-            targetTaskIndex === -1 ||
-            !sourceTask ||
-            !targetTask ||
-            sourceTask.status !== targetTask.status ||
-            sourceTask.priority !== targetTask.priority
+            activeTask.status !== overTask.status ||
+            activeTask.priority !== overTask.priority
         ) {
             return;
         }
 
         // Store original state for potential revert
-        const originalCategorizedTaskList = [...categorizedTaskList];
+        const originalTasks = [...allTasks];
 
-        // Perform optimistic update within the same category
-        const updatedCategorizedTaskList = categorizedTaskList.map((group) => {
-            if (group === sourceGroup) {
-                const reorderedTasks = [...group.tasks.data];
-                const [movedTask] = reorderedTasks.splice(sourceTaskIndex, 1);
-                reorderedTasks.splice(targetTaskIndex, 0, movedTask);
+        // Perform optimistic update
+        const reorderedTasks = [...allTasks];
+        const [movedTask] = reorderedTasks.splice(activeIndex, 1);
+        reorderedTasks.splice(overIndex, 0, movedTask);
 
-                return {
-                    ...group,
-                    tasks: {
-                        ...group.tasks,
-                        data: reorderedTasks,
-                    },
-                };
-            }
-            return group;
-        });
-
-        setCategorizedTaskList(updatedCategorizedTaskList);
+        setAllTasks(reorderedTasks);
 
         // Use the target task's current position as the new position
-        const globalNewPosition = targetTask.position;
+        const globalNewPosition = overTask.position;
 
         // Send the new order to the server
         router.post(
@@ -607,7 +489,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
                 },
                 onError: () => {
                     // Revert to original state on error
-                    setCategorizedTaskList(originalCategorizedTaskList);
+                    setAllTasks(originalTasks);
                     toast.error("Failed to reorder task");
                 },
             }
@@ -689,6 +571,19 @@ export default function Index({ categorizedTasks, categories, filters }) {
         }
     };
 
+    const getStatusColor = (status) => {
+        switch (status) {
+            case "completed":
+                return "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/20";
+            case "in_progress":
+                return "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20";
+            case "cancelled":
+                return "text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/20";
+            default:
+                return "text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/20";
+        }
+    };
+
     const getStatusIcon = (status) => {
         switch (status) {
             case "completed":
@@ -714,25 +609,19 @@ export default function Index({ categorizedTasks, categories, filters }) {
         const newStatus = task.status === "completed" ? "pending" : "completed";
 
         // Update local state immediately for instant feedback
-        setCategorizedTaskList(
-            categorizedTaskList.map((group) => ({
-                ...group,
-                tasks: {
-                    ...group.tasks,
-                    data: group.tasks.data.map((t) =>
-                        t.id === task.id
-                            ? {
-                                  ...t,
-                                  status: newStatus,
-                                  completed_at:
-                                      newStatus === "completed"
-                                          ? new Date().toISOString()
-                                          : null,
-                              }
-                            : t
-                    ),
-                },
-            }))
+        setAllTasks(
+            allTasks.map((t) =>
+                t.id === task.id
+                    ? {
+                          ...t,
+                          status: newStatus,
+                          completed_at:
+                              newStatus === "completed"
+                                  ? new Date().toISOString()
+                                  : null,
+                      }
+                    : t
+            )
         );
 
         // Send request to server
@@ -752,25 +641,19 @@ export default function Index({ categorizedTasks, categories, filters }) {
                     // Revert changes on error
                     const revertStatus =
                         newStatus === "completed" ? "pending" : "completed";
-                    setCategorizedTaskList(
-                        categorizedTaskList.map((group) => ({
-                            ...group,
-                            tasks: {
-                                ...group.tasks,
-                                data: group.tasks.data.map((t) =>
-                                    t.id === task.id
-                                        ? {
-                                              ...t,
-                                              status: revertStatus,
-                                              completed_at:
-                                                  revertStatus === "completed"
-                                                      ? new Date().toISOString()
-                                                      : null,
-                                          }
-                                        : t
-                                ),
-                            },
-                        }))
+                    setAllTasks(
+                        allTasks.map((t) =>
+                            t.id === task.id
+                                ? {
+                                      ...t,
+                                      status: revertStatus,
+                                      completed_at:
+                                          revertStatus === "completed"
+                                              ? new Date().toISOString()
+                                              : null,
+                                  }
+                                : t
+                        )
                     );
                     toast.error("Failed to update task status");
                 },
@@ -781,24 +664,28 @@ export default function Index({ categorizedTasks, categories, filters }) {
     return (
         <TodoLayout
             header={
-                <div className="flex flex-row items-center justify-between gap-2 md:gap-4">
-                    <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100 flex-shrink-0">
-                        My Tasks
-                    </h2>
-                    <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                            Tasks
+                        </h1>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            Manage and organize your tasks efficiently
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-3">
                         <button
                             onClick={() => setShowTaskModal(true)}
                             disabled={isTaskSubmitting}
-                            className="inline-flex items-center justify-center w-auto px-3 py-2 sm:px-2 sm:py-1.5 md:px-4 md:py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs sm:text-xs md:text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg font-medium text-sm text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             title={
                                 isTaskSubmitting
                                     ? "Creating task..."
                                     : "Create a new task"
                             }
                         >
-                            <Plus className="mr-1 sm:mr-2 h-4 w-4 sm:h-3 sm:w-3 md:h-4 md:w-4" />
-                            <span className="hidden sm:inline">New Task</span>
-                            <span className="sm:hidden">Add</span>
+                            <Plus className="mr-2 h-4 w-4" />
+                            New Task
                         </button>
                     </div>
                 </div>
@@ -806,135 +693,172 @@ export default function Index({ categorizedTasks, categories, filters }) {
         >
             <Head title="Tasks" />
 
-            <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-6">
                 {/* Search and Filters */}
-                <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 sm:p-6">
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        {/* Search */}
-                        <div className="flex-1">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Search tasks..."
-                                    value={search}
-                                    onChange={(e) =>
-                                        handleSearch(e.target.value)
-                                    }
-                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
-                                />
+                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            {/* Search */}
+                            <div className="flex-1">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search tasks by title or description..."
+                                        value={search}
+                                        onChange={(e) =>
+                                            handleSearch(e.target.value)
+                                        }
+                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm"
+                                    />
+                                </div>
                             </div>
+
+                            {/* Filter Toggle */}
+                            <button
+                                onClick={() => setShowFilters(!showFilters)}
+                                className={`inline-flex items-center justify-center px-4 py-2.5 border rounded-lg text-sm font-medium transition-colors ${
+                                    showFilters || statusFilter || priorityFilter || categoryFilter || dueDateFilter
+                                        ? "bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300"
+                                        : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                }`}
+                            >
+                                <Filter className="mr-2 h-4 w-4" />
+                                Filters
+                                {(statusFilter || priorityFilter || categoryFilter || dueDateFilter) && (
+                                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                        {[statusFilter, priorityFilter, categoryFilter, dueDateFilter].filter(Boolean).length}
+                                    </span>
+                                )}
+                            </button>
                         </div>
 
-                        {/* Filter Toggle */}
-                        <button
-                            onClick={() => setShowFilters(!showFilters)}
-                            className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                            <Filter className="mr-2 h-4 w-4" />
-                            Filters
-                        </button>
-                    </div>
-
-                    {/* Filter Options */}
-                    {showFilters && (
-                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                            {/* Status Filter */}
-                            <select
-                                value={statusFilter}
-                                onChange={(e) =>
-                                    handleFilter("status", e.target.value)
-                                }
-                                className="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                            >
-                                <option value="">All Status</option>
-                                <option value="pending">Pending</option>
-                                <option value="in_progress">In Progress</option>
-                                <option value="completed">Completed</option>
-                                <option value="cancelled">Cancelled</option>
-                            </select>
-
-                            {/* Priority Filter */}
-                            <select
-                                value={priorityFilter}
-                                onChange={(e) =>
-                                    handleFilter("priority", e.target.value)
-                                }
-                                className="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                            >
-                                <option value="">All Priorities</option>
-                                <option value="low">Low</option>
-                                <option value="medium">Medium</option>
-                                <option value="high">High</option>
-                                <option value="urgent">Urgent</option>
-                            </select>
-
-                            {/* Category Filter */}
-                            <select
-                                value={categoryFilter}
-                                onChange={(e) =>
-                                    handleFilter("category", e.target.value)
-                                }
-                                className="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                            >
-                                <option value="">All Categories</option>
-                                {categories.map((category) => (
-                                    <option
-                                        key={category.id}
-                                        value={category.id}
+                        {/* Filter Options */}
+                        {showFilters && (
+                            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                {/* Status Filter */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Status
+                                    </label>
+                                    <select
+                                        value={statusFilter}
+                                        onChange={(e) =>
+                                            handleFilter("status", e.target.value)
+                                        }
+                                        className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                                     >
-                                        {category.name}
-                                    </option>
-                                ))}
-                            </select>
+                                        <option value="">All Status</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="in_progress">In Progress</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="cancelled">Cancelled</option>
+                                    </select>
+                                </div>
 
-                            {/* Due Date Filter */}
-                            <select
-                                value={dueDateFilter}
-                                onChange={(e) =>
-                                    handleFilter("due_date", e.target.value)
-                                }
-                                className="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                            >
-                                <option value="">All Dates</option>
-                                <option value="today">Today</option>
-                                <option value="tomorrow">Tomorrow</option>
-                                <option value="this_week">This Week</option>
-                                <option value="overdue">Overdue</option>
-                            </select>
-                        </div>
-                    )}
+                                {/* Priority Filter */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Priority
+                                    </label>
+                                    <select
+                                        value={priorityFilter}
+                                        onChange={(e) =>
+                                            handleFilter("priority", e.target.value)
+                                        }
+                                        className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                    >
+                                        <option value="">All Priorities</option>
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                        <option value="urgent">Urgent</option>
+                                    </select>
+                                </div>
+
+                                {/* Category Filter */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Category
+                                    </label>
+                                    <select
+                                        value={categoryFilter}
+                                        onChange={(e) =>
+                                            handleFilter("category", e.target.value)
+                                        }
+                                        className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                    >
+                                        <option value="">All Categories</option>
+                                        {categories.map((category) => (
+                                            <option
+                                                key={category.id}
+                                                value={category.id}
+                                            >
+                                                {category.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Due Date Filter */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Due Date
+                                    </label>
+                                    <select
+                                        value={dueDateFilter}
+                                        onChange={(e) =>
+                                            handleFilter("due_date", e.target.value)
+                                        }
+                                        className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                    >
+                                        <option value="">All Dates</option>
+                                        <option value="today">Today</option>
+                                        <option value="tomorrow">Tomorrow</option>
+                                        <option value="this_week">This Week</option>
+                                        <option value="overdue">Overdue</option>
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                {/* Tasks List */}
-                <div className="space-y-6">
-                    {filteredCategorizedTaskList.filter((group) => {
-                        // Show empty categories unless there are active filters (search, status, priority, category, due date)
-                        const hasActiveFilters =
-                            search ||
-                            statusFilter ||
-                            priorityFilter ||
-                            categoryFilter ||
-                            dueDateFilter;
-                        return hasActiveFilters
-                            ? group.tasks.data.length > 0
-                            : true;
-                    }).length === 0 ? (
-                        <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 sm:p-8 text-center">
-                            <div className="text-gray-400 dark:text-gray-500 mb-4">
-                                <CheckCircle className="mx-auto h-10 w-10 sm:h-12 sm:w-12" />
+                {/* Tasks Table */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    {/* Table Header */}
+                    <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    All Tasks ({allTasks.length})
+                                </h3>
                             </div>
-                            <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                            <div className="flex items-center space-x-2">
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    Drag to reorder • Click to view details
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Tasks List */}
+                    {allTasks.length === 0 ? (
+                        <div className="p-12 text-center">
+                            <div className="text-gray-400 dark:text-gray-500 mb-4">
+                                <CheckSquare className="mx-auto h-16 w-16" />
+                            </div>
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                                 No tasks found
                             </h3>
-                            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mb-4">
+                            <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
                                 {search ||
                                 statusFilter ||
                                 priorityFilter ||
                                 categoryFilter ||
                                 dueDateFilter
-                                    ? "Try adjusting your filters or search terms."
-                                    : "Get started by creating your first task."}
+                                    ? "Try adjusting your filters or search terms to find what you're looking for."
+                                    : "Get started by creating your first task to organize your work and boost productivity."}
                             </p>
                             {!search &&
                                 !statusFilter &&
@@ -944,235 +868,44 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                     <button
                                         onClick={() => setShowTaskModal(true)}
                                         disabled={isTaskSubmitting}
-                                        className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg font-medium text-sm text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <Plus className="mr-2 h-4 w-4" />
-                                        Create Task
+                                        Create Your First Task
                                     </button>
                                 )}
                         </div>
                     ) : (
-                        filteredCategorizedTaskList
-                            .filter((group) => {
-                                // Show empty categories unless there are active filters (search, status, priority, category, due date)
-                                // but always show categories when just hiding completed tasks
-                                const hasActiveFilters =
-                                    search ||
-                                    statusFilter ||
-                                    priorityFilter ||
-                                    categoryFilter ||
-                                    dueDateFilter;
-                                return hasActiveFilters
-                                    ? group.tasks.data.length > 0
-                                    : true;
-                            })
-                            .map((group, groupIndex) => (
-                                <div
-                                    key={group.category.id || "uncategorized"}
-                                    className="bg-white dark:bg-gray-800 shadow-sm rounded-lg"
-                                >
-                                    {/* Category Header */}
-                                    <div className="px-4 sm:px-6 py-3 border-b border-gray-200 dark:border-gray-700">
-                                        <div className="flex items-center space-x-3">
-                                            <button
-                                                onClick={() =>
-                                                    toggleCategoryCollapse(
-                                                        group.category.id ||
-                                                            "uncategorized"
-                                                    )
-                                                }
-                                                className="flex items-center space-x-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md p-2 -m-2 transition-colors flex-1"
-                                                title={`${
-                                                    collapsedCategories.has(
-                                                        group.category.id ||
-                                                            "uncategorized"
-                                                    )
-                                                        ? "Expand"
-                                                        : "Collapse"
-                                                } ${
-                                                    group.category.name
-                                                } category`}
-                                            >
-                                                <div className="flex-shrink-0">
-                                                    {collapsedCategories.has(
-                                                        group.category.id ||
-                                                            "uncategorized"
-                                                    ) ? (
-                                                        <ChevronRight className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                                                    ) : (
-                                                        <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                                                    )}
-                                                </div>
-                                                <div
-                                                    className="w-3 h-3 rounded-full flex-shrink-0"
-                                                    style={{
-                                                        backgroundColor:
-                                                            group.category
-                                                                .color,
-                                                    }}
-                                                />
-                                                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 flex-1">
-                                                    {group.category.name}
-                                                </h3>
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 flex-shrink-0">
-                                                    {group.tasks.data.length}{" "}
-                                                    {group.tasks.data.length ===
-                                                    1
-                                                        ? "task"
-                                                        : "tasks"}
-                                                </span>
-                                            </button>
-
-                                            {/* Quick Add Task Button */}
-                                            <button
-                                                onClick={(e) =>
-                                                    handleQuickAddTask(
-                                                        group.category.id ||
-                                                            null,
-                                                        e
-                                                    )
-                                                }
-                                                className="flex-shrink-0 p-2 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:text-blue-700 dark:hover:text-blue-300 transition-all duration-200 hover:scale-110 shadow-sm hover:shadow-md"
-                                                title={`Add task to ${group.category.name}`}
-                                            >
-                                                <Plus className="h-4 w-4 font-bold" />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Tasks in Category */}
-                                    {!collapsedCategories.has(
-                                        group.category.id || "uncategorized"
-                                    ) && (
-                                        <>
-                                            {group.tasks.data.length > 0 ? (
-                                                <DndContext
-                                                    sensors={sensors}
-                                                    collisionDetection={
-                                                        closestCenter
-                                                    }
-                                                    onDragEnd={handleDragEnd}
-                                                >
-                                                    <SortableContext
-                                                        items={group.tasks.data.map(
-                                                            (task) =>
-                                                                task.id.toString()
-                                                        )}
-                                                        strategy={
-                                                            verticalListSortingStrategy
-                                                        }
-                                                    >
-                                                        <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                                                            {group.tasks.data.map(
-                                                                (
-                                                                    task,
-                                                                    index
-                                                                ) => {
-                                                                    const globalIndex =
-                                                                        getAllTasks().findIndex(
-                                                                            (
-                                                                                t
-                                                                            ) =>
-                                                                                t.id ===
-                                                                                task.id
-                                                                        );
-                                                                    return (
-                                                                        <SortableTask
-                                                                            key={
-                                                                                task.id
-                                                                            }
-                                                                            task={
-                                                                                task
-                                                                            }
-                                                                            globalIndex={
-                                                                                globalIndex
-                                                                            }
-                                                                            getPriorityColor={
-                                                                                getPriorityColor
-                                                                            }
-                                                                            getStatusIcon={
-                                                                                getStatusIcon
-                                                                            }
-                                                                            isOverdue={
-                                                                                isOverdue
-                                                                            }
-                                                                            toggleTaskStatus={
-                                                                                toggleTaskStatus
-                                                                            }
-                                                                            handleTaskStatusChange={
-                                                                                handleTaskStatusChange
-                                                                            }
-                                                                            setSelectedTask={
-                                                                                setSelectedTask
-                                                                            }
-                                                                            setShowViewModal={
-                                                                                setShowViewModal
-                                                                            }
-                                                                            setShowEditModal={
-                                                                                setShowEditModal
-                                                                            }
-                                                                            setShowSubtaskModal={
-                                                                                setShowSubtaskModal
-                                                                            }
-                                                                        />
-                                                                    );
-                                                                }
-                                                            )}
-                                                        </div>
-                                                    </SortableContext>
-                                                </DndContext>
-                                            ) : (
-                                                <div className="p-6 sm:p-8 text-center">
-                                                    <div className="text-gray-400 dark:text-gray-500 mb-3">
-                                                        <ListTodo className="mx-auto h-8 w-8" />
-                                                    </div>
-                                                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                        No tasks in this
-                                                        category yet.
-                                                    </p>
-                                                </div>
-                                            )}
-
-                                            {/* Category Pagination */}
-                                            {group.tasks.data.length > 0 &&
-                                                group.tasks.links &&
-                                                group.tasks.links.length >
-                                                    3 && (
-                                                    <div className="px-4 sm:px-6 py-3 border-t border-gray-200 dark:border-gray-700">
-                                                        <div className="flex flex-wrap justify-center gap-1 sm:gap-2">
-                                                            {group.tasks.links.map(
-                                                                (
-                                                                    link,
-                                                                    index
-                                                                ) => (
-                                                                    <Link
-                                                                        key={
-                                                                            index
-                                                                        }
-                                                                        href={
-                                                                            link.url ||
-                                                                            "#"
-                                                                        }
-                                                                        className={`px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
-                                                                            link.active
-                                                                                ? "bg-blue-600 text-white"
-                                                                                : link.url
-                                                                                ? "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                                                                : "text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                                                                        }`}
-                                                                        dangerouslySetInnerHTML={{
-                                                                            __html: link.label,
-                                                                        }}
-                                                                    />
-                                                                )
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                        </>
-                                    )}
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
+                        >
+                            <SortableContext
+                                items={allTasks.map((task) => task.id.toString())}
+                                strategy={verticalListSortingStrategy}
+                            >
+                                <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                                    {allTasks.map((task, index) => (
+                                        <SortableTask
+                                            key={task.id}
+                                            task={task}
+                                            globalIndex={index}
+                                            getPriorityColor={getPriorityColor}
+                                            getStatusIcon={getStatusIcon}
+                                            getStatusColor={getStatusColor}
+                                            isOverdue={isOverdue}
+                                            toggleTaskStatus={toggleTaskStatus}
+                                            handleTaskStatusChange={handleTaskStatusChange}
+                                            setSelectedTask={setSelectedTask}
+                                            setShowViewModal={setShowViewModal}
+                                            setShowEditModal={setShowEditModal}
+                                            setShowSubtaskModal={setShowSubtaskModal}
+                                        />
+                                    ))}
                                 </div>
-                            ))
+                            </SortableContext>
+                        </DndContext>
                     )}
                 </div>
             </div>

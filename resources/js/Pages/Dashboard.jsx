@@ -24,7 +24,6 @@ import TaskViewModal from "@/Components/TaskViewModal";
 import TaskEditModal from "@/Components/TaskEditModal";
 import ScheduleModal from "@/Components/ScheduleModal";
 import WeatherWidget from "@/Components/widgets/WeatherWidget";
-import NewsWidget from "@/Components/widgets/NewsWidget";
 
 export default function Dashboard({
     currentTasks = [],
@@ -167,6 +166,47 @@ export default function Dashboard({
         );
     };
 
+    const handleDeleteTask = (task) => {
+        if (!confirm(`Are you sure you want to delete "${task.title}"? This action cannot be undone.`)) {
+            return;
+        }
+
+        // Helper function to remove task from a list
+        const removeTaskFromList = (taskList, setTaskList) => {
+            setTaskList(taskList.filter((t) => t.id !== task.id));
+        };
+
+        // Store original state for potential revert
+        const originalCurrentTasks = [...localCurrentTasks];
+        const originalTodayTasks = [...localTodayTasks];
+        const originalOverdueTasks = [...localOverdueTasks];
+        const originalUpcomingTasks = [...localUpcomingTasks];
+
+        // Optimistically remove the task from all lists
+        removeTaskFromList(localCurrentTasks, setLocalCurrentTasks);
+        removeTaskFromList(localTodayTasks, setLocalTodayTasks);
+        removeTaskFromList(localOverdueTasks, setLocalOverdueTasks);
+        removeTaskFromList(localUpcomingTasks, setLocalUpcomingTasks);
+
+        // Send delete request to server
+        router.delete(route("tasks.destroy", task.id), {
+            preserveScroll: true,
+            preserveState: true,
+            only: [], // Don't reload any data
+            onSuccess: () => {
+                toast.success("Task deleted successfully");
+            },
+            onError: () => {
+                // Revert to original state on error
+                setLocalCurrentTasks(originalCurrentTasks);
+                setLocalTodayTasks(originalTodayTasks);
+                setLocalOverdueTasks(originalOverdueTasks);
+                setLocalUpcomingTasks(originalUpcomingTasks);
+                toast.error("Failed to delete task");
+            },
+        });
+    };
+
     const getPriorityColor = (priority) => {
         switch (priority) {
             case "urgent":
@@ -297,9 +337,8 @@ export default function Dashboard({
                 </div>
 
                 {/* Widgets Section */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                <div className="grid grid-cols-1 gap-4 sm:gap-6">
                     <WeatherWidget />
-                    <NewsWidget />
                 </div>
 
                 {/* Quick Actions */}
@@ -592,6 +631,12 @@ export default function Dashboard({
                                                 >
                                                     <Edit className="h-4 w-4" />
                                                 </button>
+                                                <button
+                                                    onClick={() => handleDeleteTask(task)}
+                                                    className="text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
                                             </div>
                                         </div>
                                     ))}
@@ -735,6 +780,12 @@ export default function Dashboard({
                                                         .toUpperCase() +
                                                         task.priority.slice(1)}
                                                 </span>
+                                                <button
+                                                    onClick={() => handleDeleteTask(task)}
+                                                    className="text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
                                             </div>
                                         </div>
                                     ))}
@@ -808,6 +859,12 @@ export default function Dashboard({
                                                         .toUpperCase() +
                                                         task.priority.slice(1)}
                                                 </span>
+                                                <button
+                                                    onClick={() => handleDeleteTask(task)}
+                                                    className="text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
                                             </div>
                                         </div>
                                     ))}

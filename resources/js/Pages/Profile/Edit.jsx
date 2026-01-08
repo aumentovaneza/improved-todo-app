@@ -4,7 +4,6 @@ import { User, Mail, Calendar, Shield, LogOut, Edit3 } from "lucide-react";
 import DeleteUserForm from "./Partials/DeleteUserForm";
 import UpdatePasswordForm from "./Partials/UpdatePasswordForm";
 import UpdateProfileInformationForm from "./Partials/UpdateProfileInformationForm";
-import UpdateNewsPreferencesForm from "./Partials/UpdateNewsPreferencesForm";
 import DangerButton from "@/Components/DangerButton";
 import SecondaryButton from "@/Components/SecondaryButton";
 
@@ -175,10 +174,6 @@ export default function Edit({ mustVerifyEmail, status }) {
                         status={status}
                         className="max-w-xl"
                     />
-                </div>
-
-                <div className="bg-white p-4 shadow-sm sm:rounded-lg sm:p-8 dark:bg-gray-800">
-                    <UpdateNewsPreferencesForm className="max-w-xl" />
                 </div>
 
                 <div className="bg-white p-4 shadow-sm sm:rounded-lg sm:p-8 dark:bg-gray-800">

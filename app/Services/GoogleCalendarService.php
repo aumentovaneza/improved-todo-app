@@ -6,17 +6,14 @@ use App\Models\Task;
 use App\Models\User;
 use App\Services\ActivityLogService;
 use App\Services\TaskService;
-use Google\Client;
-use Google\Service\Calendar;
-use Google\Service\Calendar\Event;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class GoogleCalendarService
 {
-    private Client $client;
-    private Calendar $service;
+    private $client;
+    private $service;
 
     public function __construct(
         private ActivityLogService $activityLogService,
@@ -30,11 +27,21 @@ class GoogleCalendarService
      */
     private function initializeClient(): void
     {
-        $this->client = new Client();
+        // Check if Google classes are available using string class names
+        if (!class_exists('Google\Client') || !class_exists('Google\Service\Calendar')) {
+            Log::warning('Google API client classes not available. Google Calendar features will be disabled.');
+            $this->client = null;
+            return;
+        }
+
+        $clientClass = 'Google\Client';
+        $calendarClass = 'Google\Service\Calendar';
+        
+        $this->client = new $clientClass();
         $this->client->setClientId(config('services.google.client_id'));
         $this->client->setClientSecret(config('services.google.client_secret'));
         $this->client->setRedirectUri(config('services.google.redirect'));
-        $this->client->addScope(Calendar::CALENDAR);
+        $this->client->addScope($calendarClass::CALENDAR);
     }
 
     /**
@@ -138,7 +145,8 @@ class GoogleCalendarService
             }
 
             $this->client->setAccessToken(decrypt($user->google_token));
-            $this->service = new Calendar($this->client);
+            $calendarClass = 'Google\Service\Calendar';
+            $this->service = new $calendarClass($this->client);
             return true;
         } catch (\Exception $e) {
             Log::error('Failed to setup Google Calendar service: ' . $e->getMessage());

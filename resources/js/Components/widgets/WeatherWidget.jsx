@@ -11,6 +11,7 @@ import {
     Wind,
     Eye,
     Thermometer,
+    Calendar,
 } from "lucide-react";
 
 const WeatherWidget = () => {
@@ -225,28 +226,28 @@ const WeatherWidget = () => {
     }
 
     return (
-        <div className="card h-80 sm:h-96 overflow-hidden flex flex-col">
-            {/* Header with gradient background */}
+        <div className="card overflow-hidden flex flex-col">
+            {/* Header with gradient background - Full width design */}
             <div
                 className={`bg-gradient-to-r ${getWeatherGradient(
                     weather?.condition
-                )} p-4 sm:p-6 text-white relative flex-shrink-0`}
+                )} p-6 sm:p-8 text-white relative`}
             >
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg sm:text-xl font-bold flex items-center space-x-2">
+                    <h3 className="text-xl sm:text-2xl font-bold flex items-center space-x-3">
                         <span>Weather</span>
                     </h3>
                     <button
                         onClick={handleRefresh}
-                        className="text-white/80 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+                        className="text-white/80 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
                         title="Refresh weather data"
                     >
                         <RefreshCw className="h-4 w-4" />
                     </button>
                 </div>
 
-                {/* Current Weather */}
-                <div className="flex items-center justify-between">
+                {/* Current Weather - Enhanced for full width */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center space-x-4">
                         {weather?.icon ? (
                             <img
@@ -260,110 +261,119 @@ const WeatherWidget = () => {
                             </div>
                         )}
                         <div>
-                            <div className="text-3xl sm:text-4xl font-bold">
+                            <div className="text-3xl sm:text-4xl font-bold mb-1">
                                 {weather?.temperature}°
                             </div>
-                            <div className="text-sm sm:text-base text-white/90 capitalize">
+                            <div className="text-sm sm:text-base text-white/90 capitalize mb-1">
                                 {weather?.condition}
+                            </div>
+                            <div className="flex items-center text-xs sm:text-sm text-white/80">
+                                <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                                <span>{location}</span>
                             </div>
                         </div>
                     </div>
-                    <div className="text-right">
-                        <div className="text-sm text-white/90 mb-1">
-                            Feels like
-                        </div>
-                        <div className="text-xl font-semibold">
-                            {weather?.feelsLike}°
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+                        <div className="text-center sm:text-right">
+                            <div className="text-xs sm:text-sm text-white/90 mb-1">
+                                Feels like
+                            </div>
+                            <div className="text-2xl sm:text-3xl font-semibold">
+                                {weather?.feelsLike}°
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <div className="flex items-center text-sm text-white/90 mt-3">
-                    <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-                    <span className="truncate">{location}</span>
                 </div>
             </div>
 
-            {/* Weather Details */}
-            <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
-                {/* Weather Stats */}
-                <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                    <div className="flex flex-col items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                        <Droplets className="h-5 w-5 text-blue-500 mb-1" />
-                        <span className="text-xs text-adaptive-muted">
-                            Humidity
-                        </span>
-                        <span className="text-sm font-semibold text-adaptive-primary">
-                            {weather?.humidity}%
-                        </span>
+            {/* Weather Details - Side by side layout for full width */}
+            <div className="p-4 sm:p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* Weather Stats */}
+                    <div>
+                        <h4 className="text-sm sm:text-base font-semibold text-adaptive-primary mb-3 flex items-center">
+                            <Thermometer className="h-4 w-4 mr-2" />
+                            Current Conditions
+                        </h4>
+                        <div className="grid grid-cols-3 gap-3">
+                            <div className="flex flex-col items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                                <Droplets className="h-5 w-5 text-blue-500 mb-1" />
+                                <span className="text-xs text-adaptive-muted mb-1">
+                                    Humidity
+                                </span>
+                                <span className="text-sm font-semibold text-adaptive-primary">
+                                    {weather?.humidity}%
+                                </span>
+                            </div>
+                            <div className="flex flex-col items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                                <Wind className="h-5 w-5 text-green-500 mb-1" />
+                                <span className="text-xs text-adaptive-muted mb-1">
+                                    Wind
+                                </span>
+                                <span className="text-sm font-semibold text-adaptive-primary">
+                                    {weather?.windSpeed} km/h
+                                </span>
+                            </div>
+                            <div className="flex flex-col items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                                <Eye className="h-5 w-5 text-purple-500 mb-1" />
+                                <span className="text-xs text-adaptive-muted mb-1">
+                                    Visibility
+                                </span>
+                                <span className="text-sm font-semibold text-adaptive-primary">
+                                    {weather?.visibility} km
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex flex-col items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                        <Wind className="h-5 w-5 text-green-500 mb-1" />
-                        <span className="text-xs text-adaptive-muted">
-                            Wind
-                        </span>
-                        <span className="text-sm font-semibold text-adaptive-primary">
-                            {weather?.windSpeed} km/h
-                        </span>
-                    </div>
-                    <div className="flex flex-col items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                        <Eye className="h-5 w-5 text-purple-500 mb-1" />
-                        <span className="text-xs text-adaptive-muted">
-                            Visibility
-                        </span>
-                        <span className="text-sm font-semibold text-adaptive-primary">
-                            {weather?.visibility} km
-                        </span>
-                    </div>
-                </div>
 
-                {/* 3-Day Forecast */}
-                <div>
-                    <h4 className="text-sm font-semibold text-adaptive-primary mb-3 flex items-center">
-                        <Thermometer className="h-4 w-4 mr-2" />
-                        3-Day Forecast
-                    </h4>
-                    <div className="space-y-2">
-                        {forecast.map((day, index) => (
-                            <div
-                                key={index}
-                                className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                            >
-                                <div className="flex items-center space-x-3">
-                                    <img
-                                        src={day.icon}
-                                        alt={day.condition}
-                                        className="h-8 w-8"
-                                    />
-                                    <div>
-                                        <div className="text-sm font-medium text-adaptive-primary">
-                                            {day.dayName}
-                                        </div>
-                                        <div className="text-xs text-adaptive-muted capitalize">
-                                            {day.condition}
+                    {/* 3-Day Forecast */}
+                    <div>
+                        <h4 className="text-sm sm:text-base font-semibold text-adaptive-primary mb-3 flex items-center">
+                            <Calendar className="h-4 w-4 mr-2" />
+                            3-Day Forecast
+                        </h4>
+                        <div className="space-y-2">
+                            {forecast.map((day, index) => (
+                                <div
+                                    key={index}
+                                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                >
+                                    <div className="flex items-center space-x-3">
+                                        <img
+                                            src={day.icon}
+                                            alt={day.condition}
+                                            className="h-8 w-8"
+                                        />
+                                        <div>
+                                            <div className="text-sm font-medium text-adaptive-primary">
+                                                {day.dayName}
+                                            </div>
+                                            <div className="text-xs text-adaptive-muted capitalize">
+                                                {day.condition}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="flex items-center space-x-3">
-                                    {day.chanceOfRain > 0 && (
-                                        <div className="flex items-center space-x-1 text-blue-500">
-                                            <Droplets className="h-3 w-3" />
-                                            <span className="text-xs">
-                                                {day.chanceOfRain}%
+                                    <div className="flex items-center space-x-3">
+                                        {day.chanceOfRain > 0 && (
+                                            <div className="flex items-center space-x-1 text-blue-500">
+                                                <Droplets className="h-3 w-3" />
+                                                <span className="text-xs font-medium">
+                                                    {day.chanceOfRain}%
+                                                </span>
+                                            </div>
+                                        )}
+                                        <div className="text-right">
+                                            <span className="text-sm font-semibold text-adaptive-primary">
+                                                {day.maxTemp}°
+                                            </span>
+                                            <span className="text-xs text-adaptive-muted ml-1">
+                                                / {day.minTemp}°
                                             </span>
                                         </div>
-                                    )}
-                                    <div className="text-right">
-                                        <span className="text-sm font-semibold text-adaptive-primary">
-                                            {day.maxTemp}°
-                                        </span>
-                                        <span className="text-xs text-adaptive-muted ml-1">
-                                            {day.minTemp}°
-                                        </span>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>

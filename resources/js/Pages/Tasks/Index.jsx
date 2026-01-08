@@ -67,6 +67,7 @@ function SortableTask({
     setShowViewModal,
     setShowEditModal,
     setShowSubtaskModal,
+    handleDeleteTask,
 }) {
     const {
         attributes,
@@ -316,6 +317,13 @@ function SortableTask({
                         >
                             <Edit className="h-4 w-4" />
                         </button>
+                        <button
+                            onClick={() => handleDeleteTask(task)}
+                            className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                            title="Delete Task"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </button>
                     </div>
                 </div>
             </div>
@@ -422,6 +430,32 @@ export default function Index({ categorizedTasks, categories, filters }) {
                 t.id === updatedTask.id ? updatedTask : t
             )
         );
+    };
+
+    // Handle task deletion
+    const handleDeleteTask = (task) => {
+        if (!confirm(`Are you sure you want to delete "${task.title}"? This action cannot be undone.`)) {
+            return;
+        }
+
+        // Optimistically remove the task from the UI
+        const originalTasks = [...allTasks];
+        setAllTasks(allTasks.filter((t) => t.id !== task.id));
+
+        // Send delete request to server
+        router.delete(route("tasks.destroy", task.id), {
+            preserveScroll: true,
+            preserveState: true,
+            only: [], // Don't reload any data
+            onSuccess: () => {
+                toast.success("Task deleted successfully");
+            },
+            onError: () => {
+                // Revert to original state on error
+                setAllTasks(originalTasks);
+                toast.error("Failed to delete task");
+            },
+        });
     };
 
     const sensors = useSensors(
@@ -901,6 +935,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                             setShowViewModal={setShowViewModal}
                                             setShowEditModal={setShowEditModal}
                                             setShowSubtaskModal={setShowSubtaskModal}
+                                            handleDeleteTask={handleDeleteTask}
                                         />
                                     ))}
                                 </div>

@@ -146,7 +146,7 @@ function SortableTask({
                                 setSelectedTask(task);
                                 setShowViewModal(true);
                             }}
-                            className={`text-left font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${
+                            className={`text-left font-medium hover:text-primary-400 dark:hover:text-[#2ED7A1] transition-colors ${
                                 task.status === "completed"
                                     ? "text-gray-500 dark:text-gray-400 line-through"
                                     : "text-gray-900 dark:text-gray-100"
@@ -302,7 +302,7 @@ function SortableTask({
                                 setSelectedTask(task);
                                 setShowViewModal(true);
                             }}
-                            className="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                            className="p-1 text-gray-400 hover:text-primary-400 dark:hover:text-[#2ED7A1] transition-colors"
                             title="View Task"
                         >
                             <Eye className="h-4 w-4" />
@@ -312,7 +312,7 @@ function SortableTask({
                                 setSelectedTask(task);
                                 setShowEditModal(true);
                             }}
-                            className="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                            className="p-1 text-gray-400 hover:text-primary-400 dark:hover:text-[#2ED7A1] transition-colors"
                             title="Edit Task"
                         >
                             <Edit className="h-4 w-4" />
@@ -610,7 +610,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
             case "completed":
                 return "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/20";
             case "in_progress":
-                return "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20";
+                return "text-primary-400 bg-primary-100 dark:text-[#2ED7A1] dark:bg-primary-900/20";
             case "cancelled":
                 return "text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/20";
             default:
@@ -711,7 +711,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
                         <button
                             onClick={() => setShowTaskModal(true)}
                             disabled={isTaskSubmitting}
-                            className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg font-medium text-sm text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-lg font-medium text-sm text-white hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:bg-[#2ED7A1] dark:hover:bg-primary-400"
                             title={
                                 isTaskSubmitting
                                     ? "Creating task..."
@@ -743,7 +743,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                         onChange={(e) =>
                                             handleSearch(e.target.value)
                                         }
-                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm"
+                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1] text-sm"
                                     />
                                 </div>
                             </div>
@@ -753,14 +753,14 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                 onClick={() => setShowFilters(!showFilters)}
                                 className={`inline-flex items-center justify-center px-4 py-2.5 border rounded-lg text-sm font-medium transition-colors ${
                                     showFilters || statusFilter || priorityFilter || categoryFilter || dueDateFilter
-                                        ? "bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300"
+                                        ? "bg-primary-50 border-primary-200 text-primary-700 dark:bg-primary-900/20 dark:border-primary-800 dark:text-[#2ED7A1]"
                                         : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
                                 }`}
                             >
                                 <Filter className="mr-2 h-4 w-4" />
                                 Filters
                                 {(statusFilter || priorityFilter || categoryFilter || dueDateFilter) && (
-                                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-[#2ED7A1]">
                                         {[statusFilter, priorityFilter, categoryFilter, dueDateFilter].filter(Boolean).length}
                                     </span>
                                 )}
@@ -780,7 +780,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                         onChange={(e) =>
                                             handleFilter("status", e.target.value)
                                         }
-                                        className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                        className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1]"
                                     >
                                         <option value="">All Status</option>
                                         <option value="pending">Pending</option>
@@ -800,7 +800,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                         onChange={(e) =>
                                             handleFilter("priority", e.target.value)
                                         }
-                                        className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                        className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1]"
                                     >
                                         <option value="">All Priorities</option>
                                         <option value="low">Low</option>
@@ -820,7 +820,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                         onChange={(e) =>
                                             handleFilter("category", e.target.value)
                                         }
-                                        className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                        className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1]"
                                     >
                                         <option value="">All Categories</option>
                                         {categories.map((category) => (
@@ -844,7 +844,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                         onChange={(e) =>
                                             handleFilter("due_date", e.target.value)
                                         }
-                                        className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                        className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1]"
                                     >
                                         <option value="">All Dates</option>
                                         <option value="today">Today</option>
@@ -902,7 +902,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                     <button
                                         onClick={() => setShowTaskModal(true)}
                                         disabled={isTaskSubmitting}
-                                        className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg font-medium text-sm text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-lg font-medium text-sm text-white hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:bg-[#2ED7A1] dark:hover:bg-primary-400"
                                     >
                                         <Plus className="mr-2 h-4 w-4" />
                                         Create Your First Task

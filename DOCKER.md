@@ -23,7 +23,7 @@ This project is fully dockerized and ready to run with Docker Compose.
    
    Or create one with these minimum required variables:
    ```env
-   APP_NAME="Improved Todo App"
+   APP_NAME="Wevie"
    APP_ENV=local
    APP_KEY=
    APP_DEBUG=true

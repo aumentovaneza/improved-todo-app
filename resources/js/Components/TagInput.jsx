@@ -25,7 +25,8 @@ export default function TagInput({
     const generateTagColor = (tagName) => {
         // Generate a consistent color based on tag name
         const colors = [
-            "#3B82F6",
+            "#4ACF91", // Wevie Primary
+            "#5FDDE0", // Wevie Secondary
             "#EF4444",
             "#10B981",
             "#F59E0B",

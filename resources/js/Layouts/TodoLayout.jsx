@@ -157,7 +157,7 @@ export default function TodoLayout({ header, children }) {
                                 <Link href="/" className="flex items-center">
                                     <ApplicationLogo className="h-8 w-auto text-light-primary dark:text-dark-primary" />
                                     <span className="ml-2 text-lg font-semibold text-light-primary dark:text-dark-primary">
-                                        FocusFlow
+                                        Wevie
                                     </span>
                                 </Link>
                             </div>
@@ -177,14 +177,14 @@ export default function TodoLayout({ header, children }) {
                                                     }
                                                     className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 ${
                                                         item.current
-                                                            ? "bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-primary-300"
+                                                            ? "bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-[#2ED7A1]"
                                                             : "text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary"
                                                     }`}
                                                 >
                                                     <Icon
                                                         className={`mr-3 h-5 w-5 ${
                                                             item.current
-                                                                ? "text-primary-500"
+                                                                ? "text-primary-400 dark:text-[#2ED7A1]"
                                                                 : "text-light-muted group-hover:text-light-secondary dark:text-dark-muted dark:group-hover:text-dark-secondary"
                                                         }`}
                                                     />
@@ -236,7 +236,7 @@ export default function TodoLayout({ header, children }) {
                                 <div className="border-t border-gray-200 dark:border-gray-700 p-4">
                                     <div className="flex items-center">
                                         <div className="flex-shrink-0">
-                                            <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
+                                            <div className="h-8 w-8 rounded-full bg-primary-400 dark:bg-[#2ED7A1] flex items-center justify-center">
                                                 <span className="text-sm font-medium text-white">
                                                     {user.name
                                                         .charAt(0)
@@ -315,7 +315,7 @@ export default function TodoLayout({ header, children }) {
                     <Link href="/" className="flex items-center">
                         <ApplicationLogo className="h-8 w-auto text-light-primary dark:text-dark-primary" />
                         <span className="ml-2 text-lg font-semibold text-light-primary dark:text-dark-primary">
-                            FocusFlow
+                            Wevie
                         </span>
                     </Link>
                 </div>
@@ -386,7 +386,7 @@ export default function TodoLayout({ header, children }) {
                     <div className="border-t border-light-border dark:border-dark-border p-4">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <div className="h-8 w-8 rounded-full bg-primary-500 flex items-center justify-center">
+                                <div className="h-8 w-8 rounded-full bg-primary-400 dark:bg-[#2ED7A1] flex items-center justify-center">
                                     <span className="text-sm font-medium text-white">
                                         {user.name.charAt(0).toUpperCase()}
                                     </span>

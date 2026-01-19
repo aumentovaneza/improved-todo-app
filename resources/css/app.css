@@ -12,49 +12,49 @@
         color-scheme: dark;
     }
     
-    /* Light mode body styling */
+    /* Light mode body styling - Wevie colors */
     body {
-        background-color: #FDFDFD;
-        color: #334155;
+        background-color: #F9FAFB; /* Neutral Light */
+        color: #2B2F36; /* Neutral Dark */
     }
     
-    /* Dark mode body styling */
+    /* Dark mode body styling - Wevie colors */
     .dark body {
-        background-color: #121212;
-        color: #E0E0E0;
+        background-color: #1E2024; /* Neutral Light (dark mode) */
+        color: #E2E6EB; /* Neutral Dark (dark mode) */
     }
     
-    /* Scrollbar styling for light mode */
+    /* Scrollbar styling for light mode - Wevie colors */
     ::-webkit-scrollbar {
         width: 8px;
         height: 8px;
     }
     
     ::-webkit-scrollbar-track {
-        background: #F1F5F9;
+        background: #F3F4F6;
     }
     
     ::-webkit-scrollbar-thumb {
-        background: #CBD5E1;
+        background: #D1D5DB;
         border-radius: 4px;
     }
     
     ::-webkit-scrollbar-thumb:hover {
-        background: #94A3B8;
+        background: #9CA3AF;
     }
     
-    /* Scrollbar styling for dark mode */
+    /* Scrollbar styling for dark mode - Wevie colors */
     .dark ::-webkit-scrollbar-track {
-        background: #1E1E2F;
+        background: #25282E;
     }
     
     .dark ::-webkit-scrollbar-thumb {
-        background: #404040;
+        background: #3A3D44;
         border-radius: 4px;
     }
     
     .dark ::-webkit-scrollbar-thumb:hover {
-        background: #505050;
+        background: #4A4D54;
     }
 }
 
@@ -69,22 +69,18 @@
         @apply card hover:shadow-md hover:bg-light-hover dark:hover:bg-dark-hover transition-all duration-200;
     }
     
-    /* Button variants with custom colors */
+    /* Button variants with Wevie colors */
     .btn-primary {
-        @apply bg-primary-500 hover:bg-primary-600 focus:bg-primary-600 active:bg-primary-700 text-white px-4 py-2 rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+        @apply bg-primary-400 hover:bg-primary-500 focus:bg-primary-500 active:bg-primary-600 text-white px-4 py-2 rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 dark:bg-primary-400 dark:hover:bg-[#2ED7A1] dark:focus:bg-[#2ED7A1] dark:active:bg-primary-500;
     }
     
     .btn-secondary {
-        @apply bg-secondary-200 hover:bg-secondary-300 focus:bg-secondary-300 active:bg-secondary-400 text-secondary-800 dark:bg-secondary-600 dark:hover:bg-secondary-700 dark:text-white px-4 py-2 rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2;
+        @apply bg-secondary-400 hover:bg-secondary-500 focus:bg-secondary-500 active:bg-secondary-600 text-white px-4 py-2 rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:ring-offset-2 dark:bg-[#3ADBDC] dark:hover:bg-secondary-400 dark:focus:bg-secondary-400 dark:active:bg-secondary-500;
     }
     
-    .btn-accent {
-        @apply bg-accent-200 hover:bg-accent-300 focus:bg-accent-300 active:bg-accent-400 text-accent-800 dark:bg-accent-600 dark:hover:bg-accent-700 dark:text-white px-4 py-2 rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2;
-    }
-    
-    /* Input styles with light and dark mode */
+    /* Input styles with Wevie colors */
     .input-primary {
-        @apply border-light-border dark:border-dark-border bg-light-card dark:bg-dark-card text-light-primary dark:text-dark-primary focus:border-primary-500 focus:ring-primary-500 rounded-md transition-colors duration-200;
+        @apply border-light-border dark:border-dark-border bg-light-card dark:bg-dark-card text-light-primary dark:text-dark-primary focus:border-primary-400 focus:ring-primary-400 rounded-md transition-colors duration-200 dark:focus:border-primary-400 dark:focus:ring-primary-400;
     }
     
     /* Text color utilities for both modes */

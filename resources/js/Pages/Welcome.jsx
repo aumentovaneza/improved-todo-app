@@ -84,13 +84,13 @@ function LoginModal({
                     {/* Header */}
                     <div className="text-center mb-8">
                         <div className="flex items-center justify-center mb-4">
-                            <CheckSquare className="h-10 w-10 text-blue-600" />
+                            <CheckSquare className="h-10 w-10 text-primary-400" />
                         </div>
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                             Welcome Back
                         </h2>
                         <p className="text-gray-600 dark:text-gray-300 mt-2">
-                            Sign in to your FocusFlow account
+                            Sign in to your Wevie account
                         </p>
                     </div>
 
@@ -125,7 +125,7 @@ function LoginModal({
                                     onChange={(e) =>
                                         setData("email", e.target.value)
                                     }
-                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors"
+                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1] transition-colors"
                                     placeholder="Enter your email"
                                     autoComplete="username"
                                     required
@@ -158,7 +158,7 @@ function LoginModal({
                                     onChange={(e) =>
                                         setData("password", e.target.value)
                                     }
-                                    className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors"
+                                    className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1] transition-colors"
                                     placeholder="Enter your password"
                                     autoComplete="current-password"
                                     required
@@ -195,7 +195,7 @@ function LoginModal({
                                     onChange={(e) =>
                                         setData("remember", e.target.checked)
                                     }
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700"
+                                    className="h-4 w-4 text-primary-400 focus:ring-primary-400 border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700"
                                 />
                                 <label
                                     htmlFor="remember"
@@ -208,7 +208,7 @@ function LoginModal({
                             {canResetPassword && (
                                 <Link
                                     href={route("password.request")}
-                                    className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+                                    className="text-sm text-primary-400 hover:text-primary-500 dark:text-[#2ED7A1] dark:hover:text-primary-300 font-medium"
                                 >
                                     Forgot password?
                                 </Link>
@@ -219,7 +219,7 @@ function LoginModal({
                         <button
                             type="submit"
                             disabled={processing}
-                            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-400 hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors dark:bg-[#2ED7A1] dark:hover:bg-primary-400"
                         >
                             {processing ? (
                                 <div className="flex items-center">
@@ -241,7 +241,7 @@ function LoginModal({
                                     onClose();
                                     openRegisterModal();
                                 }}
-                                className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                                className="font-medium text-primary-400 hover:text-primary-500 dark:text-[#2ED7A1] dark:hover:text-primary-300"
                             >
                                 Sign up for free
                             </button>
@@ -297,10 +297,10 @@ function RegisterModal({ isOpen, onClose, openLoginModal }) {
                     {/* Header */}
                     <div className="text-center mb-8">
                         <div className="flex items-center justify-center mb-4">
-                            <CheckSquare className="h-10 w-10 text-blue-600" />
+                            <CheckSquare className="h-10 w-10 text-primary-400" />
                         </div>
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                            Join FocusFlow
+                            Join Wevie
                         </h2>
                         <p className="text-gray-600 dark:text-gray-300 mt-2">
                             Create your account to get started
@@ -329,7 +329,7 @@ function RegisterModal({ isOpen, onClose, openLoginModal }) {
                                     onChange={(e) =>
                                         setData("name", e.target.value)
                                     }
-                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors"
+                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1] transition-colors"
                                     placeholder="Enter your full name"
                                     autoComplete="name"
                                     required
@@ -362,7 +362,7 @@ function RegisterModal({ isOpen, onClose, openLoginModal }) {
                                     onChange={(e) =>
                                         setData("email", e.target.value)
                                     }
-                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors"
+                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1] transition-colors"
                                     placeholder="Enter your email"
                                     autoComplete="username"
                                     required
@@ -395,7 +395,7 @@ function RegisterModal({ isOpen, onClose, openLoginModal }) {
                                     onChange={(e) =>
                                         setData("password", e.target.value)
                                     }
-                                    className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors"
+                                    className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1] transition-colors"
                                     placeholder="Create a password"
                                     autoComplete="new-password"
                                     required
@@ -448,7 +448,7 @@ function RegisterModal({ isOpen, onClose, openLoginModal }) {
                                             e.target.value
                                         )
                                     }
-                                    className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors"
+                                    className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1] transition-colors"
                                     placeholder="Confirm your password"
                                     autoComplete="new-password"
                                     required
@@ -496,7 +496,7 @@ function RegisterModal({ isOpen, onClose, openLoginModal }) {
                                     onChange={(e) =>
                                         setData("invite_code", e.target.value)
                                     }
-                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors"
+                                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1] transition-colors"
                                     placeholder="Enter your invite code"
                                     required
                                 />
@@ -516,7 +516,7 @@ function RegisterModal({ isOpen, onClose, openLoginModal }) {
                         <button
                             type="submit"
                             disabled={processing}
-                            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-400 hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors dark:bg-[#2ED7A1] dark:hover:bg-primary-400"
                         >
                             {processing ? (
                                 <div className="flex items-center">
@@ -538,7 +538,7 @@ function RegisterModal({ isOpen, onClose, openLoginModal }) {
                                     onClose();
                                     openLoginModal();
                                 }}
-                                className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                                className="font-medium text-primary-400 hover:text-primary-500 dark:text-[#2ED7A1] dark:hover:text-primary-300"
                             >
                                 Sign in here
                             </button>
@@ -561,15 +561,15 @@ export default function Welcome({ auth, status, canResetPassword }) {
 
     return (
         <>
-            <Head title="Welcome to FocusFlow - A Smart, ADHD-Friendly To-Do App" />
+            <Head title="Welcome to Wevie - A Smart, ADHD-Friendly To-Do App" />
             <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
                 {/* Navigation */}
                 <nav className="relative px-4 sm:px-6 py-4">
                     <div className="mx-auto max-w-7xl flex items-center justify-between">
                         <div className="flex items-center space-x-2">
-                            <CheckSquare className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
+                            <CheckSquare className="h-6 w-6 sm:h-8 sm:w-8 text-primary-400 dark:text-[#2ED7A1]" />
                             <span className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-                                FocusFlow
+                                Wevie
                             </span>
                         </div>
 
@@ -577,7 +577,7 @@ export default function Welcome({ auth, status, canResetPassword }) {
                             {auth.user ? (
                                 <Link
                                     href={route("dashboard")}
-                                    className="inline-flex items-center px-3 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm sm:text-base"
+                                    className="inline-flex items-center px-3 sm:px-6 py-2 sm:py-3 bg-primary-400 text-white font-semibold rounded-lg hover:bg-primary-500 transition-colors duration-200 text-sm sm:text-base dark:bg-[#2ED7A1] dark:hover:bg-primary-400"
                                 >
                                     <span className="hidden sm:inline">
                                         Go to{" "}
@@ -589,13 +589,13 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                 <div className="flex items-center space-x-2 sm:space-x-4">
                                     <button
                                         onClick={openLoginModal}
-                                        className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 dark:text-gray-300 dark:hover:text-blue-400 text-sm sm:text-base"
+                                        className="text-gray-700 hover:text-primary-400 font-medium transition-colors duration-200 dark:text-gray-300 dark:hover:text-[#2ED7A1] text-sm sm:text-base"
                                     >
                                         Sign In
                                     </button>
                                     <button
                                         onClick={openRegisterModal}
-                                        className="inline-flex items-center px-3 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm sm:text-base"
+                                        className="inline-flex items-center px-3 sm:px-6 py-2 sm:py-3 bg-primary-400 text-white font-semibold rounded-lg hover:bg-primary-500 transition-colors duration-200 text-sm sm:text-base dark:bg-[#2ED7A1] dark:hover:bg-primary-400"
                                     >
                                         Get Started
                                         <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
@@ -611,12 +611,12 @@ export default function Welcome({ auth, status, canResetPassword }) {
                     <div className="mx-auto max-w-7xl text-center">
                         <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
                             Organize Your Life with
-                            <span className="text-blue-600 block">
+                            <span className="text-primary-400 block dark:text-[#2ED7A1]">
                                 Smart Task Management
                             </span>
                         </h1>
                         <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 sm:mb-12 max-w-3xl mx-auto px-4">
-                            Stay productive and never miss a deadline. FocusFlow
+                            Stay productive and never miss a deadline. Wevie
                             helps you manage tasks, collaborate with teams, and
                             track your progress with powerful features designed
                             for modern productivity.
@@ -626,14 +626,14 @@ export default function Welcome({ auth, status, canResetPassword }) {
                             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
                                 <button
                                     onClick={openRegisterModal}
-                                    className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 text-base sm:text-lg w-full sm:w-auto justify-center"
+                                    className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-primary-400 text-white font-semibold rounded-lg hover:bg-primary-500 transition-colors duration-200 text-base sm:text-lg w-full sm:w-auto justify-center dark:bg-[#2ED7A1] dark:hover:bg-primary-400"
                                 >
                                     Start Free Today
                                     <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                                 </button>
                                 <button
                                     onClick={openLoginModal}
-                                    className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:border-blue-600 hover:text-blue-600 transition-colors duration-200 text-base sm:text-lg dark:border-gray-600 dark:text-gray-300 dark:hover:border-blue-400 dark:hover:text-blue-400 w-full sm:w-auto justify-center"
+                                    className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:border-primary-400 hover:text-primary-400 transition-colors duration-200 text-base sm:text-lg dark:border-gray-600 dark:text-gray-300 dark:hover:border-[#2ED7A1] dark:hover:text-[#2ED7A1] w-full sm:w-auto justify-center"
                                 >
                                     Sign In
                                 </button>
@@ -659,7 +659,7 @@ export default function Welcome({ auth, status, canResetPassword }) {
                             {/* Feature 1 */}
                             <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 sm:p-8 hover:shadow-lg transition-shadow duration-200">
                                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
-                                    <CheckSquare className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
+                                    <CheckSquare className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400 dark:text-[#2ED7A1]" />
                                 </div>
                                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
                                     Smart Task Management
@@ -806,7 +806,7 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                 </div>
 
                                 {/* Advanced Analytics */}
-                                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 sm:p-8 hover:shadow-xl transition-all duration-200 border border-blue-200 dark:border-blue-800 hover:border-blue-400 dark:hover:border-blue-600">
+                                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 sm:p-8 hover:shadow-xl transition-all duration-200 border border-primary-200 dark:border-primary-800 hover:border-primary-400 dark:hover:border-primary-600">
                                     <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
                                         <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                                     </div>
@@ -1086,12 +1086,12 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                         <Clock className="h-4 w-4 text-white" />
                                     </div>
                                     <div className="ml-12 sm:ml-0 sm:w-1/2 sm:pl-8">
-                                        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+                                        <div className="bg-primary-50 dark:bg-primary-900/20 rounded-xl p-6 border border-primary-200 dark:border-primary-800">
                                             <div className="flex items-center mb-3">
-                                                <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-medium mr-3">
+                                                <span className="bg-primary-400 text-white px-3 py-1 rounded-full text-sm font-medium mr-3 dark:bg-[#2ED7A1]">
                                                     🚧 IN PROGRESS
                                                 </span>
-                                                <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                                                <span className="text-sm text-primary-400 dark:text-[#2ED7A1] font-medium">
                                                     Phase 2 - Q1 2025
                                                 </span>
                                             </div>
@@ -1100,24 +1100,24 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                             </h3>
                                             <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                                                 <li className="flex items-center">
-                                                    <Timer className="h-4 w-4 text-blue-500 mr-2 flex-shrink-0" />
+                                                    <Timer className="h-4 w-4 text-primary-400 mr-2 flex-shrink-0 dark:text-[#2ED7A1]" />
                                                     AI Productivity Coach
                                                 </li>
                                                 <li className="flex items-center">
-                                                    <Timer className="h-4 w-4 text-blue-500 mr-2 flex-shrink-0" />
+                                                    <Timer className="h-4 w-4 text-primary-400 mr-2 flex-shrink-0 dark:text-[#2ED7A1]" />
                                                     Pomodoro Timer Integration
                                                 </li>
                                                 <li className="flex items-center">
-                                                    <Timer className="h-4 w-4 text-blue-500 mr-2 flex-shrink-0" />
+                                                    <Timer className="h-4 w-4 text-primary-400 mr-2 flex-shrink-0 dark:text-[#2ED7A1]" />
                                                     Advanced Analytics &
                                                     Insights
                                                 </li>
                                                 <li className="flex items-center">
-                                                    <Timer className="h-4 w-4 text-blue-500 mr-2 flex-shrink-0" />
+                                                    <Timer className="h-4 w-4 text-primary-400 mr-2 flex-shrink-0 dark:text-[#2ED7A1]" />
                                                     Smart Daily Planner
                                                 </li>
                                                 <li className="flex items-center">
-                                                    <Timer className="h-4 w-4 text-blue-500 mr-2 flex-shrink-0" />
+                                                    <Timer className="h-4 w-4 text-primary-400 mr-2 flex-shrink-0 dark:text-[#2ED7A1]" />
                                                     Snapshot-to-Task (OCR)
                                                 </li>
                                             </ul>
@@ -1222,7 +1222,7 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                 <h3 className="text-2xl font-bold mb-4">
                                     Be Part of the Journey
                                 </h3>
-                                <p className="text-lg mb-6 text-blue-100">
+                                <p className="text-lg mb-6 text-white/90">
                                     Join our early adopters and help shape the
                                     future of productivity. Your feedback drives
                                     our development priorities.
@@ -1230,7 +1230,7 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                 {!auth.user && (
                                     <button
                                         onClick={openRegisterModal}
-                                        className="inline-flex items-center px-8 py-4 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors duration-200 text-lg"
+                                        className="inline-flex items-center px-8 py-4 bg-white text-primary-400 font-semibold rounded-lg hover:bg-primary-50 transition-colors duration-200 text-lg dark:text-[#2ED7A1] dark:hover:bg-primary-900/20"
                                     >
                                         Start Your Journey
                                         <ArrowRight className="ml-2 h-5 w-5" />
@@ -1242,15 +1242,15 @@ export default function Welcome({ auth, status, canResetPassword }) {
                 </section>
 
                 {/* Stats Section */}
-                <section className="px-6 py-20 bg-blue-600">
+                <section className="px-6 py-20 bg-primary-400 dark:bg-[#2ED7A1]">
                     <div className="mx-auto max-w-7xl">
                         <div className="text-center mb-16">
                             <h2 className="text-4xl font-bold text-white mb-4">
                                 Trusted by Productive People
                             </h2>
-                            <p className="text-xl text-blue-100 max-w-2xl mx-auto">
+                            <p className="text-xl text-white/90 max-w-2xl mx-auto">
                                 Join thousands of users who have transformed
-                                their productivity with FocusFlow.
+                                their productivity with Wevie.
                             </p>
                         </div>
 
@@ -1259,7 +1259,7 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                 <div className="text-4xl font-bold text-white mb-2">
                                     10,000+
                                 </div>
-                                <div className="text-blue-100">
+                                <div className="text-white/90">
                                     Tasks Completed Daily
                                 </div>
                             </div>
@@ -1267,7 +1267,7 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                 <div className="text-4xl font-bold text-white mb-2">
                                     99.9%
                                 </div>
-                                <div className="text-blue-100">
+                                <div className="text-white/90">
                                     Uptime Reliability
                                 </div>
                             </div>
@@ -1275,7 +1275,7 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                 <div className="text-4xl font-bold text-white mb-2">
                                     5,000+
                                 </div>
-                                <div className="text-blue-100">Happy Users</div>
+                                <div className="text-white/90">Happy Users</div>
                             </div>
                         </div>
                     </div>
@@ -1296,14 +1296,14 @@ export default function Welcome({ auth, status, canResetPassword }) {
                             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                                 <button
                                     onClick={openRegisterModal}
-                                    className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 text-lg"
+                                    className="inline-flex items-center px-8 py-4 bg-primary-400 text-white font-semibold rounded-lg hover:bg-primary-500 transition-colors duration-200 text-lg dark:bg-[#2ED7A1] dark:hover:bg-primary-400"
                                 >
                                     Get Started Free
                                     <ArrowRight className="ml-2 h-5 w-5" />
                                 </button>
                                 <button
                                     onClick={openLoginModal}
-                                    className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200 dark:text-blue-400 dark:hover:text-blue-300"
+                                    className="text-primary-400 hover:text-primary-500 font-medium transition-colors duration-200 dark:text-[#2ED7A1] dark:hover:text-primary-300"
                                 >
                                     Already have an account? Sign in
                                 </button>
@@ -1317,15 +1317,15 @@ export default function Welcome({ auth, status, canResetPassword }) {
                     <div className="mx-auto max-w-7xl">
                         <div className="flex flex-col md:flex-row justify-between items-center">
                             <div className="flex items-center space-x-2 mb-4 md:mb-0">
-                                <CheckSquare className="h-8 w-8 text-blue-400" />
+                                <CheckSquare className="h-8 w-8 text-primary-300 dark:text-[#2ED7A1]" />
                                 <span className="text-2xl font-bold">
-                                    FocusFlow
+                                    Wevie
                                 </span>
                             </div>
 
                             <div className="text-gray-400 text-center md:text-right">
                                 <p>
-                                    &copy; 2024 FocusFlow. All rights reserved.
+                                    &copy; 2024 Wevie. All rights reserved.
                                 </p>
                                 <p className="text-sm mt-1">
                                     Built with Laravel & React

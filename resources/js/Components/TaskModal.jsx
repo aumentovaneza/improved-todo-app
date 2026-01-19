@@ -234,7 +234,7 @@ export default function TaskModal({
                             <input
                                 type="checkbox"
                                 id="is_recurring"
-                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
+                                className="rounded border-gray-300 text-primary-400 shadow-sm focus:ring-primary-400 dark:text-[#2ED7A1] dark:focus:ring-[#2ED7A1]"
                                 checked={data.is_recurring}
                                 onChange={(e) => {
                                     setData("is_recurring", e.target.checked);
@@ -336,7 +336,7 @@ export default function TaskModal({
                                     <input
                                         type="checkbox"
                                         id="is_all_day"
-                                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                        className="rounded border-gray-300 text-primary-400 shadow-sm focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50 dark:text-[#2ED7A1] dark:focus:border-primary-300 dark:focus:ring-primary-200"
                                         checked={data.is_all_day}
                                         onChange={(e) => {
                                             setData(

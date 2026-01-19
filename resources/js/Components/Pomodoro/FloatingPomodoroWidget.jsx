@@ -49,7 +49,7 @@ export default function FloatingPomodoroWidget() {
             case "short_break":
                 return "bg-green-500 hover:bg-green-600";
             case "long_break":
-                return "bg-blue-500 hover:bg-blue-600";
+                return "bg-secondary-400 hover:bg-secondary-500 dark:bg-[#3ADBDC] dark:hover:bg-secondary-400";
             default:
                 return "bg-red-500 hover:bg-red-600";
         }
@@ -291,7 +291,7 @@ export default function FloatingPomodoroWidget() {
                                 ? "focus:ring-red-500"
                                 : currentSession === "short_break"
                                 ? "focus:ring-green-500"
-                                : "focus:ring-blue-500"
+                                : "focus:ring-secondary-400 dark:focus:ring-[#3ADBDC]"
                         }
                     `}
                     title={`Pomodoro Timer - ${formatTime(timeLeft)}`}

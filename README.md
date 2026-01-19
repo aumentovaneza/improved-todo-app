@@ -1,4 +1,4 @@
-# ✅ FocusFlow — A Smart, ADHD-Friendly To-Do App
+# ✅ Wevie — A Smart, ADHD-Friendly To-Do App
 
 [![Laravel](https://img.shields.io/badge/Laravel-11.x-red?logo=laravel)](https://laravel.com/)
 [![React](https://img.shields.io/badge/React-18.x-61dafb?logo=react)](https://reactjs.org/)
@@ -8,13 +8,13 @@
 
 ---
 
-> _“FocusFlow is more than a to-do list — it's a focus companion that supports how your brain naturally works. Whether you're neurotypical or neurodivergent, this app adapts to help you flow through your day with confidence.”_
+> _"Wevie is more than a to-do list — it's a focus companion that supports how your brain naturally works. Whether you're neurotypical or neurodivergent, this app adapts to help you flow through your day with confidence."_
 
 ---
 
 ## 🌟 Overview
 
-**FocusFlow** is a full-stack to-do application built with **Laravel** and **React**, designed to promote productivity through AI, timers, analytics, and ADHD-friendly tools. It's simple, beautiful, and supportive — with features for both casual and neurodivergent users.
+**Wevie** is a full-stack to-do application built with **Laravel** and **React**, designed to promote productivity through AI, timers, analytics, and ADHD-friendly tools. It's simple, beautiful, and supportive — with features for both casual and neurodivergent users.
 
 ---
 
@@ -86,7 +86,9 @@ react-frontend/
 └── src/App.jsx
 
 ✨ Live Demo (Coming Soon)
-Stay tuned for a hosted preview of FocusFlow! 🚀
+Stay tuned for a hosted preview of Wevie! 🚀
+
+Visit us at [wevieapp.online](https://wevieapp.online)
 
 🤝 Contributing
 We welcome contributors, especially neurodivergent developers! If you have suggestions or ideas to improve focus, reduce overwhelm, or improve accessibility, feel free to open an issue or submit a PR.

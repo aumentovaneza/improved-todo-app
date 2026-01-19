@@ -402,7 +402,7 @@ export default function Dashboard({
                                                 title: e.target.value,
                                             })
                                         }
-                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:text-white"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1]"
                                         required
                                     />
                                 </div>
@@ -416,7 +416,7 @@ export default function Dashboard({
                                                 category_id: e.target.value,
                                             })
                                         }
-                                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:text-white"
+                                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1]"
                                     >
                                         <option value="">
                                             Select Category
@@ -439,7 +439,7 @@ export default function Dashboard({
                                                 priority: e.target.value,
                                             })
                                         }
-                                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:text-white"
+                                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1]"
                                     >
                                         <option value="low">
                                             Low Priority
@@ -462,7 +462,7 @@ export default function Dashboard({
                                                 due_date: e.target.value,
                                             })
                                         }
-                                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:text-white"
+                                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1]"
                                     />
                                 </div>
 
@@ -470,13 +470,13 @@ export default function Dashboard({
                                     <button
                                         type="button"
                                         onClick={() => setShowQuickTask(false)}
-                                        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-md hover:bg-gray-50 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-md hover:bg-gray-50 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-400 dark:focus:ring-[#2ED7A1]"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
-                                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                        className="px-4 py-2 text-sm font-medium text-white bg-primary-400 border border-transparent rounded-md hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-400 dark:bg-[#2ED7A1] dark:hover:bg-primary-400 dark:focus:ring-[#2ED7A1]"
                                     >
                                         Create Task
                                     </button>

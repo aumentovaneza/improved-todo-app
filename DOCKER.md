@@ -207,6 +207,17 @@ docker-compose exec app chown -R www-data:www-data storage bootstrap/cache
 docker-compose exec app chmod -R 775 storage bootstrap/cache
 ```
 
+### npm build fails with Rollup optional dependency error (Alpine)
+**Problem**: `npm run build` fails with `Cannot find module @rollup/rollup-linux-x64-musl`.
+
+**Solution**:
+1. Ensure container-managed `node_modules` is used (Docker Compose now mounts it as a volume).
+2. Reinstall dependencies inside the container:
+```bash
+docker-compose exec app rm -rf node_modules package-lock.json
+docker-compose exec app npm install --include=optional
+```
+
 ### Database connection errors
 Make sure the MySQL service is healthy:
 ```bash

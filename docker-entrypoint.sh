@@ -46,6 +46,23 @@ mkdir -p /var/www/html/bootstrap/cache
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
+# Workaround for npm optional dependency bug on Alpine (musl)
+ensure_rollup_binary() {
+    if [ -f "node_modules/rollup/dist/native.js" ] && [ ! -d "node_modules/@rollup/rollup-linux-x64-musl" ]; then
+        echo "Installing Rollup musl binary (optional dependency)..."
+        npm install --no-save @rollup/rollup-linux-x64-musl || true
+    fi
+}
+
+# Ensure Node dependencies are installed (vite present)
+ensure_npm_dependencies() {
+    if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/vite" ]; then
+        echo "Installing NPM dependencies..."
+        npm install --include=optional || true
+        ensure_rollup_binary
+    fi
+}
+
 # Function to run setup in background
 setup_app() {
     # Install dependencies if needed
@@ -61,10 +78,7 @@ setup_app() {
         composer dump-autoload --optimize || true
     fi
 
-    if [ ! -d "node_modules" ]; then
-        echo "Installing NPM dependencies..."
-        npm install || true
-    fi
+    ensure_npm_dependencies
 
     # Generate application key if not set
     if [ ! -f ".env" ] || ! grep -q "APP_KEY=" .env 2>/dev/null || grep -q "APP_KEY=$" .env 2>/dev/null; then
@@ -85,6 +99,7 @@ setup_app() {
         
         # Build assets in production
         echo "Building production assets..."
+        ensure_rollup_binary
         npm run build || true
     else
         echo "Clearing caches for development..."
@@ -99,6 +114,7 @@ setup_app() {
 # Check if vendor directory exists and has autoload
 if [ -d "vendor" ] && [ -f "vendor/autoload.php" ]; then
     echo "Dependencies already installed, starting immediately..."
+    ensure_npm_dependencies
     # Run quick setup synchronously
     if [ ! -f ".env" ] || ! grep -q "APP_KEY=" .env 2>/dev/null || grep -q "APP_KEY=$" .env 2>/dev/null; then
         php artisan key:generate --force || true
@@ -108,6 +124,7 @@ if [ -d "vendor" ] && [ -f "vendor/autoload.php" ]; then
     # Build assets if manifest doesn't exist
     if [ ! -f "public/build/manifest.json" ]; then
         echo "Building assets (manifest not found)..."
+        ensure_rollup_binary
         npm run build || true
     fi
     

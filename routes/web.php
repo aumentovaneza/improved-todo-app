@@ -14,6 +14,12 @@ use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\BoardController;
 use App\Http\Controllers\SwimlaneController;
+use App\Modules\Finance\Controllers\FinanceBudgetController;
+use App\Modules\Finance\Controllers\FinanceCategoryController;
+use App\Modules\Finance\Controllers\FinanceDashboardController;
+use App\Modules\Finance\Controllers\FinanceReportController;
+use App\Modules\Finance\Controllers\FinanceSavingsGoalController;
+use App\Modules\Finance\Controllers\FinanceTransactionController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -67,6 +73,33 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Analytics
     Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
 
+    // Finance
+    Route::get('finance', [FinanceDashboardController::class, 'index'])->name('finance.dashboard');
+    Route::prefix('finance/api')->name('finance.api.')->group(function () {
+        Route::get('transactions', [FinanceTransactionController::class, 'index'])->name('transactions.index');
+        Route::post('transactions', [FinanceTransactionController::class, 'store'])->name('transactions.store');
+        Route::put('transactions/{transaction}', [FinanceTransactionController::class, 'update'])->name('transactions.update');
+        Route::delete('transactions/{transaction}', [FinanceTransactionController::class, 'destroy'])->name('transactions.destroy');
+
+        Route::get('categories', [FinanceCategoryController::class, 'index'])->name('categories.index');
+        Route::post('categories', [FinanceCategoryController::class, 'store'])->name('categories.store');
+        Route::put('categories/{category}', [FinanceCategoryController::class, 'update'])->name('categories.update');
+        Route::delete('categories/{category}', [FinanceCategoryController::class, 'destroy'])->name('categories.destroy');
+
+        Route::get('budgets', [FinanceBudgetController::class, 'index'])->name('budgets.index');
+        Route::post('budgets', [FinanceBudgetController::class, 'store'])->name('budgets.store');
+        Route::put('budgets/{budget}', [FinanceBudgetController::class, 'update'])->name('budgets.update');
+        Route::delete('budgets/{budget}', [FinanceBudgetController::class, 'destroy'])->name('budgets.destroy');
+
+        Route::get('savings-goals', [FinanceSavingsGoalController::class, 'index'])->name('savings-goals.index');
+        Route::post('savings-goals', [FinanceSavingsGoalController::class, 'store'])->name('savings-goals.store');
+        Route::put('savings-goals/{savingsGoal}', [FinanceSavingsGoalController::class, 'update'])->name('savings-goals.update');
+        Route::delete('savings-goals/{savingsGoal}', [FinanceSavingsGoalController::class, 'destroy'])->name('savings-goals.destroy');
+
+        Route::get('reports/summary', [FinanceReportController::class, 'summary'])->name('reports.summary');
+        Route::post('reports', [FinanceReportController::class, 'store'])->name('reports.store');
+    });
+
     // Workspaces
     Route::resource('workspaces', WorkspaceController::class)->except(['create', 'edit']);
     Route::post('workspaces/{workspace}/collaborators', [WorkspaceController::class, 'addCollaborator'])->name('workspaces.collaborators.store');
@@ -112,6 +145,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profile/finance-categories', [ProfileController::class, 'financeCategories'])
+        ->name('profile.finance-categories');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 

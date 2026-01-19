@@ -52,6 +52,12 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     Workspaces
                                 </NavLink>
+                                <NavLink
+                                    href={route("finance.dashboard")}
+                                    active={route().current("finance.*")}
+                                >
+                                    WevieWallet
+                                </NavLink>
                             </div>
                         </div>
 
@@ -176,6 +182,12 @@ export default function AuthenticatedLayout({ header, children }) {
                             }
                         >
                             Workspaces
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            href={route("finance.dashboard")}
+                            active={route().current("finance.*")}
+                        >
+                            WevieWallet
                         </ResponsiveNavLink>
                     </div>
 

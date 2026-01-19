@@ -43,6 +43,7 @@ class DatabaseSeeder extends Seeder
         // Seed categories and tasks
         $this->call([
             TodoSeeder::class,
+            FinanceSeeder::class,
         ]);
     }
 }

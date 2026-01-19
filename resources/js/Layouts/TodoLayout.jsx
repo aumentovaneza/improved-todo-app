@@ -16,6 +16,7 @@ import {
     Home,
     Calendar,
     BarChart3,
+    DollarSign,
     Menu,
     X,
 } from "lucide-react";
@@ -86,6 +87,12 @@ export default function TodoLayout({ header, children }) {
             href: route("analytics.index"),
             icon: BarChart3,
             current: route().current("analytics.*"),
+        },
+        {
+            name: "WevieWallet",
+            href: route("finance.dashboard"),
+            icon: DollarSign,
+            current: route().current("finance.*"),
         },
     ];
 

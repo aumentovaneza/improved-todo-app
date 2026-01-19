@@ -1,0 +1,187 @@
+import { useMemo, useState } from "react";
+import * as LucideIcons from "lucide-react";
+import IconPicker from "@/Components/Finance/Categories/IconPicker";
+
+export default function CategoryList({
+    categories = [],
+    onUpdate,
+    onDelete,
+}) {
+    const iconMap = useMemo(() => {
+        return Object.entries(LucideIcons).reduce((acc, [name, Icon]) => {
+            if (typeof Icon === "function") {
+                acc[name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase()] =
+                    Icon;
+            }
+            return acc;
+        }, {});
+    }, []);
+    const [editingId, setEditingId] = useState(null);
+    const [draft, setDraft] = useState({
+        name: "",
+        type: "expense",
+        color: "#64748B",
+        icon: "",
+    });
+
+    const startEdit = (category) => {
+        setEditingId(category.id);
+        setDraft({
+            name: category.name ?? "",
+            type: category.type ?? "expense",
+            color: category.color ?? "#64748B",
+            icon: category.icon ?? "",
+        });
+    };
+
+    const cancelEdit = () => {
+        setEditingId(null);
+        setDraft({
+            name: "",
+            type: "expense",
+            color: "#64748B",
+            icon: "",
+        });
+    };
+
+    const updateField = (field) => (event) => {
+        setDraft((prev) => ({ ...prev, [field]: event.target.value }));
+    };
+
+    const saveEdit = async (category) => {
+        await onUpdate?.(category, draft);
+        setEditingId(null);
+    };
+
+    return (
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                Finance categories
+            </h3>
+            <div className="mt-4 space-y-3">
+                {categories.map((category) => (
+                    <div
+                        key={category.id}
+                        className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300"
+                    >
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                                <span
+                                    className="h-3 w-3 rounded-full"
+                                    style={{ backgroundColor: category.color }}
+                                />
+                                {category.icon && iconMap[category.icon] && (
+                                    <span className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-200">
+                                        {(() => {
+                                            const Icon = iconMap[category.icon];
+                                            return <Icon className="h-4 w-4" />;
+                                        })()}
+                                    </span>
+                                )}
+                                <div>
+                                    <p className="font-medium text-slate-800 dark:text-slate-100">
+                                        {category.name}
+                                    </p>
+                                    <p className="text-xs text-slate-400">
+                                        {category.type}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => startEdit(category)}
+                                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                                >
+                                    Edit
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => onDelete?.(category)}
+                                    className="text-xs font-semibold text-rose-600 hover:text-rose-700"
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+
+                        {editingId === category.id && (
+                            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                                <div>
+                                    <label className="text-xs text-slate-500">
+                                        Name
+                                    </label>
+                                    <input
+                                        className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                        value={draft.name}
+                                        onChange={updateField("name")}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-slate-500">
+                                        Type
+                                    </label>
+                                    <select
+                                        className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                        value={draft.type}
+                                        onChange={updateField("type")}
+                                    >
+                                        <option value="income">Income</option>
+                                        <option value="expense">Expense</option>
+                                        <option value="savings">Savings</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-xs text-slate-500">
+                                        Color
+                                    </label>
+                                    <input
+                                        type="color"
+                                        className="mt-1 h-9 w-full rounded-md border border-slate-300 p-1 dark:border-slate-600 dark:bg-slate-800"
+                                        value={draft.color}
+                                        onChange={updateField("color")}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-slate-500">
+                                        Icon
+                                    </label>
+                                    <IconPicker
+                                        value={draft.icon}
+                                        onChange={(value) =>
+                                            setDraft((prev) => ({
+                                                ...prev,
+                                                icon: value,
+                                            }))
+                                        }
+                                    />
+                                </div>
+                                <div className="flex justify-end gap-2 sm:col-span-2">
+                                    <button
+                                        type="button"
+                                        onClick={cancelEdit}
+                                        className="rounded-md border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:text-slate-700 dark:border-slate-700 dark:text-slate-300 dark:hover:text-slate-100"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => saveEdit(category)}
+                                        className="rounded-md bg-indigo-600 px-3 py-1 text-xs font-semibold text-white hover:bg-indigo-500"
+                                    >
+                                        Save
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                ))}
+                {(!categories || categories.length === 0) && (
+                    <p className="text-sm text-slate-400">
+                        No finance categories yet.
+                    </p>
+                )}
+            </div>
+        </div>
+    );
+}

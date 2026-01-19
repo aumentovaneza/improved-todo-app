@@ -9,6 +9,7 @@ services:
     volumes:
       - ./:/var/www/html
       - ./storage:/var/www/html/storage
+      - /var/www/html/node_modules
     networks:
       - todo-network
     depends_on:
@@ -39,6 +40,7 @@ services:
       - "${APP_PORT:-8000}:80"
     volumes:
       - ./:/var/www/html
+      - /var/www/html/node_modules
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
     networks:
       - todo-network
@@ -92,6 +94,7 @@ services:
     working_dir: /var/www/html
     volumes:
       - ./:/var/www/html
+      - /var/www/html/node_modules
     networks:
       - todo-network
     depends_on:

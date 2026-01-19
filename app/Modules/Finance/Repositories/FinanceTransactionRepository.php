@@ -1,0 +1,98 @@
+<?php
+
+namespace App\Modules\Finance\Repositories;
+
+use App\Modules\Finance\Models\FinanceTransaction;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
+
+class FinanceTransactionRepository
+{
+    public function getForUser(int $userId, int $limit = 100): Collection
+    {
+        return FinanceTransaction::with('category')
+            ->where('user_id', $userId)
+            ->orderByDesc('occurred_at')
+            ->limit($limit)
+            ->get();
+    }
+
+    public function create(array $data): FinanceTransaction
+    {
+        return FinanceTransaction::create($data);
+    }
+
+    public function update(FinanceTransaction $transaction, array $data): FinanceTransaction
+    {
+        $transaction->update($data);
+
+        return $transaction->refresh();
+    }
+
+    public function delete(FinanceTransaction $transaction): bool
+    {
+        return (bool) $transaction->delete();
+    }
+
+    public function getTotalsForUser(int $userId, Carbon $startDate, Carbon $endDate): array
+    {
+        $totals = FinanceTransaction::where('user_id', $userId)
+            ->whereBetween('occurred_at', [$startDate->startOfDay(), $endDate->endOfDay()])
+            ->select('type', DB::raw('SUM(amount) as total'))
+            ->groupBy('type')
+            ->pluck('total', 'type')
+            ->all();
+
+        return [
+            'income' => (float) ($totals['income'] ?? 0),
+            'expense' => (float) ($totals['expense'] ?? 0),
+            'savings' => (float) ($totals['savings'] ?? 0),
+        ];
+    }
+
+    public function getMonthlyTotals(int $userId, int $monthsBack = 6): Collection
+    {
+        $start = now()->subMonths($monthsBack - 1)->startOfMonth();
+
+        return FinanceTransaction::where('user_id', $userId)
+            ->where('occurred_at', '>=', $start)
+            ->select(
+                DB::raw("DATE_FORMAT(occurred_at, '%Y-%m') as period"),
+                'type',
+                DB::raw('SUM(amount) as total')
+            )
+            ->groupBy('period', 'type')
+            ->orderBy('period')
+            ->get();
+    }
+
+    public function getDailyTotals(int $userId, int $daysBack = 14): Collection
+    {
+        $start = now()->subDays($daysBack - 1)->startOfDay();
+
+        return FinanceTransaction::where('user_id', $userId)
+            ->where('occurred_at', '>=', $start)
+            ->select(
+                DB::raw('DATE(occurred_at) as period'),
+                'type',
+                DB::raw('SUM(amount) as total')
+            )
+            ->groupBy('period', 'type')
+            ->orderBy('period')
+            ->get();
+    }
+
+    public function getCategoryTotals(int $userId, Carbon $startDate, Carbon $endDate): Collection
+    {
+        return FinanceTransaction::query()
+            ->with('category')
+            ->where('user_id', $userId)
+            ->where('type', 'expense')
+            ->whereBetween('occurred_at', [$startDate->startOfDay(), $endDate->endOfDay()])
+            ->select('finance_category_id', DB::raw('SUM(amount) as total'))
+            ->groupBy('finance_category_id')
+            ->orderByDesc('total')
+            ->get();
+    }
+}

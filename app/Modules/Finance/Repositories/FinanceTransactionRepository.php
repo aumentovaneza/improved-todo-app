@@ -11,7 +11,7 @@ class FinanceTransactionRepository
 {
     public function getForUser(int $userId, int $limit = 100): Collection
     {
-        return FinanceTransaction::with(['category', 'loan', 'tags'])
+        return FinanceTransaction::with(['category', 'loan', 'tags', 'createdBy'])
             ->where('user_id', $userId)
             ->orderByDesc('occurred_at')
             ->limit($limit)

@@ -21,6 +21,7 @@ class FinanceBudget extends Model
         'current_spent',
         'currency',
         'period',
+        'is_recurring',
         'starts_on',
         'ends_on',
         'is_active',
@@ -32,6 +33,7 @@ class FinanceBudget extends Model
         'starts_on' => 'date',
         'ends_on' => 'date',
         'is_active' => 'boolean',
+        'is_recurring' => 'boolean',
     ];
 
     public function user(): BelongsTo

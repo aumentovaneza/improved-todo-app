@@ -44,10 +44,7 @@ export default function LoanForm({
             onSubmit={handleSubmit}
             className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
         >
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-                {initialValues ? "Edit loan" : "Add loan"}
-            </h3>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                     <label className="text-sm text-slate-500">Loan name</label>
                     <input

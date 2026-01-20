@@ -115,6 +115,30 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    public function walletCollaborators(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'finance_wallet_collaborators',
+            'owner_user_id',
+            'collaborator_user_id'
+        )
+            ->withPivot('role', 'joined_at')
+            ->withTimestamps();
+    }
+
+    public function collaboratingWallets(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'finance_wallet_collaborators',
+            'collaborator_user_id',
+            'owner_user_id'
+        )
+            ->withPivot('role', 'joined_at')
+            ->withTimestamps();
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';

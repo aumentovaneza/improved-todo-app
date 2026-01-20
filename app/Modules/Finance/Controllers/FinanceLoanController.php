@@ -6,22 +6,44 @@ use App\Http\Controllers\Controller;
 use App\Modules\Finance\Models\FinanceLoan;
 use App\Modules\Finance\Repositories\FinanceLoanRepository;
 use App\Modules\Finance\Services\FinanceService;
+use App\Modules\Finance\Services\FinanceWalletService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class FinanceLoanController extends Controller
 {
     public function __construct(
         private FinanceService $financeService,
-        private FinanceLoanRepository $loanRepository
+        private FinanceLoanRepository $loanRepository,
+        private FinanceWalletService $walletService
     ) {}
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $loans = $this->loanRepository->getForUser(Auth::id());
+        $walletUserId = $this->walletService->resolveWalletUserId(
+            Auth::user(),
+            $request->integer('wallet_user_id') ?: null
+        );
+        $loans = $this->loanRepository->getForUser($walletUserId);
 
         return response()->json($loans);
+    }
+
+    public function indexPage(Request $request): Response
+    {
+        $walletUserId = $this->walletService->resolveWalletUserId(
+            Auth::user(),
+            $request->integer('wallet_user_id') ?: null
+        );
+        $loans = $this->loanRepository->getForUser($walletUserId);
+
+        return Inertia::render('Finance/Loans', [
+            'loans' => $loans->values()->all(),
+            'walletUserId' => $walletUserId,
+        ]);
     }
 
     public function store(Request $request): JsonResponse
@@ -36,7 +58,14 @@ class FinanceLoanController extends Controller
             'is_active' => ['nullable', 'boolean'],
         ]);
 
-        $loan = $this->financeService->createLoan($validated, Auth::id());
+        $walletUserId = $request->integer('wallet_user_id');
+        if ($walletUserId) {
+            $this->walletService->ensureCanAccessWallet(Auth::id(), $walletUserId);
+        }
+        $loan = $this->financeService->createLoan(
+            $validated,
+            $walletUserId ?: Auth::id()
+        );
 
         return response()->json($loan, 201);
     }

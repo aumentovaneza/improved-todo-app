@@ -38,7 +38,11 @@ const typeStyles = {
 };
 const typeOrder = ["income", "expense", "savings"];
 
-export default function Transactions({ transactions = [], filters = {} }) {
+export default function Transactions({
+    transactions = [],
+    filters = {},
+    walletUserId,
+}) {
     const [search, setSearch] = useState(filters.search ?? "");
     const [type, setType] = useState(filters.type ?? "");
     const [startDate, setStartDate] = useState(filters.start_date ?? "");
@@ -78,6 +82,7 @@ export default function Transactions({ transactions = [], filters = {} }) {
                 start_date: startDate || undefined,
                 end_date: endDate || undefined,
                 sort: sort || undefined,
+                wallet_user_id: walletUserId || undefined,
             },
             { preserveState: true, replace: true, preserveScroll: true }
         );
@@ -89,7 +94,9 @@ export default function Transactions({ transactions = [], filters = {} }) {
         setStartDate("");
         setEndDate("");
         setSort("date_desc");
-        router.get(route("weviewallet.transactions.index"));
+        router.get(route("weviewallet.transactions.index"), {
+            wallet_user_id: walletUserId || undefined,
+        });
     };
 
     return (
@@ -109,7 +116,9 @@ export default function Transactions({ transactions = [], filters = {} }) {
                         <button
                             type="button"
                             onClick={() =>
-                                router.get(route("weviewallet.dashboard"))
+                                router.get(route("weviewallet.dashboard"), {
+                                    wallet_user_id: walletUserId || undefined,
+                                })
                             }
                             className="rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                         >
@@ -283,6 +292,20 @@ export default function Transactions({ transactions = [], filters = {} }) {
                                                                                     ?.name ??
                                                                                     "Uncategorized"}
                                                                             </p>
+                                                                            {transaction.created_by &&
+                                                                                transaction
+                                                                                    .created_by
+                                                                                    .id !==
+                                                                                    transaction.user_id && (
+                                                                                    <p className="text-xs text-slate-400">
+                                                                                        Added by{" "}
+                                                                                        {
+                                                                                            transaction
+                                                                                                .created_by
+                                                                                                .name
+                                                                                        }
+                                                                                    </p>
+                                                                                )}
                                                                         </div>
                                                                         <div className="text-right">
                                                                             <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">

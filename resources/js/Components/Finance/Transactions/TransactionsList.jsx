@@ -63,6 +63,14 @@ export default function TransactionsList({
                                     <div className="text-xs capitalize text-slate-400">
                                         {transaction.type}
                                     </div>
+                                    {transaction.created_by &&
+                                        transaction.created_by.id !==
+                                            transaction.user_id && (
+                                            <div className="text-xs text-slate-400">
+                                                Added by{" "}
+                                                {transaction.created_by.name}
+                                            </div>
+                                        )}
                                     {transaction.is_recurring &&
                                         transaction.recurring_frequency && (
                                             <div className="text-xs text-purple-500">

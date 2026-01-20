@@ -16,6 +16,7 @@ class FinanceTransaction extends Model
 
     protected $fillable = [
         'user_id',
+        'created_by_user_id',
         'finance_category_id',
         'finance_loan_id',
         'finance_savings_goal_id',
@@ -42,6 +43,11 @@ class FinanceTransaction extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_user_id');
     }
 
     public function category(): BelongsTo

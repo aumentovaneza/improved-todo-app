@@ -21,6 +21,7 @@ use App\Modules\Finance\Controllers\FinanceLoanController;
 use App\Modules\Finance\Controllers\FinanceReportController;
 use App\Modules\Finance\Controllers\FinanceSavingsGoalController;
 use App\Modules\Finance\Controllers\FinanceTransactionController;
+use App\Modules\Finance\Controllers\FinanceWalletCollaboratorController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -76,9 +77,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Finance
     Route::get('weviewallet', [FinanceDashboardController::class, 'index'])->name('weviewallet.dashboard');
+    Route::post('weviewallet/collaborators', [FinanceWalletCollaboratorController::class, 'store'])
+        ->name('weviewallet.collaborators.store');
+    Route::delete('weviewallet/collaborators/{user}', [FinanceWalletCollaboratorController::class, 'destroy'])
+        ->name('weviewallet.collaborators.destroy');
     Route::get('weviewallet/transactions', [FinanceTransactionController::class, 'indexPage'])
         ->name('weviewallet.transactions.index');
+    Route::get('weviewallet/budgets', [FinanceBudgetController::class, 'indexPage'])
+        ->name('weviewallet.budgets.index');
+    Route::get('weviewallet/savings-goals', [FinanceSavingsGoalController::class, 'indexPage'])
+        ->name('weviewallet.savings-goals.index');
+    Route::get('weviewallet/loans', [FinanceLoanController::class, 'indexPage'])
+        ->name('weviewallet.loans.index');
     Route::prefix('weviewallet/api')->name('weviewallet.api.')->group(function () {
+        Route::get('collaborators/search', [FinanceWalletCollaboratorController::class, 'search'])
+            ->name('collaborators.search');
         Route::get('transactions', [FinanceTransactionController::class, 'index'])->name('transactions.index');
         Route::post('transactions', [FinanceTransactionController::class, 'store'])->name('transactions.store');
         Route::put('transactions/{transaction}', [FinanceTransactionController::class, 'update'])->name('transactions.update');

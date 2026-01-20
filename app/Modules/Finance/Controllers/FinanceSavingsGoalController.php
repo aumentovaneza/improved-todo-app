@@ -6,22 +6,44 @@ use App\Http\Controllers\Controller;
 use App\Modules\Finance\Models\FinanceSavingsGoal;
 use App\Modules\Finance\Repositories\FinanceSavingsGoalRepository;
 use App\Modules\Finance\Services\FinanceService;
+use App\Modules\Finance\Services\FinanceWalletService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class FinanceSavingsGoalController extends Controller
 {
     public function __construct(
         private FinanceService $financeService,
-        private FinanceSavingsGoalRepository $goalRepository
+        private FinanceSavingsGoalRepository $goalRepository,
+        private FinanceWalletService $walletService
     ) {}
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $goals = $this->goalRepository->getForUser(Auth::id());
+        $walletUserId = $this->walletService->resolveWalletUserId(
+            Auth::user(),
+            $request->integer('wallet_user_id') ?: null
+        );
+        $goals = $this->goalRepository->getForUser($walletUserId);
 
         return response()->json($goals);
+    }
+
+    public function indexPage(Request $request): Response
+    {
+        $walletUserId = $this->walletService->resolveWalletUserId(
+            Auth::user(),
+            $request->integer('wallet_user_id') ?: null
+        );
+        $goals = $this->goalRepository->getForUser($walletUserId);
+
+        return Inertia::render('Finance/SavingsGoals', [
+            'savingsGoals' => $goals->values()->all(),
+            'walletUserId' => $walletUserId,
+        ]);
     }
 
     public function store(Request $request): JsonResponse
@@ -36,7 +58,14 @@ class FinanceSavingsGoalController extends Controller
             'is_active' => ['nullable', 'boolean'],
         ]);
 
-        $goal = $this->financeService->createSavingsGoal($validated, Auth::id());
+        $walletUserId = $request->integer('wallet_user_id');
+        if ($walletUserId) {
+            $this->walletService->ensureCanAccessWallet(Auth::id(), $walletUserId);
+        }
+        $goal = $this->financeService->createSavingsGoal(
+            $validated,
+            $walletUserId ?: Auth::id()
+        );
 
         return response()->json($goal, 201);
     }

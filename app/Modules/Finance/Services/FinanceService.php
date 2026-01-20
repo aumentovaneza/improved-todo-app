@@ -16,6 +16,7 @@ use App\Services\TagService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
+use App\Modules\Finance\Services\FinanceWalletService;
 
 class FinanceService
 {
@@ -26,7 +27,8 @@ class FinanceService
         private FinanceSavingsGoalRepository $savingsGoalRepository,
         private FinanceLoanRepository $loanRepository,
         private FinanceReportService $reportService,
-        private TagService $tagService
+        private TagService $tagService,
+        private FinanceWalletService $walletService
     ) {}
 
     public function getDashboardData(int $userId): array
@@ -65,16 +67,17 @@ class FinanceService
         ];
     }
 
-    public function createTransaction(array $data, int $userId): FinanceTransaction
+    public function createTransaction(array $data, int $userId, int $actorUserId): FinanceTransaction
     {
         $data['user_id'] = $userId;
+        $data['created_by_user_id'] = $actorUserId;
         $transaction = $this->transactionRepository->create($data);
         $this->syncTransactionTags($transaction, $data['tags'] ?? null);
 
         $this->applyTransactionImpact($transaction, 1);
         $this->triggerBudgetNotifications($userId);
 
-        return $transaction->load(['category', 'loan', 'tags']);
+        return $transaction->load(['category', 'loan', 'tags', 'createdBy']);
     }
 
     public function updateTransaction(FinanceTransaction $transaction, array $data, int $userId): FinanceTransaction
@@ -329,9 +332,11 @@ class FinanceService
 
     private function ensureOwnership(?int $ownerId, int $userId): void
     {
-        if ($ownerId !== $userId) {
+        if (!$ownerId) {
             throw new UnauthorizedHttpException('', 'You do not have permission to modify this finance data.');
         }
+
+        $this->walletService->ensureCanAccessWallet($userId, $ownerId);
     }
 
     private function triggerBudgetNotifications(int $userId): void

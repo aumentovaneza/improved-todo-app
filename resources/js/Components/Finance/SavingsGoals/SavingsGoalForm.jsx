@@ -1,15 +1,28 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-export default function SavingsGoalForm({ onSubmit }) {
-    const [form, setForm] = useState({
-        name: "",
-        target_amount: "",
-        current_amount: "",
-        currency: "PHP",
-        target_date: "",
-        notes: "",
-    });
+const buildInitialState = (initialValues) => ({
+    id: initialValues?.id,
+    name: initialValues?.name ?? "",
+    target_amount: initialValues?.target_amount ?? "",
+    current_amount: initialValues?.current_amount ?? "",
+    currency: initialValues?.currency ?? "PHP",
+    target_date: initialValues?.target_date
+        ? initialValues.target_date.slice(0, 10)
+        : "",
+    notes: initialValues?.notes ?? "",
+});
+
+export default function SavingsGoalForm({
+    onSubmit,
+    initialValues,
+    submitLabel = "Save goal",
+}) {
+    const [form, setForm] = useState(buildInitialState(initialValues));
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        setForm(buildInitialState(initialValues));
+    }, [initialValues]);
 
     const updateField = (field) => (event) => {
         setForm((prev) => ({ ...prev, [field]: event.target.value }));
@@ -20,14 +33,9 @@ export default function SavingsGoalForm({ onSubmit }) {
         setIsSubmitting(true);
         Promise.resolve(onSubmit?.(form)).finally(() => {
             setIsSubmitting(false);
-            setForm({
-                name: "",
-                target_amount: "",
-                current_amount: "",
-                currency: "PHP",
-                target_date: "",
-                notes: "",
-            });
+            if (!initialValues) {
+                setForm(buildInitialState());
+            }
         });
     };
 
@@ -36,10 +44,7 @@ export default function SavingsGoalForm({ onSubmit }) {
             onSubmit={handleSubmit}
             className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
         >
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-                Add savings goal
-            </h3>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                     <label className="text-sm text-slate-500">Name</label>
                     <input
@@ -105,7 +110,7 @@ export default function SavingsGoalForm({ onSubmit }) {
                     disabled={isSubmitting}
                     className="rounded-md bg-indigo-600 px-4 py-2 text-sm text-white shadow hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                    {isSubmitting ? "Saving..." : "Save goal"}
+                    {isSubmitting ? "Saving..." : submitLabel}
                 </button>
             </div>
         </form>

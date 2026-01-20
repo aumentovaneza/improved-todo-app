@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Tag;
 use App\Modules\Finance\Models\FinanceTransaction;
 use App\Modules\Finance\Services\FinanceService;
+use App\Modules\Finance\Services\FinanceWalletService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,19 +15,30 @@ use Inertia\Response;
 
 class FinanceTransactionController extends Controller
 {
-    public function __construct(private FinanceService $financeService) {}
+    public function __construct(
+        private FinanceService $financeService,
+        private FinanceWalletService $walletService
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
-        $userId = Auth::id();
-        $data = $this->financeService->getDashboardData($userId);
+        $user = Auth::user();
+        $walletUserId = $this->walletService->resolveWalletUserId(
+            $user,
+            $request->integer('wallet_user_id') ?: null
+        );
+        $data = $this->financeService->getDashboardData($walletUserId);
 
         return response()->json($data['transactions']);
     }
 
     public function indexPage(Request $request): Response
     {
-        $userId = Auth::id();
+        $user = Auth::user();
+        $walletUserId = $this->walletService->resolveWalletUserId(
+            $user,
+            $request->integer('wallet_user_id') ?: null
+        );
         $filters = [
             'search' => $request->string('search')->toString(),
             'type' => $request->string('type')->toString(),
@@ -34,11 +46,12 @@ class FinanceTransactionController extends Controller
             'end_date' => $request->string('end_date')->toString(),
             'sort' => $request->string('sort')->toString(),
             'tags' => array_values(array_filter((array) $request->input('tags', []))),
+            'wallet_user_id' => $walletUserId,
         ];
 
         $query = FinanceTransaction::query()
-            ->with(['category', 'loan', 'tags'])
-            ->where('user_id', $userId);
+            ->with(['category', 'loan', 'tags', 'createdBy'])
+            ->where('user_id', $walletUserId);
 
         if (!empty($filters['type'])) {
             $query->where('type', $filters['type']);
@@ -97,6 +110,7 @@ class FinanceTransactionController extends Controller
             'transactions' => $transactions,
             'tags' => $tags,
             'filters' => $filters,
+            'walletUserId' => $walletUserId,
         ]);
     }
 
@@ -126,7 +140,15 @@ class FinanceTransactionController extends Controller
         ]);
 
         $validated = $this->normalizeRecurringData($validated);
-        $transaction = $this->financeService->createTransaction($validated, Auth::id());
+        $walletUserId = $request->integer('wallet_user_id');
+        if ($walletUserId) {
+            $this->walletService->ensureCanAccessWallet(Auth::id(), $walletUserId);
+        }
+        $transaction = $this->financeService->createTransaction(
+            $validated,
+            $walletUserId ?: Auth::id(),
+            Auth::id()
+        );
 
         return response()->json($transaction, 201);
     }

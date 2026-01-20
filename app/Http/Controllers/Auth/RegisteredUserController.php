@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\DB;
 
 class RegisteredUserController extends Controller
 {
@@ -55,6 +56,28 @@ class RegisteredUserController extends Controller
 
         // Mark invite code as used
         $inviteCode->markAsUsed();
+
+        $pendingInvites = DB::table('finance_wallet_invitations')
+            ->where('email', $user->email)
+            ->whereNull('used_at')
+            ->where(function ($query) {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->get();
+
+        foreach ($pendingInvites as $invite) {
+            $owner = User::find($invite->owner_user_id);
+            if ($owner && !$owner->walletCollaborators()->where('users.id', $user->id)->exists()) {
+                $owner->walletCollaborators()->attach($user->id, [
+                    'role' => 'collaborator',
+                    'joined_at' => now(),
+                ]);
+            }
+
+            DB::table('finance_wallet_invitations')
+                ->where('id', $invite->id)
+                ->update(['used_at' => now(), 'updated_at' => now()]);
+        }
 
         event(new Registered($user));
 

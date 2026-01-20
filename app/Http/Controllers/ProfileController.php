@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Modules\Finance\Models\FinanceCategory;
+use App\Modules\Finance\Services\FinanceWalletService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +15,8 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
+    public function __construct(private FinanceWalletService $walletService) {}
+
     /**
      * Display the user's profile.
      */
@@ -54,13 +57,19 @@ class ProfileController extends Controller
      */
     public function financeCategories(Request $request): Response
     {
-        $categories = FinanceCategory::where('user_id', $request->user()->id)
+        $walletUserId = $this->walletService->resolveWalletUserId(
+            $request->user(),
+            $request->integer('wallet_user_id') ?: null
+        );
+
+        $categories = FinanceCategory::where('user_id', $walletUserId)
             ->orderBy('type')
             ->orderBy('name')
             ->get();
 
         return Inertia::render('Profile/FinanceCategories', [
             'categories' => $categories,
+            'walletUserId' => $walletUserId,
         ]);
     }
 

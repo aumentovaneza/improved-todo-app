@@ -31,6 +31,7 @@ export default function Dashboard({
     overdueTasks = [],
     upcomingTasks = [],
     weeklyTasks = [],
+    upcomingPayments = [],
     stats = {},
     categories = [],
 }) {
@@ -50,6 +51,13 @@ export default function Dashboard({
     const [showEditModal, setShowEditModal] = useState(false);
     const [showScheduleModal, setShowScheduleModal] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
+
+    const formatCurrency = (value, currency = "PHP") =>
+        new Intl.NumberFormat("en-PH", {
+            style: "currency",
+            currency,
+            maximumFractionDigits: 2,
+        }).format(value ?? 0);
 
     // Handle task updates from modals
     const handleTaskUpdate = (updatedTask) => {
@@ -535,108 +543,81 @@ export default function Dashboard({
 
                 {/* Current Tasks */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                    {/* Current Tasks */}
+                    {/* Upcoming Payments */}
                     <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg">
                         <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                             <h2 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100">
-                                Current Tasks
+                                Upcoming Payments
                             </h2>
                         </div>
                         <div className="p-4 sm:p-6">
-                            {localCurrentTasks.length === 0 ? (
+                            {upcomingPayments.length === 0 ? (
                                 <div className="text-center py-8">
-                                    <CheckCircle className="mx-auto h-12 w-12 text-gray-400" />
+                                    <Calendar className="mx-auto h-12 w-12 text-gray-400" />
                                     <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        No current tasks
+                                        No upcoming payments
                                     </h3>
                                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                        All caught up!
+                                        You're all set for the next week.
                                     </p>
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {localCurrentTasks.map((task) => (
+                                    {upcomingPayments.map((payment) => (
                                         <div
-                                            key={task.id}
+                                            key={payment.id}
                                             className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                                         >
                                             <div className="flex items-center space-x-3 flex-1">
-                                                <button
-                                                    onClick={() =>
-                                                        toggleTaskStatus(task)
-                                                    }
-                                                    className="flex-shrink-0"
-                                                >
-                                                    {getStatusIcon(task.status)}
-                                                </button>
                                                 <div className="flex-1 min-w-0">
                                                     <p
-                                                        className={`text-sm font-medium ${
-                                                            task.status ===
-                                                            "completed"
-                                                                ? "text-gray-500 dark:text-gray-400 line-through"
-                                                                : "text-gray-900 dark:text-gray-100"
-                                                        }`}
+                                                        className="text-sm font-medium text-gray-900 dark:text-gray-100"
                                                     >
-                                                        {task.title}
+                                                        {payment.description}
                                                     </p>
-                                                    {task.category && (
+                                                    {payment.loan && (
                                                         <div className="flex items-center space-x-1 mt-1">
-                                                            <div
-                                                                className="w-2 h-2 rounded-full"
-                                                                style={{
-                                                                    backgroundColor:
-                                                                        task
-                                                                            .category
-                                                                            .color,
-                                                                }}
-                                                            />
-                                                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                                {
-                                                                    task
-                                                                        .category
-                                                                        .name
-                                                                }
+                                                            <span className="text-xs text-amber-600 dark:text-amber-300">
+                                                                Loan:{" "}
+                                                                {payment.loan.name}
                                                             </span>
                                                         </div>
                                                     )}
+                                                    {!payment.loan &&
+                                                        payment.category && (
+                                                            <div className="flex items-center space-x-1 mt-1">
+                                                                <div
+                                                                    className="w-2 h-2 rounded-full"
+                                                                    style={{
+                                                                        backgroundColor:
+                                                                            payment
+                                                                                .category
+                                                                                .color,
+                                                                    }}
+                                                                />
+                                                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                                    {
+                                                                        payment
+                                                                            .category
+                                                                            .name
+                                                                    }
+                                                                </span>
+                                                            </div>
+                                                        )}
                                                 </div>
                                             </div>
-                                            <div className="flex items-center space-x-2">
-                                                <span
-                                                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(
-                                                        task.priority
-                                                    )}`}
-                                                >
-                                                    {task.priority
-                                                        .charAt(0)
-                                                        .toUpperCase() +
-                                                        task.priority.slice(1)}
-                                                </span>
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedTask(task);
-                                                        setShowViewModal(true);
-                                                    }}
-                                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedTask(task);
-                                                        setShowEditModal(true);
-                                                    }}
-                                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                                                >
-                                                    <Edit className="h-4 w-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDeleteTask(task)}
-                                                    className="text-gray-400 hover:text-red-600 dark:hover:text-red-400"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </button>
+                                            <div className="text-right">
+                                                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                                    {formatCurrency(
+                                                        payment.amount,
+                                                        payment.currency ?? "PHP"
+                                                    )}
+                                                </p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                    {formatDate(
+                                                        payment.occurred_at
+                                                    )}
+                                                </p>
                                             </div>
                                         </div>
                                     ))}

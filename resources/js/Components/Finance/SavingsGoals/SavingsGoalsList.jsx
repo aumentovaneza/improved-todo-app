@@ -1,3 +1,5 @@
+import { Link } from "@inertiajs/react";
+
 const formatCurrency = (value, currency = "PHP") =>
     new Intl.NumberFormat("en-PH", {
         style: "currency",
@@ -8,12 +10,27 @@ const formatCurrency = (value, currency = "PHP") =>
 const formatDate = (value) =>
     value ? new Date(value).toLocaleDateString() : "-";
 
-export default function SavingsGoalsList({ goals = [], onDelete }) {
+export default function SavingsGoalsList({
+    goals = [],
+    onDelete,
+    onEdit,
+    showAllHref,
+}) {
     return (
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-                Savings goals
-            </h3>
+            <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                    Savings goals
+                </h3>
+                {showAllHref && (
+                    <Link
+                        href={showAllHref}
+                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                    >
+                        Show all
+                    </Link>
+                )}
+            </div>
             <div className="mt-4 space-y-3 text-sm text-slate-600 dark:text-slate-300">
                 {goals.map((goal) => {
                     const progress =
@@ -66,6 +83,15 @@ export default function SavingsGoalsList({ goals = [], onDelete }) {
                                     </span>
                                 </div>
                                 <div className="mt-2 flex justify-end">
+                                    {onEdit && (
+                                        <button
+                                            type="button"
+                                            onClick={() => onEdit?.(goal)}
+                                            className="mr-3 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                                        >
+                                            Edit
+                                        </button>
+                                    )}
                                     <button
                                         type="button"
                                         onClick={() => onDelete?.(goal)}

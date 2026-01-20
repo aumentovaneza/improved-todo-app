@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Finance\Models\FinanceCategory;
 use App\Modules\Finance\Repositories\FinanceCategoryRepository;
 use App\Modules\Finance\Services\FinanceService;
+use App\Modules\Finance\Services\FinanceWalletService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,12 +15,17 @@ class FinanceCategoryController extends Controller
 {
     public function __construct(
         private FinanceService $financeService,
-        private FinanceCategoryRepository $categoryRepository
+        private FinanceCategoryRepository $categoryRepository,
+        private FinanceWalletService $walletService
     ) {}
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $categories = $this->categoryRepository->getForUser(Auth::id());
+        $walletUserId = $this->walletService->resolveWalletUserId(
+            Auth::user(),
+            $request->integer('wallet_user_id') ?: null
+        );
+        $categories = $this->categoryRepository->getForUser($walletUserId);
 
         return response()->json($categories);
     }
@@ -34,7 +40,14 @@ class FinanceCategoryController extends Controller
             'is_active' => ['nullable', 'boolean'],
         ]);
 
-        $category = $this->financeService->createCategory($validated, Auth::id());
+        $walletUserId = $request->integer('wallet_user_id');
+        if ($walletUserId) {
+            $this->walletService->ensureCanAccessWallet(Auth::id(), $walletUserId);
+        }
+        $category = $this->financeService->createCategory(
+            $validated,
+            $walletUserId ?: Auth::id()
+        );
 
         return response()->json($category, 201);
     }

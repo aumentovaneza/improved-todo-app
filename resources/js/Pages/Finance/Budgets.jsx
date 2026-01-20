@@ -2,7 +2,8 @@ import BudgetForm from "@/Components/Finance/Budgets/BudgetForm";
 import Modal from "@/Components/Modal";
 import TodoLayout from "@/Layouts/TodoLayout";
 import { Head, Link, router } from "@inertiajs/react";
-import { useCallback, useState } from "react";
+import { Eye, Lock, Pencil, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 const formatCurrency = (value, currency = "PHP") =>
     new Intl.NumberFormat("en-PH", {
@@ -43,6 +44,30 @@ export default function Budgets({
     const [viewBudget, setViewBudget] = useState(null);
     const [relatedTransactions, setRelatedTransactions] = useState([]);
     const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
+    const [page, setPage] = useState(1);
+    const perPage = 8;
+    const visibleBudgets = useMemo(
+        () => budgets.filter((budget) => !budget.deleted_at),
+        [budgets]
+    );
+    const totalPages = useMemo(
+        () => Math.max(1, Math.ceil(visibleBudgets.length / perPage)),
+        [visibleBudgets.length]
+    );
+    const pagedBudgets = useMemo(() => {
+        const start = (page - 1) * perPage;
+        return visibleBudgets.slice(start, start + perPage);
+    }, [page, perPage, visibleBudgets]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [search, status, visibleBudgets.length]);
+
+    useEffect(() => {
+        if (page > totalPages) {
+            setPage(totalPages);
+        }
+    }, [page, totalPages]);
 
     const handleFilterSubmit = (event) => {
         event.preventDefault();
@@ -315,140 +340,215 @@ export default function Budgets({
                     <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
                         All budgets
                     </h3>
-                    <div className="mt-4 space-y-3 text-sm text-slate-600 dark:text-slate-300">
-                        {budgets.map((budget) => {
-                            const spent = Number(budget.current_spent ?? 0);
-                            const total = Number(budget.amount ?? 0);
-                            const remaining = Math.max(0, total - spent);
-                            const progress =
-                                total > 0
-                                    ? Math.min(
-                                          100,
-                                          Math.round((spent / total) * 100)
-                                      )
-                                    : 0;
+                    <div className="mt-4 overflow-x-auto">
+                        <table className="min-w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                            <thead className="text-xs uppercase text-slate-400 dark:text-slate-500">
+                                <tr>
+                                    <th className="py-2">Budget</th>
+                                    <th className="py-2">Type</th>
+                                    <th className="py-2">Category</th>
+                                    <th className="py-2">Account</th>
+                                    <th className="py-2 hidden md:table-cell">
+                                        Status
+                                    </th>
+                                    <th className="py-2 hidden md:table-cell">
+                                        Progress
+                                    </th>
+                                    <th className="py-2 text-right">Amount</th>
+                                    <th className="py-2 text-right">Remaining</th>
+                                    <th className="py-2 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {pagedBudgets.map((budget) => {
+                                    const spent = Number(budget.current_spent ?? 0);
+                                    const total = Number(budget.amount ?? 0);
+                                    const remaining = Math.max(0, total - spent);
+                                    const progress =
+                                        total > 0
+                                            ? Math.min(
+                                                  100,
+                                                  Math.round(
+                                                      (spent / total) * 100
+                                                  )
+                                              )
+                                            : 0;
+                                    const statusLabel = budget.is_active
+                                        ? "Active"
+                                        : remaining === 0
+                                          ? "Completed"
+                                          : "Closed";
 
-                            return (
-                                <div
-                                    key={budget.id}
-                                    className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-700"
-                                >
-                                    <div className="flex flex-wrap items-center justify-between gap-3">
-                                        <div>
-                                            <p className="font-medium text-slate-800 dark:text-slate-100">
-                                                {budget.name}
-                                            </p>
-                                            {!budget.is_active && (
-                                                <p className="text-xs text-rose-500">
-                                                    Closed
+                                    return (
+                                        <tr
+                                            key={budget.id}
+                                            className="border-t border-slate-200 dark:border-slate-700"
+                                        >
+                                            <td className="py-3">
+                                                <p className="font-medium text-slate-800 dark:text-slate-100">
+                                                    {budget.name}
                                                 </p>
-                                            )}
-                                            {budget.budget_type === "saved" && (
-                                                <p className="text-xs text-slate-400">
-                                                    Saved budget
-                                                </p>
-                                            )}
-                                            <p className="text-xs text-slate-400">
+                                            </td>
+                                            <td className="py-3 capitalize text-xs text-slate-400">
+                                                {budget.budget_type ?? "spending"}
+                                            </td>
+                                            <td className="py-3 text-xs text-slate-400">
                                                 {budget.category?.name ??
                                                     "All categories"}
-                                            </p>
-                                            {budget.account?.name && (
-                                                <p className="text-xs text-slate-400">
-                                                    Account: {budget.account.name}
-                                                </p>
-                                            )}
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setActiveBudget(budget)
-                                                }
-                                                className="mt-2 mr-3 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    handleViewTransactions(
-                                                        budget
-                                                    )
-                                                }
-                                                className="mt-2 mr-3 text-xs font-semibold text-slate-600 hover:text-slate-800 dark:text-slate-300 dark:hover:text-slate-100"
-                                            >
-                                                View
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    handleOpenClose(budget)
-                                                }
-                                                disabled={!budget.is_active}
-                                                className="mt-2 mr-3 text-xs font-semibold text-amber-600 hover:text-amber-700 disabled:cursor-not-allowed disabled:text-slate-300 dark:disabled:text-slate-500"
-                                            >
-                                                Close
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    handleDelete(budget)
-                                                }
-                                                className="mt-2 text-xs font-semibold text-rose-600 hover:text-rose-700"
-                                            >
-                                                Delete
-                                            </button>
-                                        </div>
-                                        <div className="text-right text-sm">
-                                            <p className="font-semibold text-slate-800 dark:text-slate-100">
+                                            </td>
+                                            <td className="py-3 text-xs text-slate-400">
+                                                {budget.account?.name ?? "—"}
+                                            </td>
+                                            <td className="py-3 hidden md:table-cell">
+                                                <span
+                                                    className={`text-xs font-semibold ${
+                                                        budget.is_active
+                                                            ? "text-emerald-600"
+                                                            : remaining === 0
+                                                              ? "text-slate-500"
+                                                              : "text-rose-500"
+                                                    }`}
+                                                >
+                                                    {statusLabel}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 min-w-[160px] hidden md:table-cell">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs text-slate-400">
+                                                        {progress}%
+                                                    </span>
+                                                    <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-800">
+                                                        <div
+                                                            className="h-2 rounded-full bg-rose-500"
+                                                            style={{
+                                                                width: `${progress}%`,
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="py-3 text-right font-semibold text-slate-800 dark:text-slate-100">
                                                 {formatCurrency(
                                                     budget.amount,
                                                     budget.currency
                                                 )}
-                                            </p>
-                                            <p className="text-xs text-slate-400">
-                                                {progress}% used
-                                            </p>
-                                            <p className="text-xs text-slate-400">
+                                            </td>
+                                            <td className="py-3 text-right text-xs text-slate-400">
                                                 {formatCurrency(
                                                     remaining,
                                                     budget.currency
-                                                )}{" "}
-                                                remaining
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="mt-2">
-                                        <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-800">
-                                            <div
-                                                className="h-2 rounded-full bg-rose-500"
-                                                style={{
-                                                    width: `${progress}%`,
-                                                }}
-                                            />
-                                        </div>
-                                        <div className="mt-1 flex items-center justify-between text-xs text-slate-400">
-                                            <span>
-                                                {formatCurrency(
-                                                    spent,
-                                                    budget.currency
                                                 )}
-                                            </span>
-                                            <span>
-                                                {formatCurrency(
-                                                    budget.amount,
-                                                    budget.currency
-                                                )}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                        {(!budgets || budgets.length === 0) && (
-                            <p className="text-sm text-slate-400 dark:text-slate-500">
-                                No budgets match your filters.
-                            </p>
-                        )}
+                                            </td>
+                                            <td className="py-3 text-right">
+                                                <div className="flex flex-wrap items-center justify-end gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setActiveBudget(
+                                                                budget
+                                                            )
+                                                        }
+                                                        className="rounded-md p-1 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-300"
+                                                        title="Edit budget"
+                                                        aria-label="Edit budget"
+                                                    >
+                                                        <Pencil className="h-4 w-4" />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            handleViewTransactions(
+                                                                budget
+                                                            )
+                                                        }
+                                                        className="rounded-md p-1 text-slate-600 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                                                        title="View transactions"
+                                                        aria-label="View transactions"
+                                                    >
+                                                        <Eye className="h-4 w-4" />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            handleOpenClose(
+                                                                budget
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            !budget.is_active
+                                                        }
+                                                        className="rounded-md p-1 text-amber-600 hover:bg-amber-50 hover:text-amber-700 disabled:cursor-not-allowed disabled:text-slate-300 dark:text-amber-400 dark:hover:bg-amber-900/20 dark:hover:text-amber-300 dark:disabled:text-slate-500"
+                                                        title="Close budget"
+                                                        aria-label="Close budget"
+                                                    >
+                                                        <Lock className="h-4 w-4" />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            handleDelete(budget)
+                                                        }
+                                                        className="rounded-md p-1 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-900/20 dark:hover:text-rose-300"
+                                                        title="Delete budget"
+                                                        aria-label="Delete budget"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                                {(!pagedBudgets ||
+                                    pagedBudgets.length === 0) && (
+                                    <tr>
+                                        <td
+                                            colSpan={9}
+                                            className="py-6 text-center text-sm text-slate-400 dark:text-slate-500"
+                                        >
+                                            No budgets match your filters.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
+                    {visibleBudgets.length > perPage && (
+                        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-300">
+                            <span>
+                                Showing {(page - 1) * perPage + 1}-
+                                {Math.min(page * perPage, visibleBudgets.length)}{" "}
+                                of {visibleBudgets.length}
+                            </span>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setPage((prev) => Math.max(1, prev - 1))
+                                    }
+                                    disabled={page === 1}
+                                    className="rounded-md border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:text-slate-700 disabled:cursor-not-allowed disabled:text-slate-300 dark:border-slate-700 dark:text-slate-300 dark:hover:text-slate-100"
+                                >
+                                    Prev
+                                </button>
+                                <span className="text-xs text-slate-400">
+                                    Page {page} of {totalPages}
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setPage((prev) =>
+                                            Math.min(totalPages, prev + 1)
+                                        )
+                                    }
+                                    disabled={page === totalPages}
+                                    className="rounded-md border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:text-slate-700 disabled:cursor-not-allowed disabled:text-slate-300 dark:border-slate-700 dark:text-slate-300 dark:hover:text-slate-100"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -541,7 +641,7 @@ export default function Budgets({
                                 }
                             >
                                 <option value="">Select a budget</option>
-                                {budgets
+                                {visibleBudgets
                                     .filter(
                                         (budget) =>
                                             budget.id !== closingBudget?.id
@@ -732,7 +832,7 @@ export default function Budgets({
                                 }
                             >
                                 <option value="">Select a budget</option>
-                                {budgets
+                                {visibleBudgets
                                     .filter(
                                         (budget) =>
                                             budget.id !== deletingBudget?.id

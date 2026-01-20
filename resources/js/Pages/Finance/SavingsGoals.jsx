@@ -1,9 +1,19 @@
 import SavingsGoalForm from "@/Components/Finance/SavingsGoals/SavingsGoalForm";
-import SavingsGoalsList from "@/Components/Finance/SavingsGoals/SavingsGoalsList";
 import Modal from "@/Components/Modal";
 import TodoLayout from "@/Layouts/TodoLayout";
 import { Head, Link, router } from "@inertiajs/react";
-import { useCallback, useState } from "react";
+import { Eye, Pencil, Repeat2, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+const formatCurrency = (value, currency = "PHP") =>
+    new Intl.NumberFormat("en-PH", {
+        style: "currency",
+        currency,
+        maximumFractionDigits: 0,
+    }).format(value ?? 0);
+
+const formatDate = (value) =>
+    value ? new Date(value).toLocaleDateString() : "-";
 
 export default function SavingsGoals({
     savingsGoals = [],
@@ -17,9 +27,30 @@ export default function SavingsGoals({
     const [viewGoal, setViewGoal] = useState(null);
     const [relatedTransactions, setRelatedTransactions] = useState([]);
     const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
+    const [page, setPage] = useState(1);
+    const perPage = 8;
     const refreshPage = useCallback(() => {
         window.location.reload();
     }, []);
+
+    const totalPages = useMemo(
+        () => Math.max(1, Math.ceil(savingsGoals.length / perPage)),
+        [perPage, savingsGoals.length]
+    );
+    const pagedGoals = useMemo(() => {
+        const start = (page - 1) * perPage;
+        return savingsGoals.slice(start, start + perPage);
+    }, [page, perPage, savingsGoals]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [search, status, savingsGoals.length]);
+
+    useEffect(() => {
+        if (page > totalPages) {
+            setPage(totalPages);
+        }
+    }, [page, totalPages]);
 
     const handleFilterSubmit = (event) => {
         event.preventDefault();
@@ -217,13 +248,220 @@ export default function SavingsGoals({
                         </div>
                     </div>
                 </form>
-                <SavingsGoalsList
-                    goals={savingsGoals}
-                    onDelete={handleDelete}
-                    onEdit={(goal) => setActiveGoal(goal)}
-                    onConvert={handleConvert}
-                    onView={handleViewTransactions}
-                />
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                        All savings goals
+                    </h3>
+                    <div className="mt-4 overflow-x-auto">
+                        <table className="min-w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                            <thead className="text-xs uppercase text-slate-400 dark:text-slate-500">
+                                <tr>
+                                    <th className="py-2">Goal</th>
+                                    <th className="py-2">Account</th>
+                                    <th className="py-2">Target date</th>
+                                    <th className="py-2 hidden md:table-cell">
+                                        Status
+                                    </th>
+                                    <th className="py-2 hidden md:table-cell">
+                                        Progress
+                                    </th>
+                                    <th className="py-2 text-right">Saved</th>
+                                    <th className="py-2 text-right">Target</th>
+                                    <th className="py-2 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {pagedGoals.map((goal) => {
+                                    const current = Number(
+                                        goal.current_amount ?? 0
+                                    );
+                                    const target = Number(
+                                        goal.target_amount ?? 0
+                                    );
+                                    const progress =
+                                        target > 0
+                                            ? Math.min(
+                                                  100,
+                                                  Math.round(
+                                                      (current / target) * 100
+                                                  )
+                                              )
+                                            : 0;
+                                    const statusLabel = goal.is_active
+                                        ? "Active"
+                                        : goal.converted_finance_budget_id
+                                          ? "Converted"
+                                          : current >= target
+                                            ? "Completed"
+                                            : "Closed";
+
+                                    return (
+                                        <tr
+                                            key={goal.id}
+                                            className="border-t border-slate-200 dark:border-slate-700"
+                                        >
+                                            <td className="py-3">
+                                                <p className="font-medium text-slate-800 dark:text-slate-100">
+                                                    {goal.name}
+                                                </p>
+                                            </td>
+                                            <td className="py-3 text-xs text-slate-400">
+                                                {goal.account?.name ?? "—"}
+                                            </td>
+                                            <td className="py-3 text-xs text-slate-400">
+                                                {formatDate(goal.target_date)}
+                                            </td>
+                                            <td className="py-3 hidden md:table-cell">
+                                                <span
+                                                    className={`text-xs font-semibold ${
+                                                        statusLabel === "Active"
+                                                            ? "text-emerald-600"
+                                                            : statusLabel ===
+                                                                "Converted"
+                                                              ? "text-indigo-600"
+                                                              : statusLabel ===
+                                                                  "Completed"
+                                                                ? "text-slate-500"
+                                                                : "text-rose-500"
+                                                    }`}
+                                                >
+                                                    {statusLabel}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 min-w-[160px] hidden md:table-cell">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs text-slate-400">
+                                                        {progress}%
+                                                    </span>
+                                                    <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-800">
+                                                        <div
+                                                            className="h-2 rounded-full bg-emerald-500"
+                                                            style={{
+                                                                width: `${progress}%`,
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="py-3 text-right font-semibold text-slate-800 dark:text-slate-100">
+                                                {formatCurrency(
+                                                    current,
+                                                    goal.currency
+                                                )}
+                                            </td>
+                                            <td className="py-3 text-right text-xs text-slate-400">
+                                                {formatCurrency(
+                                                    target,
+                                                    goal.currency
+                                                )}
+                                            </td>
+                                            <td className="py-3 text-right">
+                                                <div className="flex flex-wrap items-center justify-end gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setActiveGoal(goal)
+                                                        }
+                                                        className="rounded-md p-1 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-300"
+                                                        title="Edit goal"
+                                                        aria-label="Edit goal"
+                                                    >
+                                                        <Pencil className="h-4 w-4" />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            handleViewTransactions(
+                                                                goal
+                                                            )
+                                                        }
+                                                        className="rounded-md p-1 text-slate-600 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                                                        title="View transactions"
+                                                        aria-label="View transactions"
+                                                    >
+                                                        <Eye className="h-4 w-4" />
+                                                    </button>
+                                                    {!goal.converted_finance_budget_id && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                handleConvert(
+                                                                    goal
+                                                                )
+                                                            }
+                                                            className="rounded-md p-1 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-900/20 dark:hover:text-emerald-300"
+                                                            title="Convert to budget"
+                                                            aria-label="Convert to budget"
+                                                        >
+                                                            <Repeat2 className="h-4 w-4" />
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            handleDelete(goal)
+                                                        }
+                                                        className="rounded-md p-1 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-900/20 dark:hover:text-rose-300"
+                                                        title="Delete goal"
+                                                        aria-label="Delete goal"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                                {(!pagedGoals || pagedGoals.length === 0) && (
+                                    <tr>
+                                        <td
+                                            colSpan={8}
+                                            className="py-6 text-center text-sm text-slate-400 dark:text-slate-500"
+                                        >
+                                            No savings goals match your filters.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {savingsGoals.length > perPage && (
+                    <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-300">
+                        <span>
+                            Showing {(page - 1) * perPage + 1}-
+                            {Math.min(page * perPage, savingsGoals.length)} of{" "}
+                            {savingsGoals.length}
+                        </span>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setPage((prev) => Math.max(1, prev - 1))
+                                }
+                                disabled={page === 1}
+                                className="rounded-md border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:text-slate-700 disabled:cursor-not-allowed disabled:text-slate-300 dark:border-slate-700 dark:text-slate-300 dark:hover:text-slate-100"
+                            >
+                                Prev
+                            </button>
+                            <span className="text-xs text-slate-400">
+                                Page {page} of {totalPages}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setPage((prev) =>
+                                        Math.min(totalPages, prev + 1)
+                                    )
+                                }
+                                disabled={page === totalPages}
+                                className="rounded-md border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:text-slate-700 disabled:cursor-not-allowed disabled:text-slate-300 dark:border-slate-700 dark:text-slate-300 dark:hover:text-slate-100"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             <Modal

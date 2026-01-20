@@ -41,7 +41,9 @@ export default function IconPicker({ value, onChange }) {
     return (
         <div>
             <div className="flex items-center justify-between">
-                <label className="text-sm text-slate-500">Icon</label>
+                <label className="text-sm text-slate-500 dark:text-slate-400">
+                    Icon
+                </label>
                 <button
                     type="button"
                     onClick={handleClear}
@@ -79,7 +81,7 @@ export default function IconPicker({ value, onChange }) {
                     </button>
                 ))}
                 {filteredIcons.length === 0 && (
-                    <p className="col-span-6 text-center text-xs text-slate-400">
+                    <p className="col-span-6 text-center text-xs text-slate-400 dark:text-slate-500">
                         No matching icons
                     </p>
                 )}

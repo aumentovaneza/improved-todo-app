@@ -16,11 +16,14 @@ class FinanceBudget extends Model
     protected $fillable = [
         'user_id',
         'finance_category_id',
+        'finance_account_id',
+        'budget_type',
         'name',
         'amount',
         'current_spent',
         'currency',
         'period',
+        'is_recurring',
         'starts_on',
         'ends_on',
         'is_active',
@@ -32,6 +35,7 @@ class FinanceBudget extends Model
         'starts_on' => 'date',
         'ends_on' => 'date',
         'is_active' => 'boolean',
+        'is_recurring' => 'boolean',
     ];
 
     public function user(): BelongsTo
@@ -42,5 +46,10 @@ class FinanceBudget extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(FinanceCategory::class, 'finance_category_id');
+    }
+
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(FinanceAccount::class, 'finance_account_id');
     }
 }

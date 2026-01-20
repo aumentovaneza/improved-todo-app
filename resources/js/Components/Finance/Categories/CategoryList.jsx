@@ -91,14 +91,14 @@ export default function CategoryList({
                                 <button
                                     type="button"
                                     onClick={() => startEdit(category)}
-                                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
                                 >
                                     Edit
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => onDelete?.(category)}
-                                    className="text-xs font-semibold text-rose-600 hover:text-rose-700"
+                                    className="text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
                                 >
                                     Delete
                                 </button>
@@ -108,7 +108,7 @@ export default function CategoryList({
                         {editingId === category.id && (
                             <div className="mt-3 grid gap-3 sm:grid-cols-2">
                                 <div>
-                                    <label className="text-xs text-slate-500">
+                                    <label className="text-xs text-slate-500 dark:text-slate-400">
                                         Name
                                     </label>
                                     <input
@@ -118,7 +118,7 @@ export default function CategoryList({
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-500">
+                                    <label className="text-xs text-slate-500 dark:text-slate-400">
                                         Type
                                     </label>
                                     <select
@@ -129,10 +129,11 @@ export default function CategoryList({
                                         <option value="income">Income</option>
                                         <option value="expense">Expense</option>
                                         <option value="savings">Savings</option>
+                                        <option value="loan">Loan</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-500">
+                                    <label className="text-xs text-slate-500 dark:text-slate-400">
                                         Color
                                     </label>
                                     <input
@@ -143,7 +144,7 @@ export default function CategoryList({
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-500">
+                                    <label className="text-xs text-slate-500 dark:text-slate-400">
                                         Icon
                                     </label>
                                     <IconPicker
@@ -177,7 +178,7 @@ export default function CategoryList({
                     </div>
                 ))}
                 {(!categories || categories.length === 0) && (
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-slate-400 dark:text-slate-500">
                         No finance categories yet.
                     </p>
                 )}

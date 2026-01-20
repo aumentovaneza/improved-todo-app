@@ -109,3 +109,38 @@
         @apply bg-light-card dark:bg-dark-card;
     }
 }
+
+@layer utilities {
+    /* Tremor chart labels in dark mode */
+    .dark .tremor-ChartWrapper text {
+        fill: #CBD5E1;
+    }
+
+    .dark .tremor-LegendText {
+        color: #CBD5E1;
+    }
+
+    .dark .recharts-cartesian-axis .recharts-text {
+        fill: #CBD5E1;
+    }
+
+    .dark .recharts-cartesian-axis-label .recharts-text {
+        fill: #CBD5E1;
+    }
+
+    .dark .recharts-pie-label-text {
+        fill: #CBD5E1;
+    }
+
+    .dark .tremor-DonutChart text {
+        fill: #CBD5E1;
+    }
+
+    .dark .tremor-DonutChartLabel {
+        color: #CBD5E1;
+    }
+
+    .dark .dark\:fill-dark-tremor-content-emphasis {
+        fill: #CBD5E1;
+    }
+}

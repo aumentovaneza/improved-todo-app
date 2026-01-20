@@ -1,15 +1,30 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-export default function SavingsGoalForm({ onSubmit }) {
-    const [form, setForm] = useState({
-        name: "",
-        target_amount: "",
-        current_amount: "",
-        currency: "PHP",
-        target_date: "",
-        notes: "",
-    });
+const buildInitialState = (initialValues) => ({
+    id: initialValues?.id,
+    name: initialValues?.name ?? "",
+    finance_account_id: initialValues?.finance_account_id ?? "",
+    target_amount: initialValues?.target_amount ?? "",
+    current_amount: initialValues?.current_amount ?? "",
+    currency: initialValues?.currency ?? "PHP",
+    target_date: initialValues?.target_date
+        ? initialValues.target_date.slice(0, 10)
+        : "",
+    notes: initialValues?.notes ?? "",
+});
+
+export default function SavingsGoalForm({
+    onSubmit,
+    accounts = [],
+    initialValues,
+    submitLabel = "Save goal",
+}) {
+    const [form, setForm] = useState(buildInitialState(initialValues));
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        setForm(buildInitialState(initialValues));
+    }, [initialValues]);
 
     const updateField = (field) => (event) => {
         setForm((prev) => ({ ...prev, [field]: event.target.value }));
@@ -20,14 +35,9 @@ export default function SavingsGoalForm({ onSubmit }) {
         setIsSubmitting(true);
         Promise.resolve(onSubmit?.(form)).finally(() => {
             setIsSubmitting(false);
-            setForm({
-                name: "",
-                target_amount: "",
-                current_amount: "",
-                currency: "PHP",
-                target_date: "",
-                notes: "",
-            });
+            if (!initialValues) {
+                setForm(buildInitialState());
+            }
         });
     };
 
@@ -36,12 +46,11 @@ export default function SavingsGoalForm({ onSubmit }) {
             onSubmit={handleSubmit}
             className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
         >
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-                Add savings goal
-            </h3>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label className="text-sm text-slate-500">Name</label>
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                        Name
+                    </label>
                     <input
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
                         value={form.name}
@@ -50,8 +59,29 @@ export default function SavingsGoalForm({ onSubmit }) {
                         required
                     />
                 </div>
+                <div className="sm:col-span-2">
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                        Account (optional)
+                    </label>
+                    <select
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        value={form.finance_account_id}
+                        onChange={updateField("finance_account_id")}
+                    >
+                        <option value="">No account linked</option>
+                        {accounts.map((account) => (
+                            <option key={account.id} value={account.id}>
+                                {account.name}
+                            </option>
+                        ))}
+                    </select>
+                    <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                        Recommended: keep savings in a separate account from
+                        salary and expenses.
+                    </p>
+                </div>
                 <div>
-                    <label className="text-sm text-slate-500">
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
                         Target amount
                     </label>
                     <input
@@ -65,7 +95,7 @@ export default function SavingsGoalForm({ onSubmit }) {
                     />
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500">
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
                         Current amount
                     </label>
                     <input
@@ -78,7 +108,7 @@ export default function SavingsGoalForm({ onSubmit }) {
                     />
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500">
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
                         Target date
                     </label>
                     <input
@@ -89,7 +119,9 @@ export default function SavingsGoalForm({ onSubmit }) {
                     />
                 </div>
                 <div className="sm:col-span-2">
-                    <label className="text-sm text-slate-500">Notes</label>
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                        Notes
+                    </label>
                     <textarea
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
                         rows={2}
@@ -105,7 +137,7 @@ export default function SavingsGoalForm({ onSubmit }) {
                     disabled={isSubmitting}
                     className="rounded-md bg-indigo-600 px-4 py-2 text-sm text-white shadow hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                    {isSubmitting ? "Saving..." : "Save goal"}
+                    {isSubmitting ? "Saving..." : submitLabel}
                 </button>
             </div>
         </form>

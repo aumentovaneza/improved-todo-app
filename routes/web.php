@@ -15,11 +15,14 @@ use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\BoardController;
 use App\Http\Controllers\SwimlaneController;
 use App\Modules\Finance\Controllers\FinanceBudgetController;
+use App\Modules\Finance\Controllers\FinanceAccountController;
 use App\Modules\Finance\Controllers\FinanceCategoryController;
 use App\Modules\Finance\Controllers\FinanceDashboardController;
+use App\Modules\Finance\Controllers\FinanceLoanController;
 use App\Modules\Finance\Controllers\FinanceReportController;
 use App\Modules\Finance\Controllers\FinanceSavingsGoalController;
 use App\Modules\Finance\Controllers\FinanceTransactionController;
+use App\Modules\Finance\Controllers\FinanceWalletCollaboratorController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -74,9 +77,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
 
     // Finance
-    Route::get('finance', [FinanceDashboardController::class, 'index'])->name('finance.dashboard');
-    Route::prefix('finance/api')->name('finance.api.')->group(function () {
+    Route::get('weviewallet', [FinanceDashboardController::class, 'index'])->name('weviewallet.dashboard');
+    Route::post('weviewallet/collaborators', [FinanceWalletCollaboratorController::class, 'store'])
+        ->name('weviewallet.collaborators.store');
+    Route::delete('weviewallet/collaborators/{user}', [FinanceWalletCollaboratorController::class, 'destroy'])
+        ->name('weviewallet.collaborators.destroy');
+    Route::get('weviewallet/transactions', [FinanceTransactionController::class, 'indexPage'])
+        ->name('weviewallet.transactions.index');
+    Route::get('weviewallet/budgets', [FinanceBudgetController::class, 'indexPage'])
+        ->name('weviewallet.budgets.index');
+    Route::get('weviewallet/accounts', [FinanceAccountController::class, 'indexPage'])
+        ->name('weviewallet.accounts.index');
+    Route::get('weviewallet/savings-goals', [FinanceSavingsGoalController::class, 'indexPage'])
+        ->name('weviewallet.savings-goals.index');
+    Route::get('weviewallet/loans', [FinanceLoanController::class, 'indexPage'])
+        ->name('weviewallet.loans.index');
+    Route::prefix('weviewallet/api')->name('weviewallet.api.')->group(function () {
+        Route::get('collaborators/search', [FinanceWalletCollaboratorController::class, 'search'])
+            ->name('collaborators.search');
         Route::get('transactions', [FinanceTransactionController::class, 'index'])->name('transactions.index');
+        Route::get('transactions/related', [FinanceTransactionController::class, 'related'])
+            ->name('transactions.related');
         Route::post('transactions', [FinanceTransactionController::class, 'store'])->name('transactions.store');
         Route::put('transactions/{transaction}', [FinanceTransactionController::class, 'update'])->name('transactions.update');
         Route::delete('transactions/{transaction}', [FinanceTransactionController::class, 'destroy'])->name('transactions.destroy');
@@ -90,11 +111,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('budgets', [FinanceBudgetController::class, 'store'])->name('budgets.store');
         Route::put('budgets/{budget}', [FinanceBudgetController::class, 'update'])->name('budgets.update');
         Route::delete('budgets/{budget}', [FinanceBudgetController::class, 'destroy'])->name('budgets.destroy');
+        Route::post('budgets/{budget}/delete', [FinanceBudgetController::class, 'destroyWithReallocation'])
+            ->name('budgets.delete');
+        Route::post('budgets/{budget}/close', [FinanceBudgetController::class, 'close'])
+            ->name('budgets.close');
+
+        Route::get('accounts', [FinanceAccountController::class, 'index'])->name('accounts.index');
+        Route::post('accounts', [FinanceAccountController::class, 'store'])->name('accounts.store');
+        Route::put('accounts/{account}', [FinanceAccountController::class, 'update'])->name('accounts.update');
+        Route::delete('accounts/{account}', [FinanceAccountController::class, 'destroy'])->name('accounts.destroy');
 
         Route::get('savings-goals', [FinanceSavingsGoalController::class, 'index'])->name('savings-goals.index');
         Route::post('savings-goals', [FinanceSavingsGoalController::class, 'store'])->name('savings-goals.store');
         Route::put('savings-goals/{savingsGoal}', [FinanceSavingsGoalController::class, 'update'])->name('savings-goals.update');
         Route::delete('savings-goals/{savingsGoal}', [FinanceSavingsGoalController::class, 'destroy'])->name('savings-goals.destroy');
+        Route::post('savings-goals/{savingsGoal}/convert', [FinanceSavingsGoalController::class, 'convert'])
+            ->name('savings-goals.convert');
+
+        Route::get('loans', [FinanceLoanController::class, 'index'])->name('loans.index');
+        Route::post('loans', [FinanceLoanController::class, 'store'])->name('loans.store');
+        Route::put('loans/{loan}', [FinanceLoanController::class, 'update'])->name('loans.update');
+        Route::delete('loans/{loan}', [FinanceLoanController::class, 'destroy'])->name('loans.destroy');
 
         Route::get('reports/summary', [FinanceReportController::class, 'summary'])->name('reports.summary');
         Route::post('reports', [FinanceReportController::class, 'store'])->name('reports.store');
@@ -145,6 +182,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profile/weviewallet', [ProfileController::class, 'weviewalletManagement'])
+        ->name('profile.weviewallet');
     Route::get('/profile/finance-categories', [ProfileController::class, 'financeCategories'])
         ->name('profile.finance-categories');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

@@ -28,6 +28,12 @@ class FinanceReportService
             ? round(($totals['expense'] / $budgetTotal) * 100, 1)
             : 0;
 
+        $categoryBreakdown = $this->buildCategoryBreakdown(
+            $userId,
+            $periodStart->copy(),
+            $periodEnd->copy()
+        );
+
         return [
             'summary' => [
                 'period' => [
@@ -37,13 +43,15 @@ class FinanceReportService
                 'income' => $totals['income'],
                 'expenses' => $totals['expense'],
                 'savings' => $totals['savings'],
-                'net' => $totals['income'] - $totals['expense'],
+                'unallocated' => $totals['income'] + $totals['loan'] - $totals['savings'] - $totals['expense'],
+                'borrowed' => $totals['loan'],
+                'net' => $totals['income'] + $totals['loan'] - $totals['expense'],
                 'budget_utilization' => $budgetUtilization,
             ],
             'charts' => [
                 'income_vs_expense' => $this->buildMonthlyIncomeExpense($userId),
                 'trend' => $this->buildDailyTrend($userId),
-                'category_breakdown' => $this->buildCategoryBreakdown($userId, $periodStart, $periodEnd),
+                'category_breakdown' => $categoryBreakdown,
             ],
             'budgets' => $budgets->values()->all(),
         ];
@@ -99,12 +107,27 @@ class FinanceReportService
 
     private function buildCategoryBreakdown(int $userId, Carbon $startDate, Carbon $endDate): array
     {
-        $categoryTotals = $this->transactionRepository->getCategoryTotals($userId, $startDate, $endDate);
+        $categoryTotals = $this->transactionRepository->getCategoryTotalsForTypes(
+            $userId,
+            $startDate,
+            $endDate,
+            ['expense', 'savings']
+        );
 
         return $categoryTotals->map(function ($row) {
+            $categoryName = $row->category?->name ?? 'Uncategorized';
+            $label = $row->type === 'savings'
+                ? "{$categoryName} (Savings)"
+                : $categoryName;
+
             return [
-                'name' => $row->category?->name ?? 'Uncategorized',
+                'name' => $categoryName,
+                'label' => $label,
                 'total' => (float) $row->total,
+                'color' => $row->type === 'savings'
+                    ? '#8B5CF6'
+                    : ($row->category?->color ?? '#94A3B8'),
+                'type' => $row->type,
             ];
         })->values()->all();
     }

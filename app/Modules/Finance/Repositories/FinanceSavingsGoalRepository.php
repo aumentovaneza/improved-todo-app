@@ -9,7 +9,8 @@ class FinanceSavingsGoalRepository
 {
     public function getForUser(int $userId): Collection
     {
-        return FinanceSavingsGoal::where('user_id', $userId)
+        return FinanceSavingsGoal::with('account')
+            ->where('user_id', $userId)
             ->orderByDesc('is_active')
             ->orderBy('target_date')
             ->get();

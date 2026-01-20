@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\TaskService;
+use App\Modules\Finance\Models\FinanceTransaction;
 use App\Services\CategoryService;
+use App\Services\TaskService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -39,12 +40,25 @@ class DashboardController extends Controller
         $weekEnd = $userToday->copy()->addDays(7);
         $weeklyTasks = $this->taskService->getTasksInDateRange($userId, $weekStart, $weekEnd);
 
+        $upcomingPayments = FinanceTransaction::with(['category', 'loan'])
+            ->where('user_id', $userId)
+            ->where('type', 'expense')
+            ->where('is_recurring', true)
+            ->whereBetween('occurred_at', [
+                $userToday->copy()->startOfDay(),
+                $userToday->copy()->addDays(30)->endOfDay(),
+            ])
+            ->orderBy('occurred_at')
+            ->limit(5)
+            ->get();
+
         return Inertia::render('Dashboard', [
             'currentTasks' => $currentTasks->values()->all(),
             'todayTasks' => $todayTasks->values()->all(),
             'overdueTasks' => $overdueTasks->values()->all(),
             'upcomingTasks' => $upcomingTasks->values()->all(),
             'weeklyTasks' => $weeklyTasks->values()->all(),
+            'upcomingPayments' => $upcomingPayments->values()->all(),
             'stats' => $stats,
             'categories' => $categories->values()->all(),
         ]);

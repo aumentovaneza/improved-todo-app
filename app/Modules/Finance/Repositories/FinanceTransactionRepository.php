@@ -11,7 +11,7 @@ class FinanceTransactionRepository
 {
     public function getForUser(int $userId, int $limit = 100): Collection
     {
-        return FinanceTransaction::with('category')
+        return FinanceTransaction::with(['category', 'loan', 'tags', 'createdBy', 'account', 'creditCardAccount'])
             ->where('user_id', $userId)
             ->orderByDesc('occurred_at')
             ->limit($limit)
@@ -48,6 +48,7 @@ class FinanceTransactionRepository
             'income' => (float) ($totals['income'] ?? 0),
             'expense' => (float) ($totals['expense'] ?? 0),
             'savings' => (float) ($totals['savings'] ?? 0),
+            'loan' => (float) ($totals['loan'] ?? 0),
         ];
     }
 
@@ -92,6 +93,23 @@ class FinanceTransactionRepository
             ->whereBetween('occurred_at', [$startDate->startOfDay(), $endDate->endOfDay()])
             ->select('finance_category_id', DB::raw('SUM(amount) as total'))
             ->groupBy('finance_category_id')
+            ->orderByDesc('total')
+            ->get();
+    }
+
+    public function getCategoryTotalsForTypes(
+        int $userId,
+        Carbon $startDate,
+        Carbon $endDate,
+        array $types
+    ): Collection {
+        return FinanceTransaction::query()
+            ->with('category')
+            ->where('user_id', $userId)
+            ->whereIn('type', $types)
+            ->whereBetween('occurred_at', [$startDate->startOfDay(), $endDate->endOfDay()])
+            ->select('finance_category_id', 'type', DB::raw('SUM(amount) as total'))
+            ->groupBy('finance_category_id', 'type')
             ->orderByDesc('total')
             ->get();
     }

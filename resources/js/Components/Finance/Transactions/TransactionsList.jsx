@@ -12,7 +12,11 @@ const typeStyles = {
     income: "text-emerald-600",
     expense: "text-rose-600",
     savings: "text-violet-600",
+    loan: "text-cyan-600",
 };
+
+const formatFrequency = (frequency) =>
+    frequency ? frequency.replace("-", " ") : "";
 
 export default function TransactionsList({
     transactions = [],
@@ -38,10 +42,11 @@ export default function TransactionsList({
             </div>
             <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
-                    <thead className="text-xs uppercase text-slate-400">
+                    <thead className="text-xs uppercase text-slate-400 dark:text-slate-500">
                         <tr>
                             <th className="py-2">Description</th>
                             <th className="py-2">Category</th>
+                            <th className="py-2">Account</th>
                             <th className="py-2">Date</th>
                             <th className="py-2 text-right">Amount</th>
                             <th className="py-2 text-right">Actions</th>
@@ -60,9 +65,29 @@ export default function TransactionsList({
                                     <div className="text-xs capitalize text-slate-400">
                                         {transaction.type}
                                     </div>
+                                    {transaction.created_by &&
+                                        transaction.created_by.id !==
+                                            transaction.user_id && (
+                                            <div className="text-xs text-slate-400">
+                                                Added by{" "}
+                                                {transaction.created_by.name}
+                                            </div>
+                                        )}
+                                    {transaction.is_recurring &&
+                                        transaction.recurring_frequency && (
+                                            <div className="text-xs text-purple-500 dark:text-purple-300">
+                                                Recurring:{" "}
+                                                {formatFrequency(
+                                                    transaction.recurring_frequency
+                                                )}
+                                            </div>
+                                        )}
                                 </td>
                                 <td className="py-3">
                                     {transaction.category?.name ?? "Uncategorized"}
+                                </td>
+                                <td className="py-3">
+                                    {transaction.account?.name ?? "—"}
                                 </td>
                                 <td className="py-3">
                                     {formatDate(transaction.occurred_at)}
@@ -84,7 +109,7 @@ export default function TransactionsList({
                                             onClick={() =>
                                                 onEdit?.(transaction)
                                             }
-                                            className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                                            className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
                                         >
                                             Edit
                                         </button>
@@ -93,7 +118,7 @@ export default function TransactionsList({
                                             onClick={() =>
                                                 onDelete?.(transaction)
                                             }
-                                            className="text-xs font-semibold text-rose-600 hover:text-rose-700"
+                                            className="text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
                                         >
                                             Delete
                                         </button>
@@ -104,8 +129,8 @@ export default function TransactionsList({
                         {transactions.length === 0 && (
                             <tr>
                                 <td
-                                    colSpan={5}
-                                    className="py-6 text-center text-sm text-slate-400"
+                                    colSpan={6}
+                                    className="py-6 text-center text-sm text-slate-400 dark:text-slate-500"
                                 >
                                     No transactions yet.
                                 </td>

@@ -1,4 +1,5 @@
-import { BarChart, Card, Title } from "@tremor/react";
+import { Card, LineChart, Title } from "@tremor/react";
+import { getTremorColorsFromHex } from "./chartColors";
 
 const formatCurrency = (value, currency = "PHP") =>
     new Intl.NumberFormat("en-PH", {
@@ -8,17 +9,32 @@ const formatCurrency = (value, currency = "PHP") =>
     }).format(value ?? 0);
 
 export default function TrendsChart({ data = [], currency = "PHP" }) {
+    const displayData = data.map((row) => ({
+        ...row,
+        Income: row.income ?? 0,
+        Expenses: row.expense ?? 0,
+        Savings: row.savings ?? 0,
+    }));
+
     return (
         <Card>
             <Title>14-day trend</Title>
-            <BarChart
+            <LineChart
                 className="mt-4 h-64"
-                data={data}
+                data={displayData}
                 index="period"
-                categories={["income", "expense", "savings"]}
-                colors={["emerald", "rose", "violet"]}
+                categories={["Income", "Expenses", "Savings"]}
+                colors={getTremorColorsFromHex([
+                    "#10B981",
+                    "#F43F5E",
+                    "#8B5CF6",
+                ])}
                 valueFormatter={(value) => formatCurrency(value, currency)}
                 showLegend
+                showTooltip={false}
+                xAxisLabel="Date"
+                yAxisLabel={`Amount (${currency})`}
+                yAxisWidth={80}
             />
         </Card>
     );

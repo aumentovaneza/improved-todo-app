@@ -4,7 +4,7 @@ import TodoLayout from "@/Layouts/TodoLayout";
 import { Head, Link } from "@inertiajs/react";
 import { useCallback } from "react";
 
-export default function FinanceCategories({ categories = [] }) {
+export default function FinanceCategories({ categories = [], walletUserId }) {
     const refreshPage = useCallback(() => {
         window.location.reload();
     }, []);
@@ -13,39 +13,44 @@ export default function FinanceCategories({ categories = [] }) {
         async (formData) => {
             const payload = {
                 ...formData,
+                wallet_user_id: walletUserId || undefined,
                 color: formData.color || "#64748B",
                 icon: formData.icon || null,
             };
 
-            await window.axios.post(route("finance.api.categories.store"), payload);
+            await window.axios.post(
+                route("weviewallet.api.categories.store"),
+                payload
+            );
             refreshPage();
             return true;
         },
-        [refreshPage]
+        [refreshPage, walletUserId]
     );
 
     const handleUpdate = useCallback(
         async (category, formData) => {
             const payload = {
                 ...formData,
+                wallet_user_id: walletUserId || undefined,
                 color: formData.color || "#64748B",
                 icon: formData.icon || null,
             };
 
             await window.axios.put(
-                `${route("finance.api.categories.index")}/${category.id}`,
+                `${route("weviewallet.api.categories.index")}/${category.id}`,
                 payload
             );
             refreshPage();
             return true;
         },
-        [refreshPage]
+        [refreshPage, walletUserId]
     );
 
     const handleDelete = useCallback(
         async (category) => {
             await window.axios.delete(
-                `${route("finance.api.categories.index")}/${category.id}`
+                `${route("weviewallet.api.categories.index")}/${category.id}`
             );
             refreshPage();
         },
@@ -67,10 +72,12 @@ export default function FinanceCategories({ categories = [] }) {
                             </p>
                         </div>
                         <Link
-                            href={route("profile.edit")}
+                            href={route("weviewallet.dashboard", {
+                                wallet_user_id: walletUserId || undefined,
+                            })}
                             className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
                         >
-                            Back to profile
+                            Back to WevieWallet
                         </Link>
                     </div>
                 </div>

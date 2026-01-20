@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Modules\Finance\Enums\FinanceAccountInstitution;
 use App\Modules\Finance\Models\FinanceCategory;
+use App\Modules\Finance\Repositories\FinanceAccountRepository;
+use App\Modules\Finance\Services\FinanceWalletService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +17,11 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
+    public function __construct(
+        private FinanceWalletService $walletService,
+        private FinanceAccountRepository $accountRepository
+    ) {}
+
     /**
      * Display the user's profile.
      */
@@ -50,17 +58,42 @@ class ProfileController extends Controller
     }
 
     /**
+     * Display WevieWallet management page.
+     */
+    public function weviewalletManagement(Request $request): Response
+    {
+        $userId = $request->user()->id;
+        $accounts = $this->accountRepository->getForUser($userId);
+        $categories = FinanceCategory::where('user_id', $userId)
+            ->orderBy('type')
+            ->orderBy('name')
+            ->get();
+
+        return Inertia::render('Profile/WevieWalletManagement', [
+            'accounts' => $accounts->values()->all(),
+            'categories' => $categories->values()->all(),
+            'accountSuggestions' => FinanceAccountInstitution::suggestionsByType(),
+        ]);
+    }
+
+    /**
      * Display finance categories editor.
      */
     public function financeCategories(Request $request): Response
     {
-        $categories = FinanceCategory::where('user_id', $request->user()->id)
+        $walletUserId = $this->walletService->resolveWalletUserId(
+            $request->user(),
+            $request->integer('wallet_user_id') ?: null
+        );
+
+        $categories = FinanceCategory::where('user_id', $walletUserId)
             ->orderBy('type')
             ->orderBy('name')
             ->get();
 
         return Inertia::render('Profile/FinanceCategories', [
             'categories' => $categories,
+            'walletUserId' => $walletUserId,
         ]);
     }
 

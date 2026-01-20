@@ -4,6 +4,7 @@ import PrimaryButton from "@/Components/PrimaryButton";
 import TextInput from "@/Components/TextInput";
 import GuestLayout from "@/Layouts/GuestLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
+import { useEffect } from "react";
 
 export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -13,6 +14,18 @@ export default function Register() {
         password_confirmation: "",
         invite_code: "",
     });
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const inviteCode = params.get("invite_code") || "";
+        const email = params.get("email") || "";
+        if (inviteCode && data.invite_code !== inviteCode) {
+            setData("invite_code", inviteCode);
+        }
+        if (email && data.email !== email) {
+            setData("email", email);
+        }
+    }, [data.email, data.invite_code, setData]);
 
     const submit = (e) => {
         e.preventDefault();

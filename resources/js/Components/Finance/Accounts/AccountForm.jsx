@@ -59,7 +59,7 @@ export default function AccountForm({
         >
             <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label className="text-sm text-slate-500">
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
                         Account label
                     </label>
                     <input
@@ -70,7 +70,9 @@ export default function AccountForm({
                     />
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500">Type</label>
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                        Type
+                    </label>
                     <div className="relative mt-1">
                         <select
                             className="w-full appearance-none rounded-md border border-slate-300 bg-white px-3 py-2 pr-10 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
@@ -94,7 +96,7 @@ export default function AccountForm({
                     </div>
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500">
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
                         Institution
                     </label>
                     <div className="relative mt-1">
@@ -122,12 +124,12 @@ export default function AccountForm({
                             </svg>
                         </span>
                     </div>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                         Philippine institutions are suggested for now.
                     </p>
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500">
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
                         {form.type === "credit-card"
                             ? "Card number"
                             : "Account number"}
@@ -145,7 +147,7 @@ export default function AccountForm({
                 </div>
                 {form.type !== "credit-card" && (
                     <div>
-                        <label className="text-sm text-slate-500">
+                        <label className="text-sm text-slate-500 dark:text-slate-400">
                             Starting balance
                         </label>
                         <input
@@ -161,7 +163,7 @@ export default function AccountForm({
                 )}
                 {form.type === "credit-card" && (
                     <div>
-                        <label className="text-sm text-slate-500">
+                        <label className="text-sm text-slate-500 dark:text-slate-400">
                             Credit limit
                         </label>
                         <input
@@ -176,7 +178,9 @@ export default function AccountForm({
                     </div>
                 )}
                 <div>
-                    <label className="text-sm text-slate-500">Currency</label>
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                        Currency
+                    </label>
                     <input
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
                         value={form.currency}
@@ -185,7 +189,9 @@ export default function AccountForm({
                     />
                 </div>
                 <div className="sm:col-span-2">
-                    <label className="text-sm text-slate-500">Notes</label>
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                        Notes
+                    </label>
                     <textarea
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
                         rows={2}
@@ -198,13 +204,13 @@ export default function AccountForm({
                     <input
                         id="account_is_active"
                         type="checkbox"
-                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
                         checked={form.is_active}
                         onChange={updateField("is_active")}
                     />
                     <label
                         htmlFor="account_is_active"
-                        className="text-sm text-slate-500"
+                        className="text-sm text-slate-500 dark:text-slate-400"
                     >
                         Active account
                     </label>

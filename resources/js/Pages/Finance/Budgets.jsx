@@ -246,7 +246,7 @@ export default function Budgets({
                             href={route("weviewallet.dashboard", {
                                 wallet_user_id: walletUserId || undefined,
                             })}
-                            className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+                            className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
                         >
                             Back to dashboard
                         </Link>
@@ -333,7 +333,7 @@ export default function Budgets({
                                     key={budget.id}
                                     className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-700"
                                 >
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex flex-wrap items-center justify-between gap-3">
                                         <div>
                                             <p className="font-medium text-slate-800 dark:text-slate-100">
                                                 {budget.name}
@@ -373,7 +373,7 @@ export default function Budgets({
                                                         budget
                                                     )
                                                 }
-                                                className="mt-2 mr-3 text-xs font-semibold text-slate-600 hover:text-slate-800"
+                                                className="mt-2 mr-3 text-xs font-semibold text-slate-600 hover:text-slate-800 dark:text-slate-300 dark:hover:text-slate-100"
                                             >
                                                 View
                                             </button>
@@ -383,7 +383,7 @@ export default function Budgets({
                                                     handleOpenClose(budget)
                                                 }
                                                 disabled={!budget.is_active}
-                                                className="mt-2 mr-3 text-xs font-semibold text-amber-600 hover:text-amber-700 disabled:cursor-not-allowed disabled:text-slate-300"
+                                                className="mt-2 mr-3 text-xs font-semibold text-amber-600 hover:text-amber-700 disabled:cursor-not-allowed disabled:text-slate-300 dark:disabled:text-slate-500"
                                             >
                                                 Close
                                             </button>
@@ -444,7 +444,7 @@ export default function Budgets({
                             );
                         })}
                         {(!budgets || budgets.length === 0) && (
-                            <p className="text-sm text-slate-400">
+                            <p className="text-sm text-slate-400 dark:text-slate-500">
                                 No budgets match your filters.
                             </p>
                         )}
@@ -503,7 +503,7 @@ export default function Budgets({
                         . Choose what to do with the remaining budget.
                     </p>
                     <div>
-                        <label className="text-sm text-slate-500">
+                        <label className="text-sm text-slate-500 dark:text-slate-400">
                             Action
                         </label>
                         <select
@@ -527,7 +527,7 @@ export default function Budgets({
                     </div>
                     {closeForm.action === "reallocate_budget" && (
                         <div>
-                            <label className="text-sm text-slate-500">
+                            <label className="text-sm text-slate-500 dark:text-slate-400">
                                 Target budget
                             </label>
                             <select
@@ -559,7 +559,7 @@ export default function Budgets({
                     )}
                     {closeForm.action === "add_to_savings_goal" && (
                         <div>
-                            <label className="text-sm text-slate-500">
+                            <label className="text-sm text-slate-500 dark:text-slate-400">
                                 Target savings goal
                             </label>
                             <select
@@ -615,11 +615,11 @@ export default function Budgets({
                 </div>
                 <div className="px-6 py-4">
                     {isLoadingTransactions ? (
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
                             Loading transactions...
                         </p>
                     ) : relatedTransactions.length === 0 ? (
-                        <p className="text-sm text-slate-400">
+                        <p className="text-sm text-slate-400 dark:text-slate-500">
                             No transactions linked to this budget yet.
                         </p>
                     ) : (
@@ -629,7 +629,7 @@ export default function Budgets({
                                     key={transaction.id}
                                     className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-700"
                                 >
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex flex-wrap items-center justify-between gap-3">
                                         <div>
                                             <p className="font-medium text-slate-800 dark:text-slate-100">
                                                 {transaction.description}
@@ -691,7 +691,7 @@ export default function Budgets({
                         . Choose where to reallocate before deleting.
                     </p>
                     <div>
-                        <label className="text-sm text-slate-500">
+                        <label className="text-sm text-slate-500 dark:text-slate-400">
                             Action
                         </label>
                         <select
@@ -718,7 +718,7 @@ export default function Budgets({
                     </div>
                     {deleteForm.action === "reallocate_budget" && (
                         <div>
-                            <label className="text-sm text-slate-500">
+                            <label className="text-sm text-slate-500 dark:text-slate-400">
                                 Target budget
                             </label>
                             <select
@@ -751,7 +751,7 @@ export default function Budgets({
                     {deleteForm.action === "create_budget" && (
                         <div className="space-y-3">
                             <div>
-                                <label className="text-sm text-slate-500">
+                                <label className="text-sm text-slate-500 dark:text-slate-400">
                                     New budget name
                                 </label>
                                 <input
@@ -767,7 +767,7 @@ export default function Budgets({
                                 />
                             </div>
                             <div>
-                                <label className="text-sm text-slate-500">
+                                <label className="text-sm text-slate-500 dark:text-slate-400">
                                     Category (optional)
                                 </label>
                                 <select
@@ -798,7 +798,7 @@ export default function Budgets({
                                 </select>
                             </div>
                             <div>
-                                <label className="text-sm text-slate-500">
+                                <label className="text-sm text-slate-500 dark:text-slate-400">
                                     Account (optional)
                                 </label>
                                 <select
@@ -827,7 +827,7 @@ export default function Budgets({
                     )}
                     {deleteForm.action === "add_to_savings_goal" && (
                         <div>
-                            <label className="text-sm text-slate-500">
+                            <label className="text-sm text-slate-500 dark:text-slate-400">
                                 Target savings goal
                             </label>
                             <select

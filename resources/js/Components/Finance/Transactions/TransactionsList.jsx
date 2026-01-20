@@ -42,7 +42,7 @@ export default function TransactionsList({
             </div>
             <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
-                    <thead className="text-xs uppercase text-slate-400">
+                    <thead className="text-xs uppercase text-slate-400 dark:text-slate-500">
                         <tr>
                             <th className="py-2">Description</th>
                             <th className="py-2">Category</th>
@@ -75,7 +75,7 @@ export default function TransactionsList({
                                         )}
                                     {transaction.is_recurring &&
                                         transaction.recurring_frequency && (
-                                            <div className="text-xs text-purple-500">
+                                            <div className="text-xs text-purple-500 dark:text-purple-300">
                                                 Recurring:{" "}
                                                 {formatFrequency(
                                                     transaction.recurring_frequency
@@ -109,7 +109,7 @@ export default function TransactionsList({
                                             onClick={() =>
                                                 onEdit?.(transaction)
                                             }
-                                            className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                                            className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
                                         >
                                             Edit
                                         </button>
@@ -118,7 +118,7 @@ export default function TransactionsList({
                                             onClick={() =>
                                                 onDelete?.(transaction)
                                             }
-                                            className="text-xs font-semibold text-rose-600 hover:text-rose-700"
+                                            className="text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
                                         >
                                             Delete
                                         </button>
@@ -130,7 +130,7 @@ export default function TransactionsList({
                             <tr>
                                 <td
                                     colSpan={6}
-                                    className="py-6 text-center text-sm text-slate-400"
+                                    className="py-6 text-center text-sm text-slate-400 dark:text-slate-500"
                                 >
                                     No transactions yet.
                                 </td>

@@ -52,7 +52,7 @@ export default function AccountsList({ accounts = [], onEdit, onDelete }) {
                                     {formatType(account.type)}
                                 </p>
                                 {!account.is_active && (
-                                    <p className="text-xs text-rose-500">
+                                    <p className="text-xs text-rose-500 dark:text-rose-400">
                                         Inactive
                                     </p>
                                 )}
@@ -104,7 +104,7 @@ export default function AccountsList({ accounts = [], onEdit, onDelete }) {
                                 <button
                                     type="button"
                                     onClick={() => onEdit?.(account)}
-                                    className="mr-3 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                                    className="mr-3 text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
                                 >
                                     Edit
                                 </button>
@@ -112,7 +112,7 @@ export default function AccountsList({ accounts = [], onEdit, onDelete }) {
                             <button
                                 type="button"
                                 onClick={() => onDelete?.(account)}
-                                className="text-xs font-semibold text-rose-600 hover:text-rose-700"
+                                className="text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
                             >
                                 Delete
                             </button>
@@ -120,7 +120,7 @@ export default function AccountsList({ accounts = [], onEdit, onDelete }) {
                     </div>
                 ))}
                 {(!accounts || accounts.length === 0) && (
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-slate-400 dark:text-slate-500">
                         No accounts yet.
                     </p>
                 )}

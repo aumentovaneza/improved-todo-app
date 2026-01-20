@@ -20,14 +20,14 @@ export default function SavingsGoalsList({
 }) {
     return (
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
                     Savings goals
                 </h3>
                 {showAllHref && (
                     <Link
                         href={showAllHref}
-                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
                     >
                         Show all
                     </Link>
@@ -52,7 +52,7 @@ export default function SavingsGoalsList({
                             key={goal.id}
                             className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-700"
                         >
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div>
                                     <p className="font-medium text-slate-800 dark:text-slate-100">
                                         {goal.name}
@@ -99,7 +99,7 @@ export default function SavingsGoalsList({
                                         <button
                                             type="button"
                                             onClick={() => onEdit?.(goal)}
-                                            className="mr-3 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                                            className="mr-3 text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
                                         >
                                             Edit
                                         </button>
@@ -108,7 +108,7 @@ export default function SavingsGoalsList({
                                         <button
                                             type="button"
                                             onClick={() => onView?.(goal)}
-                                            className="mr-3 text-xs font-semibold text-slate-600 hover:text-slate-800"
+                                            className="mr-3 text-xs font-semibold text-slate-600 hover:text-slate-800 dark:text-slate-300 dark:hover:text-slate-100"
                                         >
                                             View
                                         </button>
@@ -117,7 +117,7 @@ export default function SavingsGoalsList({
                                         <button
                                             type="button"
                                             onClick={() => onConvert?.(goal)}
-                                            className="mr-3 text-xs font-semibold text-emerald-600 hover:text-emerald-700"
+                                            className="mr-3 text-xs font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
                                         >
                                             Convert to budget
                                         </button>
@@ -125,7 +125,7 @@ export default function SavingsGoalsList({
                                     <button
                                         type="button"
                                         onClick={() => onDelete?.(goal)}
-                                        className="text-xs font-semibold text-rose-600 hover:text-rose-700"
+                                        className="text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
                                     >
                                         Delete
                                     </button>
@@ -135,7 +135,7 @@ export default function SavingsGoalsList({
                     );
                 })}
                 {(!goals || goals.length === 0) && (
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-slate-400 dark:text-slate-500">
                         No savings goals yet.
                     </p>
                 )}

@@ -156,7 +156,9 @@ export default function BudgetForm({
         >
             <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label className="text-sm text-slate-500">Name</label>
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                        Name
+                    </label>
                     <input
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
                         value={form.name}
@@ -166,7 +168,9 @@ export default function BudgetForm({
                     />
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500">Amount</label>
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                        Amount
+                    </label>
                     <input
                         type="number"
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
@@ -179,7 +183,9 @@ export default function BudgetForm({
                 </div>
                 {form.is_recurring && (
                     <div>
-                        <label className="text-sm text-slate-500">Period</label>
+                        <label className="text-sm text-slate-500 dark:text-slate-400">
+                            Period
+                        </label>
                         <select
                             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
                             value={form.period}
@@ -196,19 +202,21 @@ export default function BudgetForm({
                     <input
                         type="checkbox"
                         id="budget_is_recurring"
-                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
                         checked={form.is_recurring}
                         onChange={updateField("is_recurring")}
                     />
                     <label
                         htmlFor="budget_is_recurring"
-                        className="text-sm text-slate-500"
+                        className="text-sm text-slate-500 dark:text-slate-400"
                     >
                         Recurring budget
                     </label>
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500">Budget type</label>
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                        Budget type
+                    </label>
                     <select
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
                         value={form.budget_type}
@@ -217,12 +225,14 @@ export default function BudgetForm({
                         <option value="spending">Spending budget</option>
                         <option value="saved">Saved budget</option>
                     </select>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                         Saved budgets must be reallocated when deleted.
                     </p>
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500">Category</label>
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                        Category
+                    </label>
                     <select
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
                         value={form.finance_category_id}
@@ -239,7 +249,7 @@ export default function BudgetForm({
                     </select>
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500">
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
                         Account (optional)
                     </label>
                     <select
@@ -254,14 +264,14 @@ export default function BudgetForm({
                             </option>
                         ))}
                     </select>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                         Use this if you want a budget tied to a specific account.
                     </p>
                 </div>
                 {form.is_recurring && (
                     <>
                         <div>
-                            <label className="text-sm text-slate-500">
+                            <label className="text-sm text-slate-500 dark:text-slate-400">
                                 Start date
                             </label>
                             <input
@@ -273,7 +283,7 @@ export default function BudgetForm({
                             />
                         </div>
                         <div>
-                            <label className="text-sm text-slate-500">
+                            <label className="text-sm text-slate-500 dark:text-slate-400">
                                 End date
                             </label>
                             <input

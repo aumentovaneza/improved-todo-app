@@ -148,7 +148,7 @@ export default function Transactions({
                         className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4"
                     >
                         <div className="lg:col-span-2">
-                            <label className="text-xs font-semibold uppercase text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400 dark:text-slate-500">
                                 Search
                             </label>
                             <input
@@ -161,7 +161,7 @@ export default function Transactions({
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-semibold uppercase text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400 dark:text-slate-500">
                                 Type
                             </label>
                             <select
@@ -179,7 +179,7 @@ export default function Transactions({
                             </select>
                         </div>
                         <div>
-                            <label className="text-xs font-semibold uppercase text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400 dark:text-slate-500">
                                 Sort
                             </label>
                             <select
@@ -204,7 +204,7 @@ export default function Transactions({
                             </select>
                         </div>
                         <div>
-                            <label className="text-xs font-semibold uppercase text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400 dark:text-slate-500">
                                 Date from
                             </label>
                             <input
@@ -217,7 +217,7 @@ export default function Transactions({
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-semibold uppercase text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400 dark:text-slate-500">
                                 Date to
                             </label>
                             <input

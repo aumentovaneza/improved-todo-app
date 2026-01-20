@@ -48,9 +48,29 @@ const getCenterSummary = (data, currency) => {
     };
 };
 
+const formatPeriodLabel = (period) => {
+    if (!period?.start || !period?.end) {
+        return null;
+    }
+    const startDate = new Date(period.start);
+    const endDate = new Date(period.end);
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+        return null;
+    }
+    const label = `${startDate.toLocaleDateString("en-PH", {
+        month: "short",
+        day: "numeric",
+    })} - ${endDate.toLocaleDateString("en-PH", {
+        month: "short",
+        day: "numeric",
+    })}`;
+    return label;
+};
+
 export default function CategoryBreakdownChart({
     data = [],
     currency = "PHP",
+    period,
 }) {
     const chartColors = data.map((item) =>
         item?.color ? getNearestTremorColorName(item.color) : "slate"
@@ -63,10 +83,16 @@ export default function CategoryBreakdownChart({
         even: "text-slate-500 dark:text-slate-400",
         none: "text-slate-400",
     }[centerSummary.tone];
+    const periodLabel = formatPeriodLabel(period);
 
     return (
         <Card>
             <Title>Spending & Savings by category</Title>
+            {periodLabel && (
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    Current month · {periodLabel}
+                </p>
+            )}
             <div className="relative">
                 <DonutChart
                     className="mt-4 h-64"

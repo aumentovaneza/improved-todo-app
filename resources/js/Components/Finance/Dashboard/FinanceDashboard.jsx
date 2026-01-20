@@ -193,7 +193,10 @@ export default function FinanceDashboard({
                     <IncomeExpenseChart data={charts?.income_vs_expense} />
                 </div>
                 <div className="space-y-6">
-                    <CategoryBreakdownChart data={charts?.category_breakdown} />
+                    <CategoryBreakdownChart
+                        data={charts?.category_breakdown}
+                        period={summary?.period}
+                    />
                 </div>
             </div>
 

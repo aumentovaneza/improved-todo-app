@@ -143,7 +143,7 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
                             href={route("weviewallet.dashboard", {
                                 wallet_user_id: walletUserId || undefined,
                             })}
-                            className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+                            className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
                         >
                             Back to dashboard
                         </Link>
@@ -157,7 +157,7 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
                 >
                     <div className="grid gap-3 sm:grid-cols-2">
                         <div>
-                            <label className="text-xs font-semibold uppercase text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400 dark:text-slate-500">
                                 Search
                             </label>
                             <input
@@ -170,7 +170,7 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-semibold uppercase text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400 dark:text-slate-500">
                                 Status
                             </label>
                             <select
@@ -247,11 +247,11 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
                 </div>
                 <div className="px-6 py-4">
                     {isLoadingTransactions ? (
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
                             Loading transactions...
                         </p>
                     ) : relatedTransactions.length === 0 ? (
-                        <p className="text-sm text-slate-400">
+                        <p className="text-sm text-slate-400 dark:text-slate-500">
                             No transactions linked to this loan yet.
                         </p>
                     ) : (
@@ -261,7 +261,7 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
                                     key={transaction.id}
                                     className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-700"
                                 >
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex flex-wrap items-center justify-between gap-3">
                                         <div>
                                             <p className="font-medium text-slate-800 dark:text-slate-100">
                                                 {transaction.description}

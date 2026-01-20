@@ -48,7 +48,9 @@ export default function SavingsGoalForm({
         >
             <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label className="text-sm text-slate-500">Name</label>
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                        Name
+                    </label>
                     <input
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
                         value={form.name}
@@ -58,7 +60,7 @@ export default function SavingsGoalForm({
                     />
                 </div>
                 <div className="sm:col-span-2">
-                    <label className="text-sm text-slate-500">
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
                         Account (optional)
                     </label>
                     <select
@@ -73,13 +75,13 @@ export default function SavingsGoalForm({
                             </option>
                         ))}
                     </select>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                         Recommended: keep savings in a separate account from
                         salary and expenses.
                     </p>
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500">
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
                         Target amount
                     </label>
                     <input
@@ -93,7 +95,7 @@ export default function SavingsGoalForm({
                     />
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500">
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
                         Current amount
                     </label>
                     <input
@@ -106,7 +108,7 @@ export default function SavingsGoalForm({
                     />
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500">
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
                         Target date
                     </label>
                     <input
@@ -117,7 +119,9 @@ export default function SavingsGoalForm({
                     />
                 </div>
                 <div className="sm:col-span-2">
-                    <label className="text-sm text-slate-500">Notes</label>
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                        Notes
+                    </label>
                     <textarea
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
                         rows={2}

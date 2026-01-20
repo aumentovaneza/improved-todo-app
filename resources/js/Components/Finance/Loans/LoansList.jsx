@@ -19,14 +19,14 @@ export default function LoansList({
 }) {
     return (
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
                     Loans
                 </h3>
                 {showAllHref && (
                     <Link
                         href={showAllHref}
-                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
                     >
                         Show all
                     </Link>
@@ -52,7 +52,7 @@ export default function LoansList({
                             key={loan.id}
                             className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-700"
                         >
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div>
                                     <p className="font-medium text-slate-800 dark:text-slate-100">
                                         {loan.name}
@@ -89,7 +89,7 @@ export default function LoansList({
                                         <button
                                             type="button"
                                             onClick={() => onEdit?.(loan)}
-                                            className="mr-3 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                                            className="mr-3 text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
                                         >
                                             Edit
                                         </button>
@@ -98,7 +98,7 @@ export default function LoansList({
                                         <button
                                             type="button"
                                             onClick={() => onView?.(loan)}
-                                            className="mr-3 text-xs font-semibold text-slate-600 hover:text-slate-800"
+                                            className="mr-3 text-xs font-semibold text-slate-600 hover:text-slate-800 dark:text-slate-300 dark:hover:text-slate-100"
                                         >
                                             View
                                         </button>
@@ -106,7 +106,7 @@ export default function LoansList({
                                     <button
                                         type="button"
                                         onClick={() => onDelete?.(loan)}
-                                        className="text-xs font-semibold text-rose-600 hover:text-rose-700"
+                                        className="text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
                                     >
                                         Delete
                                     </button>
@@ -116,7 +116,7 @@ export default function LoansList({
                     );
                 })}
                 {(!loans || loans.length === 0) && (
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-slate-400 dark:text-slate-500">
                         No loans tracked yet.
                     </p>
                 )}

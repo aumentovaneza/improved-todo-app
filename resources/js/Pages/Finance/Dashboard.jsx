@@ -692,11 +692,11 @@ export default function Dashboard(props) {
                 </div>
                 <div className="px-6 py-4">
                     {isLoadingRelated ? (
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
                             Loading transactions...
                         </p>
                     ) : relatedTransactions.length === 0 ? (
-                        <p className="text-sm text-slate-400">
+                        <p className="text-sm text-slate-400 dark:text-slate-500">
                             No transactions linked yet.
                         </p>
                     ) : (
@@ -706,7 +706,7 @@ export default function Dashboard(props) {
                                     key={transaction.id}
                                     className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-700"
                                 >
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex flex-wrap items-center justify-between gap-3">
                                         <div>
                                             <p className="font-medium text-slate-800 dark:text-slate-100">
                                                 {transaction.description}
@@ -880,7 +880,7 @@ export default function Dashboard(props) {
                 <div className="px-6 py-4 space-y-4 text-sm text-slate-600 dark:text-slate-300">
                     <div className="space-y-3">
                         {creditCardAccounts.length === 0 ? (
-                            <p className="text-sm text-slate-400">
+                            <p className="text-sm text-slate-400 dark:text-slate-500">
                                 No credit card accounts yet.
                             </p>
                         ) : (
@@ -896,13 +896,13 @@ export default function Dashboard(props) {
                                         key={account.id}
                                         className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-700"
                                     >
-                                        <div className="flex items-center justify-between">
+                                        <div className="flex flex-wrap items-center justify-between gap-3">
                                             <div>
                                                 <p className="font-medium text-slate-800 dark:text-slate-100">
                                                     {account.label ||
                                                         account.name}
                                                 </p>
-                                                <p className="text-xs text-slate-400">
+                                                <p className="text-xs text-slate-400 dark:text-slate-500">
                                                     Limit:{" "}
                                                     {new Intl.NumberFormat(
                                                         "en-PH",
@@ -937,14 +937,14 @@ export default function Dashboard(props) {
                                                 Charges
                                             </p>
                                             {charges.length === 0 ? (
-                                                <p className="text-slate-400">
+                                                <p className="text-slate-400 dark:text-slate-500">
                                                     No charges yet.
                                                 </p>
                                             ) : (
                                                 charges.map((transaction) => (
                                                     <div
                                                         key={transaction.id}
-                                                        className="flex items-center justify-between border-t border-slate-200 pt-2 dark:border-slate-700"
+                                                        className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-2 dark:border-slate-700"
                                                     >
                                                         <div>
                                                             <p className="text-sm text-slate-700 dark:text-slate-200">
@@ -1028,7 +1028,7 @@ export default function Dashboard(props) {
                         . Choose where to reallocate before deleting.
                     </p>
                     <div>
-                        <label className="text-sm text-slate-500">
+                        <label className="text-sm text-slate-500 dark:text-slate-400">
                             Action
                         </label>
                         <select
@@ -1055,7 +1055,7 @@ export default function Dashboard(props) {
                     </div>
                     {deleteForm.action === "reallocate_budget" && (
                         <div>
-                            <label className="text-sm text-slate-500">
+                            <label className="text-sm text-slate-500 dark:text-slate-400">
                                 Target budget
                             </label>
                             <select
@@ -1088,7 +1088,7 @@ export default function Dashboard(props) {
                     {deleteForm.action === "create_budget" && (
                         <div className="space-y-3">
                             <div>
-                                <label className="text-sm text-slate-500">
+                                <label className="text-sm text-slate-500 dark:text-slate-400">
                                     New budget name
                                 </label>
                                 <input
@@ -1104,7 +1104,7 @@ export default function Dashboard(props) {
                                 />
                             </div>
                             <div>
-                                <label className="text-sm text-slate-500">
+                                <label className="text-sm text-slate-500 dark:text-slate-400">
                                     Category (optional)
                                 </label>
                                 <select
@@ -1135,7 +1135,7 @@ export default function Dashboard(props) {
                                 </select>
                             </div>
                             <div>
-                                <label className="text-sm text-slate-500">
+                                <label className="text-sm text-slate-500 dark:text-slate-400">
                                     Account (optional)
                                 </label>
                                 <select
@@ -1164,7 +1164,7 @@ export default function Dashboard(props) {
                     )}
                     {deleteForm.action === "add_to_savings_goal" && (
                         <div>
-                            <label className="text-sm text-slate-500">
+                            <label className="text-sm text-slate-500 dark:text-slate-400">
                                 Target savings goal
                             </label>
                             <select

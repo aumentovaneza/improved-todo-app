@@ -28,6 +28,12 @@ class FinanceReportService
             ? round(($totals['expense'] / $budgetTotal) * 100, 1)
             : 0;
 
+        $categoryBreakdown = $this->buildCategoryBreakdown(
+            $userId,
+            $periodStart->copy(),
+            $periodEnd->copy()
+        );
+
         return [
             'summary' => [
                 'period' => [
@@ -45,7 +51,7 @@ class FinanceReportService
             'charts' => [
                 'income_vs_expense' => $this->buildMonthlyIncomeExpense($userId),
                 'trend' => $this->buildDailyTrend($userId),
-                'category_breakdown' => $this->buildCategoryBreakdown($userId, $periodStart, $periodEnd),
+                'category_breakdown' => $categoryBreakdown,
             ],
             'budgets' => $budgets->values()->all(),
         ];

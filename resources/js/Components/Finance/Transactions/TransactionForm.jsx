@@ -120,7 +120,7 @@ export default function TransactionForm({
         >
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label className="text-sm text-slate-500">
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
                         Description
                     </label>
                     <input
@@ -132,7 +132,9 @@ export default function TransactionForm({
                     />
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500">Type</label>
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                        Type
+                    </label>
                     <select
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
                         value={form.type}
@@ -145,7 +147,9 @@ export default function TransactionForm({
                     </select>
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500">Amount</label>
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                        Amount
+                    </label>
                     <input
                         type="number"
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
@@ -157,7 +161,9 @@ export default function TransactionForm({
                     />
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500">Date</label>
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                        Date
+                    </label>
                     <input
                         type="date"
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
@@ -167,7 +173,9 @@ export default function TransactionForm({
                     />
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500">Recurring</label>
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                        Recurring
+                    </label>
                     <select
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
                         value={form.recurring_frequency}
@@ -182,7 +190,9 @@ export default function TransactionForm({
                     </select>
                 </div>
                 <div className="sm:col-span-2">
-                    <label className="text-sm text-slate-500">Category</label>
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                        Category
+                    </label>
                     <select
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
                         value={form.finance_category_id}
@@ -205,7 +215,7 @@ export default function TransactionForm({
                     </div>
                 )}
                 <div className="sm:col-span-2">
-                    <label className="text-sm text-slate-500">
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
                         Account (optional)
                     </label>
                     <select
@@ -223,7 +233,7 @@ export default function TransactionForm({
                 </div>
                 {form.type === "savings" && (
                     <div className="sm:col-span-2">
-                        <label className="text-sm text-slate-500">
+                        <label className="text-sm text-slate-500 dark:text-slate-400">
                             Savings goal (optional)
                         </label>
                         <select
@@ -242,7 +252,7 @@ export default function TransactionForm({
                 )}
                 {form.type === "expense" && (
                     <div className="sm:col-span-2">
-                        <label className="text-sm text-slate-500">
+                        <label className="text-sm text-slate-500 dark:text-slate-400">
                             Budget (optional)
                         </label>
                         <select
@@ -261,7 +271,7 @@ export default function TransactionForm({
                 )}
                 {form.type === "expense" && (
                     <div className="sm:col-span-2">
-                        <label className="text-sm text-slate-500">
+                        <label className="text-sm text-slate-500 dark:text-slate-400">
                             Loan payment (optional)
                         </label>
                         <select
@@ -281,7 +291,7 @@ export default function TransactionForm({
                 {form.type === "expense" &&
                     creditCardAccounts.length > 0 && (
                     <div className="sm:col-span-2">
-                        <label className="text-sm text-slate-500">
+                        <label className="text-sm text-slate-500 dark:text-slate-400">
                             Credit card payment (optional)
                         </label>
                         <select
@@ -305,14 +315,14 @@ export default function TransactionForm({
                                 </option>
                             ))}
                         </select>
-                        <p className="mt-1 text-xs text-slate-400">
+                        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                             This will restore available credit on the selected
                             card.
                         </p>
                     </div>
                 )}
                 <div className="sm:col-span-2">
-                    <label className="text-sm text-slate-500">
+                    <label className="text-sm text-slate-500 dark:text-slate-400">
                         Tags (optional)
                     </label>
                     <TagInput

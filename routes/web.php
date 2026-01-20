@@ -96,6 +96,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('collaborators/search', [FinanceWalletCollaboratorController::class, 'search'])
             ->name('collaborators.search');
         Route::get('transactions', [FinanceTransactionController::class, 'index'])->name('transactions.index');
+        Route::get('transactions/grouped', [FinanceTransactionController::class, 'grouped'])
+            ->name('transactions.grouped');
         Route::get('transactions/related', [FinanceTransactionController::class, 'related'])
             ->name('transactions.related');
         Route::post('transactions', [FinanceTransactionController::class, 'store'])->name('transactions.store');

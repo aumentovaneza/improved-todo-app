@@ -10,6 +10,7 @@ use App\Modules\Finance\Services\FinanceWalletService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -50,6 +51,93 @@ class FinanceTransactionController extends Controller
             'wallet_user_id' => $walletUserId,
         ];
 
+        $baseQuery = $this->buildFilteredQuery($walletUserId, $filters);
+
+        $sort = $filters['sort'] ?: 'date_desc';
+        $dateOrder = $sort === 'date_asc' ? 'asc' : 'desc';
+        $perPageDates = max(1, (int) $request->integer('per_page_dates', 3));
+        $dateQuery = (clone $baseQuery)
+            ->selectRaw('DATE(occurred_at) as date')
+            ->groupBy('date')
+            ->orderBy('date', $dateOrder);
+        $allDateKeys = $dateQuery->pluck('date');
+        $dateKeys = $allDateKeys->take($perPageDates);
+        $hasMore = $allDateKeys->count() > $perPageDates;
+
+        $transactions = collect();
+        if ($dateKeys->isNotEmpty()) {
+            $transactionsQuery = $this->applySort(
+                (clone $baseQuery)->whereIn(DB::raw('DATE(occurred_at)'), $dateKeys),
+                $sort
+            );
+            $transactions = $transactionsQuery->get();
+        }
+        $totalAmount = (clone $baseQuery)->sum('amount');
+        $tags = Tag::orderBy('name')->get(['id', 'name', 'color']);
+
+        return Inertia::render('Finance/Transactions', [
+            'transactions' => $transactions,
+            'totalAmount' => $totalAmount,
+            'page' => 1,
+            'hasMore' => $hasMore,
+            'perPageDates' => $perPageDates,
+            'tags' => $tags,
+            'filters' => $filters,
+            'walletUserId' => $walletUserId,
+        ]);
+    }
+
+    public function grouped(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        $walletUserId = $this->walletService->resolveWalletUserId(
+            $user,
+            $request->integer('wallet_user_id') ?: null
+        );
+        $filters = [
+            'search' => $request->string('search')->toString(),
+            'type' => $request->string('type')->toString(),
+            'start_date' => $request->string('start_date')->toString(),
+            'end_date' => $request->string('end_date')->toString(),
+            'sort' => $request->string('sort')->toString(),
+            'tags' => array_values(array_filter((array) $request->input('tags', []))),
+            'wallet_user_id' => $walletUserId,
+        ];
+
+        $page = max(1, (int) $request->integer('page', 1));
+        $perPageDates = max(1, (int) $request->integer('per_page_dates', 3));
+        $sort = $filters['sort'] ?: 'date_desc';
+        $dateOrder = $sort === 'date_asc' ? 'asc' : 'desc';
+
+        $baseQuery = $this->buildFilteredQuery($walletUserId, $filters);
+        $dateQuery = (clone $baseQuery)
+            ->selectRaw('DATE(occurred_at) as date')
+            ->groupBy('date')
+            ->orderBy('date', $dateOrder);
+        $totalDates = $dateQuery->get()->count();
+        $dateKeys = $dateQuery
+            ->skip(($page - 1) * $perPageDates)
+            ->take($perPageDates)
+            ->pluck('date');
+
+        $transactions = collect();
+        if ($dateKeys->isNotEmpty()) {
+            $transactionsQuery = $this->applySort(
+                (clone $baseQuery)->whereIn(DB::raw('DATE(occurred_at)'), $dateKeys),
+                $sort
+            );
+            $transactions = $transactionsQuery->get();
+        }
+
+        return response()->json([
+            'transactions' => $transactions,
+            'page' => $page,
+            'has_more' => ($page * $perPageDates) < $totalDates,
+        ]);
+    }
+
+    private function buildFilteredQuery(int $walletUserId, array $filters)
+    {
         $query = FinanceTransaction::query()
             ->with(['category', 'loan', 'tags', 'createdBy', 'account', 'creditCardAccount'])
             ->where('user_id', $walletUserId);
@@ -88,31 +176,17 @@ class FinanceTransactionController extends Controller
             });
         }
 
-        $sort = $filters['sort'] ?: 'date_desc';
-        switch ($sort) {
-            case 'date_asc':
-                $query->orderBy('occurred_at');
-                break;
-            case 'amount_asc':
-                $query->orderBy('amount');
-                break;
-            case 'amount_desc':
-                $query->orderByDesc('amount');
-                break;
-            default:
-                $query->orderByDesc('occurred_at');
-                break;
-        }
+        return $query;
+    }
 
-        $transactions = $query->get();
-        $tags = Tag::orderBy('name')->get(['id', 'name', 'color']);
-
-        return Inertia::render('Finance/Transactions', [
-            'transactions' => $transactions,
-            'tags' => $tags,
-            'filters' => $filters,
-            'walletUserId' => $walletUserId,
-        ]);
+    private function applySort($query, string $sort)
+    {
+        return match ($sort) {
+            'date_asc' => $query->orderBy('occurred_at'),
+            'amount_asc' => $query->orderBy('amount'),
+            'amount_desc' => $query->orderByDesc('amount'),
+            default => $query->orderByDesc('occurred_at'),
+        };
     }
 
     public function related(Request $request): JsonResponse

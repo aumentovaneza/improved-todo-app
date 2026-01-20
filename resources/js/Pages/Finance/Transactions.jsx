@@ -1,6 +1,6 @@
 import TodoLayout from "@/Layouts/TodoLayout";
 import { Head, router } from "@inertiajs/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const formatCurrency = (amount, currency = "PHP") =>
     new Intl.NumberFormat("en-PH", {
@@ -41,6 +41,10 @@ const typeOrder = ["income", "loan", "expense", "savings"];
 
 export default function Transactions({
     transactions = [],
+    totalAmount: totalAmountProp,
+    page: initialPage = 1,
+    hasMore: initialHasMore = false,
+    perPageDates = 3,
     filters = {},
     walletUserId,
 }) {
@@ -49,19 +53,31 @@ export default function Transactions({
     const [startDate, setStartDate] = useState(filters.start_date ?? "");
     const [endDate, setEndDate] = useState(filters.end_date ?? "");
     const [sort, setSort] = useState(filters.sort ?? "date_desc");
+    const [loadedTransactions, setLoadedTransactions] = useState(transactions);
+    const [page, setPage] = useState(initialPage);
+    const [hasMore, setHasMore] = useState(initialHasMore);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const loadMoreRef = useRef(null);
+
+    useEffect(() => {
+        setLoadedTransactions(transactions);
+        setPage(initialPage);
+        setHasMore(initialHasMore);
+    }, [transactions, initialPage, initialHasMore]);
 
     const totalAmount = useMemo(
         () =>
-            transactions.reduce(
+            totalAmountProp ??
+            loadedTransactions.reduce(
                 (sum, transaction) => sum + Number(transaction.amount ?? 0),
                 0
             ),
-        [transactions]
+        [loadedTransactions, totalAmountProp]
     );
 
     const groupedTransactions = useMemo(() => {
         const grouped = {};
-        transactions.forEach((transaction) => {
+        loadedTransactions.forEach((transaction) => {
             const dateKey = getDateKey(transaction.occurred_at);
             if (!grouped[dateKey]) {
                 grouped[dateKey] = {};
@@ -72,7 +88,7 @@ export default function Transactions({
             grouped[dateKey][transaction.type].push(transaction);
         });
         return grouped;
-    }, [transactions]);
+    }, [loadedTransactions]);
 
     const sortedDateKeys = useMemo(() => {
         const keys = Object.keys(groupedTransactions);
@@ -81,6 +97,60 @@ export default function Transactions({
         }
         return keys.sort().reverse();
     }, [groupedTransactions, sort]);
+
+    const loadMore = async () => {
+        if (isLoadingMore || !hasMore) {
+            return;
+        }
+        setIsLoadingMore(true);
+        try {
+            const response = await window.axios.get(
+                route("weviewallet.api.transactions.grouped"),
+                {
+                    params: {
+                        page: page + 1,
+                        per_page_dates: perPageDates,
+                        search: search || undefined,
+                        type: type || undefined,
+                        start_date: startDate || undefined,
+                        end_date: endDate || undefined,
+                        sort: sort || undefined,
+                        wallet_user_id: walletUserId || undefined,
+                    },
+                }
+            );
+            const payload = response.data ?? {};
+            setLoadedTransactions((prev) => [
+                ...prev,
+                ...(payload.transactions ?? []),
+            ]);
+            setPage(payload.page ?? page + 1);
+            setHasMore(Boolean(payload.has_more));
+        } finally {
+            setIsLoadingMore(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!hasMore) {
+            return;
+        }
+        const target = loadMoreRef.current;
+        if (!target) {
+            return;
+        }
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const entry = entries[0];
+                if (entry.isIntersecting) {
+                    loadMore();
+                }
+            },
+            { rootMargin: "200px" }
+        );
+        observer.observe(target);
+        return () => observer.disconnect();
+    }, [hasMore, loadMoreRef, loadMore, isLoadingMore]);
 
     const handleSubmit = (event) => {
         event.preventDefault();
@@ -249,7 +319,7 @@ export default function Transactions({
                     </form>
                 </div>
 
-                {transactions.length === 0 ? (
+                {loadedTransactions.length === 0 ? (
                     <div className="rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
                         No transactions match the current filters.
                     </div>
@@ -388,6 +458,18 @@ export default function Transactions({
                                     </div>
                                 </div>
                             ))}
+                        {loadedTransactions.length > 0 && (
+                            <div
+                                ref={loadMoreRef}
+                                className="py-4 text-center text-sm text-slate-500 dark:text-slate-400"
+                            >
+                                {isLoadingMore
+                                    ? "Loading more transactions..."
+                                    : hasMore
+                                      ? "Scroll to load more"
+                                      : "No more transactions to load"}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

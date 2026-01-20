@@ -129,6 +129,7 @@ export default function CategoryList({
                                         <option value="income">Income</option>
                                         <option value="expense">Expense</option>
                                         <option value="savings">Savings</option>
+                                        <option value="loan">Loan</option>
                                     </select>
                                 </div>
                                 <div>

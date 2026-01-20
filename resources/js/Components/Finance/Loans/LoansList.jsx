@@ -10,7 +10,13 @@ const formatCurrency = (value, currency = "PHP") =>
 const formatDate = (value) =>
     value ? new Date(value).toLocaleDateString() : "-";
 
-export default function LoansList({ loans = [], onDelete, onEdit, showAllHref }) {
+export default function LoansList({
+    loans = [],
+    onDelete,
+    onEdit,
+    onView,
+    showAllHref,
+}) {
     return (
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <div className="flex items-center justify-between">
@@ -86,6 +92,15 @@ export default function LoansList({ loans = [], onDelete, onEdit, showAllHref })
                                             className="mr-3 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
                                         >
                                             Edit
+                                        </button>
+                                    )}
+                                    {onView && (
+                                        <button
+                                            type="button"
+                                            onClick={() => onView?.(loan)}
+                                            className="mr-3 text-xs font-semibold text-slate-600 hover:text-slate-800"
+                                        >
+                                            View
                                         </button>
                                     )}
                                     <button

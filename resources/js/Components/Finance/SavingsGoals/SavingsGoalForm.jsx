@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 const buildInitialState = (initialValues) => ({
     id: initialValues?.id,
     name: initialValues?.name ?? "",
+    finance_account_id: initialValues?.finance_account_id ?? "",
     target_amount: initialValues?.target_amount ?? "",
     current_amount: initialValues?.current_amount ?? "",
     currency: initialValues?.currency ?? "PHP",
@@ -14,6 +15,7 @@ const buildInitialState = (initialValues) => ({
 
 export default function SavingsGoalForm({
     onSubmit,
+    accounts = [],
     initialValues,
     submitLabel = "Save goal",
 }) {
@@ -54,6 +56,27 @@ export default function SavingsGoalForm({
                         placeholder="Emergency fund"
                         required
                     />
+                </div>
+                <div className="sm:col-span-2">
+                    <label className="text-sm text-slate-500">
+                        Account (optional)
+                    </label>
+                    <select
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        value={form.finance_account_id}
+                        onChange={updateField("finance_account_id")}
+                    >
+                        <option value="">No account linked</option>
+                        {accounts.map((account) => (
+                            <option key={account.id} value={account.id}>
+                                {account.name}
+                            </option>
+                        ))}
+                    </select>
+                    <p className="mt-1 text-xs text-slate-400">
+                        Recommended: keep savings in a separate account from
+                        salary and expenses.
+                    </p>
                 </div>
                 <div>
                     <label className="text-sm text-slate-500">

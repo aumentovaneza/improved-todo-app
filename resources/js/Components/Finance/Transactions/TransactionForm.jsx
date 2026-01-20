@@ -13,6 +13,9 @@ const buildInitialState = (initialValues) => ({
     finance_loan_id: initialValues?.finance_loan_id ?? "",
     finance_savings_goal_id: initialValues?.finance_savings_goal_id ?? "",
     finance_budget_id: initialValues?.finance_budget_id ?? "",
+    finance_account_id: initialValues?.finance_account_id ?? "",
+    finance_credit_card_account_id:
+        initialValues?.finance_credit_card_account_id ?? "",
     recurring_frequency: initialValues?.recurring_frequency ?? "",
     tags: initialValues?.tags ?? [],
 });
@@ -23,11 +26,15 @@ export default function TransactionForm({
     savingsGoals = [],
     loans = [],
     budgets = [],
+    accounts = [],
     initialValues,
     submitLabel = "Save transaction",
 }) {
     const [form, setForm] = useState(buildInitialState(initialValues));
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const creditCardAccounts = accounts.filter(
+        (account) => account.type === "credit-card"
+    );
 
     useEffect(() => {
         setForm(buildInitialState(initialValues));
@@ -70,7 +77,13 @@ export default function TransactionForm({
                     ? form.finance_budget_id
                     : "",
             finance_loan_id:
-                form.type === "expense" ? form.finance_loan_id : "",
+                form.type === "expense" || form.type === "loan"
+                    ? form.finance_loan_id
+                    : "",
+            finance_credit_card_account_id:
+                form.type === "expense"
+                    ? form.finance_credit_card_account_id
+                    : "",
             is_recurring: Boolean(recurringFrequency),
             recurring_frequency: recurringFrequency,
         };
@@ -81,6 +94,24 @@ export default function TransactionForm({
             }
         });
     };
+
+    useEffect(() => {
+        if (form.type !== "expense" && form.finance_credit_card_account_id) {
+            setForm((prev) => ({
+                ...prev,
+                finance_credit_card_account_id: "",
+            }));
+        }
+    }, [form.type, form.finance_credit_card_account_id]);
+
+    useEffect(() => {
+        const account = accounts.find(
+            (item) => String(item.id) === String(form.finance_account_id)
+        );
+        if (account?.type === "credit-card") {
+            setForm((prev) => ({ ...prev, finance_credit_card_account_id: "" }));
+        }
+    }, [accounts, form.finance_account_id]);
 
     return (
         <form
@@ -108,6 +139,7 @@ export default function TransactionForm({
                         onChange={updateField("type")}
                     >
                         <option value="income">Income</option>
+                        <option value="loan">Loan</option>
                         <option value="expense">Expense</option>
                         <option value="savings">Savings</option>
                     </select>
@@ -166,6 +198,29 @@ export default function TransactionForm({
                             ))}
                     </select>
                 </div>
+                {form.type === "loan" && (
+                    <div className="sm:col-span-2 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs text-cyan-700 dark:border-cyan-700/60 dark:bg-cyan-900/20 dark:text-cyan-200">
+                        Loan transactions add cash to the selected account and
+                        create a loan tracker using the description and amount.
+                    </div>
+                )}
+                <div className="sm:col-span-2">
+                    <label className="text-sm text-slate-500">
+                        Account (optional)
+                    </label>
+                    <select
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        value={form.finance_account_id}
+                        onChange={updateField("finance_account_id")}
+                    >
+                        <option value="">No account linked</option>
+                        {accounts.map((account) => (
+                            <option key={account.id} value={account.id}>
+                                {account.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
                 {form.type === "savings" && (
                     <div className="sm:col-span-2">
                         <label className="text-sm text-slate-500">
@@ -221,6 +276,39 @@ export default function TransactionForm({
                                 </option>
                             ))}
                         </select>
+                    </div>
+                )}
+                {form.type === "expense" &&
+                    creditCardAccounts.length > 0 && (
+                    <div className="sm:col-span-2">
+                        <label className="text-sm text-slate-500">
+                            Credit card payment (optional)
+                        </label>
+                        <select
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            value={form.finance_credit_card_account_id}
+                            onChange={updateField(
+                                "finance_credit_card_account_id"
+                            )}
+                            disabled={
+                                accounts.find(
+                                    (account) =>
+                                        String(account.id) ===
+                                        String(form.finance_account_id)
+                                )?.type === "credit-card"
+                            }
+                        >
+                            <option value="">Not a credit card payment</option>
+                            {creditCardAccounts.map((account) => (
+                                <option key={account.id} value={account.id}>
+                                    {account.name}
+                                </option>
+                            ))}
+                        </select>
+                        <p className="mt-1 text-xs text-slate-400">
+                            This will restore available credit on the selected
+                            card.
+                        </p>
                     </div>
                 )}
                 <div className="sm:col-span-2">

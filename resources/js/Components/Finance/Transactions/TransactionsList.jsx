@@ -12,6 +12,7 @@ const typeStyles = {
     income: "text-emerald-600",
     expense: "text-rose-600",
     savings: "text-violet-600",
+    loan: "text-cyan-600",
 };
 
 const formatFrequency = (frequency) =>
@@ -45,6 +46,7 @@ export default function TransactionsList({
                         <tr>
                             <th className="py-2">Description</th>
                             <th className="py-2">Category</th>
+                            <th className="py-2">Account</th>
                             <th className="py-2">Date</th>
                             <th className="py-2 text-right">Amount</th>
                             <th className="py-2 text-right">Actions</th>
@@ -83,6 +85,9 @@ export default function TransactionsList({
                                 </td>
                                 <td className="py-3">
                                     {transaction.category?.name ?? "Uncategorized"}
+                                </td>
+                                <td className="py-3">
+                                    {transaction.account?.name ?? "—"}
                                 </td>
                                 <td className="py-3">
                                     {formatDate(transaction.occurred_at)}
@@ -124,7 +129,7 @@ export default function TransactionsList({
                         {transactions.length === 0 && (
                             <tr>
                                 <td
-                                    colSpan={5}
+                                    colSpan={6}
                                     className="py-6 text-center text-sm text-slate-400"
                                 >
                                     No transactions yet.

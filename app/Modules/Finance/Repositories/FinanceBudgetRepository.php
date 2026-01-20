@@ -9,7 +9,7 @@ class FinanceBudgetRepository
 {
     public function getForUser(int $userId): Collection
     {
-        return FinanceBudget::with('category')
+        return FinanceBudget::with(['category', 'account'])
             ->where('user_id', $userId)
             ->orderByDesc('is_active')
             ->orderBy('starts_on')
@@ -18,7 +18,7 @@ class FinanceBudgetRepository
 
     public function getActiveForUser(int $userId): Collection
     {
-        return FinanceBudget::with('category')
+        return FinanceBudget::with(['category', 'account'])
             ->where('user_id', $userId)
             ->where('is_active', true)
             ->get();

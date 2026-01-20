@@ -52,11 +52,13 @@ const getPeriodRange = (baseDate, period) => {
 
 const buildInitialState = (initialValues) => {
     const isEditing = Boolean(initialValues?.id);
-    const period = initialValues?.period ?? "monthly";
     const isRecurring =
         initialValues?.is_recurring !== undefined
             ? initialValues.is_recurring
             : true;
+    const period = isRecurring
+        ? initialValues?.period ?? "monthly"
+        : initialValues?.period ?? "";
     const storedStarts = initialValues?.starts_on
         ? initialValues.starts_on.slice(0, 10)
         : "";
@@ -85,11 +87,14 @@ const buildInitialState = (initialValues) => {
         starts_on: startsOn,
         ends_on: endsOn,
         finance_category_id: initialValues?.finance_category_id ?? "",
+        finance_account_id: initialValues?.finance_account_id ?? "",
+        budget_type: initialValues?.budget_type ?? "spending",
     };
 };
 
 export default function BudgetForm({
     categories = [],
+    accounts = [],
     onSubmit,
     initialValues,
     submitLabel = "Save budget",
@@ -106,6 +111,11 @@ export default function BudgetForm({
             field === "is_recurring" ? event.target.checked : event.target.value;
         setForm((prev) => {
             const next = { ...prev, [field]: value };
+            if (field === "is_recurring" && !value) {
+                next.period = "";
+                next.starts_on = "";
+                next.ends_on = "";
+            }
             if (field === "period") {
                 if (next.is_recurring) {
                     const range = getPeriodRange(getToday(), value);
@@ -167,19 +177,21 @@ export default function BudgetForm({
                         required
                     />
                 </div>
-                <div>
-                    <label className="text-sm text-slate-500">Period</label>
-                    <select
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
-                        value={form.period}
-                        onChange={updateField("period")}
-                    >
-                        <option value="weekly">Weekly</option>
-                        <option value="monthly">Monthly</option>
-                        <option value="quarterly">Quarterly</option>
-                        <option value="yearly">Yearly</option>
-                    </select>
-                </div>
+                {form.is_recurring && (
+                    <div>
+                        <label className="text-sm text-slate-500">Period</label>
+                        <select
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            value={form.period}
+                            onChange={updateField("period")}
+                        >
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="yearly">Yearly</option>
+                        </select>
+                    </div>
+                )}
                 <div className="flex items-center gap-2">
                     <input
                         type="checkbox"
@@ -194,6 +206,20 @@ export default function BudgetForm({
                     >
                         Recurring budget
                     </label>
+                </div>
+                <div>
+                    <label className="text-sm text-slate-500">Budget type</label>
+                    <select
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        value={form.budget_type}
+                        onChange={updateField("budget_type")}
+                    >
+                        <option value="spending">Spending budget</option>
+                        <option value="saved">Saved budget</option>
+                    </select>
+                    <p className="mt-1 text-xs text-slate-400">
+                        Saved budgets must be reallocated when deleted.
+                    </p>
                 </div>
                 <div>
                     <label className="text-sm text-slate-500">Category</label>
@@ -213,27 +239,58 @@ export default function BudgetForm({
                     </select>
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500">Start date</label>
-                    <input
-                        type="date"
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
-                        value={form.starts_on}
-                        onChange={updateField("starts_on")}
-                        required
-                    />
-                </div>
-                <div>
                     <label className="text-sm text-slate-500">
-                        End date
+                        Account (optional)
                     </label>
-                    <input
-                        type="date"
+                    <select
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
-                        value={form.ends_on}
-                        onChange={updateField("ends_on")}
-                        disabled={form.is_recurring}
-                    />
+                        value={form.finance_account_id}
+                        onChange={updateField("finance_account_id")}
+                    >
+                        <option value="">Any account</option>
+                        {accounts.map((account) => (
+                            <option key={account.id} value={account.id}>
+                                {account.name}
+                            </option>
+                        ))}
+                    </select>
+                    <p className="mt-1 text-xs text-slate-400">
+                        Use this if you want a budget tied to a specific account.
+                    </p>
                 </div>
+                {form.is_recurring && (
+                    <>
+                        <div>
+                            <label className="text-sm text-slate-500">
+                                Start date
+                            </label>
+                            <input
+                                type="date"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                value={form.starts_on}
+                                onChange={updateField("starts_on")}
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm text-slate-500">
+                                End date
+                            </label>
+                            <input
+                                type="date"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                value={form.ends_on}
+                                onChange={updateField("ends_on")}
+                                disabled={form.is_recurring}
+                            />
+                        </div>
+                    </>
+                )}
+                {!form.is_recurring && (
+                    <div className="sm:col-span-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                        Non-recurring budgets do not have a period or dates.
+                    </div>
+                )}
             </div>
             <div className="mt-4 flex justify-end">
                 <button

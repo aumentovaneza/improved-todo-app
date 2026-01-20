@@ -35,8 +35,9 @@ const typeStyles = {
     income: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400",
     expense: "bg-rose-100 text-rose-700 dark:bg-rose-900/20 dark:text-rose-400",
     savings: "bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400",
+    loan: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/20 dark:text-cyan-400",
 };
-const typeOrder = ["income", "expense", "savings"];
+const typeOrder = ["income", "loan", "expense", "savings"];
 
 export default function Transactions({
     transactions = [],
@@ -48,6 +49,15 @@ export default function Transactions({
     const [startDate, setStartDate] = useState(filters.start_date ?? "");
     const [endDate, setEndDate] = useState(filters.end_date ?? "");
     const [sort, setSort] = useState(filters.sort ?? "date_desc");
+
+    const totalAmount = useMemo(
+        () =>
+            transactions.reduce(
+                (sum, transaction) => sum + Number(transaction.amount ?? 0),
+                0
+            ),
+        [transactions]
+    );
 
     const groupedTransactions = useMemo(() => {
         const grouped = {};
@@ -125,6 +135,14 @@ export default function Transactions({
                             Back to dashboard
                         </button>
                     </div>
+                    {type && (
+                        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                            Total {type} transactions:{" "}
+                            <span className="font-semibold">
+                                {formatCurrency(totalAmount)}
+                            </span>
+                        </div>
+                    )}
                     <form
                         onSubmit={handleSubmit}
                         className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4"
@@ -155,6 +173,7 @@ export default function Transactions({
                             >
                                 <option value="">All types</option>
                                 <option value="income">Income</option>
+                                <option value="loan">Loan</option>
                                 <option value="expense">Expense</option>
                                 <option value="savings">Savings</option>
                             </select>
@@ -292,6 +311,17 @@ export default function Transactions({
                                                                                     ?.name ??
                                                                                     "Uncategorized"}
                                                                             </p>
+                                                                            {transaction.account
+                                                                                ?.name && (
+                                                                                <p className="text-xs text-slate-400">
+                                                                                    Account:{" "}
+                                                                                    {
+                                                                                        transaction
+                                                                                            .account
+                                                                                            .name
+                                                                                    }
+                                                                                </p>
+                                                                            )}
                                                                             {transaction.created_by &&
                                                                                 transaction
                                                                                     .created_by

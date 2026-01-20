@@ -14,6 +14,8 @@ export default function SavingsGoalsList({
     goals = [],
     onDelete,
     onEdit,
+    onConvert,
+    onView,
     showAllHref,
 }) {
     return (
@@ -58,6 +60,16 @@ export default function SavingsGoalsList({
                                     <p className="text-xs text-slate-400">
                                         Target by {formatDate(goal.target_date)}
                                     </p>
+                                    {goal.account?.name && (
+                                        <p className="text-xs text-slate-400">
+                                            Account: {goal.account.name}
+                                        </p>
+                                    )}
+                                    {goal.converted_finance_budget_id && (
+                                        <p className="text-xs text-emerald-600">
+                                            Converted to budget
+                                        </p>
+                                    )}
                                 </div>
                                 <p className="font-semibold">
                                     {formatCurrency(
@@ -90,6 +102,24 @@ export default function SavingsGoalsList({
                                             className="mr-3 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
                                         >
                                             Edit
+                                        </button>
+                                    )}
+                                    {onView && (
+                                        <button
+                                            type="button"
+                                            onClick={() => onView?.(goal)}
+                                            className="mr-3 text-xs font-semibold text-slate-600 hover:text-slate-800"
+                                        >
+                                            View
+                                        </button>
+                                    )}
+                                    {!goal.converted_finance_budget_id && (
+                                        <button
+                                            type="button"
+                                            onClick={() => onConvert?.(goal)}
+                                            className="mr-3 text-xs font-semibold text-emerald-600 hover:text-emerald-700"
+                                        >
+                                            Convert to budget
                                         </button>
                                     )}
                                     <button

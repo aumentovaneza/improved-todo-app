@@ -11,7 +11,7 @@ class FinanceTransactionRepository
 {
     public function getForUser(int $userId, int $limit = 100): Collection
     {
-        return FinanceTransaction::with(['category', 'loan', 'tags', 'createdBy'])
+        return FinanceTransaction::with(['category', 'loan', 'tags', 'createdBy', 'account', 'creditCardAccount'])
             ->where('user_id', $userId)
             ->orderByDesc('occurred_at')
             ->limit($limit)
@@ -48,6 +48,7 @@ class FinanceTransactionRepository
             'income' => (float) ($totals['income'] ?? 0),
             'expense' => (float) ($totals['expense'] ?? 0),
             'savings' => (float) ($totals['savings'] ?? 0),
+            'loan' => (float) ($totals['loan'] ?? 0),
         ];
     }
 

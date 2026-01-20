@@ -10,6 +10,7 @@ use App\Modules\Finance\Services\FinanceWalletService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -50,7 +51,7 @@ class FinanceTransactionController extends Controller
         ];
 
         $query = FinanceTransaction::query()
-            ->with(['category', 'loan', 'tags', 'createdBy'])
+            ->with(['category', 'loan', 'tags', 'createdBy', 'account', 'creditCardAccount'])
             ->where('user_id', $walletUserId);
 
         if (!empty($filters['type'])) {
@@ -114,14 +115,73 @@ class FinanceTransactionController extends Controller
         ]);
     }
 
+    public function related(Request $request): JsonResponse
+    {
+        $walletUserId = $this->walletService->resolveWalletUserId(
+            Auth::user(),
+            $request->integer('wallet_user_id') ?: null
+        );
+        $validated = $request->validate([
+            'finance_loan_id' => ['nullable', 'integer', 'exists:finance_loans,id'],
+            'finance_savings_goal_id' => ['nullable', 'integer', 'exists:finance_savings_goals,id'],
+            'finance_budget_id' => ['nullable', 'integer', 'exists:finance_budgets,id'],
+        ]);
+
+        $query = FinanceTransaction::query()
+            ->with(['category', 'account'])
+            ->where('user_id', $walletUserId);
+
+        $hasFilter = false;
+        if (!empty($validated['finance_loan_id'])) {
+            $query->where('finance_loan_id', $validated['finance_loan_id']);
+            $hasFilter = true;
+        }
+
+        if (!empty($validated['finance_savings_goal_id'])) {
+            $query->where('finance_savings_goal_id', $validated['finance_savings_goal_id']);
+            $hasFilter = true;
+        }
+
+        if (!empty($validated['finance_budget_id'])) {
+            $query->where('finance_budget_id', $validated['finance_budget_id']);
+            $hasFilter = true;
+        }
+
+        $transactions = $hasFilter
+            ? $query->orderByDesc('occurred_at')->get()
+            : collect();
+
+        return response()->json($transactions);
+    }
+
     public function store(Request $request): JsonResponse
     {
+        $walletUserId = $request->integer('wallet_user_id');
+        if ($walletUserId) {
+            $this->walletService->ensureCanAccessWallet(Auth::id(), $walletUserId);
+        }
+
         $validated = $request->validate([
             'finance_category_id' => ['nullable', 'integer', 'exists:finance_categories,id'],
             'finance_loan_id' => ['nullable', 'integer', 'exists:finance_loans,id'],
             'finance_savings_goal_id' => ['nullable', 'integer', 'exists:finance_savings_goals,id'],
             'finance_budget_id' => ['nullable', 'integer', 'exists:finance_budgets,id'],
-            'type' => ['required', 'in:income,expense,savings'],
+            'finance_account_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('finance_accounts', 'id')->where(
+                    'user_id',
+                    $walletUserId ?: Auth::id()
+                ),
+            ],
+            'finance_credit_card_account_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('finance_accounts', 'id')
+                    ->where('user_id', $walletUserId ?: Auth::id())
+                    ->where('type', 'credit-card'),
+            ],
+            'type' => ['required', 'in:income,expense,savings,loan'],
             'amount' => ['required', 'numeric', 'min:0'],
             'currency' => ['nullable', 'string', 'max:8'],
             'description' => ['required', 'string', 'max:255'],
@@ -140,10 +200,6 @@ class FinanceTransactionController extends Controller
         ]);
 
         $validated = $this->normalizeRecurringData($validated);
-        $walletUserId = $request->integer('wallet_user_id');
-        if ($walletUserId) {
-            $this->walletService->ensureCanAccessWallet(Auth::id(), $walletUserId);
-        }
         $transaction = $this->financeService->createTransaction(
             $validated,
             $walletUserId ?: Auth::id(),
@@ -155,12 +211,25 @@ class FinanceTransactionController extends Controller
 
     public function update(Request $request, FinanceTransaction $transaction): JsonResponse
     {
+        $walletUserId = $transaction->user_id;
         $validated = $request->validate([
             'finance_category_id' => ['nullable', 'integer', 'exists:finance_categories,id'],
             'finance_loan_id' => ['nullable', 'integer', 'exists:finance_loans,id'],
             'finance_savings_goal_id' => ['nullable', 'integer', 'exists:finance_savings_goals,id'],
             'finance_budget_id' => ['nullable', 'integer', 'exists:finance_budgets,id'],
-            'type' => ['nullable', 'in:income,expense,savings'],
+            'finance_account_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('finance_accounts', 'id')->where('user_id', $walletUserId),
+            ],
+            'finance_credit_card_account_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('finance_accounts', 'id')
+                    ->where('user_id', $walletUserId)
+                    ->where('type', 'credit-card'),
+            ],
+            'type' => ['nullable', 'in:income,expense,savings,loan'],
             'amount' => ['nullable', 'numeric', 'min:0'],
             'currency' => ['nullable', 'string', 'max:8'],
             'description' => ['nullable', 'string', 'max:255'],

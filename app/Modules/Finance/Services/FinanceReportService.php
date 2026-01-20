@@ -37,7 +37,9 @@ class FinanceReportService
                 'income' => $totals['income'],
                 'expenses' => $totals['expense'],
                 'savings' => $totals['savings'],
-                'net' => $totals['income'] - $totals['expense'],
+                'unallocated' => $totals['income'] + $totals['loan'] - $totals['savings'] - $totals['expense'],
+                'borrowed' => $totals['loan'],
+                'net' => $totals['income'] + $totals['loan'] - $totals['expense'],
                 'budget_utilization' => $budgetUtilization,
             ],
             'charts' => [

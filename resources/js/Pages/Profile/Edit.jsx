@@ -1,11 +1,11 @@
 import TodoLayout from "@/Layouts/TodoLayout";
 import { Head, Link, useForm, usePage } from "@inertiajs/react";
-import { User, Mail, Calendar, Shield, LogOut, Edit3 } from "lucide-react";
+import { Calendar, Edit3, LogOut, Mail, Shield, User } from "lucide-react";
 import DeleteUserForm from "./Partials/DeleteUserForm";
 import UpdatePasswordForm from "./Partials/UpdatePasswordForm";
 import UpdateProfileInformationForm from "./Partials/UpdateProfileInformationForm";
 import DangerButton from "@/Components/DangerButton";
-import SecondaryButton from "@/Components/SecondaryButton";
+import { useCallback } from "react";
 
 export default function Edit({ mustVerifyEmail, status }) {
     const { auth } = usePage().props;
@@ -159,10 +159,10 @@ export default function Edit({ mustVerifyEmail, status }) {
                             Manage Categories
                         </Link>
                         <Link
-                            href={route("profile.finance-categories")}
+                            href={route("profile.weviewallet")}
                             className="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors duration-200"
                         >
-                            Manage WevieWallet Categories
+                            Manage WevieWallet
                         </Link>
                     </div>
                 </div>
@@ -190,6 +190,7 @@ export default function Edit({ mustVerifyEmail, status }) {
                     <DeleteUserForm className="max-w-xl" />
                 </div>
             </div>
+
         </TodoLayout>
     );
 }

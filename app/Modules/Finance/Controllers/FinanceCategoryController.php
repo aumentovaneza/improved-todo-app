@@ -34,7 +34,7 @@ class FinanceCategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'in:income,expense,savings'],
+            'type' => ['required', 'in:income,expense,savings,loan'],
             'color' => ['nullable', 'string', 'max:20'],
             'icon' => ['nullable', 'string', 'max:50'],
             'is_active' => ['nullable', 'boolean'],
@@ -56,7 +56,7 @@ class FinanceCategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => ['nullable', 'string', 'max:255'],
-            'type' => ['nullable', 'in:income,expense,savings'],
+            'type' => ['nullable', 'in:income,expense,savings,loan'],
             'color' => ['nullable', 'string', 'max:20'],
             'icon' => ['nullable', 'string', 'max:50'],
             'is_active' => ['nullable', 'boolean'],

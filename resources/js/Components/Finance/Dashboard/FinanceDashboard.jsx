@@ -12,7 +12,7 @@ import LoansList from "@/Components/Finance/Loans/LoansList";
 import LoanForm from "@/Components/Finance/Loans/LoanForm";
 import Modal from "@/Components/Modal";
 import { Link } from "@inertiajs/react";
-import { Plus, Settings, Users, Tags } from "lucide-react";
+import { Landmark, Plus, Settings, Users } from "lucide-react";
 import { useState } from "react";
 
 const formatCurrency = (value, currency = "PHP") =>
@@ -30,6 +30,7 @@ export default function FinanceDashboard({
     budgets,
     savingsGoals,
     loans,
+    accounts,
     tier,
     canAccessAdvancedCharts,
     onViewAllTransactions,
@@ -40,13 +41,24 @@ export default function FinanceDashboard({
     onCreateLoan,
     onDeleteBudget,
     onDeleteSavingsGoal,
+    onConvertSavingsGoal,
     onDeleteLoan,
     onDeleteTransaction,
     onEditLoan,
     onEditBudget,
     onEditSavingsGoal,
     onEditTransaction,
+    onViewLoan,
+    onViewGoal,
+    onViewBudget,
     onOpenCollaborators,
+    onIncomeSummary,
+    onUnallocatedSummary,
+    onExpensesSummary,
+    onSavingsSummary,
+    onNetSummary,
+    onLoansSummary,
+    onAvailableCreditSummary,
     walletUserId,
     isWalletOwner,
 }) {
@@ -60,8 +72,12 @@ export default function FinanceDashboard({
         );
 
     const visibleBudgets = sortByUpdated(budgets).slice(0, 2);
-    const visibleSavings = sortByUpdated(savingsGoals).slice(0, 2);
-    const visibleLoans = sortByUpdated(loans).slice(0, 2);
+    const visibleSavings = sortByUpdated(
+        savingsGoals.filter((goal) => goal.is_active)
+    ).slice(0, 2);
+    const visibleLoans = sortByUpdated(
+        loans.filter((loan) => loan.is_active)
+    ).slice(0, 2);
 
     const handleSubmitAndClose = async (handler, payload) => {
         const succeeded = await Promise.resolve(handler?.(payload));
@@ -82,10 +98,7 @@ export default function FinanceDashboard({
                             Add new items without losing your place.
                         </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <div className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
-                            {tier} tier
-                        </div>
+                    <div className="flex items-center">
                         <Dropdown>
                             <Dropdown.Trigger>
                                 <button
@@ -112,13 +125,11 @@ export default function FinanceDashboard({
                                     </button>
                                 )}
                                 <Dropdown.Link
-                                    href={route("profile.finance-categories", {
-                                        wallet_user_id: walletUserId || undefined,
-                                    })}
+                                    href={route("profile.weviewallet")}
                                 >
                                     <span className="inline-flex items-center gap-2">
-                                        <Tags className="h-4 w-4" />
-                                        Manage categories
+                                        <Landmark className="h-4 w-4" />
+                                        WevieWallet management
                                     </span>
                                 </Dropdown.Link>
                             </Dropdown.Content>
@@ -166,7 +177,16 @@ export default function FinanceDashboard({
                 </div>
             </div>
 
-            <SummaryCards summary={summary} />
+            <SummaryCards
+                summary={summary}
+                onIncomeClick={onIncomeSummary}
+                onUnallocatedClick={onUnallocatedSummary}
+                onAvailableCreditClick={onAvailableCreditSummary}
+                onExpensesClick={onExpensesSummary}
+                onSavingsClick={onSavingsSummary}
+                onNetClick={onNetSummary}
+                onLoansClick={onLoansSummary}
+            />
 
             <div className="grid gap-6 lg:grid-cols-3">
                 <div className="lg:col-span-2 space-y-6">
@@ -177,11 +197,9 @@ export default function FinanceDashboard({
                 </div>
             </div>
 
-            {canAccessAdvancedCharts && (
-                <div>
-                    <TrendsChart data={charts?.trend} />
-                </div>
-            )}
+            <div>
+                <TrendsChart data={charts?.trend} />
+            </div>
 
             <div className="grid gap-6 lg:grid-cols-3">
                 <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
@@ -223,6 +241,16 @@ export default function FinanceDashboard({
                                                 {budget.category?.name ??
                                                     "All categories"}
                                             </p>
+                                            {budget.budget_type === "saved" && (
+                                                <p className="text-xs text-slate-400">
+                                                    Saved budget
+                                                </p>
+                                            )}
+                                            {budget.account?.name && (
+                                                <p className="text-xs text-slate-400">
+                                                    Account: {budget.account.name}
+                                                </p>
+                                            )}
                                             <div className="mt-2 flex items-center gap-3">
                                                 <button
                                                     type="button"
@@ -237,6 +265,19 @@ export default function FinanceDashboard({
                                                 >
                                                     Edit
                                                 </button>
+                                                {onViewBudget && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            onViewBudget?.(
+                                                                budget
+                                                            )
+                                                        }
+                                                        className="text-xs font-semibold text-slate-600 hover:text-slate-800"
+                                                    >
+                                                        View
+                                                    </button>
+                                                )}
                                                 <button
                                                     type="button"
                                                     onClick={() =>
@@ -302,6 +343,8 @@ export default function FinanceDashboard({
                 <SavingsGoalsList
                     goals={visibleSavings}
                     onDelete={onDeleteSavingsGoal}
+                    onConvert={onConvertSavingsGoal}
+                    onView={onViewGoal}
                     onEdit={(goal) =>
                         setActiveModal({
                             mode: "edit",
@@ -314,6 +357,7 @@ export default function FinanceDashboard({
                 <LoansList
                     loans={visibleLoans}
                     onDelete={onDeleteLoan}
+                    onView={onViewLoan}
                     onEdit={(loan) =>
                         setActiveModal({
                             mode: "edit",
@@ -361,6 +405,7 @@ export default function FinanceDashboard({
                         savingsGoals={savingsGoals}
                         loans={loans}
                         budgets={budgets}
+                        accounts={accounts}
                         initialValues={activeModal?.data}
                         submitLabel={
                             activeModal?.mode === "edit"
@@ -394,6 +439,7 @@ export default function FinanceDashboard({
                 <div className="px-6 py-4">
                     <BudgetForm
                         categories={categories}
+                        accounts={accounts}
                         initialValues={activeModal?.data}
                         submitLabel={
                             activeModal?.mode === "edit"
@@ -427,6 +473,7 @@ export default function FinanceDashboard({
                 <div className="px-6 py-4">
                     <SavingsGoalForm
                         initialValues={activeModal?.data}
+                        accounts={accounts}
                         submitLabel={
                             activeModal?.mode === "edit"
                                 ? "Update goal"

@@ -15,6 +15,8 @@ class FinanceSavingsGoal extends Model
 
     protected $fillable = [
         'user_id',
+        'finance_account_id',
+        'converted_finance_budget_id',
         'name',
         'target_amount',
         'current_amount',
@@ -34,5 +36,15 @@ class FinanceSavingsGoal extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(FinanceAccount::class, 'finance_account_id');
+    }
+
+    public function convertedBudget(): BelongsTo
+    {
+        return $this->belongsTo(FinanceBudget::class, 'converted_finance_budget_id');
     }
 }

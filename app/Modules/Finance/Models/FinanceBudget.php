@@ -16,6 +16,8 @@ class FinanceBudget extends Model
     protected $fillable = [
         'user_id',
         'finance_category_id',
+        'finance_account_id',
+        'budget_type',
         'name',
         'amount',
         'current_spent',
@@ -44,5 +46,10 @@ class FinanceBudget extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(FinanceCategory::class, 'finance_category_id');
+    }
+
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(FinanceAccount::class, 'finance_account_id');
     }
 }

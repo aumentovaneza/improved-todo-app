@@ -42,6 +42,7 @@ class FinanceDashboardController extends Controller
             'budgets' => $data['budgets'],
             'savingsGoals' => $data['savings_goals'],
             'loans' => $data['loans'],
+            'accounts' => $data['accounts'],
             'wallets' => $this->walletService->getAccessibleWallets($user),
             'activeWallet' => $walletOwner,
             'walletUserId' => $walletUserId,

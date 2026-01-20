@@ -38,11 +38,41 @@ class FinanceLoanController extends Controller
             Auth::user(),
             $request->integer('wallet_user_id') ?: null
         );
-        $loans = $this->loanRepository->getForUser($walletUserId);
+        $filters = [
+            'search' => $request->string('search')->toString(),
+            'status' => $request->string('status')->toString(),
+        ];
+        $status = $filters['status'] ?: 'all';
+        $search = strtolower($filters['search'] ?: '');
+        $loans = $this->loanRepository->getForUser($walletUserId)
+            ->filter(function (FinanceLoan $loan) use ($status, $search) {
+                $matchesStatus = match ($status) {
+                    'active' => $loan->is_active,
+                    'closed' => !$loan->is_active,
+                    default => true,
+                };
+
+                if (!$matchesStatus) {
+                    return false;
+                }
+
+                if ($search === '') {
+                    return true;
+                }
+
+                $fields = array_filter([
+                    $loan->name,
+                    $loan->notes,
+                ]);
+                $haystack = strtolower(implode(' ', $fields));
+
+                return str_contains($haystack, $search);
+            });
 
         return Inertia::render('Finance/Loans', [
             'loans' => $loans->values()->all(),
             'walletUserId' => $walletUserId,
+            'filters' => $filters,
         ]);
     }
 

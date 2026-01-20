@@ -1,3 +1,5 @@
+import { useEffect, useMemo, useState } from "react";
+
 const formatAmount = (amount, currency = "PHP") =>
     new Intl.NumberFormat("en-PH", {
         style: "currency",
@@ -20,11 +22,34 @@ const formatFrequency = (frequency) =>
 
 export default function TransactionsList({
     transactions = [],
+    perPage = 8,
     onViewAll,
     isLoading,
     onDelete,
     onEdit,
 }) {
+    const [page, setPage] = useState(1);
+
+    const totalPages = useMemo(
+        () => Math.max(1, Math.ceil(transactions.length / perPage)),
+        [transactions.length, perPage]
+    );
+
+    const pagedTransactions = useMemo(() => {
+        const start = (page - 1) * perPage;
+        return transactions.slice(start, start + perPage);
+    }, [page, perPage, transactions]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [transactions]);
+
+    useEffect(() => {
+        if (page > totalPages) {
+            setPage(totalPages);
+        }
+    }, [page, totalPages]);
+
     return (
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <div className="mb-4 flex items-center justify-between">
@@ -53,7 +78,7 @@ export default function TransactionsList({
                         </tr>
                     </thead>
                     <tbody>
-                        {transactions.map((transaction) => (
+                        {pagedTransactions.map((transaction) => (
                             <tr
                                 key={transaction.id}
                                 className="border-t border-slate-200 dark:border-slate-700"
@@ -126,7 +151,7 @@ export default function TransactionsList({
                                 </td>
                             </tr>
                         ))}
-                        {transactions.length === 0 && (
+                        {pagedTransactions.length === 0 && (
                             <tr>
                                 <td
                                     colSpan={6}
@@ -139,6 +164,40 @@ export default function TransactionsList({
                     </tbody>
                 </table>
             </div>
+            {transactions.length > perPage && (
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-300">
+                    <span>
+                        Showing {(page - 1) * perPage + 1}-
+                        {Math.min(page * perPage, transactions.length)} of{" "}
+                        {transactions.length}
+                    </span>
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                            disabled={page === 1}
+                            className="rounded-md border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:text-slate-700 disabled:cursor-not-allowed disabled:text-slate-300 dark:border-slate-700 dark:text-slate-300 dark:hover:text-slate-100"
+                        >
+                            Prev
+                        </button>
+                        <span className="text-xs text-slate-400">
+                            Page {page} of {totalPages}
+                        </span>
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setPage((prev) =>
+                                    Math.min(totalPages, prev + 1)
+                                )
+                            }
+                            disabled={page === totalPages}
+                            className="rounded-md border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:text-slate-700 disabled:cursor-not-allowed disabled:text-slate-300 dark:border-slate-700 dark:text-slate-300 dark:hover:text-slate-100"
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

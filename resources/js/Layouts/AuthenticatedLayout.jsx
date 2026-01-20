@@ -53,7 +53,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                     Workspaces
                                 </NavLink>
                                 <NavLink
-                                    href={route("finance.dashboard")}
+                                    href={route("weviewallet.dashboard")}
                                     active={route().current("finance.*")}
                                 >
                                     WevieWallet
@@ -184,7 +184,7 @@ export default function AuthenticatedLayout({ header, children }) {
                             Workspaces
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
-                            href={route("finance.dashboard")}
+                            href={route("weviewallet.dashboard")}
                             active={route().current("finance.*")}
                         >
                             WevieWallet

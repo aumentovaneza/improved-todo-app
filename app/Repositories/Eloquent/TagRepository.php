@@ -29,7 +29,7 @@ class TagRepository implements TagRepositoryInterface
      */
     public function getPaginatedTags(array $filters = [], int $perPage = 20): LengthAwarePaginator
     {
-        $query = Tag::withCount(['tasks', 'categories']);
+        $query = Tag::withCount(['tasks', 'categories', 'financeTransactions']);
 
         $this->applyFilters($query, $filters);
 
@@ -96,7 +96,7 @@ class TagRepository implements TagRepositoryInterface
      */
     public function getTagsWithUsageCounts(): Collection
     {
-        return Tag::withCount(['tasks', 'categories'])
+        return Tag::withCount(['tasks', 'categories', 'financeTransactions'])
             ->orderBy('name')
             ->get();
     }
@@ -106,8 +106,8 @@ class TagRepository implements TagRepositoryInterface
      */
     public function getPopularTags(int $limit = 10): Collection
     {
-        return Tag::withCount(['tasks', 'categories'])
-            ->orderByRaw('(tasks_count + categories_count) DESC')
+        return Tag::withCount(['tasks', 'categories', 'financeTransactions'])
+            ->orderByRaw('(tasks_count + categories_count + finance_transactions_count) DESC')
             ->limit($limit)
             ->get();
     }
@@ -127,9 +127,10 @@ class TagRepository implements TagRepositoryInterface
      */
     public function getUnusedTags(): Collection
     {
-        return Tag::withCount(['tasks', 'categories'])
+        return Tag::withCount(['tasks', 'categories', 'financeTransactions'])
             ->having('tasks_count', '=', 0)
             ->having('categories_count', '=', 0)
+            ->having('finance_transactions_count', '=', 0)
             ->orderBy('name')
             ->get();
     }
@@ -199,18 +200,23 @@ class TagRepository implements TagRepositoryInterface
             if ($filters['has_usage']) {
                 $query->where(function ($q) {
                     $q->whereHas('tasks')
-                        ->orWhereHas('categories');
+                        ->orWhereHas('categories')
+                        ->orWhereHas('financeTransactions');
                 });
             } else {
                 $query->whereDoesntHave('tasks')
-                    ->whereDoesntHave('categories');
+                    ->whereDoesntHave('categories')
+                    ->whereDoesntHave('financeTransactions');
             }
         }
 
         // Filter by minimum usage count
         if (!empty($filters['min_usage'])) {
-            $query->withCount(['tasks', 'categories'])
-                ->havingRaw('(tasks_count + categories_count) >= ?', [$filters['min_usage']]);
+            $query->withCount(['tasks', 'categories', 'financeTransactions'])
+                ->havingRaw(
+                    '(tasks_count + categories_count + finance_transactions_count) >= ?',
+                    [$filters['min_usage']]
+                );
         }
     }
 }

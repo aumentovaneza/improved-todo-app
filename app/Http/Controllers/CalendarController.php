@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use App\Models\Category;
+use App\Modules\Finance\Models\FinanceTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -52,6 +53,23 @@ class CalendarController extends Controller
             return $userDate->format('Y-m-d');
         });
 
+        // Get finance transactions (including recurring) for the month
+        $transactions = FinanceTransaction::with('category')
+            ->where('user_id', $user->id)
+            ->get();
+
+        $transactionOccurrences = collect();
+        foreach ($transactions as $transaction) {
+            $occurrences = $transaction->getOccurrencesInRange($startOfMonth, $endOfMonth);
+            $transactionOccurrences = $transactionOccurrences->merge($occurrences);
+        }
+
+        $transactionsByDate = $transactionOccurrences->groupBy(function ($transaction) use ($user) {
+            $transactionDate = $transaction->occurred_at;
+            $userDate = $user->toUserTimezone($transactionDate);
+            return $userDate->format('Y-m-d');
+        });
+
         // Get upcoming tasks (next 7 days) - both regular and recurring
         $userNow = $user->toUserTimezone(now());
         $upcomingTaskOccurrences = collect();
@@ -82,6 +100,7 @@ class CalendarController extends Controller
 
         return Inertia::render('Calendar/Index', [
             'tasks' => $tasks,
+            'transactions' => $transactionsByDate,
             'upcomingTasks' => $upcomingTasks,
             'overdueTasks' => $overdueTasks,
             'currentDate' => $date->format('Y-m-d'),

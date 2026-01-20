@@ -27,10 +27,15 @@ export default function SummaryCards({ summary, currency = "PHP" }) {
             value: formatCurrency(summary?.net, currency),
             accent: "text-slate-700 dark:text-slate-200",
         },
+        {
+            label: "Total loans",
+            value: formatCurrency(summary?.loans, currency),
+            accent: "text-amber-600",
+        },
     ];
 
     return (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             {cards.map((card) => (
                 <div
                     key={card.label}

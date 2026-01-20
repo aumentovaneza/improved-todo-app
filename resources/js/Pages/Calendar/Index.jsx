@@ -18,10 +18,12 @@ import { useState, useEffect } from "react";
 import DayTasksModal from "@/Components/DayTasksModal";
 import TaskViewModal from "@/Components/TaskViewModal";
 import TaskEditModal from "@/Components/TaskEditModal";
+import TaskModal from "@/Components/TaskModal";
 import { toast } from "react-toastify";
 
 export default function Index({
     tasks,
+    transactions,
     upcomingTasks,
     overdueTasks,
     currentDate,
@@ -34,6 +36,7 @@ export default function Index({
     const [showDayTasksModal, setShowDayTasksModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
     const [expandedDates, setExpandedDates] = useState(new Set());
 
@@ -80,6 +83,7 @@ export default function Index({
                 String(today.getDate()).padStart(2, "0");
             const isToday = dateStr === todayStr;
             const dayTasks = tasks[dateStr] || [];
+            const dayTransactions = transactions?.[dateStr] || [];
 
             days.push({
                 date: new Date(current),
@@ -88,6 +92,7 @@ export default function Index({
                 isCurrentMonth,
                 isToday,
                 tasks: dayTasks,
+                transactions: dayTransactions,
             });
 
             current.setDate(current.getDate() + 1);
@@ -128,6 +133,26 @@ export default function Index({
                 return "bg-gray-500";
         }
     };
+
+    const getTransactionTypeColor = (type) => {
+        switch (type) {
+            case "income":
+                return "bg-emerald-500";
+            case "expense":
+                return "bg-rose-500";
+            case "savings":
+                return "bg-purple-500";
+            default:
+                return "bg-gray-500";
+        }
+    };
+
+    const formatCurrency = (amount, currency = "PHP") =>
+        new Intl.NumberFormat("en-PH", {
+            style: "currency",
+            currency,
+            maximumFractionDigits: 0,
+        }).format(amount ?? 0);
 
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString("en-US", {
@@ -209,8 +234,9 @@ export default function Index({
                 "0"
             )}-${String(day).padStart(2, "0")}`;
             const dayTasks = tasks[dateStr] || [];
+            const dayTransactions = transactions?.[dateStr] || [];
 
-            if (dayTasks.length > 0) {
+            if (dayTasks.length > 0 || dayTransactions.length > 0) {
                 const dateObj = new Date(year, month, day);
                 const today = new Date();
                 const isToday = dateStr === today.toISOString().split("T")[0];
@@ -221,6 +247,7 @@ export default function Index({
                     day,
                     isToday,
                     tasks: dayTasks,
+                    transactions: dayTransactions,
                     dayName: dateObj.toLocaleDateString("en-US", {
                         weekday: "long",
                     }),
@@ -253,10 +280,10 @@ export default function Index({
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 text-center">
                     <CalendarIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                        No tasks this month
+                        No items this month
                     </h3>
                     <p className="text-gray-500 dark:text-gray-400 mb-4">
-                        You don't have any tasks scheduled for {monthName}.
+                        You don't have any tasks or transactions for {monthName}.
                     </p>
                     <Link
                         href={route("tasks.index")}
@@ -276,6 +303,9 @@ export default function Index({
                     const visibleTasks = isExpanded
                         ? dateGroup.tasks
                         : dateGroup.tasks.slice(0, 2);
+                    const visibleTransactions = isExpanded
+                        ? dateGroup.transactions
+                        : dateGroup.transactions.slice(0, 2);
 
                     return (
                         <div
@@ -331,8 +361,17 @@ export default function Index({
                                             {dateGroup.tasks.length !== 1
                                                 ? "s"
                                                 : ""}
+                                            {dateGroup.transactions.length > 0
+                                                ? `, ${dateGroup.transactions.length} transaction${
+                                                      dateGroup.transactions.length !==
+                                                      1
+                                                          ? "s"
+                                                          : ""
+                                                  }`
+                                                : ""}
                                         </span>
-                                        {dateGroup.tasks.length > 2 && (
+                                        {(dateGroup.tasks.length > 2 ||
+                                            dateGroup.transactions.length > 2) && (
                                             <button
                                                 onClick={() =>
                                                     toggleDateExpansion(
@@ -557,8 +596,43 @@ export default function Index({
                                     </div>
                                 ))}
 
+                                {visibleTransactions.map((transaction) => (
+                                    <div
+                                        key={`transaction-${transaction.id}`}
+                                        className="flex items-start justify-between space-x-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/40"
+                                    >
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between">
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">
+                                                        {transaction.description}
+                                                    </p>
+                                                    <p className="text-xs text-slate-400">
+                                                        {transaction.category
+                                                            ?.name ??
+                                                            "Uncategorized"}
+                                                    </p>
+                                                </div>
+                                                <span
+                                                    className={`ml-3 rounded-full px-2 py-0.5 text-xs text-white ${getTransactionTypeColor(
+                                                        transaction.type
+                                                    )}`}
+                                                >
+                                                    {formatCurrency(
+                                                        transaction.amount,
+                                                        transaction.currency ??
+                                                            "PHP"
+                                                    )}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+
                                 {/* Show More Button */}
-                                {!isExpanded && dateGroup.tasks.length > 2 && (
+                                {!isExpanded &&
+                                    (dateGroup.tasks.length > 2 ||
+                                        dateGroup.transactions.length > 2) && (
                                     <button
                                         onClick={() =>
                                             toggleDateExpansion(
@@ -567,9 +641,25 @@ export default function Index({
                                         }
                                         className="w-full py-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
                                     >
-                                        Show {dateGroup.tasks.length - 2} more
-                                        task
-                                        {dateGroup.tasks.length - 2 !== 1
+                                        Show{" "}
+                                        {Math.max(
+                                            0,
+                                            dateGroup.tasks.length - 2
+                                        ) +
+                                            Math.max(
+                                                0,
+                                                dateGroup.transactions.length - 2
+                                            )}{" "}
+                                        more item
+                                        {Math.max(
+                                            0,
+                                            dateGroup.tasks.length - 2
+                                        ) +
+                                            Math.max(
+                                                0,
+                                                dateGroup.transactions.length - 2
+                                            ) !==
+                                        1
                                             ? "s"
                                             : ""}
                                     </button>
@@ -899,6 +989,41 @@ export default function Index({
                                                                 </div>
                                                             </div>
                                                         ))}
+                                                    {day.transactions
+                                                        .slice(
+                                                            0,
+                                                            isMobile ? 1 : 2
+                                                        )
+                                                        .map((transaction) => (
+                                                            <div
+                                                                key={`transaction-${transaction.id}`}
+                                                                className={`text-xs p-1 rounded text-white truncate ${getTransactionTypeColor(
+                                                                    transaction.type
+                                                                )}`}
+                                                                title={`${
+                                                                    transaction.description
+                                                                } - ${formatCurrency(
+                                                                    transaction.amount,
+                                                                    transaction.currency ??
+                                                                        "PHP"
+                                                                )}`}
+                                                            >
+                                                                <div className="flex items-center justify-between">
+                                                                    <span className="truncate flex-1">
+                                                                        {
+                                                                            transaction.description
+                                                                        }
+                                                                    </span>
+                                                                    <span className="ml-1 opacity-75 text-xs">
+                                                                        {formatCurrency(
+                                                                            transaction.amount,
+                                                                            transaction.currency ??
+                                                                                "PHP"
+                                                                        )}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        ))}
                                                     {day.tasks.length >
                                                         (isMobile ? 2 : 3) && (
                                                         <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -908,6 +1033,17 @@ export default function Index({
                                                                     ? 2
                                                                     : 3)}{" "}
                                                             more
+                                                        </div>
+                                                    )}
+                                                    {day.transactions.length >
+                                                        (isMobile ? 1 : 2) && (
+                                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                            +
+                                                            {day.transactions.length -
+                                                                (isMobile
+                                                                    ? 1
+                                                                    : 2)}{" "}
+                                                            more transactions
                                                         </div>
                                                     )}
                                                 </div>
@@ -933,7 +1069,9 @@ export default function Index({
                         </h3>
                         <div className="space-y-3">
                             <Link
-                                href={route("tasks.index")}
+                                as="button"
+                                type="button"
+                                onClick={() => setShowCreateTaskModal(true)}
                                 className="flex items-center w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                             >
                                 <Plus className="w-4 h-4 mr-2" />
@@ -1055,9 +1193,15 @@ export default function Index({
                 }}
                 selectedDate={selectedDate}
                 tasks={getSelectedDateTasks()}
+                transactions={transactions?.[selectedDate] ?? []}
                 onTaskView={handleTaskView}
                 onTaskEdit={handleTaskEdit}
                 onTaskStatusToggle={handleTaskStatusToggle}
+            />
+
+            <TaskModal
+                show={showCreateTaskModal}
+                onClose={() => setShowCreateTaskModal(false)}
             />
 
             <TaskViewModal

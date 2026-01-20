@@ -14,6 +14,9 @@ const typeStyles = {
     savings: "text-violet-600",
 };
 
+const formatFrequency = (frequency) =>
+    frequency ? frequency.replace("-", " ") : "";
+
 export default function TransactionsList({
     transactions = [],
     onViewAll,
@@ -60,6 +63,15 @@ export default function TransactionsList({
                                     <div className="text-xs capitalize text-slate-400">
                                         {transaction.type}
                                     </div>
+                                    {transaction.is_recurring &&
+                                        transaction.recurring_frequency && (
+                                            <div className="text-xs text-purple-500">
+                                                Recurring:{" "}
+                                                {formatFrequency(
+                                                    transaction.recurring_frequency
+                                                )}
+                                            </div>
+                                        )}
                                 </td>
                                 <td className="py-3">
                                     {transaction.category?.name ?? "Uncategorized"}

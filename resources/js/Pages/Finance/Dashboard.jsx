@@ -9,39 +9,51 @@ export default function Dashboard(props) {
     const [savingsGoals, setSavingsGoals] = useState(
         props.savingsGoals ?? []
     );
+    const [loans, setLoans] = useState(props.loans ?? []);
     const [summary, setSummary] = useState(props.summary ?? {});
     const [charts, setCharts] = useState(props.charts ?? {});
     const [categories, setCategories] = useState(props.categories ?? []);
     const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
     const [isReloading, setIsReloading] = useState(false);
 
-    const transactionsIndexUrl = useMemo(
-        () => route("finance.api.transactions.index"),
-        []
-    );
     const transactionsStoreUrl = useMemo(
-        () => route("finance.api.transactions.store"),
+        () => route("weviewallet.api.transactions.store"),
         []
     );
     const transactionsDeleteUrl = useMemo(
-        () => route("finance.api.transactions.index"),
+        () => route("weviewallet.api.transactions.index"),
         []
     );
     const transactionsUpdateUrl = useMemo(
-        () => route("finance.api.transactions.index"),
+        () => route("weviewallet.api.transactions.index"),
         []
     );
     const budgetsStoreUrl = useMemo(
-        () => route("finance.api.budgets.store"),
+        () => route("weviewallet.api.budgets.store"),
         []
     );
-    const budgetsDeleteUrl = useMemo(() => route("finance.api.budgets.index"), []);
+    const budgetsDeleteUrl = useMemo(
+        () => route("weviewallet.api.budgets.index"),
+        []
+    );
     const savingsGoalsStoreUrl = useMemo(
-        () => route("finance.api.savings-goals.store"),
+        () => route("weviewallet.api.savings-goals.store"),
         []
     );
     const savingsGoalsDeleteUrl = useMemo(
-        () => route("finance.api.savings-goals.index"),
+        () => route("weviewallet.api.savings-goals.index"),
+        []
+    );
+    const loansStoreUrl = useMemo(
+        () => route("weviewallet.api.loans.store"),
+        []
+    );
+    const loansDeleteUrl = useMemo(
+        () => route("weviewallet.api.loans.index"),
+        []
+    );
+    const loansUpdateUrl = useMemo(
+        () => route("weviewallet.api.loans.index"),
         []
     );
     const refreshDashboardPage = useCallback(() => {
@@ -53,22 +65,22 @@ export default function Dashboard(props) {
 
     const handleViewAll = useCallback(async () => {
         setIsLoadingTransactions(true);
-        try {
-            await window.axios.get(transactionsIndexUrl);
-            refreshDashboardPage();
-        } finally {
-            setIsLoadingTransactions(false);
-        }
-    }, [refreshDashboardPage, transactionsIndexUrl]);
+        router.get(route("weviewallet.transactions.index"));
+        window.setTimeout(() => setIsLoadingTransactions(false), 300);
+    }, []);
 
     const handleCreateTransaction = useCallback(
         async (formData) => {
+            const loanSelected = Boolean(formData.finance_loan_id);
             const payload = {
                 ...formData,
                 amount: formData.amount ? Number(formData.amount) : 0,
                 finance_category_id: formData.finance_category_id || null,
+                finance_loan_id: formData.finance_loan_id || null,
                 finance_savings_goal_id: formData.finance_savings_goal_id || null,
-                finance_budget_id: formData.finance_budget_id || null,
+                finance_budget_id: loanSelected
+                    ? null
+                    : formData.finance_budget_id || null,
             };
 
             await window.axios.post(transactionsStoreUrl, payload);
@@ -112,6 +124,28 @@ export default function Dashboard(props) {
         [refreshDashboardPage, savingsGoalsStoreUrl]
     );
 
+    const handleCreateLoan = useCallback(
+        async (formData) => {
+            const payload = {
+                ...formData,
+                total_amount: formData.total_amount
+                    ? Number(formData.total_amount)
+                    : 0,
+                remaining_amount:
+                    formData.remaining_amount === "" ||
+                    formData.remaining_amount === null ||
+                    formData.remaining_amount === undefined
+                        ? null
+                        : Number(formData.remaining_amount),
+            };
+
+            await window.axios.post(loansStoreUrl, payload);
+            refreshDashboardPage();
+            return true;
+        },
+        [loansStoreUrl, refreshDashboardPage]
+    );
+
 
     const handleDeleteBudget = useCallback(
         async (budget) => {
@@ -131,6 +165,43 @@ export default function Dashboard(props) {
         [refreshDashboardPage, savingsGoalsDeleteUrl]
     );
 
+    const handleDeleteLoan = useCallback(
+        async (loan) => {
+            await window.axios.delete(`${loansDeleteUrl}/${loan.id}`);
+            refreshDashboardPage();
+        },
+        [loansDeleteUrl, refreshDashboardPage]
+    );
+
+    const handleEditLoan = useCallback(
+        async (formData) => {
+            if (!formData?.id) {
+                return false;
+            }
+
+            const payload = {
+                ...formData,
+                total_amount: formData.total_amount
+                    ? Number(formData.total_amount)
+                    : 0,
+                remaining_amount:
+                    formData.remaining_amount === "" ||
+                    formData.remaining_amount === null ||
+                    formData.remaining_amount === undefined
+                        ? null
+                        : Number(formData.remaining_amount),
+            };
+
+            await window.axios.put(
+                `${loansUpdateUrl}/${formData.id}`,
+                payload
+            );
+            refreshDashboardPage();
+            return true;
+        },
+        [loansUpdateUrl, refreshDashboardPage]
+    );
+
     const handleDeleteTransaction = useCallback(
         async (transaction) => {
             await window.axios.delete(
@@ -147,12 +218,16 @@ export default function Dashboard(props) {
                 return false;
             }
 
+            const loanSelected = Boolean(formData.finance_loan_id);
             const payload = {
                 ...formData,
                 amount: formData.amount ? Number(formData.amount) : 0,
                 finance_category_id: formData.finance_category_id || null,
+                finance_loan_id: formData.finance_loan_id || null,
                 finance_savings_goal_id: formData.finance_savings_goal_id || null,
-                finance_budget_id: formData.finance_budget_id || null,
+                finance_budget_id: loanSelected
+                    ? null
+                    : formData.finance_budget_id || null,
             };
 
             await window.axios.put(
@@ -176,6 +251,7 @@ export default function Dashboard(props) {
                     categories={categories}
                     budgets={budgets}
                     savingsGoals={savingsGoals}
+                    loans={loans}
                     tier={props.tier ?? "free"}
                     canAccessAdvancedCharts={
                         props.canAccessAdvancedCharts ?? true
@@ -185,9 +261,12 @@ export default function Dashboard(props) {
                     onCreateTransaction={handleCreateTransaction}
                     onCreateBudget={handleCreateBudget}
                     onCreateSavingsGoal={handleCreateSavingsGoal}
+                    onCreateLoan={handleCreateLoan}
                     onDeleteBudget={handleDeleteBudget}
                     onDeleteSavingsGoal={handleDeleteSavingsGoal}
+                    onDeleteLoan={handleDeleteLoan}
                     onDeleteTransaction={handleDeleteTransaction}
+                    onEditLoan={handleEditLoan}
                     onEditTransaction={handleEditTransaction}
                 />
             </div>

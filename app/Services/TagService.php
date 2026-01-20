@@ -98,7 +98,9 @@ class TagService
     public function deleteTag(Tag $tag): bool
     {
         // Check if tag is in use
-        $usageCount = $tag->tasks()->count() + $tag->categories()->count();
+        $usageCount = $tag->tasks()->count()
+            + $tag->categories()->count()
+            + $tag->financeTransactions()->count();
         if ($usageCount > 0) {
             throw new \InvalidArgumentException("Cannot delete tag '{$tag->name}'. It is used by {$usageCount} item(s). Please remove the tag from all items first.");
         }
@@ -124,7 +126,7 @@ class TagService
      */
     public function findTag(int $id): ?Tag
     {
-        return $this->tagRepository->findWithRelations($id, ['tasks', 'categories']);
+        return $this->tagRepository->findWithRelations($id, ['tasks', 'categories', 'financeTransactions']);
     }
 
     /**
@@ -254,7 +256,10 @@ class TagService
     public function getTagStatistics(): array
     {
         $totalTags = Tag::count();
-        $usedTags = Tag::whereHas('tasks')->orWhereHas('categories')->count();
+        $usedTags = Tag::whereHas('tasks')
+            ->orWhereHas('categories')
+            ->orWhereHas('financeTransactions')
+            ->count();
         $unusedTags = $totalTags - $usedTags;
 
         $popularTags = $this->tagRepository->getPopularTags(5);
@@ -308,6 +313,14 @@ class TagService
                 }
             });
             $sourceTag->categories()->detach();
+
+            // Move finance transaction associations
+            $sourceTag->financeTransactions()->each(function ($transaction) use ($targetTag) {
+                if (!$transaction->tags()->where('tag_id', $targetTag->id)->exists()) {
+                    $transaction->tags()->attach($targetTag->id);
+                }
+            });
+            $sourceTag->financeTransactions()->detach();
 
             // Log the merge activity
             $this->activityLogService->logTagActivity(

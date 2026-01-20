@@ -99,12 +99,27 @@ class FinanceReportService
 
     private function buildCategoryBreakdown(int $userId, Carbon $startDate, Carbon $endDate): array
     {
-        $categoryTotals = $this->transactionRepository->getCategoryTotals($userId, $startDate, $endDate);
+        $categoryTotals = $this->transactionRepository->getCategoryTotalsForTypes(
+            $userId,
+            $startDate,
+            $endDate,
+            ['expense', 'savings']
+        );
 
         return $categoryTotals->map(function ($row) {
+            $categoryName = $row->category?->name ?? 'Uncategorized';
+            $label = $row->type === 'savings'
+                ? "{$categoryName} (Savings)"
+                : $categoryName;
+
             return [
-                'name' => $row->category?->name ?? 'Uncategorized',
+                'name' => $categoryName,
+                'label' => $label,
                 'total' => (float) $row->total,
+                'color' => $row->type === 'savings'
+                    ? '#8B5CF6'
+                    : ($row->category?->color ?? '#94A3B8'),
+                'type' => $row->type,
             ];
         })->values()->all();
     }

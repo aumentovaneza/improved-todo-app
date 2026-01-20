@@ -17,6 +17,7 @@ use App\Http\Controllers\SwimlaneController;
 use App\Modules\Finance\Controllers\FinanceBudgetController;
 use App\Modules\Finance\Controllers\FinanceCategoryController;
 use App\Modules\Finance\Controllers\FinanceDashboardController;
+use App\Modules\Finance\Controllers\FinanceLoanController;
 use App\Modules\Finance\Controllers\FinanceReportController;
 use App\Modules\Finance\Controllers\FinanceSavingsGoalController;
 use App\Modules\Finance\Controllers\FinanceTransactionController;
@@ -74,8 +75,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
 
     // Finance
-    Route::get('finance', [FinanceDashboardController::class, 'index'])->name('finance.dashboard');
-    Route::prefix('finance/api')->name('finance.api.')->group(function () {
+    Route::get('weviewallet', [FinanceDashboardController::class, 'index'])->name('weviewallet.dashboard');
+    Route::get('weviewallet/transactions', [FinanceTransactionController::class, 'indexPage'])
+        ->name('weviewallet.transactions.index');
+    Route::prefix('weviewallet/api')->name('weviewallet.api.')->group(function () {
         Route::get('transactions', [FinanceTransactionController::class, 'index'])->name('transactions.index');
         Route::post('transactions', [FinanceTransactionController::class, 'store'])->name('transactions.store');
         Route::put('transactions/{transaction}', [FinanceTransactionController::class, 'update'])->name('transactions.update');
@@ -95,6 +98,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('savings-goals', [FinanceSavingsGoalController::class, 'store'])->name('savings-goals.store');
         Route::put('savings-goals/{savingsGoal}', [FinanceSavingsGoalController::class, 'update'])->name('savings-goals.update');
         Route::delete('savings-goals/{savingsGoal}', [FinanceSavingsGoalController::class, 'destroy'])->name('savings-goals.destroy');
+
+        Route::get('loans', [FinanceLoanController::class, 'index'])->name('loans.index');
+        Route::post('loans', [FinanceLoanController::class, 'store'])->name('loans.store');
+        Route::put('loans/{loan}', [FinanceLoanController::class, 'update'])->name('loans.update');
+        Route::delete('loans/{loan}', [FinanceLoanController::class, 'destroy'])->name('loans.destroy');
 
         Route::get('reports/summary', [FinanceReportController::class, 'summary'])->name('reports.summary');
         Route::post('reports', [FinanceReportController::class, 'store'])->name('reports.store');

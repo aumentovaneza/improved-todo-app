@@ -17,7 +17,10 @@ export default function FinanceCategories({ categories = [] }) {
                 icon: formData.icon || null,
             };
 
-            await window.axios.post(route("finance.api.categories.store"), payload);
+            await window.axios.post(
+                route("weviewallet.api.categories.store"),
+                payload
+            );
             refreshPage();
             return true;
         },
@@ -33,7 +36,7 @@ export default function FinanceCategories({ categories = [] }) {
             };
 
             await window.axios.put(
-                `${route("finance.api.categories.index")}/${category.id}`,
+                `${route("weviewallet.api.categories.index")}/${category.id}`,
                 payload
             );
             refreshPage();
@@ -45,7 +48,7 @@ export default function FinanceCategories({ categories = [] }) {
     const handleDelete = useCallback(
         async (category) => {
             await window.axios.delete(
-                `${route("finance.api.categories.index")}/${category.id}`
+                `${route("weviewallet.api.categories.index")}/${category.id}`
             );
             refreshPage();
         },

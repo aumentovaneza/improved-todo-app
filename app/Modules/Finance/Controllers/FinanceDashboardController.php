@@ -30,6 +30,7 @@ class FinanceDashboardController extends Controller
             'charts' => $data['charts'],
             'budgets' => $data['budgets'],
             'savingsGoals' => $data['savings_goals'],
+            'loans' => $data['loans'],
             'tier' => $this->accessService->getTier($user),
             'canAccessAdvancedCharts' => $this->accessService->canAccessAdvancedCharts($user),
         ]);

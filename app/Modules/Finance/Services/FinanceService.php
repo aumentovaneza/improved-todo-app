@@ -4,12 +4,15 @@ namespace App\Modules\Finance\Services;
 
 use App\Modules\Finance\Models\FinanceBudget;
 use App\Modules\Finance\Models\FinanceCategory;
+use App\Modules\Finance\Models\FinanceLoan;
 use App\Modules\Finance\Models\FinanceSavingsGoal;
 use App\Modules\Finance\Models\FinanceTransaction;
 use App\Modules\Finance\Repositories\FinanceBudgetRepository;
 use App\Modules\Finance\Repositories\FinanceCategoryRepository;
+use App\Modules\Finance\Repositories\FinanceLoanRepository;
 use App\Modules\Finance\Repositories\FinanceSavingsGoalRepository;
 use App\Modules\Finance\Repositories\FinanceTransactionRepository;
+use App\Services\TagService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
@@ -21,7 +24,9 @@ class FinanceService
         private FinanceCategoryRepository $categoryRepository,
         private FinanceBudgetRepository $budgetRepository,
         private FinanceSavingsGoalRepository $savingsGoalRepository,
-        private FinanceReportService $reportService
+        private FinanceLoanRepository $loanRepository,
+        private FinanceReportService $reportService,
+        private TagService $tagService
     ) {}
 
     public function getDashboardData(int $userId): array
@@ -29,15 +34,34 @@ class FinanceService
         $transactions = $this->transactionRepository->getForUser($userId, 20);
         $categories = $this->categoryRepository->getForUser($userId);
         $savingsGoals = $this->savingsGoalRepository->getForUser($userId);
+        $loans = $this->loanRepository->getForUser($userId)->loadCount('transactions');
+        $loans->each(function ($loan) {
+            $this->recalculateLoanRemaining($loan);
+        });
         $reportData = $this->reportService->buildDashboardData($userId);
+        $totalLoans = $loans->sum(function ($loan) {
+            $remaining = (float) $loan->remaining_amount;
+            $total = (float) $loan->total_amount;
+            if ($remaining === 0.0 && $total > 0 && ($loan->transactions_count ?? 0) === 0) {
+                return $total;
+            }
+            return $remaining;
+        });
+        $budgets = $this->refreshBudgetSpending(
+            $this->budgetRepository->getActiveForUser($userId),
+            $userId
+        );
 
         return [
             'transactions' => $transactions->values()->all(),
             'categories' => $categories->values()->all(),
-            'summary' => $reportData['summary'],
+            'summary' => array_merge($reportData['summary'], [
+                'loans' => $totalLoans,
+            ]),
             'charts' => $reportData['charts'],
-            'budgets' => $reportData['budgets'],
+            'budgets' => $budgets->values()->all(),
             'savings_goals' => $savingsGoals->values()->all(),
+            'loans' => $loans->values()->all(),
         ];
     }
 
@@ -45,11 +69,12 @@ class FinanceService
     {
         $data['user_id'] = $userId;
         $transaction = $this->transactionRepository->create($data);
+        $this->syncTransactionTags($transaction, $data['tags'] ?? null);
 
         $this->applyTransactionImpact($transaction, 1);
         $this->triggerBudgetNotifications($userId);
 
-        return $transaction->load('category');
+        return $transaction->load(['category', 'loan', 'tags']);
     }
 
     public function updateTransaction(FinanceTransaction $transaction, array $data, int $userId): FinanceTransaction
@@ -58,10 +83,11 @@ class FinanceService
 
         $this->applyTransactionImpact($transaction, -1);
         $updated = $this->transactionRepository->update($transaction, $data);
+        $this->syncTransactionTags($updated, $data['tags'] ?? null);
         $this->applyTransactionImpact($updated, 1);
         $this->triggerBudgetNotifications($userId);
 
-        return $updated->load('category');
+        return $updated->load(['category', 'loan', 'tags']);
     }
 
     public function deleteTransaction(FinanceTransaction $transaction, int $userId): bool
@@ -136,6 +162,30 @@ class FinanceService
         return $this->savingsGoalRepository->delete($goal);
     }
 
+    public function createLoan(array $data, int $userId): FinanceLoan
+    {
+        $data['user_id'] = $userId;
+        if (!isset($data['remaining_amount']) || $data['remaining_amount'] === null || $data['remaining_amount'] === '') {
+            $data['remaining_amount'] = $data['total_amount'] ?? 0;
+        }
+
+        return $this->loanRepository->create($data);
+    }
+
+    public function updateLoan(FinanceLoan $loan, array $data, int $userId): FinanceLoan
+    {
+        $this->ensureOwnership($loan->user_id, $userId);
+
+        return $this->loanRepository->update($loan, $data);
+    }
+
+    public function deleteLoan(FinanceLoan $loan, int $userId): bool
+    {
+        $this->ensureOwnership($loan->user_id, $userId);
+
+        return $this->loanRepository->delete($loan);
+    }
+
     private function applyTransactionImpact(FinanceTransaction $transaction, int $direction): void
     {
         if ($transaction->type === 'savings' && $transaction->finance_savings_goal_id) {
@@ -152,7 +202,11 @@ class FinanceService
             }
         }
 
-        if ($transaction->type === 'expense') {
+        if ($transaction->type === 'expense' && $transaction->finance_loan_id) {
+            $this->adjustLoanBalance($transaction, $direction);
+        }
+
+        if ($transaction->type === 'expense' && !$transaction->finance_loan_id) {
             $this->adjustBudgetsForExpense($transaction, $direction);
         }
     }
@@ -211,6 +265,68 @@ class FinanceService
         return true;
     }
 
+    private function adjustLoanBalance(FinanceTransaction $transaction, int $direction): void
+    {
+        $loan = $this->loanRepository->findOptionalForUser(
+            $transaction->user_id,
+            $transaction->finance_loan_id
+        );
+
+        if (!$loan) {
+            return;
+        }
+
+        $this->recalculateLoanRemaining($loan);
+    }
+
+    private function refreshBudgetSpending($budgets, int $userId)
+    {
+        foreach ($budgets as $budget) {
+            $query = FinanceTransaction::query()
+                ->where('user_id', $userId)
+                ->where('type', 'expense')
+                ->whereNull('finance_loan_id');
+
+            if ($budget->finance_category_id) {
+                $query->where('finance_category_id', $budget->finance_category_id);
+            }
+
+            if ($budget->starts_on) {
+                $query->where('occurred_at', '>=', $budget->starts_on->startOfDay());
+            }
+
+            if ($budget->ends_on) {
+                $query->where('occurred_at', '<=', $budget->ends_on->endOfDay());
+            }
+
+            $explicitQuery = (clone $query)->where('finance_budget_id', $budget->id);
+            $explicitTotal = (float) $explicitQuery->sum('amount');
+
+            if ($explicitTotal > 0) {
+                $budget->current_spent = $explicitTotal;
+                continue;
+            }
+
+            $budget->current_spent = (float) $query
+                ->whereNull('finance_budget_id')
+                ->sum('amount');
+        }
+
+        return $budgets;
+    }
+
+    private function recalculateLoanRemaining(FinanceLoan $loan): void
+    {
+        $paid = FinanceTransaction::query()
+            ->where('user_id', $loan->user_id)
+            ->where('type', 'expense')
+            ->where('finance_loan_id', $loan->id)
+            ->sum('amount');
+
+        $loan->remaining_amount = max(0, (float) $loan->total_amount - (float) $paid);
+        $loan->save();
+    }
+
     private function ensureOwnership(?int $ownerId, int $userId): void
     {
         if ($ownerId !== $userId) {
@@ -226,5 +342,15 @@ class FinanceService
             'type' => 'finance_budget_check',
             'timestamp' => now()->toIso8601String(),
         ]);
+    }
+
+    private function syncTransactionTags(FinanceTransaction $transaction, ?array $tags): void
+    {
+        if ($tags === null) {
+            return;
+        }
+
+        $tagIds = !empty($tags) ? $this->tagService->processTagsData($tags) : [];
+        $transaction->tags()->sync($tagIds);
     }
 }

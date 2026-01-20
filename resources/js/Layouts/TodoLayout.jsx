@@ -90,9 +90,9 @@ export default function TodoLayout({ header, children }) {
         },
         {
             name: "WevieWallet",
-            href: route("finance.dashboard"),
+            href: route("weviewallet.dashboard"),
             icon: DollarSign,
-            current: route().current("finance.*"),
+            current: route().current("weviewallet.*"),
         },
     ];
 

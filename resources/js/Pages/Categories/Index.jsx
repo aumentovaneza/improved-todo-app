@@ -33,7 +33,7 @@ export default function Index({ categories }) {
         >
             <Head title="Categories" />
             <div className="max-w-4xl mx-auto">
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm divide-y divide-gray-200 dark:divide-gray-700">
+                <div className="card divide-y divide-gray-200 dark:divide-white/10">
                     {categories.length === 0 ? (
                         <div className="p-6 sm:p-8 text-center">
                             <div className="text-gray-400 dark:text-gray-500 mb-4">

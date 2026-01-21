@@ -75,7 +75,7 @@ export default function FinanceCategories({ categories = [], walletUserId }) {
                             href={route("weviewallet.dashboard", {
                                 wallet_user_id: walletUserId || undefined,
                             })}
-                            className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+                            className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200"
                         >
                             Back to WevieWallet
                         </Link>

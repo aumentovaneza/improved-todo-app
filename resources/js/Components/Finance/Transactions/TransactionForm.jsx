@@ -19,6 +19,7 @@ const buildInitialState = (initialValues) => ({
     transfer_destination:
         initialValues?.metadata?.transfer_destination ??
         (initialValues?.finance_transfer_account_id ? "internal" : "internal"),
+    transfer_fee: initialValues?.metadata?.transfer_fee ?? "",
     external_account_name:
         initialValues?.metadata?.external_account_name ?? "",
     finance_credit_card_account_id:
@@ -114,6 +115,10 @@ export default function TransactionForm({
                               transferDestination === "external"
                                   ? form.external_account_name
                                   : "",
+                          transfer_fee:
+                              form.transfer_fee === ""
+                                  ? null
+                                  : Number(form.transfer_fee),
                       }
                     : form.metadata,
             is_recurring: Boolean(recurringFrequency),
@@ -149,12 +154,16 @@ export default function TransactionForm({
         if (form.type === "transfer" && form.finance_savings_goal_id) {
             setForm((prev) => ({ ...prev, finance_savings_goal_id: "" }));
         }
+        if (form.type !== "transfer" && form.transfer_fee !== "") {
+            setForm((prev) => ({ ...prev, transfer_fee: "" }));
+        }
     }, [
         form.type,
         form.finance_category_id,
         form.finance_loan_id,
         form.finance_budget_id,
         form.finance_savings_goal_id,
+        form.transfer_fee,
     ]);
 
     useEffect(() => {
@@ -220,6 +229,22 @@ export default function TransactionForm({
                         required
                     />
                 </div>
+                {form.type === "transfer" && (
+                    <div>
+                        <label className="text-sm text-slate-500 dark:text-slate-400">
+                            Transfer fee (optional)
+                        </label>
+                        <input
+                            type="number"
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                            value={form.transfer_fee}
+                            onChange={updateField("transfer_fee")}
+                            min="0"
+                            step="0.01"
+                            placeholder="0.00"
+                        />
+                    </div>
+                )}
                 <div>
                     <label className="text-sm text-slate-500 dark:text-slate-400">
                         Date

@@ -56,9 +56,21 @@ ensure_rollup_binary() {
 
 # Ensure Node dependencies are installed (vite present)
 ensure_npm_dependencies() {
+    local install_stamp="node_modules/.deps-installed"
     if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/vite" ]; then
         echo "Installing NPM dependencies..."
         npm install --include=optional || true
+        touch "$install_stamp"
+        ensure_rollup_binary
+        return
+    fi
+
+    if [ ! -f "$install_stamp" ] \
+        || [ "package.json" -nt "$install_stamp" ] \
+        || [ -f "package-lock.json" -a "package-lock.json" -nt "$install_stamp" ]; then
+        echo "Refreshing NPM dependencies (package update detected)..."
+        npm install --include=optional || true
+        touch "$install_stamp"
         ensure_rollup_binary
     fi
 }

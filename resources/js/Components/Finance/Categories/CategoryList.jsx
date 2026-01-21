@@ -71,12 +71,18 @@ export default function CategoryList({
                                     className="h-3 w-3 rounded-full"
                                     style={{ backgroundColor: category.color }}
                                 />
-                                {category.icon && iconMap[category.icon] && (
+                                {category.icon && (
                                     <span className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-200">
-                                        {(() => {
-                                            const Icon = iconMap[category.icon];
-                                            return <Icon className="h-4 w-4" />;
-                                        })()}
+                                        {iconMap[category.icon] ? (
+                                            (() => {
+                                                const Icon = iconMap[category.icon];
+                                                return <Icon className="h-4 w-4" />;
+                                            })()
+                                        ) : (
+                                            <span className="text-lg leading-none">
+                                                {category.icon}
+                                            </span>
+                                        )}
                                     </span>
                                 )}
                                 <div>
@@ -150,7 +156,7 @@ export default function CategoryList({
                                 </div>
                                 <div>
                                     <label className="text-xs text-slate-500 dark:text-slate-400">
-                                        Icon
+                                        Emoji
                                     </label>
                                     <IconPicker
                                         value={draft.icon}

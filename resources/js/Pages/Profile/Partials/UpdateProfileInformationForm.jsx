@@ -87,7 +87,7 @@ export default function UpdateProfileInformation({
 
                     <select
                         id="timezone"
-                        className="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                        className="mt-1 block w-full border-gray-300 dark:border-white/10 dark:bg-dark-card dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
                         value={data.timezone}
                         onChange={(e) => setData("timezone", e.target.value)}
                         required
@@ -143,7 +143,7 @@ export default function UpdateProfileInformation({
                         </p>
 
                         {status === "verification-link-sent" && (
-                            <div className="mt-2 text-sm font-medium text-green-600 dark:text-green-400">
+                        <div className="mt-2 text-sm font-medium text-green-600 dark:text-green-300">
                                 A new verification link has been sent to your
                                 email address.
                             </div>

@@ -62,7 +62,7 @@ export default function AccountForm({
                         Account label
                     </label>
                     <input
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                         value={form.label}
                         onChange={updateField("label")}
                         placeholder="Salary account, Daily wallet"
@@ -74,7 +74,7 @@ export default function AccountForm({
                     </label>
                     <div className="relative mt-1">
                         <select
-                            className="w-full appearance-none rounded-md border border-slate-300 bg-white px-3 py-2 pr-10 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            className="w-full appearance-none rounded-md border border-slate-300 bg-white px-3 py-2 pr-10 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                             value={form.type}
                             onChange={updateField("type")}
                         >
@@ -100,7 +100,7 @@ export default function AccountForm({
                     </label>
                     <div className="relative mt-1">
                         <select
-                            className="w-full appearance-none rounded-md border border-slate-300 bg-white px-3 py-2 pr-10 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            className="w-full appearance-none rounded-md border border-slate-300 bg-white px-3 py-2 pr-10 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                             value={form.name}
                             onChange={updateField("name")}
                             required
@@ -134,7 +134,7 @@ export default function AccountForm({
                             : "Account number"}
                     </label>
                     <input
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                         value={form.account_number}
                         onChange={updateField("account_number")}
                         placeholder={
@@ -151,7 +151,7 @@ export default function AccountForm({
                         </label>
                         <input
                             type="number"
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                             value={form.starting_balance}
                             onChange={updateField("starting_balance")}
                             min="0"
@@ -168,7 +168,7 @@ export default function AccountForm({
                             </label>
                             <input
                                 type="number"
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                                 value={form.credit_limit}
                                 onChange={updateField("credit_limit")}
                                 min="0"
@@ -182,7 +182,7 @@ export default function AccountForm({
                             </label>
                             <input
                                 type="number"
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                                 value={form.used_credit}
                                 onChange={updateField("used_credit")}
                                 min="0"
@@ -200,7 +200,7 @@ export default function AccountForm({
                         Currency
                     </label>
                     <input
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                         value={form.currency}
                         onChange={updateField("currency")}
                         placeholder="PHP"
@@ -211,7 +211,7 @@ export default function AccountForm({
                         Notes
                     </label>
                     <textarea
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                         rows={2}
                         value={form.notes}
                         onChange={updateField("notes")}
@@ -222,7 +222,7 @@ export default function AccountForm({
                     <input
                         id="account_is_active"
                         type="checkbox"
-                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                         checked={form.is_active}
                         onChange={updateField("is_active")}
                     />

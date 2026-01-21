@@ -127,6 +127,21 @@
 }
 
 @layer utilities {
+    .emoji-picker .emoji-mart {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .emoji-picker .emoji-mart-scroll {
+        max-width: 100%;
+    }
+
+    .emoji-picker em-emoji-picker {
+        width: 100% !important;
+        max-width: 100% !important;
+        display: block;
+    }
+
     /* Tremor chart labels in dark mode */
     .dark .tremor-ChartWrapper text {
         fill: #CBD5E1;

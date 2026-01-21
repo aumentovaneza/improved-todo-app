@@ -39,7 +39,7 @@ export default function CategoryForm({ onSubmit }) {
                         Name
                     </label>
                     <input
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                         value={form.name}
                         onChange={updateField("name")}
                         placeholder="Salary, Food, Rent"
@@ -51,7 +51,7 @@ export default function CategoryForm({ onSubmit }) {
                         Type
                     </label>
                     <select
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                         value={form.type}
                         onChange={updateField("type")}
                     >
@@ -67,7 +67,7 @@ export default function CategoryForm({ onSubmit }) {
                     </label>
                     <input
                         type="color"
-                        className="mt-1 h-10 w-full rounded-md border border-slate-300 p-1 dark:border-slate-600 dark:bg-slate-800"
+                        className="mt-1 h-10 w-full rounded-md border border-slate-300 p-1 dark:border-white/10 dark:bg-dark-card"
                         value={form.color}
                         onChange={updateField("color")}
                     />

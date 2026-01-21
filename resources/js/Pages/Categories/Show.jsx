@@ -90,7 +90,7 @@ export default function Show({ category }) {
             case "low":
                 return "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/20";
             default:
-                return "text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/20";
+                return "text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-dark-card/70";
         }
     };
 
@@ -130,7 +130,7 @@ export default function Show({ category }) {
             <Head title={category.name} />
             <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
                 {/* Category Info Card */}
-                <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-sm">
+                <div className="card p-4 sm:p-6">
                     <div className="flex items-center gap-4 mb-4">
                         <div
                             className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg flex items-center justify-center"
@@ -196,7 +196,7 @@ export default function Show({ category }) {
 
                 {/* Tasks in Category */}
                 {tasks && tasks.length > 0 ? (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                    <div className="card">
                         <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                             <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100">
                                 Tasks in this category
@@ -490,7 +490,7 @@ export default function Show({ category }) {
                         </div>
                     </div>
                 ) : (
-                    <div className="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-lg shadow-sm text-center">
+                    <div className="card p-6 sm:p-8 text-center">
                         <div className="text-gray-400 dark:text-gray-500 mb-4">
                             <CheckSquare className="mx-auto h-10 w-10 sm:h-12 sm:w-12" />
                         </div>

@@ -487,7 +487,11 @@ class FinanceService
             return;
         }
 
-        $amount = (float) $transaction->amount * $direction;
+        $fee = 0.0;
+        if (is_array($transaction->metadata ?? null)) {
+            $fee = (float) ($transaction->metadata['transfer_fee'] ?? 0);
+        }
+        $amount = ((float) $transaction->amount + $fee) * $direction;
 
         $source = $this->accountRepository->findOptionalForUser(
             $transaction->user_id,

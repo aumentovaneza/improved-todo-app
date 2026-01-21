@@ -49,7 +49,7 @@ export default function Edit({ category }) {
         >
             <Head title="Edit Category" />
             <div className="max-w-2xl mx-auto">
-                <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-sm">
+                <div className="card p-4 sm:p-6">
                     <div className="flex items-center gap-3 mb-6">
                         <div
                             className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center"
@@ -77,7 +77,7 @@ export default function Edit({ category }) {
                             </label>
                             <input
                                 type="text"
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
+                                className="w-full px-3 py-2 border border-light-border/70 dark:border-white/10 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-white text-sm sm:text-base"
                                 value={data.name}
                                 onChange={(e) =>
                                     setData("name", e.target.value)
@@ -98,7 +98,7 @@ export default function Edit({ category }) {
                             </label>
                             <textarea
                                 rows={3}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
+                                className="w-full px-3 py-2 border border-light-border/70 dark:border-white/10 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-white text-sm sm:text-base"
                                 value={data.description}
                                 onChange={(e) =>
                                     setData("description", e.target.value)

@@ -1,3 +1,4 @@
+import ApplicationLogo from "@/Components/ApplicationLogo";
 import { Head, Link, useForm } from "@inertiajs/react";
 import { useState } from "react";
 import {
@@ -566,11 +567,8 @@ export default function Welcome({ auth, status, canResetPassword }) {
                 {/* Navigation */}
                 <nav className="relative px-4 sm:px-6 py-4">
                     <div className="mx-auto max-w-7xl flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                            <CheckSquare className="h-6 w-6 sm:h-8 sm:w-8 text-primary-400 dark:text-[#2ED7A1]" />
-                            <span className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-                                Wevie
-                            </span>
+                        <div className="flex items-center">
+                            <ApplicationLogo className="h-8 w-auto sm:h-10" />
                         </div>
 
                         <div className="flex items-center space-x-2 sm:space-x-4">
@@ -1316,11 +1314,8 @@ export default function Welcome({ auth, status, canResetPassword }) {
                 <footer className="bg-gray-900 text-white px-6 py-12">
                     <div className="mx-auto max-w-7xl">
                         <div className="flex flex-col md:flex-row justify-between items-center">
-                            <div className="flex items-center space-x-2 mb-4 md:mb-0">
-                                <CheckSquare className="h-8 w-8 text-primary-300 dark:text-[#2ED7A1]" />
-                                <span className="text-2xl font-bold">
-                                    Wevie
-                                </span>
+                            <div className="flex items-center mb-4 md:mb-0">
+                                <ApplicationLogo className="h-10 w-auto" />
                             </div>
 
                             <div className="text-gray-400 text-center md:text-right">

@@ -162,10 +162,7 @@ export default function TodoLayout({ header, children }) {
                             {/* Sidebar Header */}
                             <div className="flex items-center justify-between h-16 px-4 border-b border-light-border dark:border-dark-border">
                                 <Link href="/" className="flex items-center">
-                                    <ApplicationLogo className="h-8 w-auto text-light-primary dark:text-dark-primary" />
-                                    <span className="ml-2 text-lg font-semibold text-light-primary dark:text-dark-primary">
-                                        Wevie
-                                    </span>
+                                    <ApplicationLogo className="h-8 w-auto" />
                                 </Link>
                             </div>
                             {/* Sidebar Content */}
@@ -320,10 +317,7 @@ export default function TodoLayout({ header, children }) {
                 {/* Sidebar Header */}
                 <div className="flex items-center justify-between h-16 px-4 border-b border-light-border dark:border-dark-border">
                     <Link href="/" className="flex items-center">
-                        <ApplicationLogo className="h-8 w-auto text-light-primary dark:text-dark-primary" />
-                        <span className="ml-2 text-lg font-semibold text-light-primary dark:text-dark-primary">
-                            Wevie
-                        </span>
+                        <ApplicationLogo className="h-8 w-auto" />
                     </Link>
                 </div>
                 {/* Sidebar Content */}

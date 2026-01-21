@@ -118,7 +118,7 @@ export default function TransactionForm({
             onSubmit={handleSubmit}
             className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
         >
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <div>
                     <label className="text-sm text-slate-500 dark:text-slate-400">
                         Description
@@ -189,7 +189,7 @@ export default function TransactionForm({
                         <option value="yearly">Yearly</option>
                     </select>
                 </div>
-                <div className="sm:col-span-2">
+                <div className="md:col-span-2">
                     <label className="text-sm text-slate-500 dark:text-slate-400">
                         Category
                     </label>
@@ -214,7 +214,7 @@ export default function TransactionForm({
                         create a loan tracker using the description and amount.
                     </div>
                 )}
-                <div className="sm:col-span-2">
+                <div className="md:col-span-1">
                     <label className="text-sm text-slate-500 dark:text-slate-400">
                         Account (optional)
                     </label>
@@ -232,7 +232,7 @@ export default function TransactionForm({
                     </select>
                 </div>
                 {form.type === "savings" && (
-                    <div className="sm:col-span-2">
+                    <div className="md:col-span-1">
                         <label className="text-sm text-slate-500 dark:text-slate-400">
                             Savings goal (optional)
                         </label>
@@ -251,7 +251,7 @@ export default function TransactionForm({
                     </div>
                 )}
                 {form.type === "expense" && (
-                    <div className="sm:col-span-2">
+                    <div className="md:col-span-1">
                         <label className="text-sm text-slate-500 dark:text-slate-400">
                             Budget (optional)
                         </label>
@@ -270,7 +270,7 @@ export default function TransactionForm({
                     </div>
                 )}
                 {form.type === "expense" && (
-                    <div className="sm:col-span-2">
+                    <div className="md:col-span-1">
                         <label className="text-sm text-slate-500 dark:text-slate-400">
                             Loan payment (optional)
                         </label>
@@ -290,7 +290,7 @@ export default function TransactionForm({
                 )}
                 {form.type === "expense" &&
                     creditCardAccounts.length > 0 && (
-                    <div className="sm:col-span-2">
+                    <div className="md:col-span-1">
                         <label className="text-sm text-slate-500 dark:text-slate-400">
                             Credit card payment (optional)
                         </label>
@@ -321,7 +321,7 @@ export default function TransactionForm({
                         </p>
                     </div>
                 )}
-                <div className="sm:col-span-2">
+                <div className="md:col-span-2">
                     <label className="text-sm text-slate-500 dark:text-slate-400">
                         Tags (optional)
                     </label>

@@ -393,7 +393,7 @@ export default function FinanceDashboard({
             <Modal
                 show={activeModal?.type === "transaction"}
                 onClose={() => setActiveModal(null)}
-                maxWidth="lg"
+                maxWidth="2xl"
             >
                 <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
                     <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">

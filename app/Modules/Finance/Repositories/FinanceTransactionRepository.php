@@ -13,7 +13,7 @@ class FinanceTransactionRepository
     {
         return FinanceTransaction::with(['category', 'loan', 'tags', 'createdBy', 'account', 'creditCardAccount'])
             ->where('user_id', $userId)
-            ->orderByDesc('occurred_at')
+            ->orderBy('created_at', 'desc')
             ->limit($limit)
             ->get();
     }

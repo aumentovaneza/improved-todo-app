@@ -283,6 +283,12 @@ class FinanceService
     public function createAccount(array $data, int $userId, int $actorUserId): FinanceAccount
     {
         $data['user_id'] = $userId;
+        if (!isset($data['starting_balance']) || $data['starting_balance'] === null) {
+            $data['starting_balance'] = 0;
+        }
+        if (!isset($data['used_credit']) || $data['used_credit'] === null) {
+            $data['used_credit'] = 0;
+        }
         $startingBalance = (float) ($data['starting_balance'] ?? 0);
         $isCreditCard = ($data['type'] ?? null) === 'credit-card';
         $data['current_balance'] = (!$isCreditCard && $startingBalance > 0)

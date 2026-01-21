@@ -57,7 +57,7 @@ export default function Modal({
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                 >
-                    <div className="absolute inset-0 bg-gray-500/75 dark:bg-dark-primary/90" />
+                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm dark:bg-slate-900/60" />
                 </TransitionChild>
 
                 <TransitionChild
@@ -69,7 +69,7 @@ export default function Modal({
                     leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                 >
                     <DialogPanel
-                        className={`mt-16 mb-6 transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:mx-auto sm:w-full dark:bg-dark-secondary ${maxWidthClass}`}
+                        className={`mt-16 mb-6 transform overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-black/5 transition-all sm:mx-auto sm:w-full dark:bg-dark-secondary dark:ring-white/5 ${maxWidthClass}`}
                     >
                         {children}
                     </DialogPanel>

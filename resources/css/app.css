@@ -14,14 +14,14 @@
     
     /* Light mode body styling - Wevie colors */
     body {
-        background-color: #F9FAFB; /* Neutral Light */
-        color: #2B2F36; /* Neutral Dark */
+        background-color: #F7FAFA; /* Wevie light background */
+        color: #1F2F33; /* Wevie light text */
     }
     
     /* Dark mode body styling - Wevie colors */
     .dark body {
-        background-color: #1E2024; /* Neutral Light (dark mode) */
-        color: #E2E6EB; /* Neutral Dark (dark mode) */
+        background-color: #1F2F33; /* Wevie dark background */
+        color: #E6F2F3; /* Wevie dark text */
     }
     
     /* Scrollbar styling for light mode - Wevie colors */
@@ -62,25 +62,25 @@
 @layer components {
     /* Card styles with light and dark mode support */
     .card {
-        @apply bg-light-card dark:bg-dark-card shadow-sm rounded-lg border border-light-border dark:border-dark-border;
+        @apply bg-light-card dark:bg-dark-card shadow-soft rounded-xl border border-light-border/70 dark:border-dark-border/70;
     }
     
     .card-hover {
-        @apply card hover:shadow-md hover:bg-light-hover dark:hover:bg-dark-hover transition-all duration-200;
+        @apply card hover:bg-light-hover dark:hover:bg-dark-hover transition-colors duration-200;
     }
     
     /* Button variants with Wevie colors */
     .btn-primary {
-        @apply bg-primary-400 hover:bg-primary-500 focus:bg-primary-500 active:bg-primary-600 text-white px-4 py-2 rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 dark:bg-primary-400 dark:hover:bg-[#2ED7A1] dark:focus:bg-[#2ED7A1] dark:active:bg-primary-500;
+        @apply bg-gradient-to-r from-wevie-teal to-wevie-mint text-white px-4 py-2 rounded-xl font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-wevie-teal/40 focus:ring-offset-2 dark:from-wevie-teal dark:to-wevie-mint;
     }
     
     .btn-secondary {
-        @apply bg-secondary-400 hover:bg-secondary-500 focus:bg-secondary-500 active:bg-secondary-600 text-white px-4 py-2 rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:ring-offset-2 dark:bg-[#3ADBDC] dark:hover:bg-secondary-400 dark:focus:bg-secondary-400 dark:active:bg-secondary-500;
+        @apply bg-white text-light-primary px-4 py-2 rounded-xl font-medium transition-colors duration-200 border border-light-border/70 hover:bg-light-hover focus:outline-none focus:ring-2 focus:ring-wevie-teal/30 focus:ring-offset-2 dark:bg-dark-card dark:text-dark-primary dark:border-dark-border/70 dark:hover:bg-dark-hover;
     }
     
     /* Input styles with Wevie colors */
     .input-primary {
-        @apply border-light-border dark:border-dark-border bg-light-card dark:bg-dark-card text-light-primary dark:text-dark-primary focus:border-primary-400 focus:ring-primary-400 rounded-md transition-colors duration-200 dark:focus:border-primary-400 dark:focus:ring-primary-400;
+        @apply border-light-border/70 dark:border-dark-border/70 bg-light-card dark:bg-dark-card text-light-primary dark:text-dark-primary focus:border-wevie-teal focus:ring-wevie-teal/30 rounded-xl transition-colors duration-200;
     }
     
     /* Text color utilities for both modes */

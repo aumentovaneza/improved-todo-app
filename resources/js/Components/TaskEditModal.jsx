@@ -104,20 +104,23 @@ export default function TaskEditModal({
         <Modal show={show} onClose={onClose} maxWidth="2xl">
             <div className="max-h-[70vh] overflow-y-auto">
                 <form onSubmit={handleSubmit} className="p-6">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-                        Edit Task
+                    <h2 className="text-lg font-medium text-light-primary dark:text-dark-primary mb-2">
+                        Edit task
                     </h2>
+                    <p className="text-sm text-light-muted dark:text-dark-muted mb-4">
+                        Make small adjustments at your own pace.
+                    </p>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Left Column - Task Details */}
                         <div className="space-y-4 lg:order-1">
                             <div>
-                                <label className="block text-sm font-medium mb-1">
+                                <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
                                     Title
                                 </label>
                                 <input
                                     type="text"
-                                    className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                    className="w-full input-primary"
                                     value={data.title}
                                     onChange={(e) =>
                                         setData("title", e.target.value)
@@ -132,11 +135,11 @@ export default function TaskEditModal({
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium mb-1">
-                                    Description
+                                <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
+                                    Notes
                                 </label>
                                 <textarea
-                                    className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                    className="w-full input-primary"
                                     value={data.description}
                                     onChange={(e) =>
                                         setData("description", e.target.value)
@@ -151,17 +154,17 @@ export default function TaskEditModal({
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium mb-1">
+                                <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
                                     Category
                                 </label>
                                 <select
-                                    className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                    className="w-full input-primary"
                                     value={data.category_id}
                                     onChange={(e) =>
                                         setData("category_id", e.target.value)
                                     }
                                 >
-                                    <option value="">Select category</option>
+                                    <option value="">Choose when ready</option>
                                     {categories &&
                                         categories.map((cat) => (
                                             <option key={cat.id} value={cat.id}>
@@ -178,17 +181,17 @@ export default function TaskEditModal({
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium mb-1">
+                                    <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
                                         Priority
                                     </label>
                                     <select
-                                        className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                        className="w-full input-primary"
                                         value={data.priority}
                                         onChange={(e) =>
                                             setData("priority", e.target.value)
                                         }
                                     >
-                                        <option value="urgent">Urgent</option>
+                                        <option value="urgent">Focus</option>
                                         <option value="high">High</option>
                                         <option value="medium">Medium</option>
                                         <option value="low">Low</option>
@@ -196,26 +199,22 @@ export default function TaskEditModal({
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-1">
+                                    <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
                                         Status
                                     </label>
                                     <select
-                                        className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                        className="w-full input-primary"
                                         value={data.status}
                                         onChange={(e) =>
                                             setData("status", e.target.value)
                                         }
                                     >
-                                        <option value="pending">Pending</option>
-                                        <option value="in_progress">
-                                            In Progress
-                                        </option>
+                                        <option value="pending">Ready</option>
+                                        <option value="in_progress">In flow</option>
                                         <option value="completed">
                                             Completed
                                         </option>
-                                        <option value="cancelled">
-                                            Cancelled
-                                        </option>
+                                        <option value="cancelled">Paused</option>
                                     </select>
                                 </div>
                             </div>
@@ -223,11 +222,11 @@ export default function TaskEditModal({
                             {/* Assignment field - only show in workspace context */}
                             {workspace && board && (
                                 <div>
-                                    <label className="block text-sm font-medium mb-1">
-                                        Assign To
+                                    <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
+                                        Assign to
                                     </label>
                                     <select
-                                        className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                        className="w-full input-primary"
                                         value={data.assigned_to}
                                         onChange={(e) =>
                                             setData(
@@ -269,8 +268,8 @@ export default function TaskEditModal({
                             />
 
                             <div>
-                                <label className="block text-sm font-medium mb-1">
-                                    Add Custom Tags (Optional)
+                                <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
+                                    Add tags (optional)
                                 </label>
                                 <TagInput
                                     value={data.tags}
@@ -289,7 +288,7 @@ export default function TaskEditModal({
                                 <input
                                     type="checkbox"
                                     id="is_recurring_edit"
-                                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
+                                    className="rounded border-light-border text-wevie-teal shadow-sm focus:ring-wevie-teal/30 dark:border-dark-border dark:text-wevie-mint"
                                     checked={data.is_recurring}
                                     onChange={(e) => {
                                         setData(
@@ -308,20 +307,20 @@ export default function TaskEditModal({
                                 />
                                 <label
                                     htmlFor="is_recurring_edit"
-                                    className="ml-2 block text-sm text-gray-900 dark:text-gray-100"
+                                    className="ml-2 block text-sm text-light-primary dark:text-dark-primary"
                                 >
-                                    Recurring Task
+                                    Repeat gently
                                 </label>
                             </div>
 
                             {data.is_recurring ? (
                                 <>
                                     <div>
-                                        <label className="block text-sm font-medium mb-1">
-                                            Recurrence Type
+                                        <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
+                                            Repeat pattern
                                         </label>
                                         <select
-                                            className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                            className="w-full input-primary"
                                             value={data.recurrence_type}
                                             onChange={(e) =>
                                                 setData(
@@ -332,7 +331,7 @@ export default function TaskEditModal({
                                             required={data.is_recurring}
                                         >
                                             <option value="">
-                                                Select type
+                                                Choose a rhythm
                                             </option>
                                             <option value="daily">Daily</option>
                                             <option value="weekly">
@@ -352,12 +351,12 @@ export default function TaskEditModal({
                                         )}
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium mb-1">
-                                            Recurring Until
+                                        <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
+                                            Repeat until
                                         </label>
                                         <input
                                             type="date"
-                                            className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                            className="w-full input-primary"
                                             value={data.recurring_until}
                                             onChange={(e) =>
                                                 setData(
@@ -376,12 +375,12 @@ export default function TaskEditModal({
                                 </>
                             ) : (
                                 <div>
-                                    <label className="block text-sm font-medium mb-1">
-                                        Due Date
+                                <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
+                                    Planned date
                                     </label>
                                     <input
                                         type="date"
-                                        className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                    className="w-full input-primary"
                                         value={data.due_date}
                                         onChange={(e) =>
                                             setData("due_date", e.target.value)
@@ -402,7 +401,7 @@ export default function TaskEditModal({
                                         <input
                                             type="checkbox"
                                             id="is_all_day_edit"
-                                            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                        className="rounded border-light-border text-wevie-teal shadow-sm focus:border-wevie-teal focus:ring focus:ring-wevie-teal/30 dark:border-dark-border dark:text-wevie-mint"
                                             checked={data.is_all_day}
                                             onChange={(e) => {
                                                 setData(
@@ -417,21 +416,21 @@ export default function TaskEditModal({
                                         />
                                         <label
                                             htmlFor="is_all_day_edit"
-                                            className="text-sm font-medium"
+                                        className="text-sm font-medium text-light-secondary dark:text-dark-secondary"
                                         >
-                                            All day task
+                                        All day
                                         </label>
                                     </div>
 
                                     {!data.is_all_day && (
                                         <div className="grid grid-cols-2 gap-3">
                                             <div>
-                                                <label className="block text-sm font-medium mb-1">
-                                                    Start Time
+                                            <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
+                                                Start time
                                                 </label>
                                                 <input
                                                     type="time"
-                                                    className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                                className="w-full input-primary"
                                                     value={data.start_time}
                                                     onChange={(e) =>
                                                         setData(
@@ -448,12 +447,12 @@ export default function TaskEditModal({
                                                 )}
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium mb-1">
-                                                    End Time
+                                            <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
+                                                End time
                                                 </label>
                                                 <input
                                                     type="time"
-                                                    className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                                className="w-full input-primary"
                                                     value={data.end_time}
                                                     onChange={(e) =>
                                                         setData(
@@ -497,10 +496,10 @@ export default function TaskEditModal({
 
                     <div className="mt-6 flex justify-end gap-3">
                         <SecondaryButton onClick={onClose}>
-                            Cancel
+                            Not now
                         </SecondaryButton>
                         <PrimaryButton type="submit" disabled={processing}>
-                            Update Task
+                            Save changes
                         </PrimaryButton>
                     </div>
                 </form>

@@ -24,7 +24,7 @@ export default function SummaryCards({
             onClick: onIncomeClick,
         },
         {
-            label: "Unallocated funds",
+            label: "Unassigned funds",
             value: formatCurrency(summary?.unallocated, currency),
             accent: "text-sky-600",
             onClick: onUnallocatedClick,
@@ -36,7 +36,7 @@ export default function SummaryCards({
             onClick: onAvailableCreditClick,
         },
         {
-            label: "Expenses",
+            label: "Spending",
             value: formatCurrency(summary?.expenses, currency),
             accent: "text-rose-600",
             onClick: onExpensesClick,
@@ -48,7 +48,7 @@ export default function SummaryCards({
             onClick: onSavingsClick,
         },
         {
-            label: "Net",
+            label: "Net balance",
             value: formatCurrency(summary?.net, currency),
             accent: "text-slate-700 dark:text-slate-200",
             onClick: onNetClick,
@@ -69,12 +69,12 @@ export default function SummaryCards({
                     type="button"
                     onClick={card.onClick}
                     disabled={!card.onClick}
-                    className="rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-slate-300 hover:shadow-md disabled:cursor-default dark:border-slate-700 dark:bg-slate-900"
+                    className="card-hover p-4 text-left"
                 >
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                    <p className="text-sm text-light-muted dark:text-dark-muted">
                         {card.label}
                     </p>
-                    <p className={`mt-2 text-2xl font-semibold ${card.accent}`}>
+                    <p className={`mt-2 text-xl font-semibold ${card.accent}`}>
                         {card.value}
                     </p>
                 </button>

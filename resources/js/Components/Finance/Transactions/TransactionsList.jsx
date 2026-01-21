@@ -51,23 +51,23 @@ export default function TransactionsList({
     }, [page, totalPages]);
 
     return (
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <div className="card p-4">
             <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-                    Recent transactions
+                <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
+                    Recent activity
                 </h3>
                 <button
                     type="button"
                     onClick={onViewAll}
                     disabled={isLoading}
-                    className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm text-white shadow hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="rounded-xl bg-gradient-to-r from-wevie-teal to-wevie-mint px-3 py-1.5 text-sm text-white shadow-soft hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                    {isLoading ? "Loading..." : "View all"}
+                    {isLoading ? "Loading..." : "See all"}
                 </button>
             </div>
             <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
-                    <thead className="text-xs uppercase text-slate-400 dark:text-slate-500">
+                <table className="w-full text-left text-sm text-light-secondary dark:text-dark-secondary">
+                    <thead className="text-xs uppercase text-light-muted dark:text-dark-muted">
                         <tr>
                             <th className="py-2">Description</th>
                             <th className="py-2">Category</th>
@@ -81,27 +81,27 @@ export default function TransactionsList({
                         {pagedTransactions.map((transaction) => (
                             <tr
                                 key={transaction.id}
-                                className="border-t border-slate-200 dark:border-slate-700"
+                                className="border-t border-light-border/70 dark:border-dark-border/70"
                             >
                                 <td className="py-3">
-                                    <div className="font-medium text-slate-800 dark:text-slate-100">
+                                    <div className="font-medium text-light-primary dark:text-dark-primary">
                                         {transaction.description}
                                     </div>
-                                    <div className="text-xs capitalize text-slate-400">
+                                    <div className="text-xs capitalize text-light-muted dark:text-dark-muted">
                                         {transaction.type}
                                     </div>
                                     {transaction.created_by &&
                                         transaction.created_by.id !==
                                             transaction.user_id && (
-                                            <div className="text-xs text-slate-400">
+                                            <div className="text-xs text-light-muted dark:text-dark-muted">
                                                 Added by{" "}
                                                 {transaction.created_by.name}
                                             </div>
                                         )}
                                     {transaction.is_recurring &&
                                         transaction.recurring_frequency && (
-                                            <div className="text-xs text-purple-500 dark:text-purple-300">
-                                                Recurring:{" "}
+                                            <div className="text-xs text-violet-500 dark:text-violet-300">
+                                                Steady:{" "}
                                                 {formatFrequency(
                                                     transaction.recurring_frequency
                                                 )}
@@ -134,7 +134,7 @@ export default function TransactionsList({
                                             onClick={() =>
                                                 onEdit?.(transaction)
                                             }
-                                            className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                            className="text-xs font-semibold text-wevie-teal hover:text-wevie-teal/80 dark:text-wevie-mint dark:hover:text-wevie-mint/80"
                                         >
                                             Edit
                                         </button>
@@ -143,9 +143,9 @@ export default function TransactionsList({
                                             onClick={() =>
                                                 onDelete?.(transaction)
                                             }
-                                            className="text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
+                                            className="text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-300 dark:hover:text-rose-200"
                                         >
-                                            Delete
+                                            Remove
                                         </button>
                                     </div>
                                 </td>
@@ -155,9 +155,9 @@ export default function TransactionsList({
                             <tr>
                                 <td
                                     colSpan={6}
-                                    className="py-6 text-center text-sm text-slate-400 dark:text-slate-500"
+                                    className="py-6 text-center text-sm text-light-muted dark:text-dark-muted"
                                 >
-                                    No transactions yet.
+                                    Nothing recorded yet.
                                 </td>
                             </tr>
                         )}
@@ -165,7 +165,7 @@ export default function TransactionsList({
                 </table>
             </div>
             {transactions.length > perPage && (
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-300">
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-light-secondary dark:text-dark-secondary">
                     <span>
                         Showing {(page - 1) * perPage + 1}-
                         {Math.min(page * perPage, transactions.length)} of{" "}
@@ -176,11 +176,11 @@ export default function TransactionsList({
                             type="button"
                             onClick={() => setPage((prev) => Math.max(1, prev - 1))}
                             disabled={page === 1}
-                            className="rounded-md border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:text-slate-700 disabled:cursor-not-allowed disabled:text-slate-300 dark:border-slate-700 dark:text-slate-300 dark:hover:text-slate-100"
+                            className="rounded-xl border border-light-border/70 px-3 py-1 text-xs font-semibold text-light-secondary hover:border-light-border hover:text-light-primary disabled:cursor-not-allowed disabled:text-light-muted dark:border-dark-border/70 dark:text-dark-secondary dark:hover:text-dark-primary"
                         >
                             Prev
                         </button>
-                        <span className="text-xs text-slate-400">
+                        <span className="text-xs text-light-muted dark:text-dark-muted">
                             Page {page} of {totalPages}
                         </span>
                         <button
@@ -191,7 +191,7 @@ export default function TransactionsList({
                                 )
                             }
                             disabled={page === totalPages}
-                            className="rounded-md border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:text-slate-700 disabled:cursor-not-allowed disabled:text-slate-300 dark:border-slate-700 dark:text-slate-300 dark:hover:text-slate-100"
+                            className="rounded-xl border border-light-border/70 px-3 py-1 text-xs font-semibold text-light-secondary hover:border-light-border hover:text-light-primary disabled:cursor-not-allowed disabled:text-light-muted dark:border-dark-border/70 dark:text-dark-secondary dark:hover:text-dark-primary"
                         >
                             Next
                         </button>

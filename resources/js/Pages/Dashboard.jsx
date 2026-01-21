@@ -116,7 +116,7 @@ export default function Dashboard({
                     tags: [],
                 });
                 setShowQuickTask(false);
-                toast.success("Task created successfully!");
+                toast.success("Task saved. You can add details anytime.");
             },
         });
     };
@@ -156,8 +156,8 @@ export default function Dashboard({
                 onSuccess: () => {
                     toast.success(
                         newStatus === "completed"
-                            ? "Task completed!"
-                            : "Task marked as pending"
+                            ? "Nice work. Task set to done."
+                            : "Task is back on your list."
                     );
                 },
                 onError: () => {
@@ -168,14 +168,20 @@ export default function Dashboard({
                     updateTaskInList(localTodayTasks, setLocalTodayTasks);
                     updateTaskInList(localOverdueTasks, setLocalOverdueTasks);
                     updateTaskInList(localUpcomingTasks, setLocalUpcomingTasks);
-                    toast.error("Failed to update task status");
+                    toast.error(
+                        "We couldn't update that just now. Try again when you’re ready."
+                    );
                 },
             }
         );
     };
 
     const handleDeleteTask = (task) => {
-        if (!confirm(`Are you sure you want to delete "${task.title}"? This action cannot be undone.`)) {
+        if (
+            !confirm(
+                `Remove "${task.title}"? You can always add it again later.`
+            )
+        ) {
             return;
         }
 
@@ -202,7 +208,7 @@ export default function Dashboard({
             preserveState: true,
             only: [], // Don't reload any data
             onSuccess: () => {
-                toast.success("Task deleted successfully");
+                toast.success("Task removed. It’s here if you need it again.");
             },
             onError: () => {
                 // Revert to original state on error
@@ -210,7 +216,9 @@ export default function Dashboard({
                 setLocalTodayTasks(originalTodayTasks);
                 setLocalOverdueTasks(originalOverdueTasks);
                 setLocalUpcomingTasks(originalUpcomingTasks);
-                toast.error("Failed to delete task");
+                toast.error(
+                    "We couldn’t remove that just now. Please try again."
+                );
             },
         });
     };
@@ -218,28 +226,35 @@ export default function Dashboard({
     const getPriorityColor = (priority) => {
         switch (priority) {
             case "urgent":
-                return "text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/20";
+                return "text-amber-700 bg-amber-100/70 dark:text-amber-200 dark:bg-amber-900/20";
             case "high":
-                return "text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/20";
+                return "text-orange-700 bg-orange-100/70 dark:text-orange-200 dark:bg-orange-900/20";
             case "medium":
-                return "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/20";
+                return "text-sky-700 bg-sky-100/70 dark:text-sky-200 dark:bg-sky-900/20";
             case "low":
-                return "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/20";
+                return "text-emerald-700 bg-emerald-100/70 dark:text-emerald-200 dark:bg-emerald-900/20";
             default:
-                return "text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/20";
+                return "text-slate-600 bg-slate-100/70 dark:text-slate-300 dark:bg-slate-800/40";
         }
     };
+
+    const getPriorityLabel = (priority) =>
+        priority === "urgent"
+            ? "Focus"
+            : priority.charAt(0).toUpperCase() + priority.slice(1);
 
     const getStatusIcon = (status) => {
         switch (status) {
             case "completed":
-                return <CheckCircle className="h-5 w-5 text-gray-500" />;
+                return (
+                    <CheckCircle className="h-5 w-5 text-emerald-500" />
+                );
             case "in_progress":
-                return <Clock className="h-5 w-5 text-green-500" />;
+                return <Clock className="h-5 w-5 text-sky-500" />;
             case "cancelled":
-                return <AlertTriangle className="h-5 w-5 text-red-500" />;
+                return <AlertTriangle className="h-5 w-5 text-slate-400" />;
             default:
-                return <Circle className="h-5 w-5 text-gray-400" />;
+                return <Circle className="h-5 w-5 text-slate-300" />;
         }
     };
 
@@ -266,13 +281,13 @@ export default function Dashboard({
                     <div className="card">
                         <div className="p-4 sm:p-5">
                             <div className="flex items-center">
-                                <div className="flex-shrink-0">
-                                    <CheckSquare className="h-5 w-5 sm:h-6 sm:w-6 text-primary-500" />
+                                <div className="flex-shrink-0 rounded-full bg-wevie-teal/10 p-2">
+                                    <CheckSquare className="h-5 w-5 sm:h-6 sm:w-6 text-wevie-teal" />
                                 </div>
                                 <div className="ml-4 sm:ml-5 w-0 flex-1">
                                     <dl>
                                         <dt className="text-xs sm:text-sm font-medium text-adaptive-muted truncate">
-                                            Total Tasks
+                                            Total tasks
                                         </dt>
                                         <dd className="text-base sm:text-lg font-medium text-adaptive-primary">
                                             {stats.total_tasks}
@@ -286,8 +301,8 @@ export default function Dashboard({
                     <div className="card">
                         <div className="p-4 sm:p-5">
                             <div className="flex items-center">
-                                <div className="flex-shrink-0">
-                                    <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-500" />
+                                <div className="flex-shrink-0 rounded-full bg-emerald-100/60 p-2 dark:bg-emerald-900/30">
+                                    <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-500" />
                                 </div>
                                 <div className="ml-4 sm:ml-5 w-0 flex-1">
                                     <dl>
@@ -306,13 +321,13 @@ export default function Dashboard({
                     <div className="card">
                         <div className="p-4 sm:p-5">
                             <div className="flex items-center">
-                                <div className="flex-shrink-0">
-                                    <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-secondary-500" />
+                                <div className="flex-shrink-0 rounded-full bg-sky-100/60 p-2 dark:bg-sky-900/30">
+                                    <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-sky-500" />
                                 </div>
                                 <div className="ml-4 sm:ml-5 w-0 flex-1">
                                     <dl>
                                         <dt className="text-xs sm:text-sm font-medium text-adaptive-muted truncate">
-                                            Pending
+                                            Open tasks
                                         </dt>
                                         <dd className="text-base sm:text-lg font-medium text-adaptive-primary">
                                             {stats.pending_tasks}
@@ -326,13 +341,13 @@ export default function Dashboard({
                     <div className="card">
                         <div className="p-4 sm:p-5">
                             <div className="flex items-center">
-                                <div className="flex-shrink-0">
-                                    <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-accent-500" />
+                                <div className="flex-shrink-0 rounded-full bg-wevie-mint/20 p-2 dark:bg-wevie-mint/10">
+                                    <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-wevie-mint" />
                                 </div>
                                 <div className="ml-4 sm:ml-5 w-0 flex-1">
                                     <dl>
                                         <dt className="text-xs sm:text-sm font-medium text-adaptive-muted truncate">
-                                            Completion Rate
+                                            Completion pace
                                         </dt>
                                         <dd className="text-base sm:text-lg font-medium text-adaptive-primary">
                                             {stats.completion_rate}%
@@ -353,22 +368,22 @@ export default function Dashboard({
                 <div className="card p-4 sm:p-6">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
                         <h2 className="text-base sm:text-lg font-medium text-adaptive-primary">
-                            Quick Actions
+                            Gentle shortcuts
                         </h2>
                         <div className="flex gap-2">
                             <button
                                 onClick={() => setShowTaskModal(true)}
-                                className="btn-accent"
+                                className="btn-primary"
                             >
                                 <Plus className="mr-2 h-4 w-4" />
-                                New Task
+                                New task
                             </button>
                             <button
                                 onClick={() => setShowQuickTask(!showQuickTask)}
-                                className="btn-primary"
+                                className="btn-secondary"
                             >
                                 <Zap className="mr-2 h-4 w-4" />
-                                Quick Task
+                                Quick add
                             </button>
                             <button
                                 className="btn-secondary"
@@ -381,19 +396,19 @@ export default function Dashboard({
                     </div>
 
                     {showQuickTask && (
-                        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
+                        <div className="bg-light-hover dark:bg-dark-hover rounded-xl p-4 mb-4">
                             <form
                                 onSubmit={handleQuickTaskSubmit}
                                 className="space-y-4"
                             >
                                 <div className="flex items-center justify-between">
-                                    <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        Create Quick Task
+                                    <h3 className="text-sm font-medium text-light-primary dark:text-dark-primary">
+                                        Quick task
                                     </h3>
                                     <button
                                         type="button"
                                         onClick={() => setShowQuickTask(false)}
-                                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                        className="text-light-muted hover:text-light-secondary dark:text-dark-muted dark:hover:text-dark-secondary"
                                     >
                                         <X className="h-5 w-5" />
                                     </button>
@@ -402,7 +417,7 @@ export default function Dashboard({
                                 <div>
                                     <input
                                         type="text"
-                                        placeholder="Task title..."
+                                        placeholder="What would you like to do?"
                                         value={quickTask.title}
                                         onChange={(e) =>
                                             setQuickTask({
@@ -410,7 +425,7 @@ export default function Dashboard({
                                                 title: e.target.value,
                                             })
                                         }
-                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1]"
+                                        className="w-full px-3 py-2 border border-light-border/70 dark:border-dark-border/70 rounded-xl focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
                                         required
                                     />
                                 </div>
@@ -424,10 +439,10 @@ export default function Dashboard({
                                                 category_id: e.target.value,
                                             })
                                         }
-                                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1]"
+                                        className="px-3 py-2 border border-light-border/70 dark:border-dark-border/70 rounded-xl focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
                                     >
                                         <option value="">
-                                            Select Category
+                                            Category (optional)
                                         </option>
                                         {(categories || []).map((category) => (
                                             <option
@@ -447,18 +462,12 @@ export default function Dashboard({
                                                 priority: e.target.value,
                                             })
                                         }
-                                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1]"
+                                        className="px-3 py-2 border border-light-border/70 dark:border-dark-border/70 rounded-xl focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
                                     >
-                                        <option value="low">
-                                            Low Priority
-                                        </option>
-                                        <option value="medium">
-                                            Medium Priority
-                                        </option>
-                                        <option value="high">
-                                            High Priority
-                                        </option>
-                                        <option value="urgent">Urgent</option>
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                        <option value="urgent">Focus</option>
                                     </select>
 
                                     <input
@@ -470,7 +479,7 @@ export default function Dashboard({
                                                 due_date: e.target.value,
                                             })
                                         }
-                                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1]"
+                                        className="px-3 py-2 border border-light-border/70 dark:border-dark-border/70 rounded-xl focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
                                     />
                                 </div>
 
@@ -478,15 +487,15 @@ export default function Dashboard({
                                     <button
                                         type="button"
                                         onClick={() => setShowQuickTask(false)}
-                                        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-md hover:bg-gray-50 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-400 dark:focus:ring-[#2ED7A1]"
+                                        className="px-4 py-2 text-sm font-medium text-light-secondary dark:text-dark-secondary bg-white dark:bg-dark-card border border-light-border/70 dark:border-dark-border/70 rounded-xl hover:bg-light-hover dark:hover:bg-dark-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wevie-teal/30"
                                     >
-                                        Cancel
+                                        Not now
                                     </button>
                                     <button
                                         type="submit"
-                                        className="px-4 py-2 text-sm font-medium text-white bg-primary-400 border border-transparent rounded-md hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-400 dark:bg-[#2ED7A1] dark:hover:bg-primary-400 dark:focus:ring-[#2ED7A1]"
+                                        className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-wevie-teal to-wevie-mint border border-transparent rounded-xl hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wevie-teal/40"
                                     >
-                                        Create Task
+                                        Save task
                                     </button>
                                 </div>
                             </form>
@@ -496,45 +505,51 @@ export default function Dashboard({
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <button
                             onClick={() => setShowTaskModal(true)}
-                            className="flex items-center p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+                            className="card-hover flex items-center p-4"
                         >
-                            <Plus className="h-5 w-5 text-blue-500 mr-3" />
+                            <div className="mr-3 flex h-9 w-9 items-center justify-center rounded-full bg-wevie-teal/10">
+                                <Plus className="h-5 w-5 text-wevie-teal" />
+                            </div>
                             <div>
-                                <h3 className="text-sm text-left font-medium text-gray-900 dark:text-gray-100">
-                                    Create Task
+                                <h3 className="text-sm text-left font-medium text-light-primary dark:text-dark-primary">
+                                    Create a task
                                 </h3>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    Add a new task with full details
+                                <p className="text-xs text-light-muted dark:text-dark-muted">
+                                    Add details now or later
                                 </p>
                             </div>
                         </button>
 
                         <Link
                             href={route("categories.create")}
-                            className="flex items-center p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+                            className="card-hover flex items-center p-4"
                         >
-                            <Target className="h-5 w-5 text-green-500 mr-3" />
+                            <div className="mr-3 flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100/60 dark:bg-emerald-900/30">
+                                <Target className="h-5 w-5 text-emerald-500" />
+                            </div>
                             <div>
-                                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                    New Category
+                                <h3 className="text-sm font-medium text-light-primary dark:text-dark-primary">
+                                    New category
                                 </h3>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    Organize tasks with categories
+                                <p className="text-xs text-light-muted dark:text-dark-muted">
+                                    Group tasks gently
                                 </p>
                             </div>
                         </Link>
 
                         <Link
                             href={route("tasks.index")}
-                            className="flex items-center p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+                            className="card-hover flex items-center p-4"
                         >
-                            <Zap className="h-5 w-5 text-yellow-500 mr-3" />
+                            <div className="mr-3 flex h-9 w-9 items-center justify-center rounded-full bg-amber-100/60 dark:bg-amber-900/30">
+                                <Zap className="h-5 w-5 text-amber-500" />
+                            </div>
                             <div>
-                                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                    View All Tasks
+                                <h3 className="text-sm font-medium text-light-primary dark:text-dark-primary">
+                                    See all tasks
                                 </h3>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    See your complete task list
+                                <p className="text-xs text-light-muted dark:text-dark-muted">
+                                    Everything in one place
                                 </p>
                             </div>
                         </Link>
@@ -544,21 +559,21 @@ export default function Dashboard({
                 {/* Current Tasks */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     {/* Upcoming Payments */}
-                    <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg">
-                        <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                            <h2 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100">
-                                Upcoming Payments
+                    <div className="card">
+                        <div className="px-4 sm:px-6 py-4 border-b border-light-border/70 dark:border-dark-border/70">
+                            <h2 className="text-base sm:text-lg font-medium text-light-primary dark:text-dark-primary">
+                                Upcoming payments
                             </h2>
                         </div>
                         <div className="p-4 sm:p-6">
                             {upcomingPayments.length === 0 ? (
                                 <div className="text-center py-8">
-                                    <Calendar className="mx-auto h-12 w-12 text-gray-400" />
-                                    <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        No upcoming payments
+                                    <Calendar className="mx-auto h-12 w-12 text-light-muted dark:text-dark-muted" />
+                                    <h3 className="mt-2 text-sm font-medium text-light-primary dark:text-dark-primary">
+                                        Nothing scheduled yet
                                     </h3>
-                                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                        You're all set for the next week.
+                                    <p className="mt-1 text-sm text-light-muted dark:text-dark-muted">
+                                        We’ll keep watch when you add one.
                                     </p>
                                 </div>
                             ) : (
@@ -566,19 +581,17 @@ export default function Dashboard({
                                     {upcomingPayments.map((payment) => (
                                         <div
                                             key={payment.id}
-                                            className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                                            className="flex items-center justify-between p-3 bg-light-hover dark:bg-dark-hover rounded-xl"
                                         >
                                             <div className="flex items-center space-x-3 flex-1">
                                                 <div className="flex-1 min-w-0">
-                                                    <p
-                                                        className="text-sm font-medium text-gray-900 dark:text-gray-100"
-                                                    >
+                                                    <p className="text-sm font-medium text-light-primary dark:text-dark-primary">
                                                         {payment.description}
                                                     </p>
                                                     {payment.loan && (
                                                         <div className="flex items-center space-x-1 mt-1">
-                                                            <span className="text-xs text-amber-600 dark:text-amber-300">
-                                                                Loan:{" "}
+                                                            <span className="text-xs text-amber-700 dark:text-amber-200">
+                                                                Loan ·{" "}
                                                                 {payment.loan.name}
                                                             </span>
                                                         </div>
@@ -595,7 +608,7 @@ export default function Dashboard({
                                                                                 .color,
                                                                     }}
                                                                 />
-                                                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                                <span className="text-xs text-light-muted dark:text-dark-muted">
                                                                     {
                                                                         payment
                                                                             .category
@@ -607,13 +620,13 @@ export default function Dashboard({
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                                <p className="text-sm font-semibold text-light-primary dark:text-dark-primary">
                                                     {formatCurrency(
                                                         payment.amount,
                                                         payment.currency ?? "PHP"
                                                     )}
                                                 </p>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                <p className="text-xs text-light-muted dark:text-dark-muted">
                                                     {formatDate(
                                                         payment.occurred_at
                                                     )}
@@ -627,21 +640,21 @@ export default function Dashboard({
                     </div>
 
                     {/* Today's Tasks */}
-                    <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg">
-                        <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                            <h2 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100">
-                                Today's Tasks
+                    <div className="card">
+                        <div className="px-4 sm:px-6 py-4 border-b border-light-border/70 dark:border-dark-border/70">
+                            <h2 className="text-base sm:text-lg font-medium text-light-primary dark:text-dark-primary">
+                                Today’s tasks
                             </h2>
                         </div>
                         <div className="p-4 sm:p-6">
                             {localTodayTasks.length === 0 ? (
                                 <div className="text-center py-8">
-                                    <CalendarDays className="mx-auto h-12 w-12 text-gray-400" />
-                                    <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        No tasks for today
+                                    <CalendarDays className="mx-auto h-12 w-12 text-light-muted dark:text-dark-muted" />
+                                    <h3 className="mt-2 text-sm font-medium text-light-primary dark:text-dark-primary">
+                                        No tasks today
                                     </h3>
-                                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                        Enjoy your day!
+                                    <p className="mt-1 text-sm text-light-muted dark:text-dark-muted">
+                                        Still here whenever you need it.
                                     </p>
                                 </div>
                             ) : (
@@ -649,7 +662,7 @@ export default function Dashboard({
                                     {localTodayTasks.map((task) => (
                                         <div
                                             key={task.id}
-                                            className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                                            className="flex items-center justify-between p-3 bg-light-hover dark:bg-dark-hover rounded-xl"
                                         >
                                             <div className="flex items-center space-x-3 flex-1">
                                                 <button
@@ -665,15 +678,15 @@ export default function Dashboard({
                                                         className={`text-sm font-medium ${
                                                             task.status ===
                                                             "completed"
-                                                                ? "text-gray-500 dark:text-gray-400 line-through"
-                                                                : "text-gray-900 dark:text-gray-100"
+                                                                ? "text-light-muted dark:text-dark-muted line-through"
+                                                                : "text-light-primary dark:text-dark-primary"
                                                         }`}
                                                     >
                                                         {task.title}
                                                     </p>
                                                     {task.due_date && (
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                            Due:{" "}
+                                                        <p className="text-xs text-light-muted dark:text-dark-muted mt-1">
+                                                            Planned for{" "}
                                                             {formatDate(
                                                                 task.due_date
                                                             )}
@@ -687,10 +700,9 @@ export default function Dashboard({
                                                         task.priority
                                                     )}`}
                                                 >
-                                                    {task.priority
-                                                        .charAt(0)
-                                                        .toUpperCase() +
-                                                        task.priority.slice(1)}
+                                                    {getPriorityLabel(
+                                                        task.priority
+                                                    )}
                                                 </span>
                                             </div>
                                         </div>
@@ -704,22 +716,22 @@ export default function Dashboard({
                 {/* Overdue and Upcoming Tasks */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Overdue Tasks */}
-                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
-                        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 flex items-center">
-                                <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
-                                Overdue Tasks
+                    <div className="card">
+                        <div className="px-6 py-4 border-b border-light-border/70 dark:border-dark-border/70">
+                            <h2 className="text-base sm:text-lg font-medium text-light-primary dark:text-dark-primary flex items-center">
+                                <AlertTriangle className="h-5 w-5 text-amber-500 mr-2" />
+                                Tasks to revisit
                             </h2>
                         </div>
                         <div className="p-6">
                             {localOverdueTasks.length === 0 ? (
                                 <div className="text-center py-8">
-                                    <CheckCircle className="mx-auto h-12 w-12 text-green-400" />
-                                    <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        No overdue tasks
+                                    <CheckCircle className="mx-auto h-12 w-12 text-emerald-400" />
+                                    <h3 className="mt-2 text-sm font-medium text-light-primary dark:text-dark-primary">
+                                        Nothing waiting here
                                     </h3>
-                                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                        Great job staying on top!
+                                    <p className="mt-1 text-sm text-light-muted dark:text-dark-muted">
+                                        You’re all set for now.
                                     </p>
                                 </div>
                             ) : (
@@ -727,7 +739,7 @@ export default function Dashboard({
                                     {localOverdueTasks.map((task) => (
                                         <div
                                             key={task.id}
-                                            className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800"
+                                            className="flex items-center justify-between p-3 bg-amber-50/70 dark:bg-amber-900/10 rounded-xl border border-amber-200/60 dark:border-amber-800/40"
                                         >
                                             <div className="flex items-center space-x-3 flex-1">
                                                 <button
@@ -739,11 +751,11 @@ export default function Dashboard({
                                                     {getStatusIcon(task.status)}
                                                 </button>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                    <p className="text-sm font-medium text-light-primary dark:text-dark-primary">
                                                         {task.title}
                                                     </p>
-                                                    <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                                                        Overdue since{" "}
+                                                    <p className="text-xs text-amber-700 dark:text-amber-200 mt-1">
+                                                        Planned for{" "}
                                                         {formatDate(
                                                             task.due_date
                                                         )}
@@ -756,14 +768,13 @@ export default function Dashboard({
                                                         task.priority
                                                     )}`}
                                                 >
-                                                    {task.priority
-                                                        .charAt(0)
-                                                        .toUpperCase() +
-                                                        task.priority.slice(1)}
+                                                    {getPriorityLabel(
+                                                        task.priority
+                                                    )}
                                                 </span>
                                                 <button
                                                     onClick={() => handleDeleteTask(task)}
-                                                    className="text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+                                                    className="text-light-muted hover:text-rose-500 dark:text-dark-muted dark:hover:text-rose-300"
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </button>
@@ -776,22 +787,22 @@ export default function Dashboard({
                     </div>
 
                     {/* Upcoming Tasks */}
-                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
-                        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 flex items-center">
-                                <Calendar className="h-5 w-5 text-blue-500 mr-2" />
-                                Upcoming Tasks
+                    <div className="card">
+                        <div className="px-6 py-4 border-b border-light-border/70 dark:border-dark-border/70">
+                            <h2 className="text-base sm:text-lg font-medium text-light-primary dark:text-dark-primary flex items-center">
+                                <Calendar className="h-5 w-5 text-wevie-teal mr-2" />
+                                Coming up
                             </h2>
                         </div>
                         <div className="p-6">
                             {localUpcomingTasks.length === 0 ? (
                                 <div className="text-center py-8">
-                                    <Calendar className="mx-auto h-12 w-12 text-gray-400" />
-                                    <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        No upcoming tasks
+                                    <Calendar className="mx-auto h-12 w-12 text-light-muted dark:text-dark-muted" />
+                                    <h3 className="mt-2 text-sm font-medium text-light-primary dark:text-dark-primary">
+                                        Nothing scheduled yet
                                     </h3>
-                                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                        Next 7 days are clear
+                                    <p className="mt-1 text-sm text-light-muted dark:text-dark-muted">
+                                        Add plans when it feels right.
                                     </p>
                                 </div>
                             ) : (
@@ -799,7 +810,7 @@ export default function Dashboard({
                                     {localUpcomingTasks.map((task) => (
                                         <div
                                             key={task.id}
-                                            className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                                            className="flex items-center justify-between p-3 bg-light-hover dark:bg-dark-hover rounded-xl"
                                         >
                                             <div className="flex items-center space-x-3 flex-1">
                                                 <button
@@ -812,17 +823,17 @@ export default function Dashboard({
                                                 </button>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center space-x-2">
-                                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                        <p className="text-sm font-medium text-light-primary dark:text-dark-primary">
                                                             {task.title}
                                                         </p>
                                                         {task.is_recurring && (
-                                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
-                                                                Recurring
+                                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-violet-100/70 text-violet-700 dark:bg-violet-900/20 dark:text-violet-200">
+                                                                Steady rhythm
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                        Due:{" "}
+                                                    <p className="text-xs text-light-muted dark:text-dark-muted mt-1">
+                                                        Planned for{" "}
                                                         {formatDate(
                                                             task.due_date
                                                         )}
@@ -835,14 +846,13 @@ export default function Dashboard({
                                                         task.priority
                                                     )}`}
                                                 >
-                                                    {task.priority
-                                                        .charAt(0)
-                                                        .toUpperCase() +
-                                                        task.priority.slice(1)}
+                                                    {getPriorityLabel(
+                                                        task.priority
+                                                    )}
                                                 </span>
                                                 <button
                                                     onClick={() => handleDeleteTask(task)}
-                                                    className="text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+                                                    className="text-light-muted hover:text-rose-500 dark:text-dark-muted dark:hover:text-rose-300"
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </button>

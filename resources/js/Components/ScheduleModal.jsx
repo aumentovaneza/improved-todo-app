@@ -88,28 +88,28 @@ export default function ScheduleModal({
     const getPriorityColor = (priority) => {
         switch (priority) {
             case "urgent":
-                return "text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/20";
+                return "text-amber-700 bg-amber-100/70 dark:text-amber-200 dark:bg-amber-900/20";
             case "high":
-                return "text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/20";
+                return "text-orange-700 bg-orange-100/70 dark:text-orange-200 dark:bg-orange-900/20";
             case "medium":
-                return "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/20";
+                return "text-sky-700 bg-sky-100/70 dark:text-sky-200 dark:bg-sky-900/20";
             case "low":
-                return "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/20";
+                return "text-emerald-700 bg-emerald-100/70 dark:text-emerald-200 dark:bg-emerald-900/20";
             default:
-                return "text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/20";
+                return "text-slate-600 bg-slate-100/70 dark:text-slate-300 dark:bg-slate-800/40";
         }
     };
 
     const getStatusIcon = (status) => {
         switch (status) {
             case "completed":
-                return <CheckCircle className="h-5 w-5 text-gray-500" />;
+                return <CheckCircle className="h-5 w-5 text-emerald-500" />;
             case "in_progress":
-                return <Clock className="h-5 w-5 text-green-500" />;
+                return <Clock className="h-5 w-5 text-sky-500" />;
             case "cancelled":
-                return <AlertTriangle className="h-5 w-5 text-red-500" />;
+                return <AlertTriangle className="h-5 w-5 text-slate-400" />;
             default:
-                return <Circle className="h-5 w-5 text-gray-400" />;
+                return <Circle className="h-5 w-5 text-amber-500" />;
         }
     };
 
@@ -178,15 +178,15 @@ export default function ScheduleModal({
         <div className="fixed inset-0 z-50 overflow-y-auto">
             <div className="flex min-h-screen items-center justify-center p-4">
                 <div
-                    className="fixed inset-0 bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75 transition-opacity"
+                    className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
                     onClick={onClose}
                 />
-                <div className="relative bg-white dark:bg-dark-secondary rounded-lg shadow-xl max-w-4xl w-full flex flex-col max-h-[90vh]">
+                <div className="relative bg-white dark:bg-dark-secondary rounded-2xl shadow-soft ring-1 ring-black/5 max-w-4xl w-full flex flex-col max-h-[90vh]">
                     {/* Modal Header */}
-                    <div className="flex items-center justify-between p-6 border-b border-light-border dark:border-dark-border flex-shrink-0">
-                        <h2 className="text-xl font-semibold text-adaptive-primary flex items-center">
-                            <Calendar className="h-6 w-6 text-primary-500 mr-2" />
-                            Schedule Overview
+                    <div className="flex items-center justify-between p-6 border-b border-light-border/70 dark:border-dark-border/70 flex-shrink-0">
+                        <h2 className="text-lg font-semibold text-adaptive-primary flex items-center">
+                            <Calendar className="h-5 w-5 text-wevie-teal mr-2" />
+                            Schedule
                         </h2>
                         <button
                             onClick={onClose}
@@ -201,7 +201,7 @@ export default function ScheduleModal({
                         {/* Quick Date Navigation */}
                         <div className="mb-6">
                             <label className="block text-sm font-medium text-adaptive-secondary mb-2">
-                                Jump to Date
+                                Jump to date
                             </label>
                             <div className="flex flex-wrap items-center gap-3">
                                 <input
@@ -228,7 +228,7 @@ export default function ScheduleModal({
                                                 ).padStart(2, "0");
                                             setSelectedDate(todayStr);
                                         }}
-                                        className="btn-secondary text-xs py-1 px-2"
+                                        className="btn-secondary text-xs py-1 px-3"
                                     >
                                         Today
                                     </button>
@@ -250,7 +250,7 @@ export default function ScheduleModal({
                                                 ).padStart(2, "0");
                                             setSelectedDate(tomorrowStr);
                                         }}
-                                        className="btn-secondary text-xs py-1 px-2"
+                                        className="btn-secondary text-xs py-1 px-3"
                                     >
                                         Tomorrow
                                     </button>
@@ -266,9 +266,9 @@ export default function ScheduleModal({
                                                     .split("T")[0]
                                             );
                                         }}
-                                        className="btn-secondary text-xs py-1 px-2"
+                                        className="btn-secondary text-xs py-1 px-3"
                                     >
-                                        Next Week
+                                        Next week
                                     </button>
                                 </div>
                             </div>
@@ -276,8 +276,8 @@ export default function ScheduleModal({
 
                         {/* Next 7 Days View */}
                         <div className="mb-8">
-                            <h3 className="text-lg font-medium text-adaptive-primary mb-4">
-                                Next 7 Days
+                            <h3 className="text-base font-medium text-adaptive-primary mb-4">
+                                Next 7 days
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                 {getNext7Days().map((day) => (
@@ -285,7 +285,7 @@ export default function ScheduleModal({
                                         key={day.date}
                                         className={`card p-4 ${
                                             day.isToday
-                                                ? "ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20"
+                                                ? "ring-2 ring-wevie-teal/50 bg-wevie-teal/5 dark:bg-wevie-teal/10"
                                                 : ""
                                         }`}
                                     >
@@ -301,12 +301,12 @@ export default function ScheduleModal({
                                             <span
                                                 className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                                                     day.tasks.length === 0
-                                                        ? "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                                                        ? "bg-light-hover text-light-muted dark:bg-dark-hover dark:text-dark-muted"
                                                         : day.tasks.length <= 2
-                                                        ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                                                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-200"
                                                         : day.tasks.length <= 4
-                                                        ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
-                                                        : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                                                        ? "bg-sky-100 text-sky-700 dark:bg-sky-900/20 dark:text-sky-200"
+                                                        : "bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-200"
                                                 }`}
                                             >
                                                 {day.tasks.length} tasks
@@ -316,7 +316,7 @@ export default function ScheduleModal({
                                         <div className="space-y-2">
                                             {day.tasks.length === 0 ? (
                                                 <p className="text-xs text-adaptive-muted italic">
-                                                    No tasks scheduled
+                                                    Nothing scheduled yet
                                                 </p>
                                             ) : (
                                                 day.tasks
@@ -324,7 +324,7 @@ export default function ScheduleModal({
                                                     .map((task) => (
                                                         <div
                                                             key={task.id}
-                                                            className="flex items-center justify-between p-2 bg-light-hover dark:bg-dark-hover rounded-md"
+                                                            className="flex items-center justify-between p-2 bg-light-hover dark:bg-dark-hover rounded-xl"
                                                         >
                                                             <div className="flex-1 min-w-0">
                                                                 <p className="text-xs font-medium text-adaptive-primary truncate">
@@ -336,9 +336,9 @@ export default function ScheduleModal({
                                                                             task.priority
                                                                         )}`}
                                                                     >
-                                                                        {
-                                                                            task.priority
-                                                                        }
+                                                                        {task.priority === "urgent"
+                                                                            ? "Focus"
+                                                                            : task.priority}
                                                                     </span>
                                                                     <span className="text-xs text-adaptive-muted">
                                                                         {formatTaskTime(
@@ -356,7 +356,7 @@ export default function ScheduleModal({
                                                                         true
                                                                     );
                                                                 }}
-                                                                className="ml-2 p-1 text-light-muted hover:text-primary-500 dark:text-dark-muted dark:hover:text-primary-400"
+                                                                className="ml-2 p-1 text-light-muted hover:text-wevie-teal dark:text-dark-muted dark:hover:text-wevie-mint"
                                                             >
                                                                 <Eye className="h-3 w-3" />
                                                             </button>
@@ -377,7 +377,7 @@ export default function ScheduleModal({
                         {/* Selected Date Tasks */}
                         {selectedDate && (
                             <div>
-                                <h3 className="text-lg font-medium text-adaptive-primary mb-4">
+                                <h3 className="text-base font-medium text-adaptive-primary mb-4">
                                     Tasks for{" "}
                                     {new Date(
                                         selectedDate + "T00:00:00"
@@ -393,10 +393,10 @@ export default function ScheduleModal({
                                         <div className="text-center py-8 card">
                                             <Calendar className="mx-auto h-12 w-12 text-light-muted dark:text-dark-muted" />
                                             <h4 className="mt-2 text-sm font-medium text-adaptive-primary">
-                                                No tasks scheduled
+                                                Nothing scheduled
                                             </h4>
                                             <p className="mt-1 text-sm text-adaptive-muted">
-                                                This date is free!
+                                                This day is open for you.
                                             </p>
                                         </div>
                                     ) : (
@@ -424,7 +424,7 @@ export default function ScheduleModal({
                                                                 <h4 className="text-sm font-medium text-adaptive-primary">
                                                                     {task.title}
                                                                 </h4>
-                                                                <span className="text-sm font-medium text-primary-600 dark:text-primary-400">
+                                                                <span className="text-sm font-medium text-wevie-teal dark:text-wevie-mint">
                                                                     {formatTaskTime(
                                                                         task
                                                                     )}
@@ -443,17 +443,19 @@ export default function ScheduleModal({
                                                                         task.priority
                                                                     )}`}
                                                                 >
-                                                                    {task.priority
-                                                                        .charAt(
-                                                                            0
-                                                                        )
-                                                                        .toUpperCase() +
-                                                                        task.priority.slice(
-                                                                            1
-                                                                        )}
+                                                                    {task.priority === "urgent"
+                                                                        ? "Focus"
+                                                                        : task.priority
+                                                                              .charAt(
+                                                                                  0
+                                                                              )
+                                                                              .toUpperCase() +
+                                                                          task.priority.slice(
+                                                                              1
+                                                                          )}
                                                                 </span>
                                                                 {task.category && (
-                                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-secondary-100 text-secondary-700 dark:bg-secondary-900/20 dark:text-secondary-300">
+                                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-wevie-teal/10 text-wevie-text-primary dark:bg-wevie-teal/10 dark:text-wevie-dark-text-primary">
                                                                         {
                                                                             task
                                                                                 .category
@@ -487,7 +489,7 @@ export default function ScheduleModal({
                                                                     true
                                                                 );
                                                             }}
-                                                            className="btn-accent p-2"
+                                                            className="btn-secondary p-2"
                                                         >
                                                             <Edit className="h-4 w-4" />
                                                         </button>
@@ -502,13 +504,13 @@ export default function ScheduleModal({
                     </div>
 
                     {/* Modal Footer - Fixed at bottom */}
-                    <div className="flex items-center justify-between p-6 border-t border-light-border dark:border-dark-border bg-light-hover dark:bg-dark-hover flex-shrink-0">
+                    <div className="flex items-center justify-between p-6 border-t border-light-border/70 dark:border-dark-border/70 bg-light-hover dark:bg-dark-hover flex-shrink-0">
                         <p className="text-sm text-adaptive-muted">
-                            Click on tasks to view details or reschedule
+                            Tap a task to see details or adjust timing.
                         </p>
                         <div className="flex space-x-3">
                             <button onClick={onClose} className="btn-secondary">
-                                Close
+                                Done
                             </button>
                             <Link
                                 href={route("calendar.index")}
@@ -516,7 +518,7 @@ export default function ScheduleModal({
                                 onClick={onClose}
                             >
                                 <Calendar className="mr-2 h-4 w-4" />
-                                Full Calendar
+                                Full calendar
                             </Link>
                         </div>
                     </div>

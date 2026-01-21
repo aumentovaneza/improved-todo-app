@@ -36,8 +36,9 @@ const typeStyles = {
     expense: "bg-rose-100 text-rose-700 dark:bg-rose-900/20 dark:text-rose-400",
     savings: "bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400",
     loan: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/20 dark:text-cyan-400",
+    transfer: "bg-sky-100 text-sky-700 dark:bg-sky-900/20 dark:text-sky-400",
 };
-const typeOrder = ["income", "loan", "expense", "savings"];
+const typeOrder = ["income", "loan", "expense", "savings", "transfer"];
 
 export default function Transactions({
     transactions = [],
@@ -246,6 +247,7 @@ export default function Transactions({
                                 <option value="loan">Loan</option>
                                 <option value="expense">Expense</option>
                                 <option value="savings">Savings</option>
+                                <option value="transfer">Transfer</option>
                             </select>
                         </div>
                         <div>
@@ -378,17 +380,51 @@ export default function Transactions({
                                                                                     ?.name ??
                                                                                     "Uncategorized"}
                                                                             </p>
-                                                                            {transaction.account
-                                                                                ?.name && (
+                                                                            {(transaction.account
+                                                                                ?.name ||
+                                                                                transaction.account
+                                                                                    ?.label) && (
                                                                                 <p className="text-xs text-slate-400">
-                                                                                    Account:{" "}
-                                                                                    {
-                                                                                        transaction
-                                                                                            .account
-                                                                                            .name
-                                                                                    }
+                                                                                    {transaction.type ===
+                                                                                    "transfer"
+                                                                                        ? `From: ${transaction.account.label ?? transaction.account.name}`
+                                                                                        : `Account: ${transaction.account.label ?? transaction.account.name}`}
                                                                                 </p>
                                                                             )}
+                                                                            {transaction.type ===
+                                                                                "transfer" &&
+                                                                                transaction
+                                                                                    .transfer_account
+                                                                                    ?.name && (
+                                                                                    <p className="text-xs text-slate-400">
+                                                                                        To:{" "}
+                                                                                        {
+                                                                                            transaction
+                                                                                                .transfer_account
+                                                                                                .label ??
+                                                                                            transaction
+                                                                                                .transfer_account
+                                                                                                .name
+                                                                                        }
+                                                                                    </p>
+                                                                                )}
+                                                                            {transaction.type ===
+                                                                                "transfer" &&
+                                                                                !transaction
+                                                                                    .transfer_account
+                                                                                    ?.name &&
+                                                                                transaction
+                                                                                    .metadata
+                                                                                    ?.external_account_name && (
+                                                                                    <p className="text-xs text-slate-400">
+                                                                                        To:{" "}
+                                                                                        {
+                                                                                            transaction
+                                                                                                .metadata
+                                                                                                .external_account_name
+                                                                                        }
+                                                                                    </p>
+                                                                                )}
                                                                             {transaction.created_by &&
                                                                                 transaction
                                                                                     .created_by

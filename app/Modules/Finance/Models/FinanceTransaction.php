@@ -22,6 +22,7 @@ class FinanceTransaction extends Model
         'finance_savings_goal_id',
         'finance_budget_id',
         'finance_account_id',
+        'finance_transfer_account_id',
         'finance_credit_card_account_id',
         'type',
         'amount',
@@ -70,6 +71,11 @@ class FinanceTransaction extends Model
     public function account(): BelongsTo
     {
         return $this->belongsTo(FinanceAccount::class, 'finance_account_id');
+    }
+
+    public function transferAccount(): BelongsTo
+    {
+        return $this->belongsTo(FinanceAccount::class, 'finance_transfer_account_id');
     }
 
     public function creditCardAccount(): BelongsTo

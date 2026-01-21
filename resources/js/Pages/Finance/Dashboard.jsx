@@ -215,6 +215,9 @@ export default function Dashboard(props) {
     const handleCreateTransaction = useCallback(
         async (formData) => {
             const loanSelected = Boolean(formData.finance_loan_id);
+            const transferDestination =
+                formData.transfer_destination ||
+                (formData.finance_transfer_account_id ? "internal" : "external");
             const payload = {
                 ...formData,
                 wallet_user_id: activeWalletId || undefined,
@@ -223,6 +226,15 @@ export default function Dashboard(props) {
                 finance_loan_id: formData.finance_loan_id || null,
                 finance_savings_goal_id: formData.finance_savings_goal_id || null,
                 finance_account_id: formData.finance_account_id || null,
+                finance_transfer_account_id:
+                    transferDestination === "internal"
+                        ? formData.finance_transfer_account_id || null
+                        : null,
+                transfer_destination: transferDestination,
+                external_account_name:
+                    transferDestination === "external"
+                        ? formData.external_account_name || null
+                        : null,
                 finance_credit_card_account_id:
                     formData.finance_credit_card_account_id || null,
                 finance_budget_id: loanSelected
@@ -512,6 +524,9 @@ export default function Dashboard(props) {
             }
 
             const loanSelected = Boolean(formData.finance_loan_id);
+            const transferDestination =
+                formData.transfer_destination ||
+                (formData.finance_transfer_account_id ? "internal" : "external");
             const payload = {
                 ...formData,
                 amount: formData.amount ? Number(formData.amount) : 0,
@@ -519,6 +534,15 @@ export default function Dashboard(props) {
                 finance_loan_id: formData.finance_loan_id || null,
                 finance_savings_goal_id: formData.finance_savings_goal_id || null,
                 finance_account_id: formData.finance_account_id || null,
+                finance_transfer_account_id:
+                    transferDestination === "internal"
+                        ? formData.finance_transfer_account_id || null
+                        : null,
+                transfer_destination: transferDestination,
+                external_account_name:
+                    transferDestination === "external"
+                        ? formData.external_account_name || null
+                        : null,
                 finance_credit_card_account_id:
                     formData.finance_credit_card_account_id || null,
                 finance_budget_id: loanSelected

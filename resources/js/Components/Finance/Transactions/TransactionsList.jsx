@@ -16,6 +16,7 @@ const typeStyles = {
     expense: "text-rose-600 dark:text-rose-300",
     savings: "text-violet-600 dark:text-violet-300",
     loan: "text-cyan-600 dark:text-cyan-300",
+    transfer: "text-sky-600 dark:text-sky-300",
 };
 
 const formatFrequency = (frequency) =>
@@ -113,7 +114,23 @@ export default function TransactionsList({
                                     {transaction.category?.name ?? "Uncategorized"}
                                 </td>
                                 <td className="py-3">
-                                    {transaction.account?.name ?? "—"}
+                                    {transaction.type === "transfer" ? (
+                                        <span>
+                                            {transaction.account?.label ??
+                                                transaction.account?.name ??
+                                                "—"}
+                                            {" → "}
+                                            {transaction.transfer_account?.label ??
+                                                transaction.transfer_account?.name ??
+                                                transaction.metadata
+                                                    ?.external_account_name ??
+                                                "External"}
+                                        </span>
+                                    ) : (
+                                        transaction.account?.label ??
+                                        transaction.account?.name ??
+                                        "—"
+                                    )}
                                 </td>
                                 <td className="py-3">
                                     {formatDate(transaction.occurred_at)}

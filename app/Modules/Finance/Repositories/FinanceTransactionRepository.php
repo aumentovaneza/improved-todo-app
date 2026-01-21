@@ -11,7 +11,15 @@ class FinanceTransactionRepository
 {
     public function getForUser(int $userId, int $limit = 100): Collection
     {
-        return FinanceTransaction::with(['category', 'loan', 'tags', 'createdBy', 'account', 'creditCardAccount'])
+        return FinanceTransaction::with([
+            'category',
+            'loan',
+            'tags',
+            'createdBy',
+            'account',
+            'transferAccount',
+            'creditCardAccount',
+        ])
             ->where('user_id', $userId)
             ->orderBy('created_at', 'desc')
             ->limit($limit)
@@ -44,9 +52,15 @@ class FinanceTransactionRepository
             ->pluck('total', 'type')
             ->all();
 
+        $externalTransfers = (float) FinanceTransaction::where('user_id', $userId)
+            ->where('type', 'transfer')
+            ->where('metadata->transfer_destination', 'external')
+            ->whereBetween('occurred_at', [$startDate->startOfDay(), $endDate->endOfDay()])
+            ->sum('amount');
+
         return [
             'income' => (float) ($totals['income'] ?? 0),
-            'expense' => (float) ($totals['expense'] ?? 0),
+            'expense' => (float) ($totals['expense'] ?? 0) + $externalTransfers,
             'savings' => (float) ($totals['savings'] ?? 0),
             'loan' => (float) ($totals['loan'] ?? 0),
         ];
@@ -56,7 +70,7 @@ class FinanceTransactionRepository
     {
         $start = now()->subMonths($monthsBack - 1)->startOfMonth();
 
-        return FinanceTransaction::where('user_id', $userId)
+        $monthlyTotals = FinanceTransaction::where('user_id', $userId)
             ->where('occurred_at', '>=', $start)
             ->select(
                 DB::raw("DATE_FORMAT(occurred_at, '%Y-%m') as period"),
@@ -66,13 +80,32 @@ class FinanceTransactionRepository
             ->groupBy('period', 'type')
             ->orderBy('period')
             ->get();
+
+        $externalTransfers = FinanceTransaction::where('user_id', $userId)
+            ->where('type', 'transfer')
+            ->where('metadata->transfer_destination', 'external')
+            ->where('occurred_at', '>=', $start)
+            ->select(
+                DB::raw("DATE_FORMAT(occurred_at, '%Y-%m') as period"),
+                DB::raw('SUM(amount) as total')
+            )
+            ->groupBy('period')
+            ->orderBy('period')
+            ->get()
+            ->map(fn($row) => (object) [
+                'period' => $row->period,
+                'type' => 'expense',
+                'total' => $row->total,
+            ]);
+
+        return $monthlyTotals->concat($externalTransfers);
     }
 
     public function getDailyTotals(int $userId, int $daysBack = 14): Collection
     {
         $start = now()->subDays($daysBack - 1)->startOfDay();
 
-        return FinanceTransaction::where('user_id', $userId)
+        $dailyTotals = FinanceTransaction::where('user_id', $userId)
             ->where('occurred_at', '>=', $start)
             ->select(
                 DB::raw('DATE(occurred_at) as period'),
@@ -82,6 +115,25 @@ class FinanceTransactionRepository
             ->groupBy('period', 'type')
             ->orderBy('period')
             ->get();
+
+        $externalTransfers = FinanceTransaction::where('user_id', $userId)
+            ->where('type', 'transfer')
+            ->where('metadata->transfer_destination', 'external')
+            ->where('occurred_at', '>=', $start)
+            ->select(
+                DB::raw('DATE(occurred_at) as period'),
+                DB::raw('SUM(amount) as total')
+            )
+            ->groupBy('period')
+            ->orderBy('period')
+            ->get()
+            ->map(fn($row) => (object) [
+                'period' => $row->period,
+                'type' => 'expense',
+                'total' => $row->total,
+            ]);
+
+        return $dailyTotals->concat($externalTransfers);
     }
 
     public function getCategoryTotals(int $userId, Carbon $startDate, Carbon $endDate): Collection

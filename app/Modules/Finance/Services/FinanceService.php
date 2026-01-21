@@ -425,6 +425,13 @@ class FinanceService
     {
         $this->ensureOwnership($loan->user_id, $userId);
 
+        if (
+            array_key_exists('remaining_amount', $data) &&
+            ($data['remaining_amount'] === null || $data['remaining_amount'] === '')
+        ) {
+            $data['remaining_amount'] = $data['total_amount'] ?? $loan->total_amount ?? 0;
+        }
+
         return $this->loanRepository->update($loan, $data);
     }
 
@@ -697,6 +704,10 @@ class FinanceService
             ->where('type', 'expense')
             ->where('finance_loan_id', $loan->id)
             ->sum('amount');
+
+        if ((float) $paid <= 0) {
+            return;
+        }
 
         $loan->remaining_amount = max(0, (float) $loan->total_amount - (float) $paid);
         $loan->save();

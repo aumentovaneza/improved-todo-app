@@ -257,7 +257,7 @@ export default function BudgetForm({
                         <option value="">Any account</option>
                         {accounts.map((account) => (
                             <option key={account.id} value={account.id}>
-                                {account.name}
+                                {account.label} - {account.name}
                             </option>
                         ))}
                     </select>

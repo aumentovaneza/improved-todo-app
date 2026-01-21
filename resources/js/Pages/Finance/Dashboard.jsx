@@ -1179,7 +1179,7 @@ export default function Dashboard(props) {
                                             key={account.id}
                                             value={account.id}
                                         >
-                                            {account.name}
+                                            {account.label} - {account.name}
                                         </option>
                                     ))}
                                 </select>

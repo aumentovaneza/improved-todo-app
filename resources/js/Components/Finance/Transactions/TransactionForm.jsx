@@ -14,10 +14,18 @@ const buildInitialState = (initialValues) => ({
     finance_savings_goal_id: initialValues?.finance_savings_goal_id ?? "",
     finance_budget_id: initialValues?.finance_budget_id ?? "",
     finance_account_id: initialValues?.finance_account_id ?? "",
+    finance_transfer_account_id:
+        initialValues?.finance_transfer_account_id ?? "",
+    transfer_destination:
+        initialValues?.metadata?.transfer_destination ??
+        (initialValues?.finance_transfer_account_id ? "internal" : "internal"),
+    external_account_name:
+        initialValues?.metadata?.external_account_name ?? "",
     finance_credit_card_account_id:
         initialValues?.finance_credit_card_account_id ?? "",
     recurring_frequency: initialValues?.recurring_frequency ?? "",
     tags: initialValues?.tags ?? [],
+    metadata: initialValues?.metadata ?? {},
 });
 
 export default function TransactionForm({
@@ -34,6 +42,9 @@ export default function TransactionForm({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const creditCardAccounts = accounts.filter(
         (account) => account.type === "credit-card"
+    );
+    const transferTargets = accounts.filter(
+        (account) => String(account.id) !== String(form.finance_account_id)
     );
 
     useEffect(() => {
@@ -68,6 +79,9 @@ export default function TransactionForm({
         setIsSubmitting(true);
         const recurringFrequency = form.recurring_frequency || null;
         const loanSelected = Boolean(form.finance_loan_id);
+        const transferDestination =
+            form.transfer_destination ||
+            (form.finance_transfer_account_id ? "internal" : "external");
         const payload = {
             ...form,
             finance_savings_goal_id:
@@ -84,6 +98,24 @@ export default function TransactionForm({
                 form.type === "expense"
                     ? form.finance_credit_card_account_id
                     : "",
+            finance_category_id:
+                form.type === "transfer" ? "" : form.finance_category_id,
+            finance_transfer_account_id:
+                form.type === "transfer"
+                    ? transferDestination === "internal"
+                        ? form.finance_transfer_account_id
+                        : ""
+                    : "",
+            metadata:
+                form.type === "transfer"
+                    ? {
+                          transfer_destination: transferDestination,
+                          external_account_name:
+                              transferDestination === "external"
+                                  ? form.external_account_name
+                                  : "",
+                      }
+                    : form.metadata,
             is_recurring: Boolean(recurringFrequency),
             recurring_frequency: recurringFrequency,
         };
@@ -105,6 +137,36 @@ export default function TransactionForm({
     }, [form.type, form.finance_credit_card_account_id]);
 
     useEffect(() => {
+        if (form.type === "transfer" && form.finance_category_id) {
+            setForm((prev) => ({ ...prev, finance_category_id: "" }));
+        }
+        if (form.type === "transfer" && form.finance_loan_id) {
+            setForm((prev) => ({ ...prev, finance_loan_id: "" }));
+        }
+        if (form.type === "transfer" && form.finance_budget_id) {
+            setForm((prev) => ({ ...prev, finance_budget_id: "" }));
+        }
+        if (form.type === "transfer" && form.finance_savings_goal_id) {
+            setForm((prev) => ({ ...prev, finance_savings_goal_id: "" }));
+        }
+    }, [
+        form.type,
+        form.finance_category_id,
+        form.finance_loan_id,
+        form.finance_budget_id,
+        form.finance_savings_goal_id,
+    ]);
+
+    useEffect(() => {
+        if (form.type === "transfer" && form.transfer_destination === "external") {
+            setForm((prev) => ({ ...prev, finance_transfer_account_id: "" }));
+        }
+        if (form.type === "transfer" && form.transfer_destination === "internal") {
+            setForm((prev) => ({ ...prev, external_account_name: "" }));
+        }
+    }, [form.type, form.transfer_destination]);
+
+    useEffect(() => {
         const account = accounts.find(
             (item) => String(item.id) === String(form.finance_account_id)
         );
@@ -114,17 +176,14 @@ export default function TransactionForm({
     }, [accounts, form.finance_account_id]);
 
     return (
-        <form
-            onSubmit={handleSubmit}
-            className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
-        >
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <form onSubmit={handleSubmit} className="card p-4">
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <div>
                     <label className="text-sm text-slate-500 dark:text-slate-400">
                         Description
                     </label>
                     <input
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                         value={form.description}
                         onChange={updateField("description")}
                         placeholder="Coffee, paycheck, rent"
@@ -136,7 +195,7 @@ export default function TransactionForm({
                         Type
                     </label>
                     <select
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                         value={form.type}
                         onChange={updateField("type")}
                     >
@@ -144,6 +203,7 @@ export default function TransactionForm({
                         <option value="loan">Loan</option>
                         <option value="expense">Expense</option>
                         <option value="savings">Savings</option>
+                        <option value="transfer">Transfer</option>
                     </select>
                 </div>
                 <div>
@@ -152,7 +212,7 @@ export default function TransactionForm({
                     </label>
                     <input
                         type="number"
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                         value={form.amount}
                         onChange={updateField("amount")}
                         min="0"
@@ -166,7 +226,7 @@ export default function TransactionForm({
                     </label>
                     <input
                         type="date"
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                         value={form.occurred_at}
                         onChange={updateField("occurred_at")}
                         required
@@ -177,7 +237,7 @@ export default function TransactionForm({
                         Recurring
                     </label>
                     <select
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                         value={form.recurring_frequency}
                         onChange={updateField("recurring_frequency")}
                     >
@@ -189,12 +249,13 @@ export default function TransactionForm({
                         <option value="yearly">Yearly</option>
                     </select>
                 </div>
-                <div className="sm:col-span-2">
+                {form.type !== "transfer" && (
+                    <div className="md:col-span-2">
                     <label className="text-sm text-slate-500 dark:text-slate-400">
                         Category
                     </label>
                     <select
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                         value={form.finance_category_id}
                         onChange={updateField("finance_category_id")}
                     >
@@ -207,56 +268,114 @@ export default function TransactionForm({
                                 </option>
                             ))}
                     </select>
-                </div>
+                    </div>
+                )}
                 {form.type === "loan" && (
                     <div className="sm:col-span-2 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs text-cyan-700 dark:border-cyan-700/60 dark:bg-cyan-900/20 dark:text-cyan-200">
                         Loan transactions add cash to the selected account and
                         create a loan tracker using the description and amount.
                     </div>
                 )}
-                <div className="sm:col-span-2">
+                <div className="md:col-span-1">
                     <label className="text-sm text-slate-500 dark:text-slate-400">
-                        Account (optional)
+                        {form.type === "transfer"
+                            ? "From account"
+                            : "Account (optional)"}
                     </label>
                     <select
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                         value={form.finance_account_id}
                         onChange={updateField("finance_account_id")}
+                        required={form.type === "transfer"}
                     >
-                        <option value="">No account linked</option>
+                        <option value="">
+                            {form.type === "transfer"
+                                ? "Select account"
+                                : "No account linked"}
+                        </option>
                         {accounts.map((account) => (
                             <option key={account.id} value={account.id}>
-                                {account.name}
+                                {account.label} - {account.name}
                             </option>
                         ))}
                     </select>
                 </div>
+                {form.type === "transfer" && (
+                    <div className="md:col-span-1">
+                        <label className="text-sm text-slate-500 dark:text-slate-400">
+                            Destination
+                        </label>
+                        <select
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                            value={form.transfer_destination}
+                            onChange={updateField("transfer_destination")}
+                        >
+                            <option value="internal">My accounts</option>
+                            <option value="external">Someone else</option>
+                        </select>
+                    </div>
+                )}
+                {form.type === "transfer" && form.transfer_destination === "external" && (
+                    <div className="md:col-span-1">
+                        <label className="text-sm text-slate-500 dark:text-slate-400">
+                            Recipient account
+                        </label>
+                        <input
+                            type="text"
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                            value={form.external_account_name}
+                            onChange={updateField("external_account_name")}
+                            placeholder="e.g., Maya (GCash)"
+                            required
+                        />
+                    </div>
+                )}
+                {form.type === "transfer" && form.transfer_destination === "internal" && (
+                    <div className="md:col-span-1">
+                        <label className="text-sm text-slate-500 dark:text-slate-400">
+                            To account
+                        </label>
+                        <select
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                            value={form.finance_transfer_account_id}
+                            onChange={updateField("finance_transfer_account_id")}
+                            required
+                        >
+                            <option value="">Select account</option>
+                            {transferTargets.map((account) => (
+                                <option key={account.id} value={account.id}>
+                                    {account.label} - {account.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
                 {form.type === "savings" && (
-                    <div className="sm:col-span-2">
+                    <div className="md:col-span-1">
                         <label className="text-sm text-slate-500 dark:text-slate-400">
                             Savings goal (optional)
                         </label>
                         <select
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                             value={form.finance_savings_goal_id}
                             onChange={updateField("finance_savings_goal_id")}
                         >
                             <option value="">No goal linked</option>
                             {savingsGoals.map((goal) => (
                                 <option key={goal.id} value={goal.id}>
-                                    {goal.name}
+                                    {goal.label}
                                 </option>
                             ))}
                         </select>
                     </div>
                 )}
                 {form.type === "expense" && (
-                    <div className="sm:col-span-2">
+                    <div className="md:col-span-1">
                         <label className="text-sm text-slate-500 dark:text-slate-400">
                             Budget (optional)
                         </label>
                         <select
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                             value={form.finance_budget_id}
                             onChange={handleBudgetChange}
                         >
@@ -270,12 +389,12 @@ export default function TransactionForm({
                     </div>
                 )}
                 {form.type === "expense" && (
-                    <div className="sm:col-span-2">
+                    <div className="md:col-span-1">
                         <label className="text-sm text-slate-500 dark:text-slate-400">
                             Loan payment (optional)
                         </label>
                         <select
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                             value={form.finance_loan_id}
                             onChange={handleLoanChange}
                         >
@@ -290,12 +409,12 @@ export default function TransactionForm({
                 )}
                 {form.type === "expense" &&
                     creditCardAccounts.length > 0 && (
-                    <div className="sm:col-span-2">
+                    <div className="md:col-span-1">
                         <label className="text-sm text-slate-500 dark:text-slate-400">
                             Credit card payment (optional)
                         </label>
                         <select
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                             value={form.finance_credit_card_account_id}
                             onChange={updateField(
                                 "finance_credit_card_account_id"
@@ -321,7 +440,7 @@ export default function TransactionForm({
                         </p>
                     </div>
                 )}
-                <div className="sm:col-span-2">
+                <div className="md:col-span-2">
                     <label className="text-sm text-slate-500 dark:text-slate-400">
                         Tags (optional)
                     </label>

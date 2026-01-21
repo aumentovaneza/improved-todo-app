@@ -191,7 +191,7 @@ export default function Dashboard(props) {
     const handleRemoveCollaborator = useCallback((collaboratorId) => {
         if (
             !window.confirm(
-                "Are you sure you want to remove this collaborator?"
+                "Remove this collaborator? You can invite them again anytime."
             )
         ) {
             return;
@@ -215,6 +215,9 @@ export default function Dashboard(props) {
     const handleCreateTransaction = useCallback(
         async (formData) => {
             const loanSelected = Boolean(formData.finance_loan_id);
+            const transferDestination =
+                formData.transfer_destination ||
+                (formData.finance_transfer_account_id ? "internal" : "external");
             const payload = {
                 ...formData,
                 wallet_user_id: activeWalletId || undefined,
@@ -223,6 +226,15 @@ export default function Dashboard(props) {
                 finance_loan_id: formData.finance_loan_id || null,
                 finance_savings_goal_id: formData.finance_savings_goal_id || null,
                 finance_account_id: formData.finance_account_id || null,
+                finance_transfer_account_id:
+                    transferDestination === "internal"
+                        ? formData.finance_transfer_account_id || null
+                        : null,
+                transfer_destination: transferDestination,
+                external_account_name:
+                    transferDestination === "external"
+                        ? formData.external_account_name || null
+                        : null,
                 finance_credit_card_account_id:
                     formData.finance_credit_card_account_id || null,
                 finance_budget_id: loanSelected
@@ -512,6 +524,9 @@ export default function Dashboard(props) {
             }
 
             const loanSelected = Boolean(formData.finance_loan_id);
+            const transferDestination =
+                formData.transfer_destination ||
+                (formData.finance_transfer_account_id ? "internal" : "external");
             const payload = {
                 ...formData,
                 amount: formData.amount ? Number(formData.amount) : 0,
@@ -519,6 +534,15 @@ export default function Dashboard(props) {
                 finance_loan_id: formData.finance_loan_id || null,
                 finance_savings_goal_id: formData.finance_savings_goal_id || null,
                 finance_account_id: formData.finance_account_id || null,
+                finance_transfer_account_id:
+                    transferDestination === "internal"
+                        ? formData.finance_transfer_account_id || null
+                        : null,
+                transfer_destination: transferDestination,
+                external_account_name:
+                    transferDestination === "external"
+                        ? formData.external_account_name || null
+                        : null,
                 finance_credit_card_account_id:
                     formData.finance_credit_card_account_id || null,
                 finance_budget_id: loanSelected
@@ -549,7 +573,7 @@ export default function Dashboard(props) {
                         <Dropdown.Trigger>
                             <button
                                 type="button"
-                                className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                                className="rounded-full bg-light-hover px-3 py-1 text-xs font-semibold text-light-secondary hover:bg-light-border/70 dark:bg-dark-hover dark:text-dark-secondary dark:hover:bg-dark-border/70"
                                 title="Select wallet"
                             >
                                 {activeWalletLabel}
@@ -558,7 +582,7 @@ export default function Dashboard(props) {
                         <Dropdown.Content
                             align="left"
                             width="48"
-                            contentClasses="py-1 bg-white dark:bg-slate-900"
+                            contentClasses="py-1 bg-white dark:bg-dark-card"
                         >
                             {walletSelection.map((wallet) => (
                                 <button
@@ -571,10 +595,10 @@ export default function Dashboard(props) {
                                             },
                                         })
                                     }
-                                    className="flex w-full items-center justify-between px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                                    className="flex w-full items-center justify-between px-4 py-2 text-left text-sm text-light-secondary hover:bg-light-hover dark:text-dark-secondary dark:hover:bg-dark-hover"
                                 >
                                     <span>{wallet.name}</span>
-                                    <span className="text-xs text-slate-400">
+                                    <span className="text-xs text-light-muted dark:text-dark-muted">
                                         {wallet.type === "owned"
                                             ? "Mine"
                                             : "Shared"}
@@ -669,10 +693,10 @@ export default function Dashboard(props) {
             </div>
             {isReloading && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-                    <div className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 shadow-lg dark:bg-slate-900">
-                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                            Reloading...
+                    <div className="flex items-center gap-3 rounded-xl bg-white px-4 py-3 shadow-soft dark:bg-dark-card">
+                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-wevie-teal border-t-transparent" />
+                        <span className="text-sm font-medium text-light-secondary dark:text-dark-secondary">
+                            Refreshing your view...
                         </span>
                     </div>
                 </div>
@@ -685,33 +709,33 @@ export default function Dashboard(props) {
                 }}
                 maxWidth="2xl"
             >
-                <div className="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
+                    <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                         {viewEntity?.title ?? "Transactions"}
                     </h3>
                 </div>
                 <div className="px-6 py-4">
                     {isLoadingRelated ? (
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
-                            Loading transactions...
+                        <p className="text-sm text-light-muted dark:text-dark-muted">
+                            Loading details...
                         </p>
                     ) : relatedTransactions.length === 0 ? (
-                        <p className="text-sm text-slate-400 dark:text-slate-500">
-                            No transactions linked yet.
+                        <p className="text-sm text-light-muted dark:text-dark-muted">
+                            Nothing linked yet.
                         </p>
                     ) : (
-                        <div className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                        <div className="space-y-3 text-sm text-light-secondary dark:text-dark-secondary">
                             {relatedTransactions.map((transaction) => (
                                 <div
                                     key={transaction.id}
-                                    className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-700"
+                                    className="rounded-xl border border-light-border/70 px-3 py-2 dark:border-dark-border/70"
                                 >
                                     <div className="flex flex-wrap items-center justify-between gap-3">
                                         <div>
-                                            <p className="font-medium text-slate-800 dark:text-slate-100">
+                                            <p className="font-medium text-light-primary dark:text-dark-primary">
                                                 {transaction.description}
                                             </p>
-                                            <p className="text-xs text-slate-400">
+                                            <p className="text-xs text-light-muted dark:text-dark-muted">
                                                 {transaction.category?.name ??
                                                     "Uncategorized"}
                                             </p>
@@ -726,7 +750,7 @@ export default function Dashboard(props) {
                                                     maximumFractionDigits: 2,
                                                 }).format(transaction.amount ?? 0)}
                                             </p>
-                                            <p className="text-xs text-slate-400">
+                                            <p className="text-xs text-light-muted dark:text-dark-muted">
                                                 {transaction.occurred_at
                                                     ? new Date(
                                                           transaction.occurred_at
@@ -746,19 +770,19 @@ export default function Dashboard(props) {
                 onClose={() => setShowNetModal(false)}
                 maxWidth="lg"
             >
-                <div className="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
+                    <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                         Net summary
                     </h3>
                 </div>
-                <div className="px-6 py-4 space-y-4 text-sm text-slate-600 dark:text-slate-300">
+                <div className="px-6 py-4 space-y-4 text-sm text-light-secondary dark:text-dark-secondary">
                     <p>
                         Net = Income + Savings - Expenses
                     </p>
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <span>Income</span>
-                            <span className="font-semibold text-emerald-600">
+                            <span className="font-semibold text-emerald-600 dark:text-emerald-300">
                                 {new Intl.NumberFormat("en-PH", {
                                     style: "currency",
                                     currency: "PHP",
@@ -768,7 +792,7 @@ export default function Dashboard(props) {
                         </div>
                         <div className="flex items-center justify-between">
                             <span>Savings</span>
-                            <span className="font-semibold text-violet-600">
+                            <span className="font-semibold text-violet-600 dark:text-violet-300">
                                 {new Intl.NumberFormat("en-PH", {
                                     style: "currency",
                                     currency: "PHP",
@@ -778,7 +802,7 @@ export default function Dashboard(props) {
                         </div>
                         <div className="flex items-center justify-between">
                             <span>Expenses</span>
-                            <span className="font-semibold text-rose-600">
+                            <span className="font-semibold text-rose-600 dark:text-rose-300">
                                 {new Intl.NumberFormat("en-PH", {
                                     style: "currency",
                                     currency: "PHP",
@@ -786,9 +810,9 @@ export default function Dashboard(props) {
                                 }).format(summary?.expenses ?? 0)}
                             </span>
                         </div>
-                        <div className="border-t border-slate-200 pt-2 flex items-center justify-between dark:border-slate-700">
+                        <div className="border-t border-light-border/70 pt-2 flex items-center justify-between dark:border-dark-border/70">
                             <span className="font-semibold">Net</span>
-                            <span className="font-semibold text-slate-900 dark:text-slate-100">
+                            <span className="font-semibold text-light-primary dark:text-dark-primary">
                                 {new Intl.NumberFormat("en-PH", {
                                     style: "currency",
                                     currency: "PHP",
@@ -804,19 +828,19 @@ export default function Dashboard(props) {
                 onClose={() => setShowUnallocatedModal(false)}
                 maxWidth="lg"
             >
-                <div className="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-                        Unallocated funds
+                <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
+                    <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
+                        Unassigned funds
                     </h3>
                 </div>
-                <div className="px-6 py-4 space-y-4 text-sm text-slate-600 dark:text-slate-300">
+                <div className="px-6 py-4 space-y-4 text-sm text-light-secondary dark:text-dark-secondary">
                     <p>
-                        Unallocated = (Income + Loans) - Savings - Expenses
+                        Unassigned = (Income + Loans) - Savings - Expenses
                     </p>
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <span>Income</span>
-                            <span className="font-semibold text-emerald-600">
+                            <span className="font-semibold text-emerald-600 dark:text-emerald-300">
                                 {new Intl.NumberFormat("en-PH", {
                                     style: "currency",
                                     currency: "PHP",
@@ -826,7 +850,7 @@ export default function Dashboard(props) {
                         </div>
                         <div className="flex items-center justify-between">
                             <span>Loans</span>
-                            <span className="font-semibold text-cyan-600">
+                            <span className="font-semibold text-cyan-600 dark:text-cyan-300">
                                 {new Intl.NumberFormat("en-PH", {
                                     style: "currency",
                                     currency: "PHP",
@@ -836,7 +860,7 @@ export default function Dashboard(props) {
                         </div>
                         <div className="flex items-center justify-between">
                             <span>Savings</span>
-                            <span className="font-semibold text-violet-600">
+                            <span className="font-semibold text-violet-600 dark:text-violet-300">
                                 {new Intl.NumberFormat("en-PH", {
                                     style: "currency",
                                     currency: "PHP",
@@ -846,7 +870,7 @@ export default function Dashboard(props) {
                         </div>
                         <div className="flex items-center justify-between">
                             <span>Expenses</span>
-                            <span className="font-semibold text-rose-600">
+                            <span className="font-semibold text-rose-600 dark:text-rose-300">
                                 {new Intl.NumberFormat("en-PH", {
                                     style: "currency",
                                     currency: "PHP",
@@ -854,9 +878,9 @@ export default function Dashboard(props) {
                                 }).format(summary?.expenses ?? 0)}
                             </span>
                         </div>
-                        <div className="border-t border-slate-200 pt-2 flex items-center justify-between dark:border-slate-700">
+                        <div className="border-t border-light-border/70 pt-2 flex items-center justify-between dark:border-dark-border/70">
                             <span className="font-semibold">Unallocated</span>
-                            <span className="font-semibold text-slate-900 dark:text-slate-100">
+                            <span className="font-semibold text-light-primary dark:text-dark-primary">
                                 {new Intl.NumberFormat("en-PH", {
                                     style: "currency",
                                     currency: "PHP",
@@ -872,15 +896,15 @@ export default function Dashboard(props) {
                 onClose={() => setShowCreditModal(false)}
                 maxWidth="lg"
             >
-                <div className="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
+                    <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                         Available credit
                     </h3>
                 </div>
-                <div className="px-6 py-4 space-y-4 text-sm text-slate-600 dark:text-slate-300">
+                <div className="px-6 py-4 space-y-4 text-sm text-light-secondary dark:text-dark-secondary">
                     <div className="space-y-3">
                         {creditCardAccounts.length === 0 ? (
-                            <p className="text-sm text-slate-400 dark:text-slate-500">
+                            <p className="text-sm text-light-muted dark:text-dark-muted">
                                 No credit card accounts yet.
                             </p>
                         ) : (
@@ -894,15 +918,15 @@ export default function Dashboard(props) {
                                 return (
                                     <div
                                         key={account.id}
-                                        className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-700"
+                                        className="rounded-xl border border-light-border/70 px-3 py-2 dark:border-dark-border/70"
                                     >
                                         <div className="flex flex-wrap items-center justify-between gap-3">
                                             <div>
-                                                <p className="font-medium text-slate-800 dark:text-slate-100">
+                                                <p className="font-medium text-light-primary dark:text-dark-primary">
                                                     {account.label ||
                                                         account.name}
                                                 </p>
-                                                <p className="text-xs text-slate-400 dark:text-slate-500">
+                                                <p className="text-xs text-light-muted dark:text-dark-muted">
                                                     Limit:{" "}
                                                     {new Intl.NumberFormat(
                                                         "en-PH",
@@ -919,7 +943,7 @@ export default function Dashboard(props) {
                                                     )}
                                                 </p>
                                             </div>
-                                            <p className="font-semibold text-amber-600">
+                                            <p className="font-semibold text-amber-600 dark:text-amber-300">
                                                 {new Intl.NumberFormat("en-PH", {
                                                     style: "currency",
                                                     currency:
@@ -932,27 +956,27 @@ export default function Dashboard(props) {
                                                 )}
                                             </p>
                                         </div>
-                                        <div className="mt-3 space-y-2 text-xs text-slate-500 dark:text-slate-400">
-                                            <p className="font-semibold uppercase text-slate-400">
+                                        <div className="mt-3 space-y-2 text-xs text-light-muted dark:text-dark-muted">
+                                            <p className="font-semibold uppercase text-light-muted dark:text-dark-muted">
                                                 Charges
                                             </p>
                                             {charges.length === 0 ? (
-                                                <p className="text-slate-400 dark:text-slate-500">
+                                                <p className="text-light-muted dark:text-dark-muted">
                                                     No charges yet.
                                                 </p>
                                             ) : (
                                                 charges.map((transaction) => (
                                                     <div
                                                         key={transaction.id}
-                                                        className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-2 dark:border-slate-700"
+                                                        className="flex flex-wrap items-center justify-between gap-2 border-t border-light-border/70 pt-2 dark:border-dark-border/70"
                                                     >
                                                         <div>
-                                                            <p className="text-sm text-slate-700 dark:text-slate-200">
+                                                            <p className="text-sm text-light-secondary dark:text-dark-secondary">
                                                                 {
                                                                     transaction.description
                                                                 }
                                                             </p>
-                                                            <p className="text-xs text-slate-400">
+                                                            <p className="text-xs text-light-muted dark:text-dark-muted">
                                                                 {new Date(
                                                                     transaction.occurred_at ??
                                                                         transaction.created_at ??
@@ -960,7 +984,7 @@ export default function Dashboard(props) {
                                                                 ).toLocaleDateString()}
                                                             </p>
                                                         </div>
-                                                        <p className="text-sm font-semibold text-rose-600">
+                                                        <p className="text-sm font-semibold text-rose-600 dark:text-rose-300">
                                                             {new Intl.NumberFormat(
                                                                 "en-PH",
                                                                 {
@@ -985,9 +1009,9 @@ export default function Dashboard(props) {
                             })
                         )}
                     </div>
-                    <div className="border-t border-slate-200 pt-3 flex items-center justify-between dark:border-slate-700">
+                    <div className="border-t border-light-border/70 pt-3 flex items-center justify-between dark:border-dark-border/70">
                         <span className="font-semibold">Total available</span>
-                        <span className="font-semibold text-slate-900 dark:text-slate-100">
+                        <span className="font-semibold text-light-primary dark:text-dark-primary">
                             {new Intl.NumberFormat("en-PH", {
                                 style: "currency",
                                 currency: "PHP",
@@ -1002,13 +1026,13 @@ export default function Dashboard(props) {
                 onClose={() => setDeletingBudget(null)}
                 maxWidth="lg"
             >
-                <div className="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-                        Delete budget
+                <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
+                    <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
+                        Remove budget
                     </h3>
                 </div>
                 <div className="px-6 py-4 space-y-4">
-                    <p className="text-sm text-slate-600 dark:text-slate-300">
+                    <p className="text-sm text-light-secondary dark:text-dark-secondary">
                         Remaining{" "}
                         <span className="font-semibold">
                             {new Intl.NumberFormat("en-PH", {
@@ -1025,14 +1049,14 @@ export default function Dashboard(props) {
                                 )
                             )}
                         </span>
-                        . Choose where to reallocate before deleting.
+                        . Choose where it should go next.
                     </p>
                     <div>
-                        <label className="text-sm text-slate-500 dark:text-slate-400">
+                        <label className="text-sm text-light-muted dark:text-dark-muted">
                             Action
                         </label>
                         <select
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            className="mt-1 w-full rounded-xl border border-light-border/70 px-3 py-2 text-sm focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card"
                             value={deleteForm.action}
                             onChange={(event) =>
                                 setDeleteForm((prev) => ({
@@ -1041,7 +1065,7 @@ export default function Dashboard(props) {
                                 }))
                             }
                         >
-                            <option value="none">Delete without reallocating</option>
+                            <option value="none">Remove without reallocating</option>
                             <option value="reallocate_budget">
                                 Reallocate to an existing budget
                             </option>
@@ -1055,11 +1079,11 @@ export default function Dashboard(props) {
                     </div>
                     {deleteForm.action === "reallocate_budget" && (
                         <div>
-                            <label className="text-sm text-slate-500 dark:text-slate-400">
+                            <label className="text-sm text-light-muted dark:text-dark-muted">
                                 Target budget
                             </label>
                             <select
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                className="mt-1 w-full rounded-xl border border-light-border/70 px-3 py-2 text-sm focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card"
                                 value={deleteForm.target_budget_id}
                                 onChange={(event) =>
                                     setDeleteForm((prev) => ({
@@ -1088,11 +1112,11 @@ export default function Dashboard(props) {
                     {deleteForm.action === "create_budget" && (
                         <div className="space-y-3">
                             <div>
-                                <label className="text-sm text-slate-500 dark:text-slate-400">
+                                <label className="text-sm text-light-muted dark:text-dark-muted">
                                     New budget name
                                 </label>
                                 <input
-                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                    className="mt-1 w-full rounded-xl border border-light-border/70 px-3 py-2 text-sm focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card"
                                     value={deleteForm.new_budget_name}
                                     onChange={(event) =>
                                         setDeleteForm((prev) => ({
@@ -1104,11 +1128,11 @@ export default function Dashboard(props) {
                                 />
                             </div>
                             <div>
-                                <label className="text-sm text-slate-500 dark:text-slate-400">
+                                <label className="text-sm text-light-muted dark:text-dark-muted">
                                     Category (optional)
                                 </label>
                                 <select
-                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                    className="mt-1 w-full rounded-xl border border-light-border/70 px-3 py-2 text-sm focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card"
                                     value={deleteForm.new_budget_category_id}
                                     onChange={(event) =>
                                         setDeleteForm((prev) => ({
@@ -1135,11 +1159,11 @@ export default function Dashboard(props) {
                                 </select>
                             </div>
                             <div>
-                                <label className="text-sm text-slate-500 dark:text-slate-400">
+                                <label className="text-sm text-light-muted dark:text-dark-muted">
                                     Account (optional)
                                 </label>
                                 <select
-                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                    className="mt-1 w-full rounded-xl border border-light-border/70 px-3 py-2 text-sm focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card"
                                     value={deleteForm.new_budget_account_id}
                                     onChange={(event) =>
                                         setDeleteForm((prev) => ({
@@ -1164,11 +1188,11 @@ export default function Dashboard(props) {
                     )}
                     {deleteForm.action === "add_to_savings_goal" && (
                         <div>
-                            <label className="text-sm text-slate-500 dark:text-slate-400">
+                            <label className="text-sm text-light-muted dark:text-dark-muted">
                                 Target savings goal
                             </label>
                             <select
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                className="mt-1 w-full rounded-xl border border-light-border/70 px-3 py-2 text-sm focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card"
                                 value={deleteForm.target_goal_id}
                                 onChange={(event) =>
                                     setDeleteForm((prev) => ({
@@ -1190,16 +1214,16 @@ export default function Dashboard(props) {
                         <button
                             type="button"
                             onClick={() => setDeletingBudget(null)}
-                            className="rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600 hover:border-slate-300 hover:text-slate-700 dark:border-slate-700 dark:text-slate-300 dark:hover:text-slate-100"
+                            className="rounded-xl border border-light-border/70 px-3 py-2 text-sm font-semibold text-light-secondary hover:border-light-border hover:text-light-primary dark:border-dark-border/70 dark:text-dark-secondary dark:hover:text-dark-primary"
                         >
-                            Cancel
+                            Not now
                         </button>
                         <button
                             type="button"
                             onClick={handleDeleteBudgetSubmit}
-                            className="rounded-md bg-rose-600 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-500"
+                            className="rounded-xl bg-rose-500 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-400"
                         >
-                            Delete budget
+                            Remove budget
                         </button>
                     </div>
                 </div>
@@ -1210,10 +1234,10 @@ export default function Dashboard(props) {
                 maxWidth="2xl"
             >
                 <div className="p-6">
-                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                    <h2 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                         Wallet collaborators
                     </h2>
-                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                    <p className="mt-1 text-sm text-light-muted dark:text-dark-muted">
                         Collaborators can view and manage this wallet.
                     </p>
 
@@ -1222,13 +1246,13 @@ export default function Dashboard(props) {
                             collaborators.map((collaborator) => (
                                 <div
                                     key={collaborator.id}
-                                    className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700"
+                                className="flex items-center justify-between rounded-xl border border-light-border/70 px-3 py-2 text-sm dark:border-dark-border/70"
                                 >
                                     <div>
-                                        <p className="font-semibold text-slate-800 dark:text-slate-100">
+                                    <p className="font-semibold text-light-primary dark:text-dark-primary">
                                             {collaborator.name}
                                         </p>
-                                        <p className="text-xs text-slate-400">
+                                    <p className="text-xs text-light-muted dark:text-dark-muted">
                                             {collaborator.email}
                                         </p>
                                     </div>
@@ -1239,7 +1263,7 @@ export default function Dashboard(props) {
                                                 collaborator.id
                                             )
                                         }
-                                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30"
+                                    className="inline-flex items-center gap-1 rounded-xl px-2 py-1 text-xs font-semibold text-rose-600 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900/30"
                                     >
                                         <X className="h-3 w-3" />
                                         Remove
@@ -1247,14 +1271,14 @@ export default function Dashboard(props) {
                                 </div>
                             ))
                         ) : (
-                            <p className="text-sm text-slate-400">
-                                No collaborators yet.
+                        <p className="text-sm text-light-muted dark:text-dark-muted">
+                            No collaborators yet.
                             </p>
                         )}
                     </div>
 
-                    <div className="mt-6 border-t border-slate-200 pt-4 dark:border-slate-700">
-                        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                    <div className="mt-6 border-t border-light-border/70 pt-4 dark:border-dark-border/70">
+                        <h3 className="text-sm font-semibold text-light-secondary dark:text-dark-secondary">
                             Add collaborator
                         </h3>
                         <form
@@ -1293,13 +1317,13 @@ export default function Dashboard(props) {
                                     className="mt-2"
                                 />
                                 {isSearchingCollaborators && (
-                                    <p className="mt-2 text-xs text-slate-400">
-                                        Searching users...
+                                    <p className="mt-2 text-xs text-light-muted dark:text-dark-muted">
+                                        Searching gently...
                                     </p>
                                 )}
                                 {!isSearchingCollaborators &&
                                     collaboratorResults.length > 0 && (
-                                        <div className="mt-3 space-y-2 rounded-md border border-slate-200 p-2 text-sm dark:border-slate-700">
+                                        <div className="mt-3 space-y-2 rounded-xl border border-light-border/70 p-2 text-sm dark:border-dark-border/70">
                                             {collaboratorResults.map(
                                                 (user) => (
                                                     <button
@@ -1310,12 +1334,12 @@ export default function Dashboard(props) {
                                                                 user
                                                             )
                                                         }
-                                                        className="flex w-full items-center justify-between rounded-md px-2 py-1 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
+                                                        className="flex w-full items-center justify-between rounded-lg px-2 py-1 text-left hover:bg-light-hover dark:hover:bg-dark-hover"
                                                     >
-                                                        <span className="font-medium text-slate-800 dark:text-slate-100">
+                                                        <span className="font-medium text-light-primary dark:text-dark-primary">
                                                             {user.name}
                                                         </span>
-                                                        <span className="text-xs text-slate-400">
+                                                        <span className="text-xs text-light-muted dark:text-dark-muted">
                                                             {user.email}
                                                         </span>
                                                     </button>

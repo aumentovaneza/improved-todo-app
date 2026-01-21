@@ -18,7 +18,7 @@ export default function QuickSubtaskModal({ show, onClose, task }) {
         e.preventDefault();
 
         if (!subtaskTitle.trim()) {
-            setErrors({ title: "Subtask title is required" });
+            setErrors({ title: "Please add a short title." });
             return;
         }
 
@@ -34,13 +34,15 @@ export default function QuickSubtaskModal({ show, onClose, task }) {
             {
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success("Subtask added successfully!");
+                    toast.success("Subtask saved.");
                     setSubtaskTitle("");
                     onClose();
                 },
                 onError: (errors) => {
                     setErrors(errors);
-                    toast.error("Failed to add subtask");
+                    toast.error(
+                        "We couldn’t save that just now. Try again when you’re ready."
+                    );
                 },
                 onFinish: () => {
                     setProcessing(false);
@@ -59,23 +61,23 @@ export default function QuickSubtaskModal({ show, onClose, task }) {
         <Modal show={show} onClose={handleClose} maxWidth="md">
             <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        Add Subtask
+                    <h2 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
+                        Add a subtask
                     </h2>
                     <button
                         onClick={handleClose}
-                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                        className="text-light-muted hover:text-light-secondary dark:text-dark-muted dark:hover:text-dark-secondary"
                     >
                         <X className="h-5 w-5" />
                     </button>
                 </div>
 
                 {task && (
-                    <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Adding subtask to:
+                    <div className="mb-4 p-3 bg-light-hover dark:bg-dark-hover rounded-xl">
+                        <p className="text-sm text-light-muted dark:text-dark-muted">
+                            Adding to:
                         </p>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">
+                        <p className="font-medium text-light-primary dark:text-dark-primary">
                             {task.title}
                         </p>
                     </div>
@@ -85,7 +87,7 @@ export default function QuickSubtaskModal({ show, onClose, task }) {
                     <div>
                         <InputLabel
                             htmlFor="subtask_title"
-                            value="Subtask Title"
+                            value="Title"
                         />
                         <TextInput
                             id="subtask_title"
@@ -93,7 +95,7 @@ export default function QuickSubtaskModal({ show, onClose, task }) {
                             className="mt-1 block w-full"
                             value={subtaskTitle}
                             onChange={(e) => setSubtaskTitle(e.target.value)}
-                            placeholder="Enter subtask title..."
+                            placeholder="What’s a gentle next step?"
                             autoFocus
                         />
                         <InputError message={errors.title} className="mt-2" />
@@ -104,13 +106,13 @@ export default function QuickSubtaskModal({ show, onClose, task }) {
                             onClick={handleClose}
                             disabled={processing}
                         >
-                            Cancel
+                            Not now
                         </SecondaryButton>
                         <PrimaryButton
                             disabled={processing || !subtaskTitle.trim()}
                         >
                             <Plus className="h-4 w-4 mr-2" />
-                            {processing ? "Adding..." : "Add Subtask"}
+                            {processing ? "Saving..." : "Save subtask"}
                         </PrimaryButton>
                     </div>
                 </form>

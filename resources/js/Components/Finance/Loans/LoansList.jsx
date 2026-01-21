@@ -10,6 +10,8 @@ const formatCurrency = (value, currency = "PHP") =>
 const formatDate = (value) =>
     value ? new Date(value).toLocaleDateString() : "-";
 
+import { Eye, Pencil, Trash2 } from "lucide-react";
+
 export default function LoansList({
     loans = [],
     onDelete,
@@ -18,21 +20,21 @@ export default function LoansList({
     showAllHref,
 }) {
     return (
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <div className="card p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-                <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                     Loans
                 </h3>
                 {showAllHref && (
                     <Link
                         href={showAllHref}
-                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+                        className="text-xs font-semibold text-wevie-teal hover:text-wevie-teal/80"
                     >
-                        Show all
+                        See all
                     </Link>
                 )}
             </div>
-            <div className="mt-4 space-y-3 text-sm text-slate-600 dark:text-slate-300">
+            <div className="mt-4 space-y-3 text-sm text-light-secondary dark:text-dark-secondary">
                 {loans.map((loan) => {
                     const progress =
                         loan.total_amount > 0
@@ -50,15 +52,15 @@ export default function LoansList({
                     return (
                         <div
                             key={loan.id}
-                            className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-700"
+                            className="rounded-xl border border-light-border/70 px-3 py-2 dark:border-dark-border/70"
                         >
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div>
-                                    <p className="font-medium text-slate-800 dark:text-slate-100">
+                                    <p className="font-medium text-light-primary dark:text-dark-primary">
                                         {loan.name}
                                     </p>
-                                    <p className="text-xs text-slate-400">
-                                        Due by {formatDate(loan.target_date)}
+                                    <p className="text-xs text-light-muted dark:text-dark-muted">
+                                        Target by {formatDate(loan.target_date)}
                                     </p>
                                 </div>
                                 <p className="font-semibold">
@@ -69,13 +71,13 @@ export default function LoansList({
                                 </p>
                             </div>
                             <div className="mt-2">
-                                <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-800">
+                                <div className="h-2 w-full rounded-full bg-light-hover dark:bg-dark-hover">
                                     <div
-                                        className="h-2 rounded-full bg-amber-500"
+                                        className="h-2 rounded-full bg-wevie-teal/70"
                                         style={{ width: `${progress}%` }}
                                     />
                                 </div>
-                                <div className="mt-1 flex items-center justify-between text-xs text-slate-400">
+                                <div className="mt-1 flex items-center justify-between text-xs text-light-muted dark:text-dark-muted">
                                     <span>{progress}% paid</span>
                                     <span>
                                         {formatCurrency(
@@ -84,31 +86,37 @@ export default function LoansList({
                                         )}
                                     </span>
                                 </div>
-                                <div className="mt-2 flex justify-end">
+                                <div className="mt-2 flex justify-end gap-2">
                                     {onEdit && (
                                         <button
                                             type="button"
                                             onClick={() => onEdit?.(loan)}
-                                            className="mr-3 text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                            className="rounded-md p-1 text-wevie-teal hover:text-wevie-teal/80"
+                                            title="Edit"
+                                            aria-label="Edit"
                                         >
-                                            Edit
+                                            <Pencil className="h-4 w-4" />
                                         </button>
                                     )}
                                     {onView && (
                                         <button
                                             type="button"
                                             onClick={() => onView?.(loan)}
-                                            className="mr-3 text-xs font-semibold text-slate-600 hover:text-slate-800 dark:text-slate-300 dark:hover:text-slate-100"
+                                            className="rounded-md p-1 text-light-secondary hover:text-light-primary dark:text-dark-secondary dark:hover:text-dark-primary"
+                                            title="View"
+                                            aria-label="View"
                                         >
-                                            View
+                                            <Eye className="h-4 w-4" />
                                         </button>
                                     )}
                                     <button
                                         type="button"
                                         onClick={() => onDelete?.(loan)}
-                                        className="text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
+                                        className="rounded-md p-1 text-rose-600 hover:text-rose-700 dark:text-rose-300 dark:hover:text-rose-200"
+                                        title="Remove"
+                                        aria-label="Remove"
                                     >
-                                        Delete
+                                        <Trash2 className="h-4 w-4" />
                                     </button>
                                 </div>
                             </div>
@@ -116,7 +124,7 @@ export default function LoansList({
                     );
                 })}
                 {(!loans || loans.length === 0) && (
-                    <p className="text-sm text-slate-400 dark:text-slate-500">
+                    <p className="text-sm text-light-muted dark:text-dark-muted">
                         No loans tracked yet.
                     </p>
                 )}

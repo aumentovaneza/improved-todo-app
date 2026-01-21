@@ -36,8 +36,9 @@ const typeStyles = {
     expense: "bg-rose-100 text-rose-700 dark:bg-rose-900/20 dark:text-rose-400",
     savings: "bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400",
     loan: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/20 dark:text-cyan-400",
+    transfer: "bg-sky-100 text-sky-700 dark:bg-sky-900/20 dark:text-sky-400",
 };
-const typeOrder = ["income", "loan", "expense", "savings"];
+const typeOrder = ["income", "loan", "expense", "savings", "transfer"];
 
 export default function Transactions({
     transactions = [],
@@ -183,7 +184,7 @@ export default function Transactions({
         <TodoLayout header="All Transactions">
             <Head title="All Transactions" />
             <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
-                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div className="card p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
@@ -206,7 +207,7 @@ export default function Transactions({
                         </button>
                     </div>
                     {type && (
-                        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        <div className="mt-3 rounded-lg border border-light-border/70 bg-light-hover px-3 py-2 text-sm text-slate-700 dark:border-white/10 dark:bg-dark-card/70 dark:text-slate-200">
                             Total {type} transactions:{" "}
                             <span className="font-semibold">
                                 {formatCurrency(totalAmount)}
@@ -222,7 +223,7 @@ export default function Transactions({
                                 Search
                             </label>
                             <input
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                                 placeholder="Search description, notes, category, or tags"
                                 value={search}
                                 onChange={(event) =>
@@ -235,7 +236,7 @@ export default function Transactions({
                                 Type
                             </label>
                             <select
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                                 value={type}
                                 onChange={(event) =>
                                     setType(event.target.value)
@@ -246,6 +247,7 @@ export default function Transactions({
                                 <option value="loan">Loan</option>
                                 <option value="expense">Expense</option>
                                 <option value="savings">Savings</option>
+                                <option value="transfer">Transfer</option>
                             </select>
                         </div>
                         <div>
@@ -253,7 +255,7 @@ export default function Transactions({
                                 Sort
                             </label>
                             <select
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                                 value={sort}
                                 onChange={(event) =>
                                     setSort(event.target.value)
@@ -279,7 +281,7 @@ export default function Transactions({
                             </label>
                             <input
                                 type="date"
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                                 value={startDate}
                                 onChange={(event) =>
                                     setStartDate(event.target.value)
@@ -292,7 +294,7 @@ export default function Transactions({
                             </label>
                             <input
                                 type="date"
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                                 value={endDate}
                                 onChange={(event) =>
                                     setEndDate(event.target.value)
@@ -320,16 +322,13 @@ export default function Transactions({
                 </div>
 
                 {loadedTransactions.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+                    <div className="rounded-xl border border-dashed border-light-border/70 bg-white p-8 text-center text-slate-500 dark:border-white/10 dark:bg-dark-card dark:text-slate-400">
                         No transactions match the current filters.
                     </div>
                 ) : (
                     <div className="space-y-6">
                         {sortedDateKeys.map((dateKey) => (
-                                <div
-                                    key={dateKey}
-                                    className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
-                                >
+                                <div key={dateKey} className="card p-4">
                                     <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
                                         {formatDateLabel(dateKey)}
                                     </h3>
@@ -381,17 +380,51 @@ export default function Transactions({
                                                                                     ?.name ??
                                                                                     "Uncategorized"}
                                                                             </p>
-                                                                            {transaction.account
-                                                                                ?.name && (
+                                                                            {(transaction.account
+                                                                                ?.name ||
+                                                                                transaction.account
+                                                                                    ?.label) && (
                                                                                 <p className="text-xs text-slate-400">
-                                                                                    Account:{" "}
-                                                                                    {
-                                                                                        transaction
-                                                                                            .account
-                                                                                            .name
-                                                                                    }
+                                                                                    {transaction.type ===
+                                                                                    "transfer"
+                                                                                        ? `From: ${transaction.account.label ?? transaction.account.name}`
+                                                                                        : `Account: ${transaction.account.label ?? transaction.account.name}`}
                                                                                 </p>
                                                                             )}
+                                                                            {transaction.type ===
+                                                                                "transfer" &&
+                                                                                transaction
+                                                                                    .transfer_account
+                                                                                    ?.name && (
+                                                                                    <p className="text-xs text-slate-400">
+                                                                                        To:{" "}
+                                                                                        {
+                                                                                            transaction
+                                                                                                .transfer_account
+                                                                                                .label ??
+                                                                                            transaction
+                                                                                                .transfer_account
+                                                                                                .name
+                                                                                        }
+                                                                                    </p>
+                                                                                )}
+                                                                            {transaction.type ===
+                                                                                "transfer" &&
+                                                                                !transaction
+                                                                                    .transfer_account
+                                                                                    ?.name &&
+                                                                                transaction
+                                                                                    .metadata
+                                                                                    ?.external_account_name && (
+                                                                                    <p className="text-xs text-slate-400">
+                                                                                        To:{" "}
+                                                                                        {
+                                                                                            transaction
+                                                                                                .metadata
+                                                                                                .external_account_name
+                                                                                        }
+                                                                                    </p>
+                                                                                )}
                                                                             {transaction.created_by &&
                                                                                 transaction
                                                                                     .created_by

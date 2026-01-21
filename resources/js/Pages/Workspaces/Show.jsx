@@ -94,7 +94,7 @@ export default function Show({ workspace, isOrganizer }) {
     };
 
     const BoardCard = ({ board }) => (
-        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-lg hover:shadow-md transition-shadow">
+        <div className="card overflow-hidden transition-shadow hover:shadow-md">
             <div className="p-6">
                 <div className="flex items-start justify-between">
                     <div className="flex-1">

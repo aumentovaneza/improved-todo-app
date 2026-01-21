@@ -228,7 +228,7 @@ class TaskController extends Controller
         }
     }
 
-    public function reorder(Request $request): RedirectResponse
+    public function reorder(Request $request)
     {
         $validated = $request->validate([
             'taskIds' => 'required|array',
@@ -237,8 +237,19 @@ class TaskController extends Controller
 
         try {
             $this->taskService->reorderTasks($validated['taskIds'], Auth::id());
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Tasks reordered successfully',
+                ]);
+            }
             return back()->with('message', 'Tasks reordered successfully');
         } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json(
+                    ['message' => 'Failed to reorder tasks. Please try again.'],
+                    422
+                );
+            }
             return back()->withErrors(['error' => 'Failed to reorder tasks. Please try again.']);
         }
     }

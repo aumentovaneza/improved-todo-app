@@ -139,7 +139,15 @@ class FinanceTransactionController extends Controller
     private function buildFilteredQuery(int $walletUserId, array $filters)
     {
         $query = FinanceTransaction::query()
-            ->with(['category', 'loan', 'tags', 'createdBy', 'account', 'creditCardAccount'])
+            ->with([
+                'category',
+                'loan',
+                'tags',
+                'createdBy',
+                'account',
+                'transferAccount',
+                'creditCardAccount',
+            ])
             ->where('user_id', $walletUserId);
 
         if (!empty($filters['type'])) {
@@ -202,7 +210,7 @@ class FinanceTransactionController extends Controller
         ]);
 
         $query = FinanceTransaction::query()
-            ->with(['category', 'account'])
+            ->with(['category', 'account', 'transferAccount'])
             ->where('user_id', $walletUserId);
 
         $hasFilter = false;
@@ -248,6 +256,15 @@ class FinanceTransactionController extends Controller
                     $walletUserId ?: Auth::id()
                 ),
             ],
+            'finance_transfer_account_id' => [
+                'nullable',
+                'integer',
+                'different:finance_account_id',
+                Rule::exists('finance_accounts', 'id')->where(
+                    'user_id',
+                    $walletUserId ?: Auth::id()
+                ),
+            ],
             'finance_credit_card_account_id' => [
                 'nullable',
                 'integer',
@@ -255,7 +272,7 @@ class FinanceTransactionController extends Controller
                     ->where('user_id', $walletUserId ?: Auth::id())
                     ->where('type', 'credit-card'),
             ],
-            'type' => ['required', 'in:income,expense,savings,loan'],
+            'type' => ['required', 'in:income,expense,savings,loan,transfer'],
             'amount' => ['required', 'numeric', 'min:0'],
             'currency' => ['nullable', 'string', 'max:8'],
             'description' => ['required', 'string', 'max:255'],
@@ -264,6 +281,8 @@ class FinanceTransactionController extends Controller
             'is_recurring' => ['nullable', 'boolean'],
             'recurring_frequency' => ['nullable', 'in:daily,weekly,bi-weekly,monthly,yearly', 'required_if:is_recurring,1'],
             'metadata' => ['nullable', 'array'],
+            'transfer_destination' => ['nullable', 'in:internal,external'],
+            'external_account_name' => ['nullable', 'string', 'max:255'],
             'occurred_at' => ['required', 'date'],
             'tags' => ['nullable', 'array'],
             'tags.*.id' => ['nullable', 'exists:tags,id'],
@@ -272,6 +291,46 @@ class FinanceTransactionController extends Controller
             'tags.*.description' => ['nullable', 'string'],
             'tags.*.is_new' => ['nullable', 'boolean'],
         ]);
+
+        if (($validated['type'] ?? null) === 'transfer') {
+            $transferDestination = $validated['transfer_destination']
+                ?? ($validated['finance_transfer_account_id'] ? 'internal' : 'external');
+            $request->validate([
+                'finance_account_id' => [
+                    'required',
+                    'integer',
+                    Rule::exists('finance_accounts', 'id')->where(
+                        'user_id',
+                        $walletUserId ?: Auth::id()
+                    ),
+                ],
+                'finance_transfer_account_id' => $transferDestination === 'internal'
+                    ? [
+                        'required',
+                        'integer',
+                        'different:finance_account_id',
+                        Rule::exists('finance_accounts', 'id')->where(
+                            'user_id',
+                            $walletUserId ?: Auth::id()
+                        ),
+                    ]
+                    : ['nullable'],
+                'external_account_name' => $transferDestination === 'external'
+                    ? ['required', 'string', 'max:255']
+                    : ['nullable'],
+            ]);
+
+            $validated['metadata'] = array_merge($validated['metadata'] ?? [], [
+                'transfer_destination' => $transferDestination,
+                'external_account_name' => $transferDestination === 'external'
+                    ? ($validated['external_account_name'] ?? null)
+                    : null,
+            ]);
+
+            if ($transferDestination === 'external') {
+                $validated['finance_transfer_account_id'] = null;
+            }
+        }
 
         $validated = $this->normalizeRecurringData($validated);
         $transaction = $this->financeService->createTransaction(
@@ -296,6 +355,12 @@ class FinanceTransactionController extends Controller
                 'integer',
                 Rule::exists('finance_accounts', 'id')->where('user_id', $walletUserId),
             ],
+            'finance_transfer_account_id' => [
+                'nullable',
+                'integer',
+                'different:finance_account_id',
+                Rule::exists('finance_accounts', 'id')->where('user_id', $walletUserId),
+            ],
             'finance_credit_card_account_id' => [
                 'nullable',
                 'integer',
@@ -303,7 +368,7 @@ class FinanceTransactionController extends Controller
                     ->where('user_id', $walletUserId)
                     ->where('type', 'credit-card'),
             ],
-            'type' => ['nullable', 'in:income,expense,savings,loan'],
+            'type' => ['nullable', 'in:income,expense,savings,loan,transfer'],
             'amount' => ['nullable', 'numeric', 'min:0'],
             'currency' => ['nullable', 'string', 'max:8'],
             'description' => ['nullable', 'string', 'max:255'],
@@ -312,6 +377,8 @@ class FinanceTransactionController extends Controller
             'is_recurring' => ['nullable', 'boolean'],
             'recurring_frequency' => ['nullable', 'in:daily,weekly,bi-weekly,monthly,yearly', 'required_if:is_recurring,1'],
             'metadata' => ['nullable', 'array'],
+            'transfer_destination' => ['nullable', 'in:internal,external'],
+            'external_account_name' => ['nullable', 'string', 'max:255'],
             'occurred_at' => ['nullable', 'date'],
             'tags' => ['nullable', 'array'],
             'tags.*.id' => ['nullable', 'exists:tags,id'],
@@ -322,6 +389,46 @@ class FinanceTransactionController extends Controller
         ]);
 
         $validated = $this->normalizeRecurringData($validated);
+        if (($validated['type'] ?? $transaction->type) === 'transfer') {
+            $transferDestination = $validated['transfer_destination']
+                ?? ($validated['finance_transfer_account_id'] ?? $transaction->finance_transfer_account_id
+                    ? 'internal'
+                    : 'external');
+
+            if ($transferDestination === 'external' && empty($validated['external_account_name'])) {
+                $validated['external_account_name'] =
+                    $transaction->metadata['external_account_name'] ?? null;
+            }
+
+            $validated['metadata'] = array_merge($validated['metadata'] ?? ($transaction->metadata ?? []), [
+                'transfer_destination' => $transferDestination,
+                'external_account_name' => $transferDestination === 'external'
+                    ? ($validated['external_account_name'] ?? null)
+                    : null,
+            ]);
+
+            if ($transferDestination === 'external') {
+                $validated['finance_transfer_account_id'] = null;
+            }
+        }
+        $type = $validated['type'] ?? $transaction->type;
+        if ($type === 'transfer') {
+            $transferDestination = $validated['transfer_destination']
+                ?? ($validated['finance_transfer_account_id'] ?? $transaction->finance_transfer_account_id
+                    ? 'internal'
+                    : 'external');
+            $sourceId = $validated['finance_account_id'] ?? $transaction->finance_account_id;
+            $targetId = $validated['finance_transfer_account_id'] ?? $transaction->finance_transfer_account_id;
+            if (!$sourceId) {
+                abort(422, 'Transfers require a source account.');
+            }
+            if ($transferDestination !== 'external' && (!$targetId || $sourceId === $targetId)) {
+                abort(422, 'Transfers require two different accounts.');
+            }
+            if ($transferDestination === 'external' && empty($validated['external_account_name'])) {
+                abort(422, 'Transfers to external accounts require a recipient name.');
+            }
+        }
         $updated = $this->financeService->updateTransaction($transaction, $validated, Auth::id());
 
         return response()->json($updated);

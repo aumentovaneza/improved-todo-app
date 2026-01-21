@@ -55,10 +55,7 @@ export default function AccountForm({
     };
 
     return (
-        <form
-            onSubmit={handleSubmit}
-            className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
-        >
+        <form onSubmit={handleSubmit} className="card p-4">
             <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                     <label className="text-sm text-slate-500 dark:text-slate-400">

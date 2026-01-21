@@ -230,13 +230,15 @@ export default function SubtaskManager({
                             subtasks: subtasks,
                         });
                     }
-                    toast.success("Subtask created successfully");
+                    toast.success("Subtask saved.");
                 },
                 onError: () => {
                     setSubtasks((prev) =>
                         prev.filter((s) => s.id !== tempSubtask.id)
                     );
-                    toast.error("Failed to create subtask");
+                    toast.error(
+                        "We couldn’t save that just now. Try again when you’re ready."
+                    );
                 },
             }
         );
@@ -291,8 +293,8 @@ export default function SubtaskManager({
                     }
                     toast.success(
                         newStatus
-                            ? "Subtask completed!"
-                            : "Subtask marked as pending"
+                            ? "Subtask set to done."
+                            : "Subtask is back on your list."
                     );
                 },
                 onError: () => {
@@ -316,7 +318,9 @@ export default function SubtaskManager({
                                 : s
                         )
                     );
-                    toast.error("Failed to update subtask");
+                    toast.error(
+                        "We couldn’t update that just now. Try again when you’re ready."
+                    );
                 },
             }
         );
@@ -352,7 +356,7 @@ export default function SubtaskManager({
                             subtasks: subtasks,
                         });
                     }
-                    toast.success("Subtask updated successfully");
+                    toast.success("Subtask updated.");
                 },
                 onError: () => {
                     setSubtasks(
@@ -360,14 +364,16 @@ export default function SubtaskManager({
                             s.id === subtask.id ? { ...s, title: oldTitle } : s
                         )
                     );
-                    toast.error("Failed to update subtask");
+                    toast.error(
+                        "We couldn’t update that just now. Try again when you’re ready."
+                    );
                 },
             }
         );
     };
 
     const handleDeleteSubtask = (subtask) => {
-        if (!confirm("Are you sure you want to delete this subtask?")) return;
+        if (!confirm("Remove this subtask? You can add it again later.")) return;
 
         // Prevent multiple delete requests for the same subtask
         if (deletingSubtasks.has(subtask.id)) {
@@ -397,7 +403,7 @@ export default function SubtaskManager({
                         subtasks: subtasks.filter((s) => s.id !== subtask.id),
                     });
                 }
-                toast.success("Subtask deleted successfully");
+                toast.success("Subtask removed.");
             },
             onError: () => {
                 // Remove subtask from deleting state
@@ -406,7 +412,9 @@ export default function SubtaskManager({
                     newSet.delete(subtask.id);
                     return newSet;
                 });
-                toast.error("Failed to delete subtask");
+                toast.error(
+                    "We couldn’t remove that just now. Please try again."
+                );
             },
         });
     };
@@ -455,12 +463,14 @@ export default function SubtaskManager({
                             subtasks: newSubtasks,
                         });
                     }
-                    toast.success("Subtasks reordered successfully");
+                    toast.success("Subtasks reordered.");
                 },
                 onError: () => {
                     // Revert to the original order on error
                     setSubtasks(originalSubtasks);
-                    toast.error("Failed to reorder subtasks");
+                    toast.error(
+                        "We couldn’t reorder that just now. Please try again."
+                    );
                 },
             }
         );

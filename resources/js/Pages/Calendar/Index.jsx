@@ -277,7 +277,7 @@ export default function Index({
     const renderMobileListView = () => {
         if (mobileTaskList.length === 0) {
             return (
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 text-center">
+                <div className="card p-6 text-center">
                     <CalendarIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                         No items this month
@@ -310,7 +310,7 @@ export default function Index({
                     return (
                         <div
                             key={dateGroup.dateStr}
-                            className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden ${
+                            className={`card overflow-hidden ${
                                 dateGroup.isToday
                                     ? "ring-2 ring-blue-500 dark:ring-blue-400"
                                     : ""
@@ -318,10 +318,10 @@ export default function Index({
                         >
                             {/* Date Header */}
                             <div
-                                className={`p-4 border-b border-gray-200 dark:border-gray-700 ${
+                                className={`p-4 border-b border-gray-200 dark:border-white/10 ${
                                     dateGroup.isToday
                                         ? "bg-blue-50 dark:bg-blue-900/20"
-                                        : "bg-gray-50 dark:bg-gray-900/50"
+                                        : "bg-gray-50 dark:bg-dark-card/70"
                                 }`}
                             >
                                 <div className="flex items-center justify-between">
@@ -396,7 +396,7 @@ export default function Index({
                                 {visibleTasks.map((task) => (
                                     <div
                                         key={task.id}
-                                        className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors"
+                                        className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50 dark:bg-dark-card/70 hover:bg-gray-100 dark:hover:bg-dark-card transition-colors"
                                     >
                                         {/* Status Checkbox */}
                                         <button
@@ -599,7 +599,7 @@ export default function Index({
                                 {visibleTransactions.map((transaction) => (
                                     <div
                                         key={`transaction-${transaction.id}`}
-                                        className="flex items-start justify-between space-x-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/40"
+                                        className="flex items-start justify-between space-x-3 p-3 rounded-lg bg-slate-50 dark:bg-dark-card/70"
                                     >
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between">
@@ -679,7 +679,7 @@ export default function Index({
             <div className="flex flex-col lg:flex-row gap-6">
                 {/* Main Calendar */}
                 <div className="flex-1 order-2 lg:order-1">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                    <div className="card">
                         {/* Calendar Header */}
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 gap-4">
                             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -688,7 +688,7 @@ export default function Index({
                             <div className="flex items-center justify-between sm:justify-end space-x-2">
                                 {/* Mobile View Toggle */}
                                 {isMobile && (
-                                    <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1 mr-2">
+                                    <div className="flex items-center bg-gray-100 dark:bg-dark-card rounded-lg p-1 mr-2">
                                         <button
                                             onClick={() =>
                                                 setMobileViewType("list")
@@ -772,8 +772,8 @@ export default function Index({
                                                 key={index}
                                                 className={`min-h-[80px] sm:min-h-[120px] p-1 sm:p-2 border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
                                                     !day.isCurrentMonth
-                                                        ? "bg-gray-50 dark:bg-gray-900/50"
-                                                        : "bg-white dark:bg-gray-800"
+                                                        ? "bg-gray-50 dark:bg-dark-card/70"
+                                                        : "bg-white dark:bg-dark-card"
                                                 } ${
                                                     day.isToday
                                                         ? "ring-2 ring-blue-500 dark:ring-blue-400"
@@ -1063,20 +1063,19 @@ export default function Index({
                     }`}
                 >
                     {/* Quick Actions */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+                    <div className="card p-4 sm:p-6">
                         <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                             Quick Actions
                         </h3>
                         <div className="space-y-3">
-                            <Link
-                                as="button"
+                            <button
                                 type="button"
                                 onClick={() => setShowCreateTaskModal(true)}
                                 className="flex items-center w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                             >
                                 <Plus className="w-4 h-4 mr-2" />
                                 Create New Task
-                            </Link>
+                            </button>
                             <Link
                                 href={route("tasks.index")}
                                 className="flex items-center w-full px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -1089,7 +1088,7 @@ export default function Index({
 
                     {/* Overdue Tasks */}
                     {overdueTasks.length > 0 && (
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+                        <div className="card p-4 sm:p-6">
                             <div className="flex items-center mb-4">
                                 <AlertTriangle className="w-4 sm:w-5 h-4 sm:h-5 text-red-500 mr-2" />
                                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -1130,7 +1129,7 @@ export default function Index({
                     )}
 
                     {/* Upcoming Tasks */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+                    <div className="card p-4 sm:p-6">
                         <div className="flex items-center mb-4">
                             <Clock className="w-4 sm:w-5 h-4 sm:h-5 text-blue-500 mr-2" />
                             <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">

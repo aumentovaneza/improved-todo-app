@@ -85,7 +85,8 @@ class FinanceReportService
         foreach ($monthlyTotals as $row) {
             $period = $row->period;
             $grouped[$period] ??= ['period' => $period, 'income' => 0, 'expense' => 0];
-            $grouped[$period][$row->type] = (float) $row->total;
+            $grouped[$period][$row->type] = ($grouped[$period][$row->type] ?? 0)
+                + (float) $row->total;
         }
 
         return array_values($grouped);
@@ -99,7 +100,8 @@ class FinanceReportService
         foreach ($dailyTotals as $row) {
             $period = $row->period;
             $grouped[$period] ??= ['period' => $period, 'income' => 0, 'expense' => 0, 'savings' => 0];
-            $grouped[$period][$row->type] = (float) $row->total;
+            $grouped[$period][$row->type] = ($grouped[$period][$row->type] ?? 0)
+                + (float) $row->total;
         }
 
         return array_values($grouped);

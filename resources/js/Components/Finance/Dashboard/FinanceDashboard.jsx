@@ -12,7 +12,7 @@ import LoansList from "@/Components/Finance/Loans/LoansList";
 import LoanForm from "@/Components/Finance/Loans/LoanForm";
 import Modal from "@/Components/Modal";
 import { Link } from "@inertiajs/react";
-import { Landmark, Plus, Settings, Users } from "lucide-react";
+import { Eye, Landmark, Pencil, Plus, Settings, Trash2, Users } from "lucide-react";
 import { useState } from "react";
 
 const formatCurrency = (value, currency = "PHP") =>
@@ -88,14 +88,14 @@ export default function FinanceDashboard({
 
     return (
         <div className="space-y-6">
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="card p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-                            WevieWallet quick actions
+                        <h2 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
+                            WevieWallet
                         </h2>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
-                            Add new items without losing your place.
+                        <p className="text-sm text-light-muted dark:text-dark-muted">
+                            Add updates gently, without breaking your flow.
                         </p>
                     </div>
                     <div className="flex items-center">
@@ -103,7 +103,7 @@ export default function FinanceDashboard({
                             <Dropdown.Trigger>
                                 <button
                                     type="button"
-                                    className="inline-flex items-center justify-center rounded-md border border-slate-200 p-2 text-slate-500 shadow-sm hover:text-slate-700 dark:border-slate-700 dark:text-slate-300 dark:hover:text-slate-100"
+                                    className="inline-flex items-center justify-center rounded-xl border border-light-border/70 p-2 text-light-muted shadow-sm hover:text-light-secondary dark:border-dark-border/70 dark:text-dark-muted dark:hover:text-dark-secondary"
                                     title="Wallet settings"
                                 >
                                     <Settings className="h-4 w-4" />
@@ -112,13 +112,13 @@ export default function FinanceDashboard({
                             <Dropdown.Content
                                 align="right"
                                 width="48"
-                                contentClasses="py-1 bg-white dark:bg-slate-900"
+                                contentClasses="py-1 bg-white dark:bg-dark-card"
                             >
                                 {isWalletOwner && (
                                     <button
                                         type="button"
                                         onClick={() => onOpenCollaborators?.()}
-                                        className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                                        className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-light-secondary hover:bg-light-hover dark:text-dark-secondary dark:hover:bg-dark-hover"
                                     >
                                         <Users className="h-4 w-4" />
                                         Collaborators
@@ -145,7 +145,7 @@ export default function FinanceDashboard({
                                 type: "transaction",
                             })
                         }
-                        className="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-500"
+                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-wevie-teal to-wevie-mint px-4 py-2 text-sm font-medium text-white shadow-soft hover:opacity-90"
                     >
                         <Plus className="h-4 w-4" />
                         Add transaction
@@ -153,7 +153,7 @@ export default function FinanceDashboard({
                     <button
                         type="button"
                         onClick={() => setActiveModal({ type: "budget" })}
-                        className="inline-flex items-center gap-2 rounded-md border border-indigo-200 px-4 py-2 text-sm font-semibold text-indigo-700 shadow-sm hover:border-indigo-300 hover:bg-indigo-50 dark:border-indigo-700/60 dark:text-indigo-200 dark:hover:bg-indigo-900/30"
+                        className="inline-flex items-center gap-2 rounded-xl border border-light-border/70 px-4 py-2 text-sm font-medium text-light-secondary shadow-sm hover:bg-light-hover dark:border-dark-border/70 dark:text-dark-secondary dark:hover:bg-dark-hover"
                     >
                         <Plus className="h-4 w-4" />
                         Add budget
@@ -161,7 +161,7 @@ export default function FinanceDashboard({
                     <button
                         type="button"
                         onClick={() => setActiveModal({ type: "goal" })}
-                        className="inline-flex items-center gap-2 rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                        className="inline-flex items-center gap-2 rounded-xl border border-light-border/70 px-4 py-2 text-sm font-medium text-light-secondary shadow-sm hover:bg-light-hover dark:border-dark-border/70 dark:text-dark-secondary dark:hover:bg-dark-hover"
                     >
                         <Plus className="h-4 w-4" />
                         Add savings goal
@@ -169,7 +169,7 @@ export default function FinanceDashboard({
                     <button
                         type="button"
                         onClick={() => setActiveModal({ type: "loan" })}
-                        className="inline-flex items-center gap-2 rounded-md border border-amber-200 px-4 py-2 text-sm font-semibold text-amber-700 shadow-sm hover:border-amber-300 hover:bg-amber-50 dark:border-amber-700/60 dark:text-amber-200 dark:hover:bg-amber-900/30"
+                        className="inline-flex items-center gap-2 rounded-xl border border-light-border/70 px-4 py-2 text-sm font-medium text-light-secondary shadow-sm hover:bg-light-hover dark:border-dark-border/70 dark:text-dark-secondary dark:hover:bg-dark-hover"
                     >
                         <Plus className="h-4 w-4" />
                         Add loan
@@ -205,19 +205,19 @@ export default function FinanceDashboard({
             </div>
 
             <div className="grid gap-6 lg:grid-cols-3">
-                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div className="card p-4">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                        <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                             Active budgets
                         </h3>
                         <Link
                             href={route("weviewallet.budgets.index")}
-                            className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                            className="text-xs font-semibold text-wevie-teal hover:text-wevie-teal/80"
                         >
-                            Show all
+                            See all
                         </Link>
                     </div>
-                    <div className="mt-4 space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                    <div className="mt-4 space-y-3 text-sm text-light-secondary dark:text-dark-secondary">
                         {visibleBudgets.map((budget) => {
                             const spent = Number(budget.current_spent ?? 0);
                             const total = Number(budget.amount ?? 0);
@@ -233,28 +233,28 @@ export default function FinanceDashboard({
                             return (
                                 <div
                                     key={budget.id}
-                                    className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-700"
+                                    className="rounded-xl border border-light-border/70 px-3 py-2 dark:border-dark-border/70"
                                 >
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="font-medium text-slate-800 dark:text-slate-100">
+                                            <p className="font-medium text-light-primary dark:text-dark-primary">
                                                 {budget.name}
                                             </p>
-                                            <p className="text-xs text-slate-400">
+                                            <p className="text-xs text-light-muted dark:text-dark-muted">
                                                 {budget.category?.name ??
                                                     "All categories"}
                                             </p>
                                             {budget.budget_type === "saved" && (
-                                                <p className="text-xs text-slate-400">
+                                                <p className="text-xs text-light-muted dark:text-dark-muted">
                                                     Saved budget
                                                 </p>
                                             )}
                                             {budget.account?.name && (
-                                                <p className="text-xs text-slate-400">
+                                                <p className="text-xs text-light-muted dark:text-dark-muted">
                                                     Account: {budget.account.name}
                                                 </p>
                                             )}
-                                            <div className="mt-2 flex items-center gap-3">
+                                            <div className="mt-2 flex items-center gap-2">
                                                 <button
                                                     type="button"
                                                     onClick={() =>
@@ -264,9 +264,11 @@ export default function FinanceDashboard({
                                                             data: budget,
                                                         })
                                                     }
-                                                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                                                    className="rounded-md p-1 text-wevie-teal hover:text-wevie-teal/80"
+                                                    title="Edit"
+                                                    aria-label="Edit"
                                                 >
-                                                    Edit
+                                                    <Pencil className="h-4 w-4" />
                                                 </button>
                                                 {onViewBudget && (
                                                     <button
@@ -276,9 +278,11 @@ export default function FinanceDashboard({
                                                                 budget
                                                             )
                                                         }
-                                                        className="text-xs font-semibold text-slate-600 hover:text-slate-800"
+                                                        className="rounded-md p-1 text-light-secondary hover:text-light-primary dark:text-dark-secondary dark:hover:text-dark-primary"
+                                                        title="View"
+                                                        aria-label="View"
                                                     >
-                                                        View
+                                                        <Eye className="h-4 w-4" />
                                                     </button>
                                                 )}
                                                 <button
@@ -286,23 +290,25 @@ export default function FinanceDashboard({
                                                     onClick={() =>
                                                         onDeleteBudget?.(budget)
                                                     }
-                                                    className="text-xs font-semibold text-rose-600 hover:text-rose-700"
+                                                    className="rounded-md p-1 text-rose-600 hover:text-rose-700 dark:text-rose-300 dark:hover:text-rose-200"
+                                                    title="Remove"
+                                                    aria-label="Remove"
                                                 >
-                                                    Delete
+                                                    <Trash2 className="h-4 w-4" />
                                                 </button>
                                             </div>
                                         </div>
                                         <div className="text-right text-sm">
-                                            <p className="font-semibold text-slate-800 dark:text-slate-100">
+                                            <p className="font-semibold text-light-primary dark:text-dark-primary">
                                                 {formatCurrency(
                                                     budget.amount,
                                                     budget.currency
                                                 )}
                                             </p>
-                                            <p className="text-xs text-slate-400">
+                                            <p className="text-xs text-light-muted dark:text-dark-muted">
                                                 {progress}% used
                                             </p>
-                                            <p className="text-xs text-slate-400">
+                                            <p className="text-xs text-light-muted dark:text-dark-muted">
                                                 {formatCurrency(
                                                     remaining,
                                                     budget.currency
@@ -312,13 +318,13 @@ export default function FinanceDashboard({
                                         </div>
                                     </div>
                                     <div className="mt-2">
-                                        <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-800">
+                                        <div className="h-2 w-full rounded-full bg-light-hover dark:bg-dark-hover">
                                             <div
-                                                className="h-2 rounded-full bg-rose-500"
+                                                className="h-2 rounded-full bg-wevie-teal/70"
                                                 style={{ width: `${progress}%` }}
                                             />
                                         </div>
-                                        <div className="mt-1 flex items-center justify-between text-xs text-slate-400">
+                                        <div className="mt-1 flex items-center justify-between text-xs text-light-muted dark:text-dark-muted">
                                             <span>
                                                 {formatCurrency(
                                                     spent,
@@ -337,7 +343,7 @@ export default function FinanceDashboard({
                             );
                         })}
                         {(!visibleBudgets || visibleBudgets.length === 0) && (
-                            <p className="text-sm text-slate-400">
+                            <p className="text-sm text-light-muted dark:text-dark-muted">
                                 No active budgets yet.
                             </p>
                         )}
@@ -393,10 +399,10 @@ export default function FinanceDashboard({
             <Modal
                 show={activeModal?.type === "transaction"}
                 onClose={() => setActiveModal(null)}
-                maxWidth="lg"
+                maxWidth="2xl"
             >
-                <div className="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
+                    <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                         {activeModal?.mode === "edit"
                             ? "Edit transaction"
                             : "Add transaction"}
@@ -412,7 +418,7 @@ export default function FinanceDashboard({
                         initialValues={activeModal?.data}
                         submitLabel={
                             activeModal?.mode === "edit"
-                                ? "Update transaction"
+                                ? "Save changes"
                                 : "Save transaction"
                         }
                         onSubmit={(payload) =>
@@ -432,8 +438,8 @@ export default function FinanceDashboard({
                 onClose={() => setActiveModal(null)}
                 maxWidth="lg"
             >
-                <div className="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
+                    <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                         {activeModal?.mode === "edit"
                             ? "Edit budget"
                             : "Add budget"}
@@ -446,7 +452,7 @@ export default function FinanceDashboard({
                         initialValues={activeModal?.data}
                         submitLabel={
                             activeModal?.mode === "edit"
-                                ? "Update budget"
+                                ? "Save changes"
                                 : "Save budget"
                         }
                         onSubmit={(payload) =>
@@ -466,8 +472,8 @@ export default function FinanceDashboard({
                 onClose={() => setActiveModal(null)}
                 maxWidth="lg"
             >
-                <div className="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
+                    <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                         {activeModal?.mode === "edit"
                             ? "Edit savings goal"
                             : "Add savings goal"}
@@ -479,7 +485,7 @@ export default function FinanceDashboard({
                         accounts={accounts}
                         submitLabel={
                             activeModal?.mode === "edit"
-                                ? "Update goal"
+                                ? "Save changes"
                                 : "Save goal"
                         }
                         onSubmit={(payload) =>
@@ -499,8 +505,8 @@ export default function FinanceDashboard({
                 onClose={() => setActiveModal(null)}
                 maxWidth="lg"
             >
-                <div className="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
+                    <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                         {activeModal?.mode === "edit"
                             ? "Edit loan"
                             : "Add loan"}
@@ -511,7 +517,7 @@ export default function FinanceDashboard({
                         initialValues={activeModal?.data}
                         submitLabel={
                             activeModal?.mode === "edit"
-                                ? "Update loan"
+                                ? "Save changes"
                                 : "Save loan"
                         }
                         onSubmit={(payload) =>

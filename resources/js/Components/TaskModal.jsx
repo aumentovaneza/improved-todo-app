@@ -123,18 +123,21 @@ export default function TaskModal({
         <Modal show={show} onClose={handleClose} maxWidth="2xl">
             <div className="max-h-[70vh] overflow-y-auto">
                 <form onSubmit={handleSubmit} className="p-6">
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-                        Create New Task
+                    <h2 className="text-lg font-medium text-light-primary dark:text-dark-primary mb-2">
+                        New task
                     </h2>
+                    <p className="text-sm text-light-muted dark:text-dark-muted mb-4">
+                        Add what feels helpful now. Details can come later.
+                    </p>
 
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium mb-1">
+                            <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
                                 Title
                             </label>
                             <input
                                 type="text"
-                                className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                className="w-full input-primary"
                                 value={data.title}
                                 onChange={(e) =>
                                     setData("title", e.target.value)
@@ -148,11 +151,11 @@ export default function TaskModal({
                             )}
                         </div>
                         <div>
-                            <label className="block text-sm font-medium mb-1">
-                                Description
+                            <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
+                                Notes
                             </label>
                             <textarea
-                                className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                className="w-full input-primary"
                                 value={data.description}
                                 onChange={(e) =>
                                     setData("description", e.target.value)
@@ -165,17 +168,17 @@ export default function TaskModal({
                             )}
                         </div>
                         <div>
-                            <label className="block text-sm font-medium mb-1">
+                            <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
                                 Category
                             </label>
                             <select
-                                className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                className="w-full input-primary"
                                 value={data.category_id}
                                 onChange={(e) =>
                                     setData("category_id", e.target.value)
                                 }
                             >
-                                <option value="">Select category</option>
+                                <option value="">Choose when ready</option>
                                 {categories &&
                                     categories.map((cat) => (
                                         <option key={cat.id} value={cat.id}>
@@ -190,17 +193,17 @@ export default function TaskModal({
                             )}
                         </div>
                         <div>
-                            <label className="block text-sm font-medium mb-1">
+                            <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
                                 Priority
                             </label>
                             <select
-                                className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                className="w-full input-primary"
                                 value={data.priority}
                                 onChange={(e) =>
                                     setData("priority", e.target.value)
                                 }
                             >
-                                <option value="urgent">Urgent</option>
+                                <option value="urgent">Focus</option>
                                 <option value="high">High</option>
                                 <option value="medium">Medium</option>
                                 <option value="low">Low</option>
@@ -215,8 +218,8 @@ export default function TaskModal({
                         />
 
                         <div>
-                            <label className="block text-sm font-medium mb-1">
-                                Add Custom Tags (Optional)
+                            <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
+                                Add tags (optional)
                             </label>
                             <TagInput
                                 value={data.tags}
@@ -234,7 +237,7 @@ export default function TaskModal({
                             <input
                                 type="checkbox"
                                 id="is_recurring"
-                                className="rounded border-gray-300 text-primary-400 shadow-sm focus:ring-primary-400 dark:text-[#2ED7A1] dark:focus:ring-[#2ED7A1]"
+                                className="rounded border-light-border text-wevie-teal shadow-sm focus:ring-wevie-teal/30 dark:border-dark-border dark:text-wevie-mint dark:focus:ring-wevie-mint/30"
                                 checked={data.is_recurring}
                                 onChange={(e) => {
                                     setData("is_recurring", e.target.checked);
@@ -250,20 +253,20 @@ export default function TaskModal({
                             />
                             <label
                                 htmlFor="is_recurring"
-                                className="ml-2 block text-sm text-gray-900 dark:text-gray-100"
+                                className="ml-2 block text-sm text-light-primary dark:text-dark-primary"
                             >
-                                Recurring Task
+                                Repeat gently
                             </label>
                         </div>
 
                         {data.is_recurring ? (
                             <>
                                 <div>
-                                    <label className="block text-sm font-medium mb-1">
-                                        Recurrence Type
+                                    <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
+                                        Repeat pattern
                                     </label>
                                     <select
-                                        className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                        className="w-full input-primary"
                                         value={data.recurrence_type}
                                         onChange={(e) =>
                                             setData(
@@ -273,7 +276,7 @@ export default function TaskModal({
                                         }
                                         required={data.is_recurring}
                                     >
-                                        <option value="">Select type</option>
+                                        <option value="">Choose a rhythm</option>
                                         <option value="daily">Daily</option>
                                         <option value="weekly">Weekly</option>
                                         <option value="monthly">Monthly</option>
@@ -286,12 +289,12 @@ export default function TaskModal({
                                     )}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium mb-1">
-                                        Recurring Until
+                                    <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
+                                        Repeat until
                                     </label>
                                     <input
                                         type="date"
-                                        className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                        className="w-full input-primary"
                                         value={data.recurring_until}
                                         onChange={(e) =>
                                             setData(
@@ -310,12 +313,12 @@ export default function TaskModal({
                             </>
                         ) : (
                             <div>
-                                <label className="block text-sm font-medium mb-1">
-                                    Due Date
+                                <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
+                                    Planned date
                                 </label>
                                 <input
                                     type="date"
-                                    className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                    className="w-full input-primary"
                                     value={data.due_date}
                                     onChange={(e) =>
                                         setData("due_date", e.target.value)
@@ -336,7 +339,7 @@ export default function TaskModal({
                                     <input
                                         type="checkbox"
                                         id="is_all_day"
-                                        className="rounded border-gray-300 text-primary-400 shadow-sm focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50 dark:text-[#2ED7A1] dark:focus:border-primary-300 dark:focus:ring-primary-200"
+                                        className="rounded border-light-border text-wevie-teal shadow-sm focus:border-wevie-teal focus:ring focus:ring-wevie-teal/30 dark:border-dark-border dark:text-wevie-mint"
                                         checked={data.is_all_day}
                                         onChange={(e) => {
                                             setData(
@@ -351,21 +354,21 @@ export default function TaskModal({
                                     />
                                     <label
                                         htmlFor="is_all_day"
-                                        className="text-sm font-medium"
+                                        className="text-sm font-medium text-light-secondary dark:text-dark-secondary"
                                     >
-                                        All day task
+                                        All day
                                     </label>
                                 </div>
 
                                 {!data.is_all_day && (
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className="block text-sm font-medium mb-1">
-                                                Start Time
+                                            <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
+                                                Start time
                                             </label>
                                             <input
                                                 type="time"
-                                                className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                                className="w-full input-primary"
                                                 value={data.start_time}
                                                 onChange={(e) =>
                                                     setData(
@@ -382,12 +385,12 @@ export default function TaskModal({
                                             )}
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium mb-1">
-                                                End Time
+                                            <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
+                                                End time
                                             </label>
                                             <input
                                                 type="time"
-                                                className="w-full rounded border-gray-300 dark:bg-gray-700 dark:text-gray-100"
+                                                className="w-full input-primary"
                                                 value={data.end_time}
                                                 onChange={(e) =>
                                                     setData(
@@ -417,15 +420,15 @@ export default function TaskModal({
 
                     <div className="mt-6 flex justify-end gap-3">
                         <SecondaryButton onClick={handleClose}>
-                            Cancel
+                            Not now
                         </SecondaryButton>
                         <PrimaryButton
                             type="submit"
                             disabled={processing || isSubmitting}
                         >
                             {processing || isSubmitting
-                                ? "Creating..."
-                                : "Create Task"}
+                                ? "Saving..."
+                                : "Save task"}
                         </PrimaryButton>
                     </div>
                 </form>

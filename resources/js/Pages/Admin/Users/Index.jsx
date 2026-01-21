@@ -111,7 +111,7 @@ export default function Index({ users, filters }) {
 
             <div className="space-y-4 sm:space-y-6">
                 {/* Search and Filters */}
-                <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 sm:p-6">
+                <div className="card p-4 sm:p-6">
                     <div className="flex flex-col sm:flex-row gap-4">
                         {/* Search */}
                         <div className="flex-1">
@@ -124,7 +124,7 @@ export default function Index({ users, filters }) {
                                     onChange={(e) =>
                                         handleSearch(e.target.value)
                                     }
-                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
+                                    className="w-full pl-10 pr-4 py-2 border border-light-border/70 dark:border-white/10 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-white text-sm sm:text-base"
                                 />
                             </div>
                         </div>
@@ -132,7 +132,7 @@ export default function Index({ users, filters }) {
                         {/* Filter Toggle */}
                         <button
                             onClick={() => setShowFilters(!showFilters)}
-                            className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-light-border/70 dark:border-white/10 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-dark-card hover:bg-gray-50 dark:hover:bg-dark-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
                             <Filter className="mr-2 h-4 w-4" />
                             Filters
@@ -148,7 +148,7 @@ export default function Index({ users, filters }) {
                                 onChange={(e) =>
                                     handleFilter("role", e.target.value)
                                 }
-                                className="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                className="block w-full border border-light-border/70 dark:border-white/10 rounded-md px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-white"
                             >
                                 <option value="">All Roles</option>
                                 <option value="admin">Admin</option>
@@ -159,7 +159,7 @@ export default function Index({ users, filters }) {
                 </div>
 
                 {/* Users List */}
-                <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg">
+                <div className="card">
                     {users.data.length === 0 ? (
                         <div className="p-6 sm:p-8 text-center">
                             <div className="text-gray-400 dark:text-gray-500 mb-4">
@@ -185,8 +185,8 @@ export default function Index({ users, filters }) {
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead className="bg-gray-50 dark:bg-gray-700">
+                            <table className="min-w-full divide-y divide-gray-200 dark:divide-white/10">
+                                <thead className="bg-gray-50 dark:bg-dark-card/70">
                                     <tr>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                             User
@@ -208,11 +208,11 @@ export default function Index({ users, filters }) {
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                <tbody className="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-white/10">
                                     {users.data.map((user) => (
                                         <tr
                                             key={user.id}
-                                            className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                            className="hover:bg-gray-50 dark:hover:bg-dark-hover transition-colors"
                                         >
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
@@ -299,7 +299,7 @@ export default function Index({ users, filters }) {
 
                 {/* Pagination */}
                 {users.links && users.links.length > 3 && (
-                    <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 sm:p-6">
+                    <div className="card p-4 sm:p-6">
                         <div className="flex flex-wrap justify-center gap-1 sm:gap-2">
                             {users.links.map((link, index) => (
                                 <Link
@@ -309,7 +309,7 @@ export default function Index({ users, filters }) {
                                         link.active
                                             ? "bg-blue-600 text-white"
                                             : link.url
-                                            ? "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                            ? "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-hover"
                                             : "text-gray-400 dark:text-gray-500 cursor-not-allowed"
                                     }`}
                                     dangerouslySetInnerHTML={{

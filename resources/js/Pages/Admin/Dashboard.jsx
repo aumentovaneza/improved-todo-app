@@ -13,7 +13,7 @@ import {
 
 export default function Dashboard({ stats, recent_activities }) {
     const StatCard = ({ title, value, icon: Icon, color, description }) => (
-        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+        <div className="card overflow-hidden">
             <div className="p-5">
                 <div className="flex items-center">
                     <div className="flex-shrink-0">
@@ -142,7 +142,7 @@ export default function Dashboard({ stats, recent_activities }) {
                 </div>
 
                 {/* Recent Activity */}
-                <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
+                <div className="card">
                     <div className="px-4 py-5 sm:p-6">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
@@ -247,7 +247,7 @@ export default function Dashboard({ stats, recent_activities }) {
                 </div>
 
                 {/* Quick Actions */}
-                <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
+                <div className="card">
                     <div className="px-4 py-5 sm:p-6">
                         <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100 mb-4">
                             Quick Actions
@@ -255,7 +255,7 @@ export default function Dashboard({ stats, recent_activities }) {
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                             <Link
                                 href={route("admin.users.create")}
-                                className="relative rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 dark:hover:border-gray-500 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                                className="relative rounded-lg border border-light-border/70 dark:border-white/10 bg-light-card dark:bg-dark-card px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-light-border dark:hover:border-white/20 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
                             >
                                 <div className="flex-shrink-0">
                                     <Users className="h-6 w-6 text-blue-600" />
@@ -276,7 +276,7 @@ export default function Dashboard({ stats, recent_activities }) {
 
                             <Link
                                 href={route("admin.users.index")}
-                                className="relative rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 dark:hover:border-gray-500 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                                className="relative rounded-lg border border-light-border/70 dark:border-white/10 bg-light-card dark:bg-dark-card px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-light-border dark:hover:border-white/20 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
                             >
                                 <div className="flex-shrink-0">
                                     <Users className="h-6 w-6 text-green-600" />
@@ -297,7 +297,7 @@ export default function Dashboard({ stats, recent_activities }) {
 
                             <Link
                                 href={route("admin.invite-codes.create")}
-                                className="relative rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 dark:hover:border-gray-500 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                                className="relative rounded-lg border border-light-border/70 dark:border-white/10 bg-light-card dark:bg-dark-card px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-light-border dark:hover:border-white/20 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
                             >
                                 <div className="flex-shrink-0">
                                     <Users className="h-6 w-6 text-indigo-600" />
@@ -318,7 +318,7 @@ export default function Dashboard({ stats, recent_activities }) {
 
                             <Link
                                 href={route("categories.index")}
-                                className="relative rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 dark:hover:border-gray-500 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                                className="relative rounded-lg border border-light-border/70 dark:border-white/10 bg-light-card dark:bg-dark-card px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-light-border dark:hover:border-white/20 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
                             >
                                 <div className="flex-shrink-0">
                                     <FolderOpen className="h-6 w-6 text-purple-600" />
@@ -339,7 +339,7 @@ export default function Dashboard({ stats, recent_activities }) {
 
                             <Link
                                 href={route("admin.activity-logs.index")}
-                                className="relative rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 dark:hover:border-gray-500 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                                className="relative rounded-lg border border-light-border/70 dark:border-white/10 bg-light-card dark:bg-dark-card px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-light-border dark:hover:border-white/20 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
                             >
                                 <div className="flex-shrink-0">
                                     <Activity className="h-6 w-6 text-orange-600" />

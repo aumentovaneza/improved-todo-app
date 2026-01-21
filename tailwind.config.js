@@ -20,9 +20,34 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Inter', 'system-ui', 'sans-serif'],
             },
             colors: {
+                wevie: {
+                    teal: '#6FD9D3',
+                    mint: '#7FE0B2',
+                    bg: '#F7FAFA',
+                    surface: '#FFFFFF',
+                    border: '#DDE6E8',
+                    text: {
+                        primary: '#1F2F33',
+                        secondary: '#5F777C',
+                        muted: '#8FA3A6',
+                    },
+                    dark: {
+                        bg: '#1F2F33',
+                        surface: '#243A3F',
+                        border: '#2F4A50',
+                        text: {
+                            primary: '#E6F2F3',
+                            secondary: '#B7D1D6',
+                            muted: '#9FB6BB',
+                        },
+                    },
+                    success: '#7FE0B2',
+                    warning: '#F4D06F',
+                    info: '#6FD9D3',
+                },
                 // Wevie Light Mode Primary: #4ACF91 (Green)
                 primary: {
                     50: '#E6F9F2',
@@ -104,62 +129,65 @@ export default {
                 // Light theme specific colors
                 light: {
                     bg: {
-                        primary: '#F9FAFB', // Neutral Light
+                        primary: '#F7FAFA',
                         secondary: '#FFFFFF',
                         card: '#FFFFFF',
-                        hover: '#F3F4F6',
+                        hover: '#EEF5F6',
                     },
                     text: {
-                        primary: '#2B2F36', // Neutral Dark
-                        secondary: '#4B5563',
-                        muted: '#6B7280',
+                        primary: '#1F2F33',
+                        secondary: '#5F777C',
+                        muted: '#8FA3A6',
                     }
                 },
                 // Dark theme specific colors
                 dark: {
                     bg: {
-                        primary: '#1E2024', // Neutral Light (dark mode)
-                        secondary: '#25282E',
-                        card: '#2A2D33',
-                        hover: '#32353B',
+                        primary: '#1F2F33',
+                        secondary: '#243A3F',
+                        card: '#22353A',
+                        hover: '#2A4247',
                     },
                     text: {
-                        primary: '#E2E6EB', // Neutral Dark (dark mode)
-                        secondary: '#C4C9D0',
-                        muted: '#9CA3AF',
+                        primary: '#E6F2F3',
+                        secondary: '#B7D1D6',
+                        muted: '#9FB6BB',
                     }
                 }
             },
             backgroundColor: {
                 // Light theme backgrounds
-                'light-primary': '#F9FAFB',
+                'light-primary': '#F7FAFA',
                 'light-secondary': '#FFFFFF',
                 'light-card': '#FFFFFF',
-                'light-hover': '#F3F4F6',
+                'light-hover': '#EEF5F6',
                 // Dark theme backgrounds
-                'dark-primary': '#1E2024',
-                'dark-secondary': '#25282E',
-                'dark-card': '#2A2D33',
-                'dark-hover': '#32353B',
+                'dark-primary': '#1F2F33',
+                'dark-secondary': '#243A3F',
+                'dark-card': '#22353A',
+                'dark-hover': '#2A4247',
             },
             textColor: {
                 // Light theme text colors
-                'light-primary': '#2B2F36',
-                'light-secondary': '#4B5563',
-                'light-muted': '#6B7280',
+                'light-primary': '#1F2F33',
+                'light-secondary': '#5F777C',
+                'light-muted': '#8FA3A6',
                 // Dark theme text colors
-                'dark-primary': '#E2E6EB',
-                'dark-secondary': '#C4C9D0',
-                'dark-muted': '#9CA3AF',
+                'dark-primary': '#E6F2F3',
+                'dark-secondary': '#B7D1D6',
+                'dark-muted': '#9FB6BB',
             },
             borderColor: {
                 // Light theme borders
-                'light-border': '#E5E7EB',
-                'light-border-light': '#F3F4F6',
+                'light-border': '#DDE6E8',
+                'light-border-light': '#EEF5F6',
                 // Dark theme borders
-                'dark-border': '#3A3D44',
-                'dark-border-light': '#2A2D33',
-            }
+                'dark-border': '#2F4A50',
+                'dark-border-light': '#243A3F',
+            },
+            boxShadow: {
+                soft: '0 4px 12px rgba(0, 0, 0, 0.06)',
+            },
         },
     },
 

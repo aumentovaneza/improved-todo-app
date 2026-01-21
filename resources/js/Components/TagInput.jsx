@@ -105,9 +105,9 @@ export default function TagInput({
     return (
         <div>
             <div
-                className={`min-h-[42px] w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus-within:ring-blue-500 focus-within:border-blue-500 dark:bg-gray-700 cursor-text ${
+                className={`min-h-[42px] w-full px-3 py-2 border border-light-border/70 dark:border-dark-border/70 rounded-xl focus-within:ring-wevie-teal/30 focus-within:border-wevie-teal dark:bg-dark-card cursor-text ${
                     disabled
-                        ? "bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
+                        ? "bg-light-hover dark:bg-dark-hover cursor-not-allowed"
                         : ""
                 } ${className}`}
                 onClick={handleContainerClick}
@@ -142,18 +142,18 @@ export default function TagInput({
                             onChange={handleInputChange}
                             onKeyDown={handleKeyDown}
                             placeholder={tags.length === 0 ? placeholder : ""}
-                            className="flex-1 min-w-[120px] bg-transparent border-0 outline-none focus:ring-0 focus:border-0 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 p-0 m-0"
+                            className="flex-1 min-w-[120px] bg-transparent border-0 outline-none focus:ring-0 focus:border-0 text-light-primary dark:text-dark-primary placeholder-light-muted dark:placeholder-dark-muted p-0 m-0"
                             style={{ boxShadow: "none" }}
                         />
                     )}
                 </div>
             </div>
             {tags.length >= maxTags && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-xs text-light-muted dark:text-dark-muted mt-1">
                     Maximum {maxTags} tags allowed
                 </p>
             )}
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-xs text-light-muted dark:text-dark-muted mt-1">
                 Press space, comma, or Enter to add a tag
             </p>
         </div>

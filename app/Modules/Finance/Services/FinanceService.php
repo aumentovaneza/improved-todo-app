@@ -80,6 +80,13 @@ class FinanceService
     {
         $data['user_id'] = $userId;
         $data['created_by_user_id'] = $actorUserId;
+        if (($data['type'] ?? null) === 'transfer') {
+            $data['finance_category_id'] = null;
+            $data['finance_loan_id'] = null;
+            $data['finance_savings_goal_id'] = null;
+            $data['finance_budget_id'] = null;
+            $data['finance_credit_card_account_id'] = null;
+        }
         if (($data['type'] ?? null) === 'loan' && empty($data['finance_loan_id'])) {
             $loan = $this->createLoan([
                 'name' => $data['description'] ?? 'Loan',
@@ -97,7 +104,15 @@ class FinanceService
         $this->applyTransactionImpact($transaction, 1);
         $this->triggerBudgetNotifications($userId);
 
-        return $transaction->load(['category', 'loan', 'tags', 'createdBy', 'account', 'creditCardAccount']);
+        return $transaction->load([
+            'category',
+            'loan',
+            'tags',
+            'createdBy',
+            'account',
+            'transferAccount',
+            'creditCardAccount',
+        ]);
     }
 
     public function updateTransaction(FinanceTransaction $transaction, array $data, int $userId): FinanceTransaction
@@ -105,13 +120,28 @@ class FinanceService
         $this->ensureOwnership($transaction->user_id, $userId);
 
         $this->applyTransactionImpact($transaction, -1);
+        $type = $data['type'] ?? $transaction->type;
+        if ($type === 'transfer') {
+            $data['finance_category_id'] = null;
+            $data['finance_loan_id'] = null;
+            $data['finance_savings_goal_id'] = null;
+            $data['finance_budget_id'] = null;
+            $data['finance_credit_card_account_id'] = null;
+        }
         $updated = $this->transactionRepository->update($transaction, $data);
         $this->syncTransactionTags($updated, $data['tags'] ?? null);
         $this->syncLoanFromTransaction($updated);
         $this->applyTransactionImpact($updated, 1);
         $this->triggerBudgetNotifications($userId);
 
-        return $updated->load(['category', 'loan', 'tags', 'account', 'creditCardAccount']);
+        return $updated->load([
+            'category',
+            'loan',
+            'tags',
+            'account',
+            'transferAccount',
+            'creditCardAccount',
+        ]);
     }
 
     public function deleteTransaction(FinanceTransaction $transaction, int $userId): bool
@@ -407,6 +437,11 @@ class FinanceService
 
     private function applyTransactionImpact(FinanceTransaction $transaction, int $direction): void
     {
+        if ($transaction->type === 'transfer') {
+            $this->adjustTransferBalances($transaction, $direction);
+            return;
+        }
+
         if ($transaction->type === 'savings' && $transaction->finance_savings_goal_id) {
             $goal = $this->savingsGoalRepository->findOptionalForUser(
                 $transaction->user_id,
@@ -436,6 +471,42 @@ class FinanceService
 
         if ($transaction->finance_credit_card_account_id) {
             $this->adjustCreditCardPayment($transaction, $direction);
+        }
+    }
+
+    private function adjustTransferBalances(FinanceTransaction $transaction, int $direction): void
+    {
+        if (!$transaction->finance_account_id) {
+            return;
+        }
+
+        if (
+            $transaction->finance_transfer_account_id &&
+            $transaction->finance_account_id === $transaction->finance_transfer_account_id
+        ) {
+            return;
+        }
+
+        $amount = (float) $transaction->amount * $direction;
+
+        $source = $this->accountRepository->findOptionalForUser(
+            $transaction->user_id,
+            $transaction->finance_account_id
+        );
+        $destination = null;
+        if ($transaction->finance_transfer_account_id) {
+            $destination = $this->accountRepository->findOptionalForUser(
+                $transaction->user_id,
+                $transaction->finance_transfer_account_id
+            );
+        }
+
+        if ($source) {
+            $this->accountRepository->adjustBalance($source, $amount * -1);
+        }
+
+        if ($destination) {
+            $this->accountRepository->adjustBalance($destination, $amount);
         }
     }
 

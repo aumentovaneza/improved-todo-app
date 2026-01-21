@@ -29,10 +29,7 @@ export default function CategoryForm({ onSubmit }) {
     };
 
     return (
-        <form
-            onSubmit={handleSubmit}
-            className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
-        >
+        <form onSubmit={handleSubmit} className="card p-4">
             <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
                 Add finance category
             </h3>

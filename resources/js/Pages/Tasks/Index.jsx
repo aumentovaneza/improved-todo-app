@@ -89,15 +89,15 @@ function SortableTask({
     const getPriorityIcon = (priority) => {
         switch (priority) {
             case "urgent":
-                return <Flag className="h-3 w-3 text-red-500" />;
+                return <Flag className="h-3 w-3 text-amber-500" />;
             case "high":
                 return <Flag className="h-3 w-3 text-orange-500" />;
             case "medium":
-                return <Flag className="h-3 w-3 text-yellow-500" />;
+                return <Flag className="h-3 w-3 text-sky-500" />;
             case "low":
-                return <Flag className="h-3 w-3 text-green-500" />;
+                return <Flag className="h-3 w-3 text-emerald-500" />;
             default:
-                return <Flag className="h-3 w-3 text-gray-400" />;
+                return <Flag className="h-3 w-3 text-slate-400" />;
         }
     };
 
@@ -105,7 +105,7 @@ function SortableTask({
         <div
             ref={setNodeRef}
             style={style}
-            className={`group relative bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 ${
+            className={`group relative bg-white dark:bg-dark-card border-b border-light-border/60 dark:border-dark-border/60 hover:bg-light-hover dark:hover:bg-dark-hover transition-colors duration-200 ${
                 isDragging ? "shadow-lg z-10" : ""
             }`}
         >
@@ -115,7 +115,7 @@ function SortableTask({
                     <div
                         {...attributes}
                         {...listeners}
-                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="text-light-muted hover:text-light-secondary dark:text-dark-muted dark:hover:text-dark-secondary cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
                         title="Drag to reorder"
                     >
                         <GripVertical className="h-4 w-4" />
@@ -124,7 +124,7 @@ function SortableTask({
                     {/* Status Checkbox */}
                     <button
                         onClick={() => toggleTaskStatus(task)}
-                        className="flex-shrink-0 hover:scale-110 transition-transform"
+                        className="flex-shrink-0 transition-colors"
                         title={`Mark task as ${
                             task.status === "completed"
                                 ? "pending"
@@ -132,9 +132,9 @@ function SortableTask({
                         }`}
                     >
                         {task.status === "completed" ? (
-                            <CheckSquare className="h-5 w-5 text-green-500" />
+                            <CheckSquare className="h-5 w-5 text-emerald-500" />
                         ) : (
-                            <Square className="h-5 w-5 text-gray-400 hover:text-green-500" />
+                            <Square className="h-5 w-5 text-slate-300 hover:text-emerald-500" />
                         )}
                     </button>
 
@@ -146,17 +146,17 @@ function SortableTask({
                                 setSelectedTask(task);
                                 setShowViewModal(true);
                             }}
-                            className={`text-left font-medium hover:text-primary-400 dark:hover:text-[#2ED7A1] transition-colors ${
+                            className={`text-left font-medium hover:text-wevie-teal dark:hover:text-wevie-mint transition-colors ${
                                 task.status === "completed"
-                                    ? "text-gray-500 dark:text-gray-400 line-through"
-                                    : "text-gray-900 dark:text-gray-100"
+                                    ? "text-light-muted dark:text-dark-muted line-through"
+                                    : "text-light-primary dark:text-dark-primary"
                             }`}
                             title={task.title}
                         >
                             {task.title.length > 100 ? `${task.title.substring(0, 100)}...` : task.title}
                         </button>
                         {task.description && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-1">
+                            <p className="text-xs text-light-muted dark:text-dark-muted truncate mt-1">
                                 {task.description}
                             </p>
                         )}
@@ -172,7 +172,7 @@ function SortableTask({
                                 backgroundColor: task.category?.color || "#6B7280",
                             }}
                         />
-                        <span className="text-xs text-gray-600 dark:text-gray-300 truncate max-w-24">
+                        <span className="text-xs text-light-secondary dark:text-dark-secondary truncate max-w-24">
                             {task.category?.name || "Uncategorized"}
                         </span>
                     </div>
@@ -184,15 +184,24 @@ function SortableTask({
                             {task.status === "pending" && <Clock className="h-3 w-3 mr-1" />}
                             {task.status === "completed" && <CheckCircle className="h-3 w-3 mr-1" />}
                             {task.status === "cancelled" && <XCircle className="h-3 w-3 mr-1" />}
-                            {task.status.replace("_", " ").charAt(0).toUpperCase() + task.status.replace("_", " ").slice(1)}
+                            {task.status === "pending"
+                                ? "Ready"
+                                : task.status === "in_progress"
+                                  ? "In flow"
+                                  : task.status === "cancelled"
+                                    ? "Paused"
+                                    : "Completed"}
                         </div>
                     </div>
 
                     {/* Priority */}
                     <div className="flex items-center space-x-1" title={`Priority: ${task.priority}`}>
                         {getPriorityIcon(task.priority)}
-                        <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline">
-                            {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                        <span className="text-xs text-light-muted dark:text-dark-muted hidden sm:inline">
+                            {task.priority === "urgent"
+                                ? "Focus"
+                                : task.priority.charAt(0).toUpperCase() +
+                                  task.priority.slice(1)}
                         </span>
                     </div>
 
@@ -200,8 +209,8 @@ function SortableTask({
                     {task.due_date && (
                         <div className={`flex items-center space-x-1 ${
                             isOverdue(task.due_date, task.status)
-                                ? "text-red-600 dark:text-red-400"
-                                : "text-gray-500 dark:text-gray-400"
+                                ? "text-amber-600 dark:text-amber-200"
+                                : "text-light-muted dark:text-dark-muted"
                         }`}>
                             <CalendarDays className="h-4 w-4" />
                             <span className="text-xs hidden sm:inline">
@@ -215,7 +224,7 @@ function SortableTask({
 
                     {/* Time */}
                     {task.due_date && !task.is_all_day && (task.start_time || task.end_time) && (
-                        <div className="flex items-center space-x-1 text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center space-x-1 text-light-muted dark:text-dark-muted">
                             <Clock3 className="h-4 w-4" />
                             <span className="text-xs hidden sm:inline">
                                 {(() => {
@@ -254,7 +263,7 @@ function SortableTask({
 
                     {/* Subtasks */}
                     {task.subtasks_count > 0 && (
-                        <div className="flex items-center space-x-1 text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center space-x-1 text-light-muted dark:text-dark-muted">
                             <ListTodo className="h-4 w-4" />
                             <span className="text-xs">
                                 {task.completed_subtasks_count || 0}/{task.subtasks_count || 0}
@@ -265,7 +274,7 @@ function SortableTask({
                     {/* Tags */}
                     {task.tags && task.tags.length > 0 && (
                         <div className="flex items-center space-x-1">
-                            <TagIcon className="h-4 w-4 text-gray-400" />
+                            <TagIcon className="h-4 w-4 text-light-muted dark:text-dark-muted" />
                             <div className="flex space-x-1">
                                 {task.tags.slice(0, 2).map((tag) => (
                                     <span
@@ -292,7 +301,7 @@ function SortableTask({
                                 setSelectedTask(task);
                                 setShowSubtaskModal(true);
                             }}
-                            className="p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
+                            className="p-1 text-light-muted hover:text-emerald-500 dark:text-dark-muted dark:hover:text-emerald-300 transition-colors"
                             title="Add Subtask"
                         >
                             <ListTodo className="h-4 w-4" />
@@ -302,7 +311,7 @@ function SortableTask({
                                 setSelectedTask(task);
                                 setShowViewModal(true);
                             }}
-                            className="p-1 text-gray-400 hover:text-primary-400 dark:hover:text-[#2ED7A1] transition-colors"
+                            className="p-1 text-light-muted hover:text-wevie-teal dark:text-dark-muted dark:hover:text-wevie-mint transition-colors"
                             title="View Task"
                         >
                             <Eye className="h-4 w-4" />
@@ -312,15 +321,15 @@ function SortableTask({
                                 setSelectedTask(task);
                                 setShowEditModal(true);
                             }}
-                            className="p-1 text-gray-400 hover:text-primary-400 dark:hover:text-[#2ED7A1] transition-colors"
+                            className="p-1 text-light-muted hover:text-wevie-teal dark:text-dark-muted dark:hover:text-wevie-mint transition-colors"
                             title="Edit Task"
                         >
                             <Edit className="h-4 w-4" />
                         </button>
                         <button
                             onClick={() => handleDeleteTask(task)}
-                            className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                            title="Delete Task"
+                            className="p-1 text-light-muted hover:text-rose-500 dark:text-dark-muted dark:hover:text-rose-300 transition-colors"
+                            title="Remove Task"
                         >
                             <Trash2 className="h-4 w-4" />
                         </button>
@@ -404,9 +413,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
-                    toast.success(
-                        `Task status updated to ${newStatus.replace("_", " ")}`
-                    );
+                    toast.success("Status updated gently.");
                 },
                 onError: () => {
                     // Revert the optimistic update on error
@@ -415,7 +422,9 @@ export default function Index({ categorizedTasks, categories, filters }) {
                             t.id === task.id ? task : t
                         )
                     );
-                    toast.error("Failed to update task status");
+                    toast.error(
+                        "We couldn’t update that just now. Try again when you’re ready."
+                    );
                 },
             }
         );
@@ -434,7 +443,11 @@ export default function Index({ categorizedTasks, categories, filters }) {
 
     // Handle task deletion
     const handleDeleteTask = (task) => {
-        if (!confirm(`Are you sure you want to delete "${task.title}"? This action cannot be undone.`)) {
+        if (
+            !confirm(
+                `Remove "${task.title}"? You can add it again anytime.`
+            )
+        ) {
             return;
         }
 
@@ -448,12 +461,14 @@ export default function Index({ categorizedTasks, categories, filters }) {
             preserveState: true,
             only: [], // Don't reload any data
             onSuccess: () => {
-                toast.success("Task deleted successfully");
+                toast.success("Task removed. It’s here if you need it again.");
             },
             onError: () => {
                 // Revert to original state on error
                 setAllTasks(originalTasks);
-                toast.error("Failed to delete task");
+                toast.error(
+                    "We couldn’t remove that just now. Please try again."
+                );
             },
         });
     };
@@ -504,30 +519,28 @@ export default function Index({ categorizedTasks, categories, filters }) {
 
         setAllTasks(reorderedTasks);
 
-        // Use the target task's current position as the new position
-        const globalNewPosition = overTask.position;
-
-        // Send the new order to the server
-        router.post(
-            route("tasks.reorder"),
-            {
-                taskId: active.id,
-                newPosition: globalNewPosition,
-            },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                only: [], // Don't reload any data
-                onSuccess: () => {
-                    toast.success("Task reordered successfully");
+        window.axios
+            .post(
+                route("tasks.reorder"),
+                {
+                    taskIds: reorderedTasks.map((task) => task.id),
                 },
-                onError: () => {
-                    // Revert to original state on error
-                    setAllTasks(originalTasks);
-                    toast.error("Failed to reorder task");
-                },
-            }
-        );
+                {
+                    headers: {
+                        Accept: "application/json",
+                    },
+                }
+            )
+            .then(() => {
+                toast.success("Task reordered successfully");
+            })
+            .catch(() => {
+                // Revert to original state on error
+                setAllTasks(originalTasks);
+                toast.error(
+                    "We couldn’t reorder that just now. Please try again."
+                );
+            });
     };
 
     const handleSearch = (value) => {
@@ -593,41 +606,41 @@ export default function Index({ categorizedTasks, categories, filters }) {
     const getPriorityColor = (priority) => {
         switch (priority) {
             case "urgent":
-                return "text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/20";
+                return "text-amber-700 bg-amber-100/70 dark:text-amber-200 dark:bg-amber-900/20";
             case "high":
-                return "text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/20";
+                return "text-orange-700 bg-orange-100/70 dark:text-orange-200 dark:bg-orange-900/20";
             case "medium":
-                return "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/20";
+                return "text-sky-700 bg-sky-100/70 dark:text-sky-200 dark:bg-sky-900/20";
             case "low":
-                return "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/20";
+                return "text-emerald-700 bg-emerald-100/70 dark:text-emerald-200 dark:bg-emerald-900/20";
             default:
-                return "text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/20";
+                return "text-slate-600 bg-slate-100/70 dark:text-slate-300 dark:bg-slate-800/40";
         }
     };
 
     const getStatusColor = (status) => {
         switch (status) {
             case "completed":
-                return "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/20";
+                return "text-emerald-700 bg-emerald-100/70 dark:text-emerald-200 dark:bg-emerald-900/20";
             case "in_progress":
-                return "text-primary-400 bg-primary-100 dark:text-[#2ED7A1] dark:bg-primary-900/20";
+                return "text-sky-700 bg-sky-100/70 dark:text-sky-200 dark:bg-sky-900/20";
             case "cancelled":
-                return "text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/20";
+                return "text-slate-600 bg-slate-100/70 dark:text-slate-300 dark:bg-slate-800/40";
             default:
-                return "text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/20";
+                return "text-amber-700 bg-amber-100/70 dark:text-amber-200 dark:bg-amber-900/20";
         }
     };
 
     const getStatusIcon = (status) => {
         switch (status) {
             case "completed":
-                return <CheckCircle className="h-5 w-5 text-gray-500" />;
+                return <CheckCircle className="h-5 w-5 text-emerald-500" />;
             case "in_progress":
-                return <Clock className="h-5 w-5 text-green-500" />;
+                return <Clock className="h-5 w-5 text-sky-500" />;
             case "cancelled":
-                return <AlertTriangle className="h-5 w-5 text-red-500" />;
+                return <AlertTriangle className="h-5 w-5 text-slate-400" />;
             default:
-                return <Circle className="h-5 w-5 text-gray-400" />;
+                return <Circle className="h-5 w-5 text-amber-500" />;
         }
     };
 
@@ -667,8 +680,8 @@ export default function Index({ categorizedTasks, categories, filters }) {
                 onSuccess: () => {
                     toast.success(
                         newStatus === "completed"
-                            ? "Task completed!"
-                            : "Task marked as pending"
+                            ? "Nice work. Task set to done."
+                            : "Task is back on your list."
                     );
                 },
                 onError: () => {
@@ -689,7 +702,9 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                 : t
                         )
                     );
-                    toast.error("Failed to update task status");
+                    toast.error(
+                        "We couldn’t update that just now. Try again when you’re ready."
+                    );
                 },
             }
         );
@@ -700,26 +715,26 @@ export default function Index({ categorizedTasks, categories, filters }) {
             header={
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                        <h1 className="text-xl font-semibold text-light-primary dark:text-dark-primary">
                             Tasks
                         </h1>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                            Manage and organize your tasks efficiently
+                        <p className="text-sm text-light-muted dark:text-dark-muted mt-1">
+                            A calm space to keep track of what matters.
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setShowTaskModal(true)}
                             disabled={isTaskSubmitting}
-                            className="inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-lg font-medium text-sm text-white hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:bg-[#2ED7A1] dark:hover:bg-primary-400"
+                            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-wevie-teal to-wevie-mint border border-transparent rounded-xl font-medium text-sm text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wevie-teal/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             title={
                                 isTaskSubmitting
-                                    ? "Creating task..."
+                                    ? "Saving your task..."
                                     : "Create a new task"
                             }
                         >
                             <Plus className="mr-2 h-4 w-4" />
-                            New Task
+                            New task
                         </button>
                     </div>
                 </div>
@@ -729,21 +744,21 @@ export default function Index({ categorizedTasks, categories, filters }) {
 
             <div className="space-y-6">
                 {/* Search and Filters */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="card">
+                    <div className="p-4 border-b border-light-border/70 dark:border-dark-border/70">
                         <div className="flex flex-col sm:flex-row gap-4">
                             {/* Search */}
                             <div className="flex-1">
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-light-muted dark:text-dark-muted" />
                                     <input
                                         type="text"
-                                        placeholder="Search tasks by title or description..."
+                                        placeholder="Search by title or notes..."
                                         value={search}
                                         onChange={(e) =>
                                             handleSearch(e.target.value)
                                         }
-                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1] text-sm"
+                                        className="w-full pl-10 pr-4 py-2.5 border border-light-border/70 dark:border-dark-border/70 rounded-xl focus:ring-2 focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary text-sm"
                                     />
                                 </div>
                             </div>
@@ -751,16 +766,16 @@ export default function Index({ categorizedTasks, categories, filters }) {
                             {/* Filter Toggle */}
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
-                                className={`inline-flex items-center justify-center px-4 py-2.5 border rounded-lg text-sm font-medium transition-colors ${
+                                className={`inline-flex items-center justify-center px-4 py-2.5 border rounded-xl text-sm font-medium transition-colors ${
                                     showFilters || statusFilter || priorityFilter || categoryFilter || dueDateFilter
-                                        ? "bg-primary-50 border-primary-200 text-primary-700 dark:bg-primary-900/20 dark:border-primary-800 dark:text-[#2ED7A1]"
-                                        : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                        ? "bg-wevie-teal/10 border-wevie-teal/30 text-wevie-text-primary dark:bg-wevie-teal/10 dark:border-wevie-teal/30 dark:text-wevie-dark-text-primary"
+                                        : "bg-white dark:bg-dark-card border-light-border/70 dark:border-dark-border/70 text-light-secondary dark:text-dark-secondary hover:bg-light-hover dark:hover:bg-dark-hover"
                                 }`}
                             >
                                 <Filter className="mr-2 h-4 w-4" />
                                 Filters
                                 {(statusFilter || priorityFilter || categoryFilter || dueDateFilter) && (
-                                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-[#2ED7A1]">
+                                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-wevie-teal/20 text-wevie-text-primary dark:bg-wevie-teal/20 dark:text-wevie-dark-text-primary">
                                         {[statusFilter, priorityFilter, categoryFilter, dueDateFilter].filter(Boolean).length}
                                     </span>
                                 )}
@@ -772,7 +787,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
                             <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 {/* Status Filter */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    <label className="block text-sm font-medium text-light-secondary dark:text-dark-secondary mb-2">
                                         Status
                                     </label>
                                     <select
@@ -780,19 +795,19 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                         onChange={(e) =>
                                             handleFilter("status", e.target.value)
                                         }
-                                        className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1]"
+                                        className="block w-full border border-light-border/70 dark:border-dark-border/70 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
                                     >
-                                        <option value="">All Status</option>
-                                        <option value="pending">Pending</option>
-                                        <option value="in_progress">In Progress</option>
+                                        <option value="">All statuses</option>
+                                        <option value="pending">Ready</option>
+                                        <option value="in_progress">In flow</option>
                                         <option value="completed">Completed</option>
-                                        <option value="cancelled">Cancelled</option>
+                                        <option value="cancelled">Paused</option>
                                     </select>
                                 </div>
 
                                 {/* Priority Filter */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    <label className="block text-sm font-medium text-light-secondary dark:text-dark-secondary mb-2">
                                         Priority
                                     </label>
                                     <select
@@ -800,19 +815,19 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                         onChange={(e) =>
                                             handleFilter("priority", e.target.value)
                                         }
-                                        className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1]"
+                                        className="block w-full border border-light-border/70 dark:border-dark-border/70 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
                                     >
-                                        <option value="">All Priorities</option>
+                                        <option value="">All priorities</option>
                                         <option value="low">Low</option>
                                         <option value="medium">Medium</option>
                                         <option value="high">High</option>
-                                        <option value="urgent">Urgent</option>
+                                        <option value="urgent">Focus</option>
                                     </select>
                                 </div>
 
                                 {/* Category Filter */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    <label className="block text-sm font-medium text-light-secondary dark:text-dark-secondary mb-2">
                                         Category
                                     </label>
                                     <select
@@ -820,9 +835,9 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                         onChange={(e) =>
                                             handleFilter("category", e.target.value)
                                         }
-                                        className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1]"
+                                        className="block w-full border border-light-border/70 dark:border-dark-border/70 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
                                     >
-                                        <option value="">All Categories</option>
+                                        <option value="">All categories</option>
                                         {categories.map((category) => (
                                             <option
                                                 key={category.id}
@@ -836,21 +851,21 @@ export default function Index({ categorizedTasks, categories, filters }) {
 
                                 {/* Due Date Filter */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Due Date
+                                    <label className="block text-sm font-medium text-light-secondary dark:text-dark-secondary mb-2">
+                                        Due date
                                     </label>
                                     <select
                                         value={dueDateFilter}
                                         onChange={(e) =>
                                             handleFilter("due_date", e.target.value)
                                         }
-                                        className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1]"
+                                        className="block w-full border border-light-border/70 dark:border-dark-border/70 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
                                     >
-                                        <option value="">All Dates</option>
+                                        <option value="">All dates</option>
                                         <option value="today">Today</option>
                                         <option value="tomorrow">Tomorrow</option>
-                                        <option value="this_week">This Week</option>
-                                        <option value="overdue">Overdue</option>
+                                        <option value="this_week">This week</option>
+                                        <option value="overdue">Needs attention</option>
                                     </select>
                                 </div>
                             </div>
@@ -859,18 +874,18 @@ export default function Index({ categorizedTasks, categories, filters }) {
                 </div>
 
                 {/* Tasks Table */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div className="card overflow-hidden">
                     {/* Table Header */}
-                    <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                    <div className="px-4 py-3 border-b border-light-border/70 dark:border-dark-border/70 bg-light-hover dark:bg-dark-hover">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-4">
-                                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <h3 className="text-sm font-medium text-light-secondary dark:text-dark-secondary">
                                     All Tasks ({allTasks.length})
                                 </h3>
                             </div>
                             <div className="flex items-center space-x-2">
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    Drag to reorder • Click to view details
+                                <span className="text-xs text-light-muted dark:text-dark-muted">
+                                    Drag to reorder • Tap a task to see details
                                 </span>
                             </div>
                         </div>
@@ -879,20 +894,20 @@ export default function Index({ categorizedTasks, categories, filters }) {
                     {/* Tasks List */}
                     {allTasks.length === 0 ? (
                         <div className="p-12 text-center">
-                            <div className="text-gray-400 dark:text-gray-500 mb-4">
+                            <div className="text-light-muted dark:text-dark-muted mb-4">
                                 <CheckSquare className="mx-auto h-16 w-16" />
                             </div>
-                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                                No tasks found
+                            <h3 className="text-lg font-medium text-light-primary dark:text-dark-primary mb-2">
+                                Nothing here yet
                             </h3>
-                            <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                            <p className="text-light-muted dark:text-dark-muted mb-6 max-w-md mx-auto">
                                 {search ||
                                 statusFilter ||
                                 priorityFilter ||
                                 categoryFilter ||
                                 dueDateFilter
-                                    ? "Try adjusting your filters or search terms to find what you're looking for."
-                                    : "Get started by creating your first task to organize your work and boost productivity."}
+                                    ? "Try a softer filter or a shorter search."
+                                    : "Start with one small task when you’re ready."}
                             </p>
                             {!search &&
                                 !statusFilter &&
@@ -902,10 +917,10 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                     <button
                                         onClick={() => setShowTaskModal(true)}
                                         disabled={isTaskSubmitting}
-                                        className="inline-flex items-center px-4 py-2 bg-primary-400 border border-transparent rounded-lg font-medium text-sm text-white hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:bg-[#2ED7A1] dark:hover:bg-primary-400"
+                                        className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-wevie-teal to-wevie-mint border border-transparent rounded-xl font-medium text-sm text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wevie-teal/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <Plus className="mr-2 h-4 w-4" />
-                                        Create Your First Task
+                                        Create your first task
                                     </button>
                                 )}
                         </div>

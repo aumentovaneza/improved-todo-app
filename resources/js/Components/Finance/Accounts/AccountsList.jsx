@@ -1,3 +1,5 @@
+import { Pencil, Trash2 } from "lucide-react";
+
 const formatCurrency = (value, currency = "PHP") =>
     new Intl.NumberFormat("en-PH", {
         style: "currency",
@@ -20,7 +22,7 @@ const maskAccountNumber = (value) => {
 
 export default function AccountsList({ accounts = [], onEdit, onDelete }) {
     return (
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <div className="card p-4">
             <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
                 Accounts
             </h3>
@@ -28,7 +30,7 @@ export default function AccountsList({ accounts = [], onEdit, onDelete }) {
                 {accounts.map((account) => (
                     <div
                         key={account.id}
-                        className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-700"
+                        className="rounded-lg border border-light-border/70 px-3 py-2 dark:border-white/10"
                     >
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div>
@@ -106,22 +108,26 @@ export default function AccountsList({ accounts = [], onEdit, onDelete }) {
                                 )}
                             </div>
                         </div>
-                        <div className="mt-2 flex justify-end">
+                        <div className="mt-2 flex justify-end gap-2">
                             {onEdit && (
                                 <button
                                     type="button"
                                     onClick={() => onEdit?.(account)}
-                                    className="mr-3 text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                    className="rounded-md p-1 text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                    title="Edit"
+                                    aria-label="Edit"
                                 >
-                                    Edit
+                                    <Pencil className="h-4 w-4" />
                                 </button>
                             )}
                             <button
                                 type="button"
                                 onClick={() => onDelete?.(account)}
-                                className="text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
+                                className="rounded-md p-1 text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
+                                title="Delete"
+                                aria-label="Delete"
                             >
-                                Delete
+                                <Trash2 className="h-4 w-4" />
                             </button>
                         </div>
                     </div>

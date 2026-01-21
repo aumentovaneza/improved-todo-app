@@ -139,7 +139,7 @@ export default function Index({ inviteCodes, filters }) {
 
             <div className="space-y-6">
                 {/* Search and Filters */}
-                <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
+                <div className="card p-6">
                     <form onSubmit={handleSearch} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
@@ -152,7 +152,7 @@ export default function Index({ inviteCodes, filters }) {
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     placeholder="Enter invite code..."
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                    className="w-full px-3 py-2 border border-light-border/70 dark:border-white/10 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-white"
                                 />
                             </div>
 
@@ -164,7 +164,7 @@ export default function Index({ inviteCodes, filters }) {
                                 <select
                                     value={status}
                                     onChange={(e) => setStatus(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                    className="w-full px-3 py-2 border border-light-border/70 dark:border-white/10 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-white"
                                 >
                                     <option value="">All Status</option>
                                     <option value="active">Active</option>
@@ -191,10 +191,10 @@ export default function Index({ inviteCodes, filters }) {
                 </div>
 
                 {/* Invite Codes Table */}
-                <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden">
+                <div className="card overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead className="bg-gray-50 dark:bg-gray-900">
+                        <table className="min-w-full divide-y divide-gray-200 dark:divide-white/10">
+                            <thead className="bg-gray-50 dark:bg-dark-card/70">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Code
@@ -219,15 +219,15 @@ export default function Index({ inviteCodes, filters }) {
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <tbody className="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-white/10">
                                 {inviteCodes.data.map((inviteCode) => (
                                     <tr
                                         key={inviteCode.id}
-                                        className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                                        className="hover:bg-gray-50 dark:hover:bg-dark-hover"
                                     >
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
-                                                <div className="text-sm font-mono font-medium text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                                            <div className="text-sm font-mono font-medium text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-dark-card/70 px-2 py-1 rounded">
                                                     {inviteCode.code}
                                                 </div>
                                             </div>
@@ -241,7 +241,7 @@ export default function Index({ inviteCodes, filters }) {
                                                 {inviteCode.used_count} /{" "}
                                                 {inviteCode.max_uses}
                                             </div>
-                                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-1">
+                                            <div className="w-full bg-gray-200 dark:bg-dark-card/70 rounded-full h-2 mt-1">
                                                 <div
                                                     className="bg-blue-600 h-2 rounded-full"
                                                     style={{
@@ -315,13 +315,13 @@ export default function Index({ inviteCodes, filters }) {
 
                     {/* Pagination */}
                     {inviteCodes.links && (
-                        <div className="bg-white dark:bg-gray-800 px-4 py-3 border-t border-gray-200 dark:border-gray-700 sm:px-6">
+                        <div className="bg-white dark:bg-dark-card px-4 py-3 border-t border-gray-200 dark:border-white/10 sm:px-6">
                             <div className="flex items-center justify-between">
                                 <div className="flex-1 flex justify-between sm:hidden">
                                     {inviteCodes.prev_page_url && (
                                         <Link
                                             href={inviteCodes.prev_page_url}
-                                            className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                            className="relative inline-flex items-center px-4 py-2 border border-light-border/70 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:border-white/10 dark:bg-dark-card dark:text-gray-200 dark:hover:bg-dark-hover"
                                         >
                                             Previous
                                         </Link>
@@ -329,7 +329,7 @@ export default function Index({ inviteCodes, filters }) {
                                     {inviteCodes.next_page_url && (
                                         <Link
                                             href={inviteCodes.next_page_url}
-                                            className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                            className="ml-3 relative inline-flex items-center px-4 py-2 border border-light-border/70 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:border-white/10 dark:bg-dark-card dark:text-gray-200 dark:hover:bg-dark-hover"
                                         >
                                             Next
                                         </Link>
@@ -362,8 +362,8 @@ export default function Index({ inviteCodes, filters }) {
                                                         href={link.url || "#"}
                                                         className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
                                                             link.active
-                                                                ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
-                                                                : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
+                                                                ? "z-10 bg-blue-50 border-blue-500 text-blue-600 dark:bg-blue-900/20 dark:border-blue-400 dark:text-blue-300"
+                                                                : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50 dark:bg-dark-card dark:border-white/10 dark:text-gray-300 dark:hover:bg-dark-hover"
                                                         } ${
                                                             index === 0
                                                                 ? "rounded-l-md"
@@ -391,7 +391,7 @@ export default function Index({ inviteCodes, filters }) {
                 </div>
 
                 {inviteCodes.data.length === 0 && (
-                    <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 text-center">
+                    <div className="card p-6 text-center">
                         <div className="text-gray-500 dark:text-gray-400">
                             <Users className="mx-auto h-12 w-12 mb-4" />
                             <h3 className="text-lg font-medium mb-2">

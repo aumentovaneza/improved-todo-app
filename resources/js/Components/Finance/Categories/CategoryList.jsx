@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Pencil, Trash2 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import IconPicker from "@/Components/Finance/Categories/IconPicker";
 
@@ -54,7 +55,7 @@ export default function CategoryList({
     };
 
     return (
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <div className="card p-4">
             <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
                 Finance categories
             </h3>
@@ -62,7 +63,7 @@ export default function CategoryList({
                 {categories.map((category) => (
                     <div
                         key={category.id}
-                        className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300"
+                        className="rounded-lg border border-light-border/70 px-3 py-2 text-sm text-slate-600 dark:border-white/10 dark:text-slate-300"
                     >
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div className="flex items-center gap-3">
@@ -91,16 +92,20 @@ export default function CategoryList({
                                 <button
                                     type="button"
                                     onClick={() => startEdit(category)}
-                                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                    className="rounded-md p-1 text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                    title="Edit"
+                                    aria-label="Edit"
                                 >
-                                    Edit
+                                    <Pencil className="h-4 w-4" />
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => onDelete?.(category)}
-                                    className="text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
+                                    className="rounded-md p-1 text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
+                                    title="Delete"
+                                    aria-label="Delete"
                                 >
-                                    Delete
+                                    <Trash2 className="h-4 w-4" />
                                 </button>
                             </div>
                         </div>

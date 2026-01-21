@@ -72,14 +72,25 @@ export default function CategoryBreakdownChart({
     currency = "PHP",
     period,
 }) {
-    const chartColors = data.map((item) =>
-        item?.color ? getNearestTremorColorName(item.color) : "slate"
-    );
+    const isDark =
+        typeof document !== "undefined" &&
+        document.documentElement.classList.contains("dark");
+    const expenseColor = isDark ? "#9F1239" : "#F43F5E";
+    const savingsColor = isDark ? "#047857" : "#10B981";
+    const chartColors = data.map((item) => {
+        if (item?.type === "expense") {
+            return getNearestTremorColorName(expenseColor);
+        }
+        if (item?.type === "savings") {
+            return getNearestTremorColorName(savingsColor);
+        }
+        return item?.color ? getNearestTremorColorName(item.color) : "slate";
+    });
 
     const centerSummary = getCenterSummary(data, currency);
     const centerTextClass = {
-        spending: "text-rose-600",
-        savings: "text-emerald-600",
+        spending: "text-rose-600 dark:text-rose-300/80",
+        savings: "text-emerald-600 dark:text-emerald-300/80",
         even: "text-slate-500 dark:text-slate-400",
         none: "text-slate-400",
     }[centerSummary.tone];

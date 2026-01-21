@@ -118,7 +118,7 @@ export default function WevieWalletManagement({
         <TodoLayout header="WevieWallet Management">
             <Head title="WevieWallet Management" />
             <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
-                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div className="card p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
@@ -135,13 +135,13 @@ export default function WevieWalletManagement({
                             Back to profile
                         </Link>
                     </div>
-                    <div className="mt-4 flex flex-wrap gap-2 border-b border-slate-200 text-sm dark:border-slate-700">
+                    <div className="mt-4 flex flex-wrap gap-2 border-b border-slate-200 text-sm dark:border-white/10">
                         <button
                             type="button"
                             onClick={() => setActiveTab("accounts")}
                             className={`-mb-px rounded-t-md border border-b-0 px-4 py-2 font-semibold ${
                                 activeTab === "accounts"
-                                    ? "border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                                    ? "border-light-border/70 bg-white text-slate-900 dark:border-white/10 dark:bg-dark-card dark:text-white"
                                     : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                             }`}
                         >
@@ -152,7 +152,7 @@ export default function WevieWalletManagement({
                             onClick={() => setActiveTab("categories")}
                             className={`-mb-px rounded-t-md border border-b-0 px-4 py-2 font-semibold ${
                                 activeTab === "categories"
-                                    ? "border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                                    ? "border-light-border/70 bg-white text-slate-900 dark:border-white/10 dark:bg-dark-card dark:text-white"
                                     : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                             }`}
                         >
@@ -163,7 +163,7 @@ export default function WevieWalletManagement({
 
                 <div className="space-y-6">
                     {activeTab === "accounts" && (
-                        <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <section className="card p-4 space-y-4">
                             <div>
                                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                                     Accounts
@@ -184,7 +184,7 @@ export default function WevieWalletManagement({
                         </section>
                     )}
                     {activeTab === "categories" && (
-                        <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <section className="card p-4 space-y-4">
                             <div>
                                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                                     Categories
@@ -209,7 +209,7 @@ export default function WevieWalletManagement({
                 onClose={() => setActiveAccount(null)}
                 maxWidth="lg"
             >
-                <div className="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
+                <div className="border-b border-slate-200 px-6 py-4 dark:border-white/10">
                     <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
                         Edit account
                     </h3>

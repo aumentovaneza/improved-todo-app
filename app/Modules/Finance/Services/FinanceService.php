@@ -41,9 +41,7 @@ class FinanceService
         $savingsGoals = $this->savingsGoalRepository->getForUser($userId);
         $loans = $this->loanRepository->getForUser($userId)->loadCount('transactions');
         $accounts = $this->accountRepository->getForUser($userId);
-        $loans->each(function ($loan) {
-            $this->recalculateLoanRemaining($loan);
-        });
+        // Keep remaining amounts as stored to avoid overriding manual values.
         $reportData = $this->reportService->buildDashboardData($userId);
         $totalLoans = $loans->sum(function ($loan) {
             $remaining = (float) $loan->remaining_amount;
@@ -652,7 +650,16 @@ class FinanceService
             return;
         }
 
-        $this->recalculateLoanRemaining($loan);
+        $currentRemaining = $loan->remaining_amount ?? $loan->total_amount ?? 0;
+        $delta = (float) $transaction->amount * $direction;
+        $updatedRemaining = max(0, (float) $currentRemaining - $delta);
+
+        if ($loan->total_amount !== null) {
+            $updatedRemaining = min((float) $loan->total_amount, $updatedRemaining);
+        }
+
+        $loan->remaining_amount = $updatedRemaining;
+        $loan->save();
     }
 
     private function refreshBudgetSpending($budgets, int $userId)

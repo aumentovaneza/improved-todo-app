@@ -68,6 +68,7 @@ class FinanceSeeder extends Seeder
                 'currency' => 'PHP',
                 'credit_limit' => 60000,
                 'available_credit' => 52000,
+                'used_credit' => 8000,
                 'notes' => 'Primary credit card for travel.',
                 'is_active' => true,
             ]);

@@ -14,6 +14,8 @@ const buildInitialState = (initialValues) => ({
         initialValues?.credit_limit !== undefined
             ? initialValues.credit_limit
             : "",
+    used_credit:
+        initialValues?.used_credit !== undefined ? initialValues.used_credit : "",
     currency: initialValues?.currency ?? "PHP",
     notes: initialValues?.notes ?? "",
     is_active:
@@ -162,20 +164,39 @@ export default function AccountForm({
                     </div>
                 )}
                 {form.type === "credit-card" && (
-                    <div>
-                        <label className="text-sm text-slate-500 dark:text-slate-400">
-                            Credit limit
-                        </label>
-                        <input
-                            type="number"
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
-                            value={form.credit_limit}
-                            onChange={updateField("credit_limit")}
-                            min="0"
-                            step="0.01"
-                            placeholder="0.00"
-                        />
-                    </div>
+                    <>
+                        <div>
+                            <label className="text-sm text-slate-500 dark:text-slate-400">
+                                Credit limit
+                            </label>
+                            <input
+                                type="number"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                value={form.credit_limit}
+                                onChange={updateField("credit_limit")}
+                                min="0"
+                                step="0.01"
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm text-slate-500 dark:text-slate-400">
+                                Used credit
+                            </label>
+                            <input
+                                type="number"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                value={form.used_credit}
+                                onChange={updateField("used_credit")}
+                                min="0"
+                                step="0.01"
+                                placeholder="0.00"
+                            />
+                            <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                                Set to 0 after paying the card in full.
+                            </p>
+                        </div>
+                    </>
                 )}
                 <div>
                     <label className="text-sm text-slate-500 dark:text-slate-400">

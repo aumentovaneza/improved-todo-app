@@ -64,13 +64,15 @@ class FinanceAccountController extends Controller
             'currency' => ['nullable', 'string', 'max:8'],
             'starting_balance' => ['nullable', 'numeric', 'min:0'],
             'credit_limit' => ['nullable', 'numeric', 'min:0'],
+            'used_credit' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
         $account = $this->financeService->createAccount(
             $validated,
-            $walletUserId ?: Auth::id()
+            $walletUserId ?: Auth::id(),
+            Auth::id()
         );
 
         return response()->json($account, 201);
@@ -86,6 +88,7 @@ class FinanceAccountController extends Controller
             'currency' => ['nullable', 'string', 'max:8'],
             'starting_balance' => ['nullable', 'numeric', 'min:0'],
             'credit_limit' => ['nullable', 'numeric', 'min:0'],
+            'used_credit' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string'],
             'is_active' => ['nullable', 'boolean'],
         ]);

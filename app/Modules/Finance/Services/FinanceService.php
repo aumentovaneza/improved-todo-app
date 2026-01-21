@@ -252,13 +252,33 @@ class FinanceService
         return $goal->refresh();
     }
 
-    public function createAccount(array $data, int $userId): FinanceAccount
+    public function createAccount(array $data, int $userId, int $actorUserId): FinanceAccount
     {
         $data['user_id'] = $userId;
-        $startingBalance = $data['starting_balance'] ?? 0;
-        $data['current_balance'] = $startingBalance;
+        $startingBalance = (float) ($data['starting_balance'] ?? 0);
+        $isCreditCard = ($data['type'] ?? null) === 'credit-card';
+        $data['current_balance'] = (!$isCreditCard && $startingBalance > 0)
+            ? 0
+            : $startingBalance;
 
-        return $this->accountRepository->create($data);
+        $account = $this->accountRepository->create($data);
+
+        if (!$isCreditCard && $startingBalance > 0) {
+            $this->createTransaction([
+                'finance_category_id' => null,
+                'finance_account_id' => $account->id,
+                'type' => 'income',
+                'amount' => $startingBalance,
+                'currency' => $account->currency ?? ($data['currency'] ?? 'PHP'),
+                'description' => 'Opening balance',
+                'notes' => null,
+                'payment_method' => null,
+                'metadata' => ['source' => 'opening_balance'],
+                'occurred_at' => now(),
+            ], $userId, $actorUserId);
+        }
+
+        return $account->refresh();
     }
 
     public function updateAccount(FinanceAccount $account, array $data, int $userId): FinanceAccount

@@ -72,9 +72,15 @@ export default function CategoryBreakdownChart({
     currency = "PHP",
     period,
 }) {
-    const chartColors = data.map((item) =>
-        item?.color ? getNearestTremorColorName(item.color) : "slate"
-    );
+    const chartColors = data.map((item) => {
+        if (item?.type === "expense") {
+            return "rose";
+        }
+        if (item?.type === "savings") {
+            return "emerald";
+        }
+        return item?.color ? getNearestTremorColorName(item.color) : "slate";
+    });
 
     const centerSummary = getCenterSummary(data, currency);
     const centerTextClass = {

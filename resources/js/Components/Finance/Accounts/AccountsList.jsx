@@ -73,6 +73,13 @@ export default function AccountsList({ accounts = [], onEdit, onDelete }) {
                                             )}
                                         </p>
                                         <p className="text-xs text-slate-400">
+                                            Used:{" "}
+                                            {formatCurrency(
+                                                account.used_credit ?? 0,
+                                                account.currency
+                                            )}
+                                        </p>
+                                        <p className="text-xs text-slate-400">
                                             Limit:{" "}
                                             {formatCurrency(
                                                 account.credit_limit ?? 0,

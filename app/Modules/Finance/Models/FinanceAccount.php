@@ -25,6 +25,7 @@ class FinanceAccount extends Model
         'current_balance',
         'credit_limit',
         'available_credit',
+        'used_credit',
         'notes',
         'is_active',
     ];
@@ -34,6 +35,7 @@ class FinanceAccount extends Model
         'current_balance' => 'decimal:2',
         'credit_limit' => 'decimal:2',
         'available_credit' => 'decimal:2',
+        'used_credit' => 'decimal:2',
         'account_number' => 'encrypted',
         'is_active' => 'boolean',
     ];

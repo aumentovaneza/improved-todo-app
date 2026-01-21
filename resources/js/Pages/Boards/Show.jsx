@@ -83,7 +83,7 @@ function SortableTask({ task, swimlaneId, onTaskClick, currentUser }) {
         <div
             ref={setNodeRef}
             style={style}
-            className={`group bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-3 hover:shadow-md transition-shadow cursor-pointer ${
+            className={`group card p-4 mb-3 hover:shadow-md transition-shadow cursor-pointer ${
                 isDragging ? "shadow-lg z-10" : ""
             }`}
             onClick={() => onTaskClick && onTaskClick(task)}
@@ -177,7 +177,7 @@ function SwimlaneColumn({ swimlane, tasks, onTaskClick, currentUser }) {
         <div
             ref={setNodeRef}
             style={style}
-            className={`bg-gray-50 dark:bg-gray-900 rounded-lg p-4 w-full flex flex-col h-full`}
+            className="rounded-xl border border-light-border/70 dark:border-white/10 bg-light-hover dark:bg-dark-card/70 p-4 w-full flex flex-col h-full"
         >
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-2">
@@ -448,7 +448,7 @@ export default function Show({ workspace, board, isOrganizer, isBoardAdmin }) {
                                                         swimlane
                                                     )
                                                 }
-                                                className="w-full flex items-center justify-center p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-white dark:hover:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 transition-colors"
+                                                className="w-full flex items-center justify-center p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-white dark:hover:bg-dark-card rounded-lg border-2 border-dashed border-gray-300 dark:border-white/20 transition-colors"
                                             >
                                                 <Plus className="h-4 w-4 mr-2" />
                                                 Add Task
@@ -461,7 +461,7 @@ export default function Show({ workspace, board, isOrganizer, isBoardAdmin }) {
 
                         <DragOverlay>
                             {activeTask ? (
-                                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-4 w-80 transform rotate-3">
+                                <div className="card p-4 w-80 transform rotate-3 shadow-lg">
                                     <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
                                         {activeTask.title}
                                     </h4>

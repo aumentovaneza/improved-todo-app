@@ -114,17 +114,14 @@ export default function TransactionForm({
     }, [accounts, form.finance_account_id]);
 
     return (
-        <form
-            onSubmit={handleSubmit}
-            className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
-        >
+        <form onSubmit={handleSubmit} className="card p-4">
             <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <div>
                     <label className="text-sm text-slate-500 dark:text-slate-400">
                         Description
                     </label>
                     <input
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                         value={form.description}
                         onChange={updateField("description")}
                         placeholder="Coffee, paycheck, rent"
@@ -136,7 +133,7 @@ export default function TransactionForm({
                         Type
                     </label>
                     <select
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                         value={form.type}
                         onChange={updateField("type")}
                     >
@@ -152,7 +149,7 @@ export default function TransactionForm({
                     </label>
                     <input
                         type="number"
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                         value={form.amount}
                         onChange={updateField("amount")}
                         min="0"
@@ -166,7 +163,7 @@ export default function TransactionForm({
                     </label>
                     <input
                         type="date"
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                         value={form.occurred_at}
                         onChange={updateField("occurred_at")}
                         required
@@ -177,7 +174,7 @@ export default function TransactionForm({
                         Recurring
                     </label>
                     <select
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                         value={form.recurring_frequency}
                         onChange={updateField("recurring_frequency")}
                     >
@@ -194,7 +191,7 @@ export default function TransactionForm({
                         Category
                     </label>
                     <select
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                         value={form.finance_category_id}
                         onChange={updateField("finance_category_id")}
                     >
@@ -219,7 +216,7 @@ export default function TransactionForm({
                         Account (optional)
                     </label>
                     <select
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                         value={form.finance_account_id}
                         onChange={updateField("finance_account_id")}
                     >
@@ -237,14 +234,14 @@ export default function TransactionForm({
                             Savings goal (optional)
                         </label>
                         <select
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                             value={form.finance_savings_goal_id}
                             onChange={updateField("finance_savings_goal_id")}
                         >
                             <option value="">No goal linked</option>
                             {savingsGoals.map((goal) => (
                                 <option key={goal.id} value={goal.id}>
-                                    {goal.name}
+                                    {goal.label}
                                 </option>
                             ))}
                         </select>
@@ -256,7 +253,7 @@ export default function TransactionForm({
                             Budget (optional)
                         </label>
                         <select
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                             value={form.finance_budget_id}
                             onChange={handleBudgetChange}
                         >
@@ -275,7 +272,7 @@ export default function TransactionForm({
                             Loan payment (optional)
                         </label>
                         <select
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                             value={form.finance_loan_id}
                             onChange={handleLoanChange}
                         >
@@ -295,7 +292,7 @@ export default function TransactionForm({
                             Credit card payment (optional)
                         </label>
                         <select
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                             value={form.finance_credit_card_account_id}
                             onChange={updateField(
                                 "finance_credit_card_account_id"

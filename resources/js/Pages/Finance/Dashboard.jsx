@@ -758,7 +758,7 @@ export default function Dashboard(props) {
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <span>Income</span>
-                            <span className="font-semibold text-emerald-600">
+                            <span className="font-semibold text-emerald-600 dark:text-emerald-300">
                                 {new Intl.NumberFormat("en-PH", {
                                     style: "currency",
                                     currency: "PHP",
@@ -768,7 +768,7 @@ export default function Dashboard(props) {
                         </div>
                         <div className="flex items-center justify-between">
                             <span>Savings</span>
-                            <span className="font-semibold text-violet-600">
+                            <span className="font-semibold text-violet-600 dark:text-violet-300">
                                 {new Intl.NumberFormat("en-PH", {
                                     style: "currency",
                                     currency: "PHP",
@@ -778,7 +778,7 @@ export default function Dashboard(props) {
                         </div>
                         <div className="flex items-center justify-between">
                             <span>Expenses</span>
-                            <span className="font-semibold text-rose-600">
+                            <span className="font-semibold text-rose-600 dark:text-rose-300">
                                 {new Intl.NumberFormat("en-PH", {
                                     style: "currency",
                                     currency: "PHP",
@@ -816,7 +816,7 @@ export default function Dashboard(props) {
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <span>Income</span>
-                            <span className="font-semibold text-emerald-600">
+                            <span className="font-semibold text-emerald-600 dark:text-emerald-300">
                                 {new Intl.NumberFormat("en-PH", {
                                     style: "currency",
                                     currency: "PHP",
@@ -826,7 +826,7 @@ export default function Dashboard(props) {
                         </div>
                         <div className="flex items-center justify-between">
                             <span>Loans</span>
-                            <span className="font-semibold text-cyan-600">
+                            <span className="font-semibold text-cyan-600 dark:text-cyan-300">
                                 {new Intl.NumberFormat("en-PH", {
                                     style: "currency",
                                     currency: "PHP",
@@ -836,7 +836,7 @@ export default function Dashboard(props) {
                         </div>
                         <div className="flex items-center justify-between">
                             <span>Savings</span>
-                            <span className="font-semibold text-violet-600">
+                            <span className="font-semibold text-violet-600 dark:text-violet-300">
                                 {new Intl.NumberFormat("en-PH", {
                                     style: "currency",
                                     currency: "PHP",
@@ -846,7 +846,7 @@ export default function Dashboard(props) {
                         </div>
                         <div className="flex items-center justify-between">
                             <span>Expenses</span>
-                            <span className="font-semibold text-rose-600">
+                            <span className="font-semibold text-rose-600 dark:text-rose-300">
                                 {new Intl.NumberFormat("en-PH", {
                                     style: "currency",
                                     currency: "PHP",
@@ -919,7 +919,7 @@ export default function Dashboard(props) {
                                                     )}
                                                 </p>
                                             </div>
-                                            <p className="font-semibold text-amber-600">
+                                            <p className="font-semibold text-amber-600 dark:text-amber-300">
                                                 {new Intl.NumberFormat("en-PH", {
                                                     style: "currency",
                                                     currency:
@@ -960,7 +960,7 @@ export default function Dashboard(props) {
                                                                 ).toLocaleDateString()}
                                                             </p>
                                                         </div>
-                                                        <p className="text-sm font-semibold text-rose-600">
+                                                        <p className="text-sm font-semibold text-rose-600 dark:text-rose-300">
                                                             {new Intl.NumberFormat(
                                                                 "en-PH",
                                                                 {
@@ -1239,7 +1239,7 @@ export default function Dashboard(props) {
                                                 collaborator.id
                                             )
                                         }
-                                    className="inline-flex items-center gap-1 rounded-xl px-2 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30"
+                                    className="inline-flex items-center gap-1 rounded-xl px-2 py-1 text-xs font-semibold text-rose-600 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900/30"
                                     >
                                         <X className="h-3 w-3" />
                                         Remove

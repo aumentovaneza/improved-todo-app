@@ -160,7 +160,7 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
         <TodoLayout header="Loans">
             <Head title="Loans" />
             <div className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
-                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div className="card p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
@@ -182,17 +182,14 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
                 </div>
 
                 <LoanForm onSubmit={handleCreate} />
-                <form
-                    onSubmit={handleFilterSubmit}
-                    className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
-                >
+                <form onSubmit={handleFilterSubmit} className="card p-4">
                     <div className="grid gap-3 sm:grid-cols-2">
                         <div>
                             <label className="text-xs font-semibold uppercase text-slate-400 dark:text-slate-500">
                                 Search
                             </label>
                             <input
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                                 placeholder="Search by loan name or notes"
                                 value={search}
                                 onChange={(event) =>
@@ -205,7 +202,7 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
                                 Status
                             </label>
                             <select
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                                 value={status}
                                 onChange={(event) =>
                                     setStatus(event.target.value)
@@ -233,7 +230,7 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
                         </div>
                     </div>
                 </form>
-                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div className="card p-4">
                     <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
                         All loans
                     </h3>
@@ -289,8 +286,8 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
                                                 <span
                                                     className={`text-xs font-semibold ${
                                                         loan.is_active
-                                                            ? "text-emerald-600"
-                                                            : "text-slate-500"
+                                                            ? "text-emerald-600 dark:text-emerald-300"
+                                                            : "text-slate-500 dark:text-slate-400"
                                                     }`}
                                                 >
                                                     {loan.is_active
@@ -303,9 +300,9 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
                                                     <span className="text-xs text-slate-400">
                                                         {progress}%
                                                     </span>
-                                                    <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-800">
+                                                    <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-dark-card/70">
                                                         <div
-                                                            className="h-2 rounded-full bg-amber-500"
+                                                            className="h-2 rounded-full bg-amber-500 dark:bg-amber-500/80"
                                                             style={{
                                                                 width: `${progress}%`,
                                                             }}

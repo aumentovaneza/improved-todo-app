@@ -12,7 +12,7 @@ import LoansList from "@/Components/Finance/Loans/LoansList";
 import LoanForm from "@/Components/Finance/Loans/LoanForm";
 import Modal from "@/Components/Modal";
 import { Link } from "@inertiajs/react";
-import { Landmark, Plus, Settings, Users } from "lucide-react";
+import { Eye, Landmark, Pencil, Plus, Settings, Trash2, Users } from "lucide-react";
 import { useState } from "react";
 
 const formatCurrency = (value, currency = "PHP") =>
@@ -112,7 +112,7 @@ export default function FinanceDashboard({
                             <Dropdown.Content
                                 align="right"
                                 width="48"
-                                contentClasses="py-1 bg-white dark:bg-slate-900"
+                                contentClasses="py-1 bg-white dark:bg-dark-card"
                             >
                                 {isWalletOwner && (
                                     <button
@@ -254,7 +254,7 @@ export default function FinanceDashboard({
                                                     Account: {budget.account.name}
                                                 </p>
                                             )}
-                                            <div className="mt-2 flex items-center gap-3">
+                                            <div className="mt-2 flex items-center gap-2">
                                                 <button
                                                     type="button"
                                                     onClick={() =>
@@ -264,9 +264,11 @@ export default function FinanceDashboard({
                                                             data: budget,
                                                         })
                                                     }
-                                                    className="text-xs font-semibold text-wevie-teal hover:text-wevie-teal/80"
+                                                    className="rounded-md p-1 text-wevie-teal hover:text-wevie-teal/80"
+                                                    title="Edit"
+                                                    aria-label="Edit"
                                                 >
-                                                    Edit
+                                                    <Pencil className="h-4 w-4" />
                                                 </button>
                                                 {onViewBudget && (
                                                     <button
@@ -276,9 +278,11 @@ export default function FinanceDashboard({
                                                                 budget
                                                             )
                                                         }
-                                                        className="text-xs font-semibold text-light-secondary hover:text-light-primary dark:text-dark-secondary dark:hover:text-dark-primary"
+                                                        className="rounded-md p-1 text-light-secondary hover:text-light-primary dark:text-dark-secondary dark:hover:text-dark-primary"
+                                                        title="View"
+                                                        aria-label="View"
                                                     >
-                                                        View
+                                                        <Eye className="h-4 w-4" />
                                                     </button>
                                                 )}
                                                 <button
@@ -286,9 +290,11 @@ export default function FinanceDashboard({
                                                     onClick={() =>
                                                         onDeleteBudget?.(budget)
                                                     }
-                                                    className="text-xs font-semibold text-rose-600 hover:text-rose-700"
+                                                    className="rounded-md p-1 text-rose-600 hover:text-rose-700 dark:text-rose-300 dark:hover:text-rose-200"
+                                                    title="Remove"
+                                                    aria-label="Remove"
                                                 >
-                                                    Remove
+                                                    <Trash2 className="h-4 w-4" />
                                                 </button>
                                             </div>
                                         </div>

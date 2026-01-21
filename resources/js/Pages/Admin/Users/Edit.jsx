@@ -60,7 +60,7 @@ export default function Edit({ user }) {
 
             <div className="max-w-2xl mx-auto space-y-6">
                 {/* User Info Card */}
-                <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
+                <div className="card p-6">
                     <div className="flex items-center space-x-4">
                         <div className="flex-shrink-0">
                             <div className="h-16 w-16 rounded-full bg-blue-500 flex items-center justify-center">
@@ -100,7 +100,7 @@ export default function Edit({ user }) {
                 </div>
 
                 {/* Edit Form */}
-                <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
+                <div className="card p-6">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Name Field */}
                         <div>
@@ -114,7 +114,7 @@ export default function Edit({ user }) {
                                 onChange={(e) =>
                                     setData("name", e.target.value)
                                 }
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                className="w-full px-3 py-2 border border-light-border/70 dark:border-white/10 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-white"
                                 placeholder="Enter user's full name"
                                 required
                             />
@@ -137,7 +137,7 @@ export default function Edit({ user }) {
                                 onChange={(e) =>
                                     setData("email", e.target.value)
                                 }
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                className="w-full px-3 py-2 border border-light-border/70 dark:border-white/10 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-white"
                                 placeholder="Enter user's email address"
                                 required
                             />
@@ -159,7 +159,7 @@ export default function Edit({ user }) {
                                 onChange={(e) =>
                                     setData("role", e.target.value)
                                 }
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                className="w-full px-3 py-2 border border-light-border/70 dark:border-white/10 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-white"
                                 required
                             >
                                 <option value="member">Member</option>
@@ -178,7 +178,7 @@ export default function Edit({ user }) {
                         </div>
 
                         {/* Password Section */}
-                        <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                        <div className="border-t border-gray-200 dark:border-white/10 pt-6">
                             <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
                                 Change Password
                             </h4>
@@ -199,7 +199,7 @@ export default function Edit({ user }) {
                                     onChange={(e) =>
                                         setData("password", e.target.value)
                                     }
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                    className="w-full px-3 py-2 border border-light-border/70 dark:border-white/10 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-white"
                                     placeholder="Enter new password (optional)"
                                     minLength={8}
                                 />
@@ -232,7 +232,7 @@ export default function Edit({ user }) {
                                                 e.target.value
                                             )
                                         }
-                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                        className="w-full px-3 py-2 border border-light-border/70 dark:border-white/10 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-white"
                                         placeholder="Confirm new password"
                                         minLength={8}
                                     />
@@ -246,7 +246,7 @@ export default function Edit({ user }) {
                         </div>
 
                         {/* Form Actions */}
-                        <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-white/10">
                             <Link href={route("admin.users.index")}>
                                 <SecondaryButton type="button">
                                     Cancel

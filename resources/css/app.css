@@ -62,7 +62,7 @@
 @layer components {
     /* Card styles with light and dark mode support */
     .card {
-        @apply bg-light-card dark:bg-dark-card shadow-soft rounded-xl border border-light-border/70 dark:border-dark-border/70;
+        @apply bg-light-card dark:bg-dark-card shadow-soft rounded-xl border border-light-border/70 dark:border-white/10;
     }
     
     .card-hover {
@@ -108,6 +108,22 @@
     .bg-adaptive-card {
         @apply bg-light-card dark:bg-dark-card;
     }
+
+    /* Dark mode alignment for non-card surfaces */
+    .dark .dark\:bg-gray-800,
+    .dark .dark\:bg-slate-900 {
+        @apply bg-dark-card;
+    }
+
+    /* Thin white border for tables in dark mode */
+    .dark table {
+        @apply border border-white/10;
+    }
+
+    /* Opt-out for tables that should not show an outer border */
+    .dark table.no-table-border {
+        @apply border-0;
+    }
 }
 
 @layer utilities {
@@ -142,5 +158,67 @@
 
     .dark .dark\:fill-dark-tremor-content-emphasis {
         fill: #CBD5E1;
+    }
+
+    /* Soften accent text colors in dark mode */
+    .dark .text-blue-500,
+    .dark .text-blue-600 {
+        @apply text-blue-300;
+    }
+    .dark .text-red-500,
+    .dark .text-red-600 {
+        @apply text-red-300;
+    }
+    .dark .text-green-500,
+    .dark .text-green-600 {
+        @apply text-green-300;
+    }
+    .dark .text-yellow-500,
+    .dark .text-yellow-600 {
+        @apply text-yellow-300;
+    }
+    .dark .text-orange-500,
+    .dark .text-orange-600 {
+        @apply text-orange-300;
+    }
+    .dark .text-amber-500,
+    .dark .text-amber-600 {
+        @apply text-amber-300;
+    }
+    .dark .text-rose-500,
+    .dark .text-rose-600 {
+        @apply text-rose-300;
+    }
+    .dark .text-pink-500,
+    .dark .text-pink-600 {
+        @apply text-pink-300;
+    }
+    .dark .text-purple-500,
+    .dark .text-purple-600 {
+        @apply text-purple-300;
+    }
+    .dark .text-violet-500,
+    .dark .text-violet-600 {
+        @apply text-violet-300;
+    }
+    .dark .text-indigo-500,
+    .dark .text-indigo-600 {
+        @apply text-indigo-300;
+    }
+    .dark .text-emerald-500,
+    .dark .text-emerald-600 {
+        @apply text-emerald-300;
+    }
+    .dark .text-teal-500,
+    .dark .text-teal-600 {
+        @apply text-teal-300;
+    }
+    .dark .text-sky-500,
+    .dark .text-sky-600 {
+        @apply text-sky-300;
+    }
+    .dark .text-cyan-500,
+    .dark .text-cyan-600 {
+        @apply text-cyan-300;
     }
 }

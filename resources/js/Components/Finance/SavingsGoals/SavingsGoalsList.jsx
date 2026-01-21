@@ -1,4 +1,5 @@
 import { Link } from "@inertiajs/react";
+import { Eye, Pencil, Repeat2, Trash2 } from "lucide-react";
 
 const formatCurrency = (value, currency = "PHP") =>
     new Intl.NumberFormat("en-PH", {
@@ -66,7 +67,7 @@ export default function SavingsGoalsList({
                                         </p>
                                     )}
                                     {goal.converted_finance_budget_id && (
-                                        <p className="text-xs text-emerald-600">
+                                        <p className="text-xs text-emerald-600 dark:text-emerald-300">
                                             Converted to budget
                                         </p>
                                     )}
@@ -94,40 +95,48 @@ export default function SavingsGoalsList({
                                         )}
                                     </span>
                                 </div>
-                                <div className="mt-2 flex justify-end">
+                                <div className="mt-2 flex justify-end gap-2">
                                     {onEdit && (
                                         <button
                                             type="button"
                                             onClick={() => onEdit?.(goal)}
-                                            className="mr-3 text-xs font-semibold text-wevie-teal hover:text-wevie-teal/80"
+                                            className="rounded-md p-1 text-wevie-teal hover:text-wevie-teal/80"
+                                            title="Edit"
+                                            aria-label="Edit"
                                         >
-                                            Edit
+                                            <Pencil className="h-4 w-4" />
                                         </button>
                                     )}
                                     {onView && (
                                         <button
                                             type="button"
                                             onClick={() => onView?.(goal)}
-                                            className="mr-3 text-xs font-semibold text-light-secondary hover:text-light-primary dark:text-dark-secondary dark:hover:text-dark-primary"
+                                            className="rounded-md p-1 text-light-secondary hover:text-light-primary dark:text-dark-secondary dark:hover:text-dark-primary"
+                                            title="View"
+                                            aria-label="View"
                                         >
-                                            View
+                                            <Eye className="h-4 w-4" />
                                         </button>
                                     )}
                                     {!goal.converted_finance_budget_id && (
                                         <button
                                             type="button"
                                             onClick={() => onConvert?.(goal)}
-                                            className="mr-3 text-xs font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-300 dark:hover:text-emerald-200"
+                                            className="rounded-md p-1 text-emerald-600 hover:text-emerald-700 dark:text-emerald-300 dark:hover:text-emerald-200"
+                                            title="Convert to budget"
+                                            aria-label="Convert to budget"
                                         >
-                                            Convert to budget
+                                            <Repeat2 className="h-4 w-4" />
                                         </button>
                                     )}
                                     <button
                                         type="button"
                                         onClick={() => onDelete?.(goal)}
-                                        className="text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-300 dark:hover:text-rose-200"
+                                        className="rounded-md p-1 text-rose-600 hover:text-rose-700 dark:text-rose-300 dark:hover:text-rose-200"
+                                        title="Remove"
+                                        aria-label="Remove"
                                     >
-                                        Remove
+                                        <Trash2 className="h-4 w-4" />
                                     </button>
                                 </div>
                             </div>

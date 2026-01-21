@@ -96,7 +96,7 @@ export default function Index({
                         <select
                             value={selectedPeriod}
                             onChange={(e) => handlePeriodChange(e.target.value)}
-                            className="px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm min-w-[140px]"
+                            className="px-3 sm:px-4 py-2 border border-light-border/70 dark:border-white/10 rounded-md bg-white dark:bg-dark-card text-gray-900 dark:text-gray-100 text-sm min-w-[140px]"
                         >
                             <option value="7">Last 7 days</option>
                             <option value="30">Last 30 days</option>
@@ -111,7 +111,7 @@ export default function Index({
 
                 {/* Key Metrics */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                    <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-sm">
+                    <div className="card p-4 sm:p-6">
                         <div className="flex items-center">
                             <div className="w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
                                 <BarChart3 className="w-5 sm:w-6 h-5 sm:h-6 text-blue-600 dark:text-blue-400" />
@@ -127,7 +127,7 @@ export default function Index({
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-sm">
+                    <div className="card p-4 sm:p-6">
                         <div className="flex items-center">
                             <div className="w-10 sm:w-12 h-10 sm:h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
                                 <CheckCircle className="w-5 sm:w-6 h-5 sm:h-6 text-green-600 dark:text-green-400" />
@@ -146,7 +146,7 @@ export default function Index({
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-sm">
+                    <div className="card p-4 sm:p-6">
                         <div className="flex items-center">
                             <div className="w-10 sm:w-12 h-10 sm:h-12 bg-yellow-100 dark:bg-yellow-900 rounded-lg flex items-center justify-center">
                                 <Clock className="w-5 sm:w-6 h-5 sm:h-6 text-yellow-600 dark:text-yellow-400" />
@@ -162,7 +162,7 @@ export default function Index({
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-sm">
+                    <div className="card p-4 sm:p-6">
                         <div className="flex items-center">
                             <div className="w-10 sm:w-12 h-10 sm:h-12 bg-red-100 dark:bg-red-900 rounded-lg flex items-center justify-center">
                                 <AlertTriangle className="w-5 sm:w-6 h-5 sm:h-6 text-red-600 dark:text-red-400" />
@@ -181,7 +181,7 @@ export default function Index({
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     {/* Weekly Productivity Chart */}
-                    <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-sm">
+                    <div className="card p-4 sm:p-6">
                         <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                             Weekly Productivity
                         </h3>
@@ -195,7 +195,7 @@ export default function Index({
                                         {item.day.slice(0, 3)}
                                     </div>
                                     <div className="flex-1 mx-4">
-                                        <div className="bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                                        <div className="bg-gray-200 dark:bg-dark-card/70 rounded-full h-3">
                                             <div
                                                 className="bg-blue-600 h-3 rounded-full transition-all duration-300"
                                                 style={{
@@ -217,7 +217,7 @@ export default function Index({
                     </div>
 
                     {/* Tasks by Category */}
-                    <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-sm">
+                    <div className="card p-4 sm:p-6">
                         <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                             Tasks by Category
                         </h3>
@@ -249,7 +249,7 @@ export default function Index({
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                     {/* Performance Metrics */}
-                    <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-sm">
+                    <div className="card p-4 sm:p-6">
                         <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                             Performance Metrics
                         </h3>
@@ -262,7 +262,7 @@ export default function Index({
                                     {completionRate}%
                                 </span>
                             </div>
-                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div className="w-full bg-gray-200 dark:bg-dark-card/70 rounded-full h-2">
                                 <div
                                     className="bg-green-600 h-2 rounded-full transition-all duration-300"
                                     style={{ width: `${completionRate}%` }}
@@ -290,7 +290,7 @@ export default function Index({
                     </div>
 
                     {/* Recent Activity */}
-                    <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-sm">
+                    <div className="lg:col-span-2 card p-4 sm:p-6">
                         <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                             Recent Activity
                         </h3>
@@ -350,7 +350,7 @@ export default function Index({
                 </div>
 
                 {/* Quick Actions */}
-                <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-sm">
+                <div className="card p-4 sm:p-6">
                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                         Quick Actions
                     </h3>

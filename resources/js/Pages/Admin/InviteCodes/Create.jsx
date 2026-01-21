@@ -51,7 +51,7 @@ export default function Create() {
             <Toast />
 
             <div className="max-w-2xl mx-auto">
-                <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
+                <div className="card p-6">
                     {/* Info Banner */}
                     <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                         <div className="flex items-start">
@@ -89,7 +89,7 @@ export default function Create() {
                                         parseInt(e.target.value) || 1
                                     )
                                 }
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                className="w-full px-3 py-2 border border-light-border/70 dark:border-white/10 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-white"
                                 placeholder="Enter maximum number of uses"
                                 required
                             />
@@ -117,7 +117,7 @@ export default function Create() {
                                 onChange={(e) =>
                                     setData("expires_at", e.target.value)
                                 }
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                className="w-full px-3 py-2 border border-light-border/70 dark:border-white/10 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-white"
                             />
                             {errors.expires_at && (
                                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -131,7 +131,7 @@ export default function Create() {
                         </div>
 
                         {/* Preview Section */}
-                        <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                        <div className="bg-gray-50 dark:bg-dark-card/70 rounded-lg p-4">
                             <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
                                 Invite Code Preview
                             </h3>
@@ -158,7 +158,7 @@ export default function Create() {
                         </div>
 
                         {/* Form Actions */}
-                        <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-white/10">
                             <Link href={route("admin.invite-codes.index")}>
                                 <SecondaryButton type="button">
                                     Cancel

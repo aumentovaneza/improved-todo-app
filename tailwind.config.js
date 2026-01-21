@@ -145,8 +145,8 @@ export default {
                     bg: {
                         primary: '#1F2F33',
                         secondary: '#243A3F',
-                        card: '#243A3F',
-                        hover: '#2B444A',
+                        card: '#22353A',
+                        hover: '#2A4247',
                     },
                     text: {
                         primary: '#E6F2F3',
@@ -164,8 +164,8 @@ export default {
                 // Dark theme backgrounds
                 'dark-primary': '#1F2F33',
                 'dark-secondary': '#243A3F',
-                'dark-card': '#243A3F',
-                'dark-hover': '#2B444A',
+                'dark-card': '#22353A',
+                'dark-hover': '#2A4247',
             },
             textColor: {
                 // Light theme text colors

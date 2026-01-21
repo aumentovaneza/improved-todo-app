@@ -519,32 +519,28 @@ export default function Index({ categorizedTasks, categories, filters }) {
 
         setAllTasks(reorderedTasks);
 
-        // Use the target task's current position as the new position
-        const globalNewPosition = overTask.position;
-
-        // Send the new order to the server
-        router.post(
-            route("tasks.reorder"),
-            {
-                taskId: active.id,
-                newPosition: globalNewPosition,
-            },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                only: [], // Don't reload any data
-                onSuccess: () => {
-                    toast.success("Task reordered successfully");
+        window.axios
+            .post(
+                route("tasks.reorder"),
+                {
+                    taskIds: reorderedTasks.map((task) => task.id),
                 },
-                onError: () => {
-                    // Revert to original state on error
-                    setAllTasks(originalTasks);
-                    toast.error(
-                        "We couldn’t reorder that just now. Please try again."
-                    );
-                },
-            }
-        );
+                {
+                    headers: {
+                        Accept: "application/json",
+                    },
+                }
+            )
+            .then(() => {
+                toast.success("Task reordered successfully");
+            })
+            .catch(() => {
+                // Revert to original state on error
+                setAllTasks(originalTasks);
+                toast.error(
+                    "We couldn’t reorder that just now. Please try again."
+                );
+            });
     };
 
     const handleSearch = (value) => {

@@ -48,7 +48,7 @@ export default function Create() {
             <Head title="Create User" />
 
             <div className="max-w-2xl mx-auto">
-                <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
+                <div className="card p-6">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Name Field */}
                         <div>
@@ -62,7 +62,7 @@ export default function Create() {
                                 onChange={(e) =>
                                     setData("name", e.target.value)
                                 }
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                className="w-full px-3 py-2 border border-light-border/70 dark:border-white/10 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-white"
                                 placeholder="Enter user's full name"
                                 required
                             />
@@ -85,7 +85,7 @@ export default function Create() {
                                 onChange={(e) =>
                                     setData("email", e.target.value)
                                 }
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                className="w-full px-3 py-2 border border-light-border/70 dark:border-white/10 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-white"
                                 placeholder="Enter user's email address"
                                 required
                             />
@@ -107,7 +107,7 @@ export default function Create() {
                                 onChange={(e) =>
                                     setData("role", e.target.value)
                                 }
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                className="w-full px-3 py-2 border border-light-border/70 dark:border-white/10 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-white"
                                 required
                             >
                                 <option value="member">Member</option>
@@ -135,7 +135,7 @@ export default function Create() {
                                 onChange={(e) =>
                                     setData("timezone", e.target.value)
                                 }
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                className="w-full px-3 py-2 border border-light-border/70 dark:border-white/10 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-white"
                                 required
                             >
                                 <option value="UTC">UTC</option>
@@ -189,7 +189,7 @@ export default function Create() {
                                 onChange={(e) =>
                                     setData("password", e.target.value)
                                 }
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                className="w-full px-3 py-2 border border-light-border/70 dark:border-white/10 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-white"
                                 placeholder="Enter a secure password"
                                 required
                                 minLength={8}
@@ -219,7 +219,7 @@ export default function Create() {
                                         e.target.value
                                     )
                                 }
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                className="w-full px-3 py-2 border border-light-border/70 dark:border-white/10 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-white"
                                 placeholder="Confirm the password"
                                 required
                                 minLength={8}
@@ -232,7 +232,7 @@ export default function Create() {
                         </div>
 
                         {/* Form Actions */}
-                        <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-white/10">
                             <Link href={route("admin.users.index")}>
                                 <SecondaryButton type="button">
                                     Cancel

@@ -183,7 +183,7 @@ export default function Transactions({
         <TodoLayout header="All Transactions">
             <Head title="All Transactions" />
             <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
-                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div className="card p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
@@ -206,7 +206,7 @@ export default function Transactions({
                         </button>
                     </div>
                     {type && (
-                        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        <div className="mt-3 rounded-lg border border-light-border/70 bg-light-hover px-3 py-2 text-sm text-slate-700 dark:border-white/10 dark:bg-dark-card/70 dark:text-slate-200">
                             Total {type} transactions:{" "}
                             <span className="font-semibold">
                                 {formatCurrency(totalAmount)}
@@ -222,7 +222,7 @@ export default function Transactions({
                                 Search
                             </label>
                             <input
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                                 placeholder="Search description, notes, category, or tags"
                                 value={search}
                                 onChange={(event) =>
@@ -235,7 +235,7 @@ export default function Transactions({
                                 Type
                             </label>
                             <select
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                                 value={type}
                                 onChange={(event) =>
                                     setType(event.target.value)
@@ -253,7 +253,7 @@ export default function Transactions({
                                 Sort
                             </label>
                             <select
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                                 value={sort}
                                 onChange={(event) =>
                                     setSort(event.target.value)
@@ -279,7 +279,7 @@ export default function Transactions({
                             </label>
                             <input
                                 type="date"
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                                 value={startDate}
                                 onChange={(event) =>
                                     setStartDate(event.target.value)
@@ -292,7 +292,7 @@ export default function Transactions({
                             </label>
                             <input
                                 type="date"
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
                                 value={endDate}
                                 onChange={(event) =>
                                     setEndDate(event.target.value)
@@ -320,16 +320,13 @@ export default function Transactions({
                 </div>
 
                 {loadedTransactions.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+                    <div className="rounded-xl border border-dashed border-light-border/70 bg-white p-8 text-center text-slate-500 dark:border-white/10 dark:bg-dark-card dark:text-slate-400">
                         No transactions match the current filters.
                     </div>
                 ) : (
                     <div className="space-y-6">
                         {sortedDateKeys.map((dateKey) => (
-                                <div
-                                    key={dateKey}
-                                    className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
-                                >
+                                <div key={dateKey} className="card p-4">
                                     <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
                                         {formatDateLabel(dateKey)}
                                     </h3>

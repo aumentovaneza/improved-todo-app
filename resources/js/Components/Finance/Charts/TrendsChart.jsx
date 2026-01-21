@@ -9,12 +9,18 @@ const formatCurrency = (value, currency = "PHP") =>
     }).format(value ?? 0);
 
 export default function TrendsChart({ data = [], currency = "PHP" }) {
+    const isDark =
+        typeof document !== "undefined" &&
+        document.documentElement.classList.contains("dark");
     const displayData = data.map((row) => ({
         ...row,
         Income: row.income ?? 0,
         Expenses: row.expense ?? 0,
         Savings: row.savings ?? 0,
     }));
+    const chartColors = getTremorColorsFromHex(
+        isDark ? ["#047857", "#9F1239", "#5B21B6"] : ["#10B981", "#F43F5E", "#8B5CF6"]
+    );
 
     return (
         <Card>
@@ -24,11 +30,7 @@ export default function TrendsChart({ data = [], currency = "PHP" }) {
                 data={displayData}
                 index="period"
                 categories={["Income", "Expenses", "Savings"]}
-                colors={getTremorColorsFromHex([
-                    "#10B981",
-                    "#F43F5E",
-                    "#8B5CF6",
-                ])}
+                colors={chartColors}
                 valueFormatter={(value) => formatCurrency(value, currency)}
                 showLegend
                 showTooltip={false}

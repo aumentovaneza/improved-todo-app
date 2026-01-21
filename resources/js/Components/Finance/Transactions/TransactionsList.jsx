@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Pencil, Trash2 } from "lucide-react";
 
 const formatAmount = (amount, currency = "PHP") =>
     new Intl.NumberFormat("en-PH", {
@@ -11,10 +12,10 @@ const formatDate = (value) =>
     value ? new Date(value).toLocaleDateString() : "-";
 
 const typeStyles = {
-    income: "text-emerald-600",
-    expense: "text-rose-600",
-    savings: "text-violet-600",
-    loan: "text-cyan-600",
+    income: "text-emerald-600 dark:text-emerald-300",
+    expense: "text-rose-600 dark:text-rose-300",
+    savings: "text-violet-600 dark:text-violet-300",
+    loan: "text-cyan-600 dark:text-cyan-300",
 };
 
 const formatFrequency = (frequency) =>
@@ -66,7 +67,7 @@ export default function TransactionsList({
                 </button>
             </div>
             <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-light-secondary dark:text-dark-secondary">
+                <table className="no-table-border w-full text-left text-sm text-light-secondary dark:text-dark-secondary">
                     <thead className="text-xs uppercase text-light-muted dark:text-dark-muted">
                         <tr>
                             <th className="py-2">Description</th>
@@ -128,24 +129,28 @@ export default function TransactionsList({
                                     )}
                                 </td>
                                 <td className="py-3 text-right">
-                                    <div className="flex items-center justify-end gap-3">
+                                    <div className="flex items-center justify-end gap-2">
                                         <button
                                             type="button"
                                             onClick={() =>
                                                 onEdit?.(transaction)
                                             }
-                                            className="text-xs font-semibold text-wevie-teal hover:text-wevie-teal/80 dark:text-wevie-mint dark:hover:text-wevie-mint/80"
+                                            className="rounded-md p-1 text-wevie-teal hover:text-wevie-teal/80 dark:text-wevie-mint dark:hover:text-wevie-mint/80"
+                                            title="Edit"
+                                            aria-label="Edit"
                                         >
-                                            Edit
+                                            <Pencil className="h-4 w-4" />
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() =>
                                                 onDelete?.(transaction)
                                             }
-                                            className="text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-300 dark:hover:text-rose-200"
+                                            className="rounded-md p-1 text-rose-600 hover:text-rose-700 dark:text-rose-300 dark:hover:text-rose-200"
+                                            title="Remove"
+                                            aria-label="Remove"
                                         >
-                                            Remove
+                                            <Trash2 className="h-4 w-4" />
                                         </button>
                                     </div>
                                 </td>

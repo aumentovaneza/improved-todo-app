@@ -338,22 +338,28 @@ export default function Budgets({
                         All budgets
                     </h3>
                     <div className="mt-4 overflow-x-auto">
-                        <table className="min-w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                        <table className="min-w-[980px] w-full text-left text-sm text-slate-600 dark:text-slate-300">
                             <thead className="text-xs uppercase text-slate-400 dark:text-slate-500">
                                 <tr>
-                                    <th className="py-2">Budget</th>
-                                    <th className="py-2">Type</th>
-                                    <th className="py-2">Category</th>
-                                    <th className="py-2">Account</th>
+                                    <th className="py-2 pr-4">Budget</th>
+                                    <th className="py-2 pr-4">Type</th>
+                                    <th className="py-2 pr-4">Category</th>
+                                    <th className="py-2 pr-4">Account</th>
                                     <th className="py-2 hidden md:table-cell">
                                         Status
                                     </th>
                                     <th className="py-2 hidden md:table-cell">
                                         Progress
                                     </th>
-                                    <th className="py-2 text-right">Amount</th>
-                                    <th className="py-2 text-right">Remaining</th>
-                                    <th className="py-2 text-right">Actions</th>
+                                    <th className="py-2 text-right whitespace-nowrap">
+                                        Amount
+                                    </th>
+                                    <th className="py-2 text-right whitespace-nowrap">
+                                        Remaining
+                                    </th>
+                                    <th className="py-2 text-right whitespace-nowrap">
+                                        Actions
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -381,19 +387,19 @@ export default function Budgets({
                                             key={budget.id}
                                             className="border-t border-slate-200 dark:border-slate-700"
                                         >
-                                            <td className="py-3">
+                                            <td className="py-3 pr-4">
                                                 <p className="font-medium text-slate-800 dark:text-slate-100">
                                                     {budget.name}
                                                 </p>
                                             </td>
-                                            <td className="py-3 capitalize text-xs text-slate-400">
+                                            <td className="py-3 pr-4 capitalize text-xs text-slate-400">
                                                 {budget.budget_type ?? "spending"}
                                             </td>
-                                            <td className="py-3 text-xs text-slate-400">
+                                            <td className="py-3 pr-4 text-xs text-slate-400">
                                                 {budget.category?.name ??
                                                     "All categories"}
                                             </td>
-                                            <td className="py-3 text-xs text-slate-400">
+                                            <td className="py-3 pr-4 text-xs text-slate-400">
                                                 {budget.account?.name ?? "—"}
                                             </td>
                                             <td className="py-3 hidden md:table-cell">

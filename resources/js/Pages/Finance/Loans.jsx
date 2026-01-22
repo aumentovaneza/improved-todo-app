@@ -235,20 +235,26 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
                         All loans
                     </h3>
                     <div className="mt-4 overflow-x-auto">
-                        <table className="min-w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                        <table className="min-w-[880px] w-full text-left text-sm text-slate-600 dark:text-slate-300">
                             <thead className="text-xs uppercase text-slate-400 dark:text-slate-500">
                                 <tr>
-                                    <th className="py-2">Loan</th>
-                                    <th className="py-2">Due date</th>
+                                    <th className="py-2 pr-4">Loan</th>
+                                    <th className="py-2 pr-4">Due date</th>
                                     <th className="py-2 hidden md:table-cell">
                                         Status
                                     </th>
                                     <th className="py-2 hidden md:table-cell">
                                         Progress
                                     </th>
-                                    <th className="py-2 text-right">Remaining</th>
-                                    <th className="py-2 text-right">Total</th>
-                                    <th className="py-2 text-right">Actions</th>
+                                    <th className="py-2 text-right whitespace-nowrap">
+                                        Remaining
+                                    </th>
+                                    <th className="py-2 text-right whitespace-nowrap">
+                                        Total
+                                    </th>
+                                    <th className="py-2 text-right whitespace-nowrap">
+                                        Actions
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -274,12 +280,12 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
                                             key={loan.id}
                                             className="border-t border-slate-200 dark:border-slate-700"
                                         >
-                                            <td className="py-3">
+                                            <td className="py-3 pr-4">
                                                 <p className="font-medium text-slate-800 dark:text-slate-100">
                                                     {loan.name}
                                                 </p>
                                             </td>
-                                            <td className="py-3 text-xs text-slate-400">
+                                            <td className="py-3 pr-4 text-xs text-slate-400">
                                                 {formatDate(loan.target_date)}
                                             </td>
                                             <td className="py-3 hidden md:table-cell">

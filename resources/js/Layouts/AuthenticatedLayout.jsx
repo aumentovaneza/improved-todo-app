@@ -8,6 +8,8 @@ import { useState } from "react";
 
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
+    const isFinanceRoute =
+        route().current("finance.*") || route().current("weviewallet.*");
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
@@ -227,9 +229,13 @@ export default function AuthenticatedLayout({ header, children }) {
 
             <main>{children}</main>
 
-            {/* Pomodoro Components */}
-            <FloatingPomodoroWidget />
-            <FocusMode />
+            {!isFinanceRoute && (
+                <div className="hidden lg:block">
+                    {/* Pomodoro Components */}
+                    <FloatingPomodoroWidget />
+                    <FocusMode />
+                </div>
+            )}
         </div>
     );
 }

@@ -38,6 +38,10 @@ Route::get('/', function () {
     ]);
 });
 
+Route::get('/offline', function () {
+    return redirect('/offline.html');
+})->name('offline');
+
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');

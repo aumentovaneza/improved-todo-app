@@ -1,7 +1,12 @@
 import ApplicationLogo from "@/Components/ApplicationLogo";
 import Dropdown from "@/Components/Dropdown";
+import MobileFab from "@/Components/Mobile/MobileFab";
+import MobileTabBar from "@/Components/Mobile/MobileTabBar";
+import QuickAddTransactionModal from "@/Components/Mobile/QuickAddTransactionModal";
+import SyncQueueModal from "@/Components/Offline/SyncQueueModal";
 import Toast from "@/Components/Toast";
 import { FloatingPomodoroWidget, FocusMode } from "@/Components/Pomodoro";
+import { useOfflineSync } from "@/offline/useOfflineSync";
 import { Link, usePage } from "@inertiajs/react";
 import { useState, useEffect } from "react";
 import {
@@ -23,7 +28,21 @@ import {
 
 export default function TodoLayout({ header, children }) {
     const user = usePage().props.auth.user;
+    const isFinanceRoute =
+        route().current("finance.*") || route().current("weviewallet.*");
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [showQuickAddTransaction, setShowQuickAddTransaction] =
+        useState(false);
+    const [showSyncQueue, setShowSyncQueue] = useState(false);
+    const {
+        isOnline,
+        pendingCount,
+        queueItems,
+        retryItem,
+        removeItem,
+        syncNow,
+        enqueueTransaction,
+    } = useOfflineSync();
     const [darkMode, setDarkMode] = useState(() => {
         // Check localStorage or system preference
         if (typeof window !== "undefined") {
@@ -460,6 +479,21 @@ export default function TodoLayout({ header, children }) {
                             )}
                         </div>
                         <div className="flex items-center space-x-4">
+                            {pendingCount > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowSyncQueue(true)}
+                                    className="relative rounded-md px-3 py-1 text-xs font-semibold text-light-secondary hover:text-light-primary dark:text-dark-secondary dark:hover:text-dark-primary"
+                                >
+                                    <span className="sr-only">
+                                        Pending sync items
+                                    </span>
+                                    Pending sync
+                                    <span className="ml-2 inline-flex min-w-[20px] items-center justify-center rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-semibold text-white">
+                                        {pendingCount}
+                                    </span>
+                                </button>
+                            )}
                             {/* Dark mode toggle */}
                             <button
                                 onClick={toggleDarkMode}
@@ -484,17 +518,41 @@ export default function TodoLayout({ header, children }) {
                     </div>
                 </header>
                 {/* Page Content */}
-                <main className="flex-1 p-6">
+                <main className="flex-1 p-6 pb-28 lg:pb-6">
                     <div className="mx-auto w-full max-w-7xl">{children}</div>
                 </main>
             </div>
 
+            <MobileFab
+                onClick={() => setShowQuickAddTransaction(true)}
+            />
+            <QuickAddTransactionModal
+                show={showQuickAddTransaction}
+                onClose={() => setShowQuickAddTransaction(false)}
+                isOnline={isOnline}
+                onEnqueue={enqueueTransaction}
+            />
+            <SyncQueueModal
+                show={showSyncQueue}
+                onClose={() => setShowSyncQueue(false)}
+                items={queueItems}
+                onRetry={retryItem}
+                onRemove={removeItem}
+                onSyncNow={syncNow}
+                isOnline={isOnline}
+            />
+            <MobileTabBar />
+
             {/* Toast Notification */}
             <Toast />
 
-            {/* Pomodoro Components */}
-            <FloatingPomodoroWidget />
-            <FocusMode />
+            {!isFinanceRoute && (
+                <div className="hidden lg:block">
+                    {/* Pomodoro Components */}
+                    <FloatingPomodoroWidget />
+                    <FocusMode />
+                </div>
+            )}
         </div>
     );
 }

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>WevieApp Offline</title>
+        <style>
+            :root {
+                color-scheme: light;
+            }
+            body {
+                margin: 0;
+                font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+                background: #F7FAFA;
+                color: #1F2F33;
+                display: flex;
+                min-height: 100vh;
+                align-items: center;
+                justify-content: center;
+            }
+            .card {
+                max-width: 520px;
+                margin: 24px;
+                padding: 32px;
+                border-radius: 20px;
+                background: #FFFFFF;
+                box-shadow: 0 12px 30px rgba(31, 47, 51, 0.12);
+                text-align: center;
+            }
+            .logo {
+                width: 64px;
+                height: 64px;
+                margin: 0 auto 16px;
+                border-radius: 16px;
+                background: linear-gradient(135deg, #6FD9D3, #7FE0B2);
+                display: grid;
+                place-items: center;
+                font-weight: 700;
+                color: #1F2F33;
+                font-size: 28px;
+            }
+            h1 {
+                font-size: 24px;
+                margin: 0 0 8px;
+            }
+            p {
+                margin: 0;
+                line-height: 1.6;
+                color: #5F777C;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <div class="logo">W</div>
+            <h1>You're offline</h1>
+            <p>WevieApp can't reach the network right now. Check your connection and try again.</p>
+        </div>
+    </body>
+</html>

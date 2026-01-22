@@ -109,13 +109,13 @@ function SortableTask({
                 isDragging ? "shadow-lg z-10" : ""
             }`}
         >
-            <div className="flex items-center px-4 py-3">
+            <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center">
                 {/* Drag Handle */}
-                <div className="flex items-center space-x-3 min-w-0 flex-1">
+                <div className="flex w-full items-center space-x-3 min-w-0 flex-1">
                     <div
                         {...attributes}
                         {...listeners}
-                        className="text-light-muted hover:text-light-secondary dark:text-dark-muted dark:hover:text-dark-secondary cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="hidden sm:inline-flex text-light-muted hover:text-light-secondary dark:text-dark-muted dark:hover:text-dark-secondary cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
                         title="Drag to reorder"
                     >
                         <GripVertical className="h-4 w-4" />
@@ -164,7 +164,7 @@ function SortableTask({
                 </div>
 
                 {/* Category */}
-                <div className="flex items-center space-x-4 min-w-0">
+                <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end sm:gap-4">
                     <div className="flex items-center space-x-2 min-w-0">
                         <div
                             className="w-3 h-3 rounded-full flex-shrink-0"
@@ -224,7 +224,7 @@ function SortableTask({
 
                     {/* Time */}
                     {task.due_date && !task.is_all_day && (task.start_time || task.end_time) && (
-                        <div className="flex items-center space-x-1 text-light-muted dark:text-dark-muted">
+                        <div className="hidden sm:flex items-center space-x-1 text-light-muted dark:text-dark-muted">
                             <Clock3 className="h-4 w-4" />
                             <span className="text-xs hidden sm:inline">
                                 {(() => {
@@ -273,7 +273,7 @@ function SortableTask({
 
                     {/* Tags */}
                     {task.tags && task.tags.length > 0 && (
-                        <div className="flex items-center space-x-1">
+                        <div className="hidden sm:flex items-center space-x-1">
                             <TagIcon className="h-4 w-4 text-light-muted dark:text-dark-muted" />
                             <div className="flex space-x-1">
                                 {task.tags.slice(0, 2).map((tag) => (
@@ -295,7 +295,7 @@ function SortableTask({
                     )}
 
                     {/* Actions */}
-                    <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center space-x-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         <button
                             onClick={() => {
                                 setSelectedTask(task);

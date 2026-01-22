@@ -17,6 +17,7 @@ class FinanceTransaction extends Model
     protected $fillable = [
         'user_id',
         'created_by_user_id',
+        'client_request_id',
         'finance_category_id',
         'finance_loan_id',
         'finance_savings_goal_id',

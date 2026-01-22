@@ -74,6 +74,7 @@ class FinanceTransactionController extends Controller
         }
         $totalAmount = (clone $baseQuery)->sum('amount');
         $tags = Tag::orderBy('name')->get(['id', 'name', 'color']);
+        $dashboardData = $this->financeService->getDashboardData($walletUserId);
 
         return Inertia::render('Finance/Transactions', [
             'transactions' => $transactions,
@@ -84,6 +85,11 @@ class FinanceTransactionController extends Controller
             'tags' => $tags,
             'filters' => $filters,
             'walletUserId' => $walletUserId,
+            'categories' => $dashboardData['categories'],
+            'budgets' => $dashboardData['budgets'],
+            'savingsGoals' => $dashboardData['savings_goals'],
+            'loans' => $dashboardData['loans'],
+            'accounts' => $dashboardData['accounts'],
         ]);
     }
 
@@ -272,6 +278,7 @@ class FinanceTransactionController extends Controller
                     ->where('user_id', $walletUserId ?: Auth::id())
                     ->where('type', 'credit-card'),
             ],
+            'client_request_id' => ['nullable', 'string', 'max:64'],
             'type' => ['required', 'in:income,expense,savings,loan,transfer'],
             'amount' => ['required', 'numeric', 'min:0'],
             'currency' => ['nullable', 'string', 'max:8'],
@@ -292,6 +299,17 @@ class FinanceTransactionController extends Controller
             'tags.*.description' => ['nullable', 'string'],
             'tags.*.is_new' => ['nullable', 'boolean'],
         ]);
+
+        if (!empty($validated['client_request_id'])) {
+            $existing = FinanceTransaction::query()
+                ->where('user_id', $walletUserId ?: Auth::id())
+                ->where('client_request_id', $validated['client_request_id'])
+                ->first();
+
+            if ($existing) {
+                return response()->json($existing);
+            }
+        }
 
         if (($validated['type'] ?? null) === 'transfer') {
             $transferDestination = $validated['transfer_destination']

@@ -2,6 +2,7 @@ import FinanceDashboard from "@/Components/Finance/Dashboard/FinanceDashboard";
 import Dropdown from "@/Components/Dropdown";
 import InputError from "@/Components/InputError";
 import InputLabel from "@/Components/InputLabel";
+import MobileWalletDashboard from "@/Components/Mobile/MobileWalletDashboard";
 import Modal from "@/Components/Modal";
 import PrimaryButton from "@/Components/PrimaryButton";
 import TextInput from "@/Components/TextInput";
@@ -612,84 +613,107 @@ export default function Dashboard(props) {
         >
             <Head title="WevieWallet" />
             <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
-                <FinanceDashboard
+                <MobileWalletDashboard
                     summary={summary}
-                    charts={charts}
                     transactions={transactions}
-                    categories={categories}
-                    budgets={budgets}
-                    savingsGoals={savingsGoals}
-                    loans={loans}
-                    accounts={accounts}
-                    tier={props.tier ?? "free"}
-                    canAccessAdvancedCharts={
-                        props.canAccessAdvancedCharts ?? true
-                    }
                     onViewAllTransactions={handleViewAll}
-                    isLoadingTransactions={isLoadingTransactions}
-                    onCreateTransaction={handleCreateTransaction}
-                    onCreateBudget={handleCreateBudget}
-                    onCreateSavingsGoal={handleCreateSavingsGoal}
-                    onCreateLoan={handleCreateLoan}
-                    onDeleteBudget={handleDeleteBudget}
-                    onDeleteSavingsGoal={handleDeleteSavingsGoal}
-                    onConvertSavingsGoal={handleConvertSavingsGoal}
-                    onDeleteLoan={handleDeleteLoan}
-                    onDeleteTransaction={handleDeleteTransaction}
-                    onEditLoan={handleEditLoan}
-                    onEditBudget={handleEditBudget}
-                    onEditSavingsGoal={handleEditSavingsGoal}
-                    onEditTransaction={handleEditTransaction}
-                    onViewLoan={(loan) =>
-                        handleViewRelatedTransactions({
-                            title: `${loan.name} transactions`,
-                            params: { finance_loan_id: loan.id },
-                        })
-                    }
-                    onViewGoal={(goal) =>
-                        handleViewRelatedTransactions({
-                            title: `${goal.name} transactions`,
-                            params: { finance_savings_goal_id: goal.id },
-                        })
-                    }
-                    onViewBudget={(budget) =>
-                        handleViewRelatedTransactions({
-                            title: `${budget.name} transactions`,
-                            params: { finance_budget_id: budget.id },
-                        })
-                    }
-                    onIncomeSummary={() =>
-                        router.get(route("weviewallet.transactions.index"), {
-                            type: "income",
-                            wallet_user_id: activeWalletId || undefined,
-                        })
-                    }
-                    onUnallocatedSummary={() => setShowUnallocatedModal(true)}
-                    onExpensesSummary={() =>
-                        router.get(route("weviewallet.transactions.index"), {
-                            type: "expense",
-                            wallet_user_id: activeWalletId || undefined,
-                        })
-                    }
-                    onSavingsSummary={() =>
-                        router.get(route("weviewallet.transactions.index"), {
-                            type: "savings",
-                            wallet_user_id: activeWalletId || undefined,
-                        })
-                    }
-                    onNetSummary={() => setShowNetModal(true)}
-                    onLoansSummary={() =>
-                        router.get(route("weviewallet.loans.index"), {
-                            wallet_user_id: activeWalletId || undefined,
-                        })
-                    }
-                    onAvailableCreditSummary={() => setShowCreditModal(true)}
-                    onOpenCollaborators={() =>
-                        setShowCollaboratorsModal(true)
-                    }
-                    walletUserId={activeWalletId}
-                    isWalletOwner={props.isWalletOwner}
                 />
+                <div className="hidden lg:block">
+                    <FinanceDashboard
+                        summary={summary}
+                        charts={charts}
+                        transactions={transactions}
+                        categories={categories}
+                        budgets={budgets}
+                        savingsGoals={savingsGoals}
+                        loans={loans}
+                        accounts={accounts}
+                        tier={props.tier ?? "free"}
+                        canAccessAdvancedCharts={
+                            props.canAccessAdvancedCharts ?? true
+                        }
+                        onViewAllTransactions={handleViewAll}
+                        isLoadingTransactions={isLoadingTransactions}
+                        onCreateTransaction={handleCreateTransaction}
+                        onCreateBudget={handleCreateBudget}
+                        onCreateSavingsGoal={handleCreateSavingsGoal}
+                        onCreateLoan={handleCreateLoan}
+                        onDeleteBudget={handleDeleteBudget}
+                        onDeleteSavingsGoal={handleDeleteSavingsGoal}
+                        onConvertSavingsGoal={handleConvertSavingsGoal}
+                        onDeleteLoan={handleDeleteLoan}
+                        onDeleteTransaction={handleDeleteTransaction}
+                        onEditLoan={handleEditLoan}
+                        onEditBudget={handleEditBudget}
+                        onEditSavingsGoal={handleEditSavingsGoal}
+                        onEditTransaction={handleEditTransaction}
+                        onViewLoan={(loan) =>
+                            handleViewRelatedTransactions({
+                                title: `${loan.name} transactions`,
+                                params: { finance_loan_id: loan.id },
+                            })
+                        }
+                        onViewGoal={(goal) =>
+                            handleViewRelatedTransactions({
+                                title: `${goal.name} transactions`,
+                                params: { finance_savings_goal_id: goal.id },
+                            })
+                        }
+                        onViewBudget={(budget) =>
+                            handleViewRelatedTransactions({
+                                title: `${budget.name} transactions`,
+                                params: { finance_budget_id: budget.id },
+                            })
+                        }
+                        onIncomeSummary={() =>
+                            router.get(
+                                route("weviewallet.transactions.index"),
+                                {
+                                    type: "income",
+                                    wallet_user_id:
+                                        activeWalletId || undefined,
+                                }
+                            )
+                        }
+                        onUnallocatedSummary={() =>
+                            setShowUnallocatedModal(true)
+                        }
+                        onExpensesSummary={() =>
+                            router.get(
+                                route("weviewallet.transactions.index"),
+                                {
+                                    type: "expense",
+                                    wallet_user_id:
+                                        activeWalletId || undefined,
+                                }
+                            )
+                        }
+                        onSavingsSummary={() =>
+                            router.get(
+                                route("weviewallet.transactions.index"),
+                                {
+                                    type: "savings",
+                                    wallet_user_id:
+                                        activeWalletId || undefined,
+                                }
+                            )
+                        }
+                        onNetSummary={() => setShowNetModal(true)}
+                        onLoansSummary={() =>
+                            router.get(route("weviewallet.loans.index"), {
+                                wallet_user_id: activeWalletId || undefined,
+                            })
+                        }
+                        onAvailableCreditSummary={() =>
+                            setShowCreditModal(true)
+                        }
+                        onOpenCollaborators={() =>
+                            setShowCollaboratorsModal(true)
+                        }
+                        walletUserId={activeWalletId}
+                        isWalletOwner={props.isWalletOwner}
+                    />
+                </div>
             </div>
             {isReloading && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">

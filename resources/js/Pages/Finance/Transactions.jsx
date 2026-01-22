@@ -1,6 +1,7 @@
 import TodoLayout from "@/Layouts/TodoLayout";
+import TransactionForm from "@/Components/Finance/Transactions/TransactionForm";
 import { Head, router } from "@inertiajs/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const formatCurrency = (amount, currency = "PHP") =>
     new Intl.NumberFormat("en-PH", {
@@ -48,6 +49,11 @@ export default function Transactions({
     perPageDates = 3,
     filters = {},
     walletUserId,
+    categories = [],
+    savingsGoals = [],
+    loans = [],
+    budgets = [],
+    accounts = [],
 }) {
     const [search, setSearch] = useState(filters.search ?? "");
     const [type, setType] = useState(filters.type ?? "");
@@ -180,6 +186,46 @@ export default function Transactions({
         });
     };
 
+    const handleCreateTransaction = useCallback(
+        async (formData) => {
+            const loanSelected = Boolean(formData.finance_loan_id);
+            const transferDestination =
+                formData.transfer_destination ||
+                (formData.finance_transfer_account_id ? "internal" : "external");
+            const payload = {
+                ...formData,
+                wallet_user_id: walletUserId || undefined,
+                amount: formData.amount ? Number(formData.amount) : 0,
+                finance_category_id: formData.finance_category_id || null,
+                finance_loan_id: formData.finance_loan_id || null,
+                finance_savings_goal_id: formData.finance_savings_goal_id || null,
+                finance_account_id: formData.finance_account_id || null,
+                finance_transfer_account_id:
+                    transferDestination === "internal"
+                        ? formData.finance_transfer_account_id || null
+                        : null,
+                transfer_destination: transferDestination,
+                external_account_name:
+                    transferDestination === "external"
+                        ? formData.external_account_name || null
+                        : null,
+                finance_credit_card_account_id:
+                    formData.finance_credit_card_account_id || null,
+                finance_budget_id: loanSelected
+                    ? null
+                    : formData.finance_budget_id || null,
+            };
+
+            await window.axios.post(
+                route("weviewallet.api.transactions.store"),
+                payload
+            );
+            window.location.reload();
+            return true;
+        },
+        [walletUserId]
+    );
+
     return (
         <TodoLayout header="All Transactions">
             <Head title="All Transactions" />
@@ -223,7 +269,7 @@ export default function Transactions({
                                 Search
                             </label>
                             <input
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card dark:text-slate-100 dark:placeholder:text-slate-500"
                                 placeholder="Search description, notes, category, or tags"
                                 value={search}
                                 onChange={(event) =>
@@ -236,7 +282,7 @@ export default function Transactions({
                                 Type
                             </label>
                             <select
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card dark:text-slate-100"
                                 value={type}
                                 onChange={(event) =>
                                     setType(event.target.value)
@@ -255,7 +301,7 @@ export default function Transactions({
                                 Sort
                             </label>
                             <select
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card dark:text-slate-100"
                                 value={sort}
                                 onChange={(event) =>
                                     setSort(event.target.value)
@@ -281,7 +327,7 @@ export default function Transactions({
                             </label>
                             <input
                                 type="date"
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card dark:text-slate-100"
                                 value={startDate}
                                 onChange={(event) =>
                                     setStartDate(event.target.value)
@@ -294,7 +340,7 @@ export default function Transactions({
                             </label>
                             <input
                                 type="date"
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card dark:text-slate-100"
                                 value={endDate}
                                 onChange={(event) =>
                                     setEndDate(event.target.value)
@@ -319,6 +365,30 @@ export default function Transactions({
                             </button>
                         </div>
                     </form>
+                </div>
+
+                <div className="space-y-3">
+                    <div className="card p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                                    Add transaction
+                                </h3>
+                                <p className="text-sm text-slate-500 dark:text-slate-400">
+                                    Log income, expenses, transfers, and more.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <TransactionForm
+                        onSubmit={handleCreateTransaction}
+                        categories={categories}
+                        savingsGoals={savingsGoals}
+                        loans={loans}
+                        budgets={budgets}
+                        accounts={accounts}
+                        submitLabel="Add transaction"
+                    />
                 </div>
 
                 {loadedTransactions.length === 0 ? (

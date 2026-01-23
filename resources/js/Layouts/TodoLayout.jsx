@@ -18,22 +18,26 @@ import {
     Sun,
     Moon,
     Bell,
-    Home,
     Calendar,
     BarChart3,
     DollarSign,
     Menu,
     X,
+    ChevronDown,
+    ChevronRight,
+    Landmark,
 } from "lucide-react";
 
 export default function TodoLayout({ header, children }) {
     const user = usePage().props.auth.user;
     const isFinanceRoute =
         route().current("finance.*") || route().current("weviewallet.*");
+    const isWevieWalletRoute = route().current("weviewallet.*");
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showQuickAddTransaction, setShowQuickAddTransaction] =
         useState(false);
     const [showSyncQueue, setShowSyncQueue] = useState(false);
+    const [wevieWalletSubmenuOpen, setWevieWalletSubmenuOpen] = useState(false);
     const {
         isOnline,
         pendingCount,
@@ -71,12 +75,6 @@ export default function TodoLayout({ header, children }) {
 
     const navigation = [
         {
-            name: "Dashboard",
-            href: route("dashboard"),
-            icon: Home,
-            current: route().current("dashboard"),
-        },
-        {
             name: "Tasks",
             href: route("tasks.index"),
             icon: CheckSquare,
@@ -112,6 +110,7 @@ export default function TodoLayout({ header, children }) {
             href: route("weviewallet.dashboard"),
             icon: DollarSign,
             current: route().current("weviewallet.*"),
+            hasSubmenu: true,
         },
     ];
 
@@ -191,6 +190,77 @@ export default function TodoLayout({ header, children }) {
                                     <div className="space-y-1">
                                         {navigation.map((item) => {
                                             const Icon = item.icon;
+                                            if (item.hasSubmenu) {
+                                                return (
+                                                    <div key={item.name}>
+                                                        <div className="flex items-center justify-between">
+                                                            <Link
+                                                                href={item.href}
+                                                                onClick={() => setSidebarOpen(false)}
+                                                                className={`group flex items-center flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 ${
+                                                                    item.current
+                                                                        ? "bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-[#2ED7A1]"
+                                                                        : "text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary"
+                                                                }`}
+                                                            >
+                                                                <Icon
+                                                                    className={`mr-3 h-5 w-5 ${
+                                                                        item.current
+                                                                            ? "text-primary-400 dark:text-[#2ED7A1]"
+                                                                            : "text-light-muted group-hover:text-light-secondary dark:text-dark-muted dark:group-hover:text-dark-secondary"
+                                                                    }`}
+                                                                />
+                                                                {item.name}
+                                                            </Link>
+                                                            <button
+                                                                onClick={() => setWevieWalletSubmenuOpen(!wevieWalletSubmenuOpen)}
+                                                                className={`p-2 rounded-md transition-colors duration-150 ${
+                                                                    item.current
+                                                                        ? "text-primary-400 dark:text-[#2ED7A1] hover:bg-primary-200/50 dark:hover:bg-primary-900/30"
+                                                                        : "text-light-muted hover:text-light-secondary dark:text-dark-muted dark:hover:text-dark-secondary hover:bg-light-hover/50 dark:hover:bg-dark-hover/50"
+                                                                }`}
+                                                                title="Toggle WevieWallet menu"
+                                                            >
+                                                                {wevieWalletSubmenuOpen ? (
+                                                                    <ChevronDown className="h-4 w-4" />
+                                                                ) : (
+                                                                    <ChevronRight className="h-4 w-4" />
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                        {wevieWalletSubmenuOpen && (
+                                                            <div className="ml-8 mt-1 space-y-1">
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setSidebarOpen(false);
+                                                                        // Open collaborators modal
+                                                                        const event = new CustomEvent('openCollaborators');
+                                                                        window.dispatchEvent(event);
+                                                                    }}
+                                                                    disabled={!isWevieWalletRoute}
+                                                                    className={`flex items-center w-full px-3 py-2 text-sm rounded-md transition-colors duration-150 text-left ${
+                                                                        isWevieWalletRoute
+                                                                            ? "text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary"
+                                                                            : "text-light-muted dark:text-dark-muted cursor-not-allowed opacity-50"
+                                                                    }`}
+                                                                    title={isWevieWalletRoute ? "Manage collaborators" : "Only available on WevieWallet pages"}
+                                                                >
+                                                                    <Users className="h-4 w-4 mr-2" />
+                                                                    Collaborators
+                                                                </button>
+                                                                <Link
+                                                                    href={route("profile.weviewallet")}
+                                                                    onClick={() => setSidebarOpen(false)}
+                                                                    className="flex items-center px-3 py-2 text-sm text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary rounded-md transition-colors duration-150"
+                                                                >
+                                                                    <Landmark className="h-4 w-4 mr-2" />
+                                                                    WevieWallet Management
+                                                                </Link>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            }
                                             return (
                                                 <Link
                                                     key={item.name}
@@ -346,6 +416,74 @@ export default function TodoLayout({ header, children }) {
                         <div className="space-y-1">
                             {navigation.map((item) => {
                                 const Icon = item.icon;
+                                if (item.hasSubmenu) {
+                                    return (
+                                        <div key={item.name}>
+                                            <div className="flex items-center justify-between">
+                                                <Link
+                                                    href={item.href}
+                                                    className={`group flex items-center flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 ${
+                                                        item.current
+                                                            ? "bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-primary-300"
+                                                            : "text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary"
+                                                    }`}
+                                                >
+                                                    <Icon
+                                                        className={`mr-3 h-5 w-5 ${
+                                                            item.current
+                                                                ? "text-primary-500"
+                                                                : "text-light-muted group-hover:text-light-secondary dark:text-dark-muted dark:group-hover:text-dark-secondary"
+                                                        }`}
+                                                    />
+                                                    {item.name}
+                                                </Link>
+                                                <button
+                                                    onClick={() => setWevieWalletSubmenuOpen(!wevieWalletSubmenuOpen)}
+                                                    className={`p-2 rounded-md transition-colors duration-150 ${
+                                                        item.current
+                                                            ? "text-primary-500 hover:bg-primary-200/50 dark:hover:bg-primary-900/30"
+                                                            : "text-light-muted hover:text-light-secondary dark:text-dark-muted dark:hover:text-dark-secondary hover:bg-light-hover/50 dark:hover:bg-dark-hover/50"
+                                                    }`}
+                                                    title="Toggle WevieWallet menu"
+                                                >
+                                                    {wevieWalletSubmenuOpen ? (
+                                                        <ChevronDown className="h-4 w-4" />
+                                                    ) : (
+                                                        <ChevronRight className="h-4 w-4" />
+                                                    )}
+                                                </button>
+                                            </div>
+                                            {wevieWalletSubmenuOpen && (
+                                                <div className="ml-8 mt-1 space-y-1">
+                                                    <button
+                                                        onClick={() => {
+                                                            // Open collaborators modal
+                                                            const event = new CustomEvent('openCollaborators');
+                                                            window.dispatchEvent(event);
+                                                        }}
+                                                        disabled={!isWevieWalletRoute}
+                                                        className={`flex items-center w-full px-3 py-2 text-sm rounded-md transition-colors duration-150 text-left ${
+                                                            isWevieWalletRoute
+                                                                ? "text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary"
+                                                                : "text-light-muted dark:text-dark-muted cursor-not-allowed opacity-50"
+                                                        }`}
+                                                        title={isWevieWalletRoute ? "Manage collaborators" : "Only available on WevieWallet pages"}
+                                                    >
+                                                        <Users className="h-4 w-4 mr-2" />
+                                                        Collaborators
+                                                    </button>
+                                                    <Link
+                                                        href={route("profile.weviewallet")}
+                                                        className="flex items-center px-3 py-2 text-sm text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary rounded-md transition-colors duration-150"
+                                                    >
+                                                        <Landmark className="h-4 w-4 mr-2" />
+                                                        WevieWallet Management
+                                                    </Link>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                }
                                 return (
                                     <Link
                                         key={item.name}

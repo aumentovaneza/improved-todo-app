@@ -32,7 +32,7 @@ class FinanceAccountRepository
             $usedCredit = (float) ($data['used_credit'] ?? 0);
             $data['credit_limit'] = $creditLimit;
             $data['used_credit'] = min($creditLimit, max(0, $usedCredit));
-            $data['available_credit'] = max(0, $creditLimit - $data['used_credit']);
+            $data['available_credit'] = $creditLimit - $data['used_credit'];
             $data['starting_balance'] = 0;
             $data['current_balance'] = 0;
         }
@@ -67,7 +67,7 @@ class FinanceAccountRepository
                 $nextUsed = (float) ($account->used_credit ?? $originalUsedCredit);
                 $nextUsed = min($limit, max(0, $nextUsed));
                 $account->used_credit = $nextUsed;
-                $account->available_credit = max(0, $limit - $nextUsed);
+                $account->available_credit = $limit - $nextUsed;
             }
         }
 
@@ -81,7 +81,7 @@ class FinanceAccountRepository
         if ($account->type === 'credit-card') {
             $limit = (float) ($account->credit_limit ?? 0);
             $nextAvailable = (float) ($account->available_credit ?? 0) + $delta;
-            $account->available_credit = min($limit, max(0, $nextAvailable));
+            $account->available_credit = $nextAvailable;
             $nextUsed = (float) ($account->used_credit ?? 0) - $delta;
             $account->used_credit = min($limit, max(0, $nextUsed));
         } else {

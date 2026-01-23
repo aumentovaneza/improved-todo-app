@@ -185,7 +185,7 @@ export default function TransactionForm({
     }, [accounts, form.finance_account_id]);
 
     return (
-        <form onSubmit={handleSubmit} className="card p-4">
+        <form onSubmit={handleSubmit} className="card p-4 pb-8">
             <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <div>
                     <label className="text-sm text-slate-500 dark:text-slate-400">
@@ -455,7 +455,7 @@ export default function TransactionForm({
                             <option value="">Not a credit card payment</option>
                             {creditCardAccounts.map((account) => (
                                 <option key={account.id} value={account.id}>
-                                    {account.name}
+                                    {account.label} - {account.name}
                                 </option>
                             ))}
                         </select>

@@ -74,6 +74,17 @@ export default function Dashboard(props) {
     }, [props.walletUserId, props.activeWallet?.id]);
 
     useEffect(() => {
+        const handleOpenCollaborators = () => {
+            setShowCollaboratorsModal(true);
+        };
+
+        window.addEventListener('openCollaborators', handleOpenCollaborators);
+        return () => {
+            window.removeEventListener('openCollaborators', handleOpenCollaborators);
+        };
+    }, []);
+
+    useEffect(() => {
         if (!showCollaboratorsModal) {
             return;
         }
@@ -706,9 +717,6 @@ export default function Dashboard(props) {
                         }
                         onAvailableCreditSummary={() =>
                             setShowCreditModal(true)
-                        }
-                        onOpenCollaborators={() =>
-                            setShowCollaboratorsModal(true)
                         }
                         walletUserId={activeWalletId}
                         isWalletOwner={props.isWalletOwner}

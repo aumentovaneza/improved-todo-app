@@ -12,7 +12,7 @@ import LoansList from "@/Components/Finance/Loans/LoansList";
 import LoanForm from "@/Components/Finance/Loans/LoanForm";
 import Modal from "@/Components/Modal";
 import { Link } from "@inertiajs/react";
-import { Eye, Landmark, Pencil, Plus, Settings, Trash2, Users } from "lucide-react";
+import { Eye, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 const formatCurrency = (value, currency = "PHP") =>
@@ -51,7 +51,6 @@ export default function FinanceDashboard({
     onViewLoan,
     onViewGoal,
     onViewBudget,
-    onOpenCollaborators,
     onIncomeSummary,
     onUnallocatedSummary,
     onExpensesSummary,
@@ -97,43 +96,6 @@ export default function FinanceDashboard({
                         <p className="text-sm text-light-muted dark:text-dark-muted">
                             Add updates gently, without breaking your flow.
                         </p>
-                    </div>
-                    <div className="flex items-center">
-                        <Dropdown>
-                            <Dropdown.Trigger>
-                                <button
-                                    type="button"
-                                    className="inline-flex items-center justify-center rounded-xl border border-light-border/70 p-2 text-light-muted shadow-sm hover:text-light-secondary dark:border-dark-border/70 dark:text-dark-muted dark:hover:text-dark-secondary"
-                                    title="Wallet settings"
-                                >
-                                    <Settings className="h-4 w-4" />
-                                </button>
-                            </Dropdown.Trigger>
-                            <Dropdown.Content
-                                align="right"
-                                width="48"
-                                contentClasses="py-1 bg-white dark:bg-dark-card"
-                            >
-                                {isWalletOwner && (
-                                    <button
-                                        type="button"
-                                        onClick={() => onOpenCollaborators?.()}
-                                        className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-light-secondary hover:bg-light-hover dark:text-dark-secondary dark:hover:bg-dark-hover"
-                                    >
-                                        <Users className="h-4 w-4" />
-                                        Collaborators
-                                    </button>
-                                )}
-                                <Dropdown.Link
-                                    href={route("profile.weviewallet")}
-                                >
-                                    <span className="inline-flex items-center gap-2">
-                                        <Landmark className="h-4 w-4" />
-                                        WevieWallet management
-                                    </span>
-                                </Dropdown.Link>
-                            </Dropdown.Content>
-                        </Dropdown>
                     </div>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-3">

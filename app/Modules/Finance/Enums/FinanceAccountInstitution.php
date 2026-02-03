@@ -26,6 +26,7 @@ enum FinanceAccountInstitution: string
     case DISKARTECH = 'DiskarTech';
     case TONIK = 'TONIK';
     case BPI_BANKO = 'BPI BanKo';
+    case WISE = ' Wise';
 
     case BDO_CREDIT_CARD = 'BDO Credit Card';
     case BPI_CREDIT_CARD = 'BPI Credit Card';
@@ -60,7 +61,8 @@ enum FinanceAccountInstitution: string
             self::GOTYME,
             self::DISKARTECH,
             self::TONIK,
-            self::BPI_BANKO => 'e-wallet',
+            self::BPI_BANKO,
+            self::WISE => 'e-wallet',
             default => 'credit-card',
         };
     }

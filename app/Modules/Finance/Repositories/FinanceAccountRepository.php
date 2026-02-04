@@ -25,6 +25,31 @@ class FinanceAccountRepository
         return FinanceAccount::where('user_id', $userId)->find($accountId);
     }
 
+    private function validateCreditCardBounds(FinanceAccount $account): void
+    {
+        if ($account->type !== 'credit-card') {
+            return;
+        }
+
+        $limit = (float) ($account->credit_limit ?? 0);
+        $used = (float) ($account->used_credit ?? 0);
+        $available = (float) ($account->available_credit ?? 0);
+
+        // Ensure used credit doesn't exceed limit
+        $used = min($limit, max(0, $used));
+
+        // If used credit is 0, available should be full limit
+        if ($used === 0) {
+            $available = $limit;
+        } else {
+            // Otherwise ensure available doesn't exceed limit - used
+            $available = min($limit - $used, max(0, $available));
+        }
+
+        $account->used_credit = $used;
+        $account->available_credit = $available;
+    }
+
     public function create(array $data): FinanceAccount
     {
         if (($data['type'] ?? null) === 'credit-card') {
@@ -37,7 +62,11 @@ class FinanceAccountRepository
             $data['current_balance'] = 0;
         }
 
-        return FinanceAccount::create($data);
+        $account = FinanceAccount::create($data);
+        $this->validateCreditCardBounds($account);
+        $account->save();
+
+        return $account->refresh();
     }
 
     public function update(FinanceAccount $account, array $data): FinanceAccount
@@ -81,6 +110,7 @@ class FinanceAccountRepository
             }
         }
 
+        $this->validateCreditCardBounds($account);
         $account->save();
 
         return $account->refresh();
@@ -111,6 +141,7 @@ class FinanceAccountRepository
         } else {
             $account->current_balance = (float) $account->current_balance + $delta;
         }
+        $this->validateCreditCardBounds($account);
         $account->save();
 
         return $account->refresh();

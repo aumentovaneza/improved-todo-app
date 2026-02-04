@@ -65,9 +65,19 @@ class FinanceAccountRepository
             if (array_key_exists('credit_limit', $data) || array_key_exists('used_credit', $data)) {
                 $limit = (float) ($account->credit_limit ?? $originalCreditLimit);
                 $nextUsed = (float) ($account->used_credit ?? $originalUsedCredit);
-                $nextUsed = min($limit, max(0, $nextUsed));
-                $account->used_credit = $nextUsed;
-                $account->available_credit = $limit - $nextUsed;
+                
+                // Ensure used credit doesn't go negative
+                $nextUsed = max(0, $nextUsed);
+                
+                // If credit is fully paid (used_credit = 0), revert to full limit
+                if ($nextUsed === 0) {
+                    $account->used_credit = 0;
+                    $account->available_credit = $limit;
+                } else {
+                    // Otherwise ensure values stay within bounds
+                    $account->used_credit = min($limit, $nextUsed);
+                    $account->available_credit = $limit - $account->used_credit;
+                }
             }
         }
 
@@ -81,9 +91,23 @@ class FinanceAccountRepository
         if ($account->type === 'credit-card') {
             $limit = (float) ($account->credit_limit ?? 0);
             $nextAvailable = (float) ($account->available_credit ?? 0) + $delta;
-            $account->available_credit = $nextAvailable;
             $nextUsed = (float) ($account->used_credit ?? 0) - $delta;
-            $account->used_credit = min($limit, max(0, $nextUsed));
+            
+            // Ensure used credit doesn't go negative
+            $nextUsed = max(0, $nextUsed);
+            
+            // If credit is fully paid (used_credit = 0), revert to full limit
+            if ($nextUsed === 0) {
+                $nextAvailable = $limit;
+                $nextUsed = 0;
+            } else {
+                // Otherwise ensure values stay within bounds
+                $nextUsed = min($limit, $nextUsed);
+                $nextAvailable = $limit - $nextUsed;
+            }
+            
+            $account->available_credit = $nextAvailable;
+            $account->used_credit = $nextUsed;
         } else {
             $account->current_balance = (float) $account->current_balance + $delta;
         }

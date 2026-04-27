@@ -2,6 +2,7 @@ import ApplicationLogo from "@/Components/ApplicationLogo";
 import Dropdown from "@/Components/Dropdown";
 import MobileFab from "@/Components/Mobile/MobileFab";
 import MobileTabBar from "@/Components/Mobile/MobileTabBar";
+import OnboardingTour from "@/Components/OnboardingTour";
 import QuickAddTransactionModal from "@/Components/Mobile/QuickAddTransactionModal";
 import SyncQueueModal from "@/Components/Offline/SyncQueueModal";
 import Toast from "@/Components/Toast";
@@ -79,12 +80,14 @@ export default function TodoLayout({ header, children }) {
             href: route("tasks.index"),
             icon: CheckSquare,
             current: route().current("tasks.*"),
+            tourKey: "nav-tasks",
         },
         {
             name: "Categories",
             href: route("categories.index"),
             icon: FolderOpen,
             current: route().current("categories.*"),
+            tourKey: "nav-categories",
         },
         {
             name: "Workspaces",
@@ -92,18 +95,21 @@ export default function TodoLayout({ header, children }) {
             icon: Users,
             current:
                 route().current("workspaces.*") || route().current("boards.*"),
+            tourKey: "nav-workspaces",
         },
         {
             name: "Calendar",
             href: route("calendar.index"),
             icon: Calendar,
             current: route().current("calendar.*"),
+            tourKey: "nav-calendar",
         },
         {
             name: "Analytics",
             href: route("analytics.index"),
             icon: BarChart3,
             current: route().current("analytics.*"),
+            tourKey: "nav-analytics",
         },
         {
             name: "WevieWallet",
@@ -111,6 +117,7 @@ export default function TodoLayout({ header, children }) {
             icon: DollarSign,
             current: route().current("weviewallet.*"),
             hasSubmenu: true,
+            tourKey: "nav-weviewallet",
         },
     ];
 
@@ -405,7 +412,11 @@ export default function TodoLayout({ header, children }) {
             <aside className="hidden lg:flex w-64 h-screen bg-light-secondary dark:bg-dark-secondary shadow-lg flex-col fixed left-0 top-0 z-30">
                 {/* Sidebar Header */}
                 <div className="flex items-center justify-between h-16 px-4 border-b border-light-border dark:border-dark-border">
-                    <Link href="/" className="flex items-center">
+                    <Link
+                        href={route("dashboard")}
+                        className="flex items-center"
+                        data-tour="logo-dashboard"
+                    >
                         <ApplicationLogo className="h-8 w-auto" />
                     </Link>
                 </div>
@@ -418,7 +429,7 @@ export default function TodoLayout({ header, children }) {
                                 const Icon = item.icon;
                                 if (item.hasSubmenu) {
                                     return (
-                                        <div key={item.name}>
+                                        <div key={item.name} data-tour={item.tourKey}>
                                             <div className="flex items-center justify-between">
                                                 <Link
                                                     href={item.href}
@@ -488,6 +499,7 @@ export default function TodoLayout({ header, children }) {
                                     <Link
                                         key={item.name}
                                         href={item.href}
+                                        data-tour={item.tourKey}
                                         className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 ${
                                             item.current
                                                 ? "bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-primary-300"
@@ -558,7 +570,7 @@ export default function TodoLayout({ header, children }) {
                                     {user.email}
                                 </p>
                             </div>
-                            <div className="relative">
+                            <div className="relative" data-tour="user-menu">
                                 <Dropdown>
                                     <Dropdown.Trigger>
                                         <button className="p-1 rounded-md text-light-muted hover:text-light-secondary dark:text-dark-muted dark:hover:text-dark-secondary">
@@ -583,6 +595,15 @@ export default function TodoLayout({ header, children }) {
                                             href={route("profile.show")}
                                         >
                                             Profile
+                                        </Dropdown.Link>
+                                        <Dropdown.Link
+                                            href={route("tutorials.reset", {
+                                                key: "onboarding",
+                                            })}
+                                            method="post"
+                                            as="button"
+                                        >
+                                            Replay tour
                                         </Dropdown.Link>
                                         <Dropdown.Link
                                             href={route("logout")}
@@ -691,6 +712,8 @@ export default function TodoLayout({ header, children }) {
                     <FocusMode />
                 </div>
             )}
+
+            <OnboardingTour />
         </div>
     );
 }

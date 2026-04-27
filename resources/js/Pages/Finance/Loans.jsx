@@ -1,6 +1,8 @@
 import LoanForm from "@/Components/Finance/Loans/LoanForm";
 import Modal from "@/Components/Modal";
 import TodoLayout from "@/Layouts/TodoLayout";
+import OnboardingTour from "@/Components/OnboardingTour";
+import { walletLoansSteps } from "@/tours";
 import { Head, Link, router } from "@inertiajs/react";
 import { Eye, Pencil, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -181,8 +183,10 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
                     </div>
                 </div>
 
-                <LoanForm onSubmit={handleCreate} />
-                <form onSubmit={handleFilterSubmit} className="card p-4">
+                <div data-tour="loans-create">
+                    <LoanForm onSubmit={handleCreate} />
+                </div>
+                <form onSubmit={handleFilterSubmit} className="card p-4" data-tour="loans-filters">
                     <div className="grid gap-3 sm:grid-cols-2">
                         <div>
                             <label className="text-xs font-semibold uppercase text-slate-400 dark:text-slate-500">
@@ -230,7 +234,7 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
                         </div>
                     </div>
                 </form>
-                <div className="card p-4">
+                <div className="card p-4" data-tour="loans-list">
                     <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
                         All loans
                     </h3>
@@ -510,6 +514,11 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
                     )}
                 </div>
             </Modal>
+            <OnboardingTour
+                tourKey="wallet_loans"
+                steps={walletLoansSteps}
+                requireCompleted={["onboarding"]}
+            />
         </TodoLayout>
     );
 }

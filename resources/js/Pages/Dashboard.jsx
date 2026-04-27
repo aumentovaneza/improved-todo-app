@@ -359,7 +359,7 @@ export default function Dashboard({
                 </div>
 
                 {/* Quick Actions */}
-                <div className="card p-4 sm:p-6">
+                <div className="card p-4 sm:p-6" data-tour="quick-actions">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
                         <h2 className="text-base sm:text-lg font-medium text-adaptive-primary">
                             Gentle shortcuts

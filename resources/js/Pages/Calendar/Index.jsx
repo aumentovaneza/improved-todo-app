@@ -1,4 +1,6 @@
 import TodoLayout from "@/Layouts/TodoLayout";
+import OnboardingTour from "@/Components/OnboardingTour";
+import { calendarSteps } from "@/tours";
 import { Head, Link, router } from "@inertiajs/react";
 import {
     Calendar as CalendarIcon,
@@ -287,7 +289,7 @@ export default function Index({
                     </p>
                     <Link
                         href={route("tasks.index")}
-                        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                        className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-wevie-teal to-wevie-mint border border-transparent rounded-xl font-medium text-sm text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wevie-teal/40 transition-colors"
                     >
                         <Plus className="w-4 h-4 mr-2" />
                         Create New Task
@@ -679,9 +681,12 @@ export default function Index({
             <div className="flex flex-col lg:flex-row gap-6">
                 {/* Main Calendar */}
                 <div className="flex-1 order-2 lg:order-1">
-                    <div className="card">
+                    <div className="card" data-tour="calendar-grid">
                         {/* Calendar Header */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 gap-4">
+                        <div
+                            className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 gap-4"
+                            data-tour="calendar-header"
+                        >
                             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
                                 {monthName}
                             </h2>
@@ -732,7 +737,7 @@ export default function Index({
                                     onClick={() =>
                                         router.get(route("calendar.index"))
                                     }
-                                    className="ml-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+                                    className="ml-2 inline-flex items-center px-3 py-2 bg-gradient-to-r from-wevie-teal to-wevie-mint border border-transparent rounded-xl font-medium text-sm text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wevie-teal/40 transition-colors"
                                 >
                                     Today
                                 </button>
@@ -1222,6 +1227,11 @@ export default function Index({
                 task={selectedTask}
                 categories={categories}
                 onTaskUpdate={handleTaskUpdate}
+            />
+            <OnboardingTour
+                tourKey="calendar"
+                steps={calendarSteps}
+                requireCompleted={["onboarding"]}
             />
         </TodoLayout>
     );

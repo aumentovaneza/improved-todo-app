@@ -11,6 +11,8 @@ import SavingsGoalForm from "@/Components/Finance/SavingsGoals/SavingsGoalForm";
 import LoansList from "@/Components/Finance/Loans/LoansList";
 import LoanForm from "@/Components/Finance/Loans/LoanForm";
 import Modal from "@/Components/Modal";
+import OnboardingTour from "@/Components/OnboardingTour";
+import { addTransactionFormSteps } from "@/tours";
 import { Link } from "@inertiajs/react";
 import { Eye, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -393,6 +395,15 @@ export default function FinanceDashboard({
                         }
                     />
                 </div>
+                {activeModal?.type === "transaction" &&
+                    activeModal?.mode !== "edit" && (
+                        <OnboardingTour
+                            tourKey="add_transaction_form"
+                            steps={addTransactionFormSteps}
+                            requireCompleted={["onboarding"]}
+                            disableOverlay
+                        />
+                    )}
             </Modal>
 
             <Modal

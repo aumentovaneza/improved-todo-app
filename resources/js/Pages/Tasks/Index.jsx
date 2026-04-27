@@ -52,6 +52,8 @@ import TaskViewModal from "@/Components/TaskViewModal";
 import TaskEditModal from "@/Components/TaskEditModal";
 import QuickSubtaskModal from "@/Components/QuickSubtaskModal";
 import Toast from "@/Components/Toast";
+import OnboardingTour from "@/Components/OnboardingTour";
+import { tasksSteps } from "@/tours";
 import { toast } from "react-toastify";
 
 function SortableTask({
@@ -722,7 +724,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
                             A calm space to keep track of what matters.
                         </p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3" data-tour="tasks-create">
                         <button
                             onClick={() => setShowTaskModal(true)}
                             disabled={isTaskSubmitting}
@@ -744,7 +746,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
 
             <div className="space-y-6">
                 {/* Search and Filters */}
-                <div className="card">
+                <div className="card" data-tour="tasks-filters">
                     <div className="p-4 border-b border-light-border/70 dark:border-dark-border/70">
                         <div className="flex flex-col sm:flex-row gap-4">
                             {/* Search */}
@@ -994,6 +996,11 @@ export default function Index({ categorizedTasks, categories, filters }) {
             />
 
             <Toast />
+            <OnboardingTour
+                tourKey="tasks"
+                steps={tasksSteps}
+                requireCompleted={["onboarding"]}
+            />
         </TodoLayout>
     );
 }

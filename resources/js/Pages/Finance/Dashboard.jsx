@@ -6,6 +6,8 @@ import MobileWalletDashboard from "@/Components/Mobile/MobileWalletDashboard";
 import Modal from "@/Components/Modal";
 import PrimaryButton from "@/Components/PrimaryButton";
 import TextInput from "@/Components/TextInput";
+import OnboardingTour from "@/Components/OnboardingTour";
+import { walletDashboardSteps } from "@/tours";
 import TodoLayout from "@/Layouts/TodoLayout";
 import { Head, router, useForm } from "@inertiajs/react";
 import { UserPlus, X } from "lucide-react";
@@ -581,6 +583,7 @@ export default function Dashboard(props) {
             header={
                 <div className="flex flex-wrap items-center gap-2">
                     <span>WevieWallet</span>
+                    <span data-tour="wallet-selector">
                     <Dropdown>
                         <Dropdown.Trigger>
                             <button
@@ -619,6 +622,7 @@ export default function Dashboard(props) {
                             ))}
                         </Dropdown.Content>
                     </Dropdown>
+                    </span>
                 </div>
             }
         >
@@ -1397,6 +1401,11 @@ export default function Dashboard(props) {
                     </div>
                 </div>
             </Modal>
+            <OnboardingTour
+                tourKey="wallet_dashboard"
+                steps={walletDashboardSteps}
+                requireCompleted={["onboarding"]}
+            />
         </TodoLayout>
     );
 }

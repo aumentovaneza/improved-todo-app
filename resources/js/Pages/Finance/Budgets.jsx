@@ -1,6 +1,8 @@
 import BudgetForm from "@/Components/Finance/Budgets/BudgetForm";
 import Modal from "@/Components/Modal";
 import TodoLayout from "@/Layouts/TodoLayout";
+import OnboardingTour from "@/Components/OnboardingTour";
+import { walletBudgetsSteps } from "@/tours";
 import { Head, Link, router } from "@inertiajs/react";
 import { Eye, Lock, Pencil, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -278,13 +280,15 @@ export default function Budgets({
                     </div>
                 </div>
 
-                <BudgetForm
-                    categories={categories}
-                    accounts={accounts}
-                    onSubmit={handleCreate}
-                />
+                <div data-tour="budgets-create">
+                    <BudgetForm
+                        categories={categories}
+                        accounts={accounts}
+                        onSubmit={handleCreate}
+                    />
+                </div>
 
-                <form onSubmit={handleFilterSubmit} className="card p-4">
+                <form onSubmit={handleFilterSubmit} className="card p-4" data-tour="budgets-filters">
                     <div className="grid gap-3 sm:grid-cols-2">
                         <div>
                             <label className="text-xs font-semibold uppercase text-slate-400">
@@ -333,7 +337,7 @@ export default function Budgets({
                     </div>
                 </form>
 
-                <div className="card p-4">
+                <div className="card p-4" data-tour="budgets-list">
                     <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
                         All budgets
                     </h3>
@@ -970,6 +974,11 @@ export default function Budgets({
                     </div>
                 </div>
             </Modal>
+            <OnboardingTour
+                tourKey="wallet_budgets"
+                steps={walletBudgetsSteps}
+                requireCompleted={["onboarding"]}
+            />
         </TodoLayout>
     );
 }

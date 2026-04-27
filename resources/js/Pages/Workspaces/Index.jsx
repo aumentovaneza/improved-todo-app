@@ -1,4 +1,6 @@
 import TodoLayout from "@/Layouts/TodoLayout";
+import OnboardingTour from "@/Components/OnboardingTour";
+import { workspacesSteps } from "@/tours";
 import { Head, Link, useForm } from "@inertiajs/react";
 import { useState } from "react";
 import {
@@ -162,10 +164,12 @@ export default function Index({
                     <h2 className="font-semibold text-xl text-light-primary dark:text-dark-primary leading-tight">
                         Workspaces
                     </h2>
-                    <PrimaryButton onClick={() => setShowCreateModal(true)}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        New Workspace
-                    </PrimaryButton>
+                    <span data-tour="workspaces-create">
+                        <PrimaryButton onClick={() => setShowCreateModal(true)}>
+                            <Plus className="h-4 w-4 mr-2" />
+                            New Workspace
+                        </PrimaryButton>
+                    </span>
                 </div>
             }
         >
@@ -174,7 +178,7 @@ export default function Index({
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     {/* Organized Workspaces */}
-                    <div className="mb-8">
+                    <div className="mb-8" data-tour="workspaces-list">
                         <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
                             Your Workspaces
                         </h3>
@@ -365,6 +369,11 @@ export default function Index({
                     </div>
                 </form>
             </Modal>
+            <OnboardingTour
+                tourKey="workspaces"
+                steps={workspacesSteps}
+                requireCompleted={["onboarding"]}
+            />
         </TodoLayout>
     );
 }

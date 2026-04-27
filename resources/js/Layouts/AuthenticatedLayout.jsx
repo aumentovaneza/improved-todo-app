@@ -1,6 +1,7 @@
 import ApplicationLogo from "@/Components/ApplicationLogo";
 import Dropdown from "@/Components/Dropdown";
 import NavLink from "@/Components/NavLink";
+import OnboardingTour from "@/Components/OnboardingTour";
 import ResponsiveNavLink from "@/Components/ResponsiveNavLink";
 import { FloatingPomodoroWidget, FocusMode } from "@/Components/Pomodoro";
 import { Link, usePage } from "@inertiajs/react";
@@ -21,50 +22,60 @@ export default function AuthenticatedLayout({ header, children }) {
                     <div className="flex h-16 justify-between">
                         <div className="flex">
                             <div className="flex shrink-0 items-center">
-                                <Link href="/">
+                                <Link href={route("dashboard")}>
                                     <ApplicationLogo className="block h-9 w-auto text-gray-800 dark:text-gray-200" />
                                 </Link>
                             </div>
 
                             <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink
-                                    href={route("dashboard")}
-                                    active={route().current("dashboard")}
-                                >
-                                    Dashboard
-                                </NavLink>
-                                <NavLink
-                                    href={route("tasks.index")}
-                                    active={route().current("tasks.*")}
-                                >
-                                    Tasks
-                                </NavLink>
-                                <NavLink
-                                    href={route("categories.index")}
-                                    active={route().current("categories.*")}
-                                >
-                                    Categories
-                                </NavLink>
-                                <NavLink
-                                    href={route("workspaces.index")}
-                                    active={
-                                        route().current("workspaces.*") ||
-                                        route().current("boards.*")
-                                    }
-                                >
-                                    Workspaces
-                                </NavLink>
-                                <NavLink
-                                    href={route("weviewallet.dashboard")}
-                                    active={route().current("finance.*")}
-                                >
-                                    WevieWallet
-                                </NavLink>
+                                <span data-tour="nav-dashboard">
+                                    <NavLink
+                                        href={route("dashboard")}
+                                        active={route().current("dashboard")}
+                                    >
+                                        Dashboard
+                                    </NavLink>
+                                </span>
+                                <span data-tour="nav-tasks">
+                                    <NavLink
+                                        href={route("tasks.index")}
+                                        active={route().current("tasks.*")}
+                                    >
+                                        Tasks
+                                    </NavLink>
+                                </span>
+                                <span data-tour="nav-categories">
+                                    <NavLink
+                                        href={route("categories.index")}
+                                        active={route().current("categories.*")}
+                                    >
+                                        Categories
+                                    </NavLink>
+                                </span>
+                                <span data-tour="nav-workspaces">
+                                    <NavLink
+                                        href={route("workspaces.index")}
+                                        active={
+                                            route().current("workspaces.*") ||
+                                            route().current("boards.*")
+                                        }
+                                    >
+                                        Workspaces
+                                    </NavLink>
+                                </span>
+                                <span data-tour="nav-weviewallet">
+                                    <NavLink
+                                        href={route("weviewallet.dashboard")}
+                                        active={route().current("finance.*")}
+                                    >
+                                        WevieWallet
+                                    </NavLink>
+                                </span>
                             </div>
                         </div>
 
                         <div className="hidden sm:ms-6 sm:flex sm:items-center">
-                            <div className="relative ms-3">
+                            <div className="relative ms-3" data-tour="user-menu">
                                 <Dropdown>
                                     <Dropdown.Trigger>
                                         <span className="inline-flex rounded-md">
@@ -95,6 +106,15 @@ export default function AuthenticatedLayout({ header, children }) {
                                             href={route("profile.show")}
                                         >
                                             Profile
+                                        </Dropdown.Link>
+                                        <Dropdown.Link
+                                            href={route("tutorials.reset", {
+                                                key: "onboarding",
+                                            })}
+                                            method="post"
+                                            as="button"
+                                        >
+                                            Replay tour
                                         </Dropdown.Link>
                                         <Dropdown.Link
                                             href={route("logout")}
@@ -236,6 +256,8 @@ export default function AuthenticatedLayout({ header, children }) {
                     <FocusMode />
                 </div>
             )}
+
+            <OnboardingTour />
         </div>
     );
 }

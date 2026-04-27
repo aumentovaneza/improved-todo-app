@@ -1,5 +1,7 @@
 import TodoLayout from "@/Layouts/TodoLayout";
+import OnboardingTour from "@/Components/OnboardingTour";
 import TransactionForm from "@/Components/Finance/Transactions/TransactionForm";
+import { walletTransactionsSteps } from "@/tours";
 import { Head, router } from "@inertiajs/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -230,7 +232,7 @@ export default function Transactions({
         <TodoLayout header="All Transactions">
             <Head title="All Transactions" />
             <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
-                <div className="card p-4">
+                <div className="card p-4" data-tour="transactions-filters">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
@@ -367,7 +369,7 @@ export default function Transactions({
                     </form>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-3" data-tour="transactions-form">
                     <div className="card p-4">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div>
@@ -576,6 +578,11 @@ export default function Transactions({
                     </div>
                 )}
             </div>
+            <OnboardingTour
+                tourKey="wallet_transactions"
+                steps={walletTransactionsSteps}
+                requireCompleted={["onboarding"]}
+            />
         </TodoLayout>
     );
 }

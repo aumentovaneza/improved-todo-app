@@ -578,7 +578,7 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                     className="inline-flex items-center px-3 sm:px-6 py-2 sm:py-3 bg-primary-400 text-white font-semibold rounded-lg hover:bg-primary-500 transition-colors duration-200 text-sm sm:text-base dark:bg-[#2ED7A1] dark:hover:bg-primary-400"
                                 >
                                     <span className="hidden sm:inline">
-                                        Go to{" "}
+                                        Go to {" "}
                                     </span>
                                     Dashboard
                                     <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />

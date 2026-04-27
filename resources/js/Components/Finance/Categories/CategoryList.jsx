@@ -9,11 +9,18 @@ export default function CategoryList({
     onDelete,
 }) {
     const iconMap = useMemo(() => {
+        const forwardRefSymbol = Symbol.for("react.forward_ref");
         return Object.entries(LucideIcons).reduce((acc, [name, Icon]) => {
-            if (typeof Icon === "function") {
-                acc[name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase()] =
-                    Icon;
-            }
+            // Skip the `*Icon` aliases lucide-react ships alongside the canonical names.
+            if (name.endsWith("Icon")) return acc;
+            const isComponent =
+                typeof Icon === "function" ||
+                (Icon && typeof Icon === "object" && Icon.$$typeof === forwardRefSymbol);
+            if (!isComponent) return acc;
+            const kebab = name
+                .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+                .toLowerCase();
+            acc[kebab] = Icon;
             return acc;
         }, {});
     }, []);
@@ -155,9 +162,6 @@ export default function CategoryList({
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-500 dark:text-slate-400">
-                                        Emoji
-                                    </label>
                                     <IconPicker
                                         value={draft.icon}
                                         onChange={(value) =>

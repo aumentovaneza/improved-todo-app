@@ -1,10 +1,12 @@
 import { useForm, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 import Modal from "./Modal";
+import OnboardingTour from "./OnboardingTour";
 import SecondaryButton from "./SecondaryButton";
 import PrimaryButton from "./PrimaryButton";
 import TagInput from "./TagInput";
 import CategoryTagSelector from "./CategoryTagSelector";
+import { addTaskFormSteps } from "@/tours";
 
 export default function TaskModal({
     show,
@@ -136,6 +138,7 @@ export default function TaskModal({
                                 Title
                             </label>
                             <input
+                                data-tour="task-title"
                                 type="text"
                                 className="w-full input-primary"
                                 value={data.title}
@@ -172,6 +175,7 @@ export default function TaskModal({
                                 Category
                             </label>
                             <select
+                                data-tour="task-category"
                                 className="w-full input-primary"
                                 value={data.category_id}
                                 onChange={(e) =>
@@ -197,6 +201,7 @@ export default function TaskModal({
                                 Priority
                             </label>
                             <select
+                                data-tour="task-priority"
                                 className="w-full input-primary"
                                 value={data.priority}
                                 onChange={(e) =>
@@ -423,6 +428,7 @@ export default function TaskModal({
                             Not now
                         </SecondaryButton>
                         <PrimaryButton
+                            data-tour="task-submit"
                             type="submit"
                             disabled={processing || isSubmitting}
                         >
@@ -433,6 +439,14 @@ export default function TaskModal({
                     </div>
                 </form>
             </div>
+            {show && (
+                <OnboardingTour
+                    tourKey="add_task_form"
+                    steps={addTaskFormSteps}
+                    requireCompleted={["onboarding"]}
+                    disableOverlay
+                />
+            )}
         </Modal>
     );
 }

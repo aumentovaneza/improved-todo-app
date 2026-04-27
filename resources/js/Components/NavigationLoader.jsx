@@ -36,19 +36,15 @@ export default function NavigationLoader() {
     return (
         <div
             role="status"
+            aria-label="Loading"
             aria-live="polite"
             aria-busy="true"
             className="pointer-events-none fixed inset-0 z-[9999] flex items-center justify-center bg-black/20 backdrop-blur-[1px] transition-opacity"
         >
-            <div className="flex items-center gap-3 rounded-full bg-white/95 px-5 py-3 shadow-lg dark:bg-slate-800/95">
-                <span
-                    className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-primary-400 border-t-transparent"
-                    aria-hidden="true"
-                />
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                    Loading…
-                </span>
-            </div>
+            <span
+                className="inline-block h-10 w-10 animate-spin rounded-full border-[3px] border-primary-400 border-t-transparent"
+                aria-hidden="true"
+            />
         </div>
     );
 }

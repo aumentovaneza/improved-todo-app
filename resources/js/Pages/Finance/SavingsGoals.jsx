@@ -1,6 +1,8 @@
 import SavingsGoalForm from "@/Components/Finance/SavingsGoals/SavingsGoalForm";
 import Modal from "@/Components/Modal";
 import TodoLayout from "@/Layouts/TodoLayout";
+import OnboardingTour from "@/Components/OnboardingTour";
+import { walletSavingsGoalsSteps } from "@/tours";
 import { Head, Link, router } from "@inertiajs/react";
 import { Eye, Pencil, Repeat2, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -191,11 +193,13 @@ export default function SavingsGoals({
                     </div>
                 </div>
 
-                <SavingsGoalForm
-                    accounts={accounts}
-                    onSubmit={handleCreate}
-                />
-                <form onSubmit={handleFilterSubmit} className="card p-4">
+                <div data-tour="goals-create">
+                    <SavingsGoalForm
+                        accounts={accounts}
+                        onSubmit={handleCreate}
+                    />
+                </div>
+                <form onSubmit={handleFilterSubmit} className="card p-4" data-tour="goals-filters">
                     <div className="grid gap-3 sm:grid-cols-2">
                         <div>
                             <label className="text-xs font-semibold uppercase text-slate-400 dark:text-slate-500">
@@ -245,7 +249,7 @@ export default function SavingsGoals({
                         </div>
                     </div>
                 </form>
-                <div className="card p-4">
+                <div className="card p-4" data-tour="goals-list">
                     <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
                         All savings goals
                     </h3>
@@ -554,6 +558,11 @@ export default function SavingsGoals({
                     )}
                 </div>
             </Modal>
+            <OnboardingTour
+                tourKey="wallet_savings_goals"
+                steps={walletSavingsGoalsSteps}
+                requireCompleted={["onboarding"]}
+            />
         </TodoLayout>
     );
 }

@@ -8,24 +8,28 @@ export default function MobileTabBar() {
             href: route("dashboard"),
             icon: Home,
             isActive: route().current("dashboard"),
+            tourKey: "mobile-nav-dashboard",
         },
         {
             name: "Wallet",
             href: route("weviewallet.dashboard"),
             icon: Wallet,
             isActive: route().current("weviewallet.*"),
+            tourKey: "mobile-nav-weviewallet",
         },
         {
             name: "Tasks",
             href: route("tasks.index"),
             icon: CheckSquare,
             isActive: route().current("tasks.*"),
+            tourKey: "mobile-nav-tasks",
         },
         {
             name: "Profile",
             href: route("profile.show"),
             icon: User,
             isActive: route().current("profile.*"),
+            tourKey: "mobile-user-menu",
         },
     ];
 
@@ -44,6 +48,7 @@ export default function MobileTabBar() {
                         <Link
                             key={tab.name}
                             href={tab.href}
+                            data-tour={tab.tourKey}
                             className="flex min-w-[64px] flex-col items-center gap-1 rounded-xl px-2 py-2 text-xs font-medium text-light-muted transition-colors duration-150 hover:text-light-primary dark:text-dark-muted dark:hover:text-dark-primary"
                             aria-current={tab.isActive ? "page" : undefined}
                         >

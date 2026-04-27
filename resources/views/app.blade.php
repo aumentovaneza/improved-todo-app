@@ -8,7 +8,7 @@
 
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" type="image/svg+xml" href="/logo.svg">
-        <link rel="manifest" href="/manifest.webmanifest">
+        <link rel="manifest" href="/build/manifest.webmanifest">
         <meta name="theme-color" content="#6FD9D3">
 
         <!-- Fonts -->

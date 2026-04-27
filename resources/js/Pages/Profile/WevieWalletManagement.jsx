@@ -3,7 +3,9 @@ import AccountsList from "@/Components/Finance/Accounts/AccountsList";
 import CategoryForm from "@/Components/Finance/Categories/CategoryForm";
 import CategoryList from "@/Components/Finance/Categories/CategoryList";
 import Modal from "@/Components/Modal";
+import OnboardingTour from "@/Components/OnboardingTour";
 import TodoLayout from "@/Layouts/TodoLayout";
+import { walletManagementSteps } from "@/tours";
 import { Head, Link } from "@inertiajs/react";
 import { useCallback, useState } from "react";
 
@@ -135,7 +137,10 @@ export default function WevieWalletManagement({
                             Back to profile
                         </Link>
                     </div>
-                    <div className="mt-4 flex flex-wrap gap-2 border-b border-slate-200 text-sm dark:border-white/10">
+                    <div
+                        className="mt-4 flex flex-wrap gap-2 border-b border-slate-200 text-sm dark:border-white/10"
+                        data-tour="management-tabs"
+                    >
                         <button
                             type="button"
                             onClick={() => setActiveTab("accounts")}
@@ -161,7 +166,7 @@ export default function WevieWalletManagement({
                     </div>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-6" data-tour="management-content">
                     {activeTab === "accounts" && (
                         <section className="card p-4 space-y-4">
                             <div>
@@ -227,6 +232,11 @@ export default function WevieWalletManagement({
                     />
                 </div>
             </Modal>
+            <OnboardingTour
+                tourKey="wallet_management"
+                steps={walletManagementSteps}
+                requireCompleted={["onboarding"]}
+            />
         </TodoLayout>
     );
 }

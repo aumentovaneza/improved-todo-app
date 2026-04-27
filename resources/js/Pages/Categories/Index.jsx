@@ -1,4 +1,6 @@
 import TodoLayout from "@/Layouts/TodoLayout";
+import OnboardingTour from "@/Components/OnboardingTour";
+import { categoriesSteps } from "@/tours";
 import { Head, Link, usePage, router } from "@inertiajs/react";
 import { Plus, Eye, Edit, FolderOpen, Trash2 } from "lucide-react";
 
@@ -22,6 +24,7 @@ export default function Index({ categories }) {
                     </h2>
                     <Link
                         href={route("categories.create")}
+                        data-tour="categories-create"
                         className="inline-flex items-center justify-center w-auto px-3 py-2 sm:px-2 sm:py-1.5 md:px-4 md:py-2 bg-blue-600 text-white text-xs sm:text-xs md:text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
                     >
                         <Plus className="mr-1 sm:mr-2 h-4 w-4 sm:h-3 sm:w-3 md:h-4 md:w-4" />
@@ -33,7 +36,7 @@ export default function Index({ categories }) {
         >
             <Head title="Categories" />
             <div className="max-w-4xl mx-auto">
-                <div className="card divide-y divide-gray-200 dark:divide-white/10">
+                <div className="card divide-y divide-gray-200 dark:divide-white/10" data-tour="categories-list">
                     {categories.length === 0 ? (
                         <div className="p-6 sm:p-8 text-center">
                             <div className="text-gray-400 dark:text-gray-500 mb-4">
@@ -117,6 +120,11 @@ export default function Index({ categories }) {
                     )}
                 </div>
             </div>
+            <OnboardingTour
+                tourKey="categories"
+                steps={categoriesSteps}
+                requireCompleted={["onboarding"]}
+            />
         </TodoLayout>
     );
 }

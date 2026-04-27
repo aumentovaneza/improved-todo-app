@@ -2,6 +2,8 @@ import AccountForm from "@/Components/Finance/Accounts/AccountForm";
 import AccountsList from "@/Components/Finance/Accounts/AccountsList";
 import Modal from "@/Components/Modal";
 import TodoLayout from "@/Layouts/TodoLayout";
+import OnboardingTour from "@/Components/OnboardingTour";
+import { walletAccountsSteps } from "@/tours";
 import { Head, Link } from "@inertiajs/react";
 import { useCallback, useState } from "react";
 
@@ -95,11 +97,13 @@ export default function Accounts({
                     onSubmit={handleCreate}
                     suggestionsByType={accountSuggestions}
                 />
-                <AccountsList
-                    accounts={accounts}
-                    onEdit={(account) => setActiveAccount(account)}
-                    onDelete={handleDelete}
-                />
+                <div data-tour="accounts-list">
+                    <AccountsList
+                        accounts={accounts}
+                        onEdit={(account) => setActiveAccount(account)}
+                        onDelete={handleDelete}
+                    />
+                </div>
             </div>
 
             <Modal
@@ -125,6 +129,11 @@ export default function Accounts({
                     />
                 </div>
             </Modal>
+            <OnboardingTour
+                tourKey="wallet_accounts"
+                steps={walletAccountsSteps}
+                requireCompleted={["onboarding"]}
+            />
         </TodoLayout>
     );
 }

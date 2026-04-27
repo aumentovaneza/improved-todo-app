@@ -31,6 +31,7 @@ class User extends Authenticatable
         'role',
         'timezone',
         'news_category',
+        'tutorial_progress',
     ];
 
     /**
@@ -53,6 +54,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'tutorial_progress' => 'array',
         ];
     }
 

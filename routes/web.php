@@ -186,6 +186,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::post('/tutorials/{key}', [\App\Http\Controllers\TutorialController::class, 'update'])
+        ->where('key', '[A-Za-z0-9_]+')
+        ->name('tutorials.update');
+    Route::post('/tutorials/{key}/reset', [\App\Http\Controllers\TutorialController::class, 'reset'])
+        ->where('key', '[A-Za-z0-9_]+')
+        ->name('tutorials.reset');
+
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::get('/profile/weviewallet', [ProfileController::class, 'weviewalletManagement'])

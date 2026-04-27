@@ -192,6 +192,7 @@ export default function TransactionForm({
                         Description
                     </label>
                     <input
+                        data-tour="txn-description"
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card dark:text-slate-100 dark:placeholder:text-slate-500"
                         value={form.description}
                         onChange={updateField("description")}
@@ -204,6 +205,7 @@ export default function TransactionForm({
                         Type
                     </label>
                     <select
+                        data-tour="txn-type"
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card dark:text-slate-100 dark:placeholder:text-slate-500"
                         value={form.type}
                         onChange={updateField("type")}
@@ -220,6 +222,7 @@ export default function TransactionForm({
                         Amount
                     </label>
                     <input
+                        data-tour="txn-amount"
                         type="number"
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card dark:text-slate-100 dark:placeholder:text-slate-500"
                         value={form.amount}
@@ -481,6 +484,7 @@ export default function TransactionForm({
             </div>
             <div className="mt-4 flex justify-end">
                 <button
+                    data-tour="txn-submit"
                     type="submit"
                     disabled={isSubmitting}
                     className="rounded-md bg-indigo-600 px-4 py-2 text-sm text-white shadow hover:bg-indigo-500"

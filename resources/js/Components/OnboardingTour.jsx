@@ -1,6 +1,6 @@
 import TourTooltip from "@/Components/TourTooltip";
 import { onboardingSteps } from "@/tours";
-import { router, usePage } from "@inertiajs/react";
+import { usePage } from "@inertiajs/react";
 import { useEffect, useMemo, useState } from "react";
 import Joyride, { ACTIONS, EVENTS, STATUS } from "react-joyride";
 
@@ -84,12 +84,14 @@ export default function OnboardingTour({
     if (!user || isCompleted || isSkipped) return null;
     if (!prerequisitesMet) return null;
 
+    // Fire-and-forget via axios so Inertia's router events (which drive
+    // NavigationLoader) don't trigger on every Next click.
     const persist = (payload) => {
-        router.post(route("tutorials.update", { key: tourKey }), payload, {
-            preserveScroll: true,
-            preserveState: true,
-            only: ["auth"],
-        });
+        window.axios
+            .post(route("tutorials.update", { key: tourKey }), payload)
+            .catch(() => {
+                // Swallow — worst case the tour reappears next time.
+            });
     };
 
     const handleCallback = (data) => {

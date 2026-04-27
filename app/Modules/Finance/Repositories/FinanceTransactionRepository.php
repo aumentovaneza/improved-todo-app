@@ -70,10 +70,12 @@ class FinanceTransactionRepository
     {
         $start = now()->subMonths($monthsBack - 1)->startOfMonth();
 
+        $periodExpr = $this->monthPeriodExpression('occurred_at');
+
         $monthlyTotals = FinanceTransaction::where('user_id', $userId)
             ->where('occurred_at', '>=', $start)
             ->select(
-                DB::raw("DATE_FORMAT(occurred_at, '%Y-%m') as period"),
+                DB::raw("$periodExpr as period"),
                 'type',
                 DB::raw('SUM(amount) as total')
             )
@@ -86,7 +88,7 @@ class FinanceTransactionRepository
             ->where('metadata->transfer_destination', 'external')
             ->where('occurred_at', '>=', $start)
             ->select(
-                DB::raw("DATE_FORMAT(occurred_at, '%Y-%m') as period"),
+                DB::raw("$periodExpr as period"),
                 DB::raw('SUM(amount) as total')
             )
             ->groupBy('period')
@@ -164,5 +166,14 @@ class FinanceTransactionRepository
             ->groupBy('finance_category_id', 'type')
             ->orderByDesc('total')
             ->get();
+    }
+
+    private function monthPeriodExpression(string $column): string
+    {
+        return match (DB::connection()->getDriverName()) {
+            'pgsql' => "TO_CHAR($column, 'YYYY-MM')",
+            'sqlite' => "strftime('%Y-%m', $column)",
+            default => "DATE_FORMAT($column, '%Y-%m')",
+        };
     }
 }

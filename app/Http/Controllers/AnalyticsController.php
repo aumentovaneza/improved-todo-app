@@ -66,10 +66,16 @@ class AnalyticsController extends Controller
             ->pluck('count', 'status');
 
         // Weekly productivity (tasks completed per day of week)
+        // Normalized so 1 = Sunday .. 7 = Saturday on every driver.
+        $dowExpr = match (DB::connection()->getDriverName()) {
+            'pgsql' => 'EXTRACT(DOW FROM updated_at)::int + 1',
+            'sqlite' => "CAST(strftime('%w', updated_at) AS INTEGER) + 1",
+            default => 'DAYOFWEEK(updated_at)',
+        };
         $weeklyProductivity = $user->tasks()
             ->where('status', 'completed')
             ->where('updated_at', '>=', $startDate)
-            ->select(DB::raw('DAYOFWEEK(updated_at) as day_of_week'), DB::raw('COUNT(*) as count'))
+            ->select(DB::raw("$dowExpr as day_of_week"), DB::raw('COUNT(*) as count'))
             ->groupBy('day_of_week')
             ->get()
             ->mapWithKeys(function ($item) {

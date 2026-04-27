@@ -172,14 +172,13 @@ class Task extends Model
 
     public function scopeOrderByDateTime($query)
     {
-        return $query->orderByRaw('
-            CASE 
-                WHEN is_all_day = 1 OR (start_time IS NULL AND end_time IS NULL) THEN CONCAT(DATE(due_date), " 00:00:00")
-                WHEN start_time IS NOT NULL THEN CONCAT(DATE(due_date), " ", TIME(start_time))
-                WHEN end_time IS NOT NULL THEN CONCAT(DATE(due_date), " ", TIME(end_time))
-                ELSE CONCAT(DATE(due_date), " 00:00:00")
-            END ASC
-        ');
+        return $query
+            ->orderBy('due_date', 'asc')
+            ->orderByRaw("CASE
+                WHEN is_all_day OR (start_time IS NULL AND end_time IS NULL) THEN CAST('00:00:00' AS TIME)
+                WHEN start_time IS NOT NULL THEN start_time
+                ELSE end_time
+            END ASC");
     }
 
     /**

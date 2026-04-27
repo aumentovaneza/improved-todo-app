@@ -90,7 +90,7 @@ class AdminController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255',
             'role' => 'required|in:member,admin',
-            'timezone' => 'required|string|timezone',
+            'timezone' => 'nullable|string|timezone',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
 

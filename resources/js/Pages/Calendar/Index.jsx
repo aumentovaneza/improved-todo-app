@@ -309,48 +309,67 @@ export default function Index({
         return tasks[selectedDate] || [];
     };
 
-    // Build the agenda list grouped per day from the server-returned data.
-    // Works for any range (month/week/day) since it derives days from the
-    // returned keys rather than assuming a single month.
-    const buildDateGroups = () => {
-        const dateKeys = Array.from(
-            new Set([
-                ...Object.keys(tasks || {}),
-                ...Object.keys(transactions || {}),
-            ])
-        ).sort();
+    // Enumerate every day in the active range so the list can show empty days
+    // too. Derived from currentDate + effectiveRange to match the server window
+    // (weeks are Sunday-first, matching the grid headers and the controller).
+    const rangeDateStrings = () => {
+        const [year, month, day] = currentDate.split("-").map(Number);
+        const base = new Date(year, month - 1, day);
 
+        if (effectiveRange === "day") {
+            return [toDateStr(base)];
+        }
+
+        let start;
+        let count;
+        if (effectiveRange === "week") {
+            start = new Date(base);
+            start.setDate(start.getDate() - start.getDay()); // back to Sunday
+            count = 7;
+        } else {
+            start = new Date(year, month - 1, 1);
+            count = new Date(year, month, 0).getDate(); // days in month
+        }
+
+        const days = [];
+        const cursor = new Date(start);
+        for (let i = 0; i < count; i++) {
+            days.push(toDateStr(cursor));
+            cursor.setDate(cursor.getDate() + 1);
+        }
+        return days;
+    };
+
+    // Build the agenda list grouped per day. Every day in the range is included
+    // (even with no tasks/transactions) so users can still see and act on it.
+    const buildDateGroups = () => {
         const today = new Date();
         const todayStr = toDateStr(today);
 
-        return dateKeys
-            .map((dateStr) => {
-                const dayTasks = tasks?.[dateStr] || [];
-                const dayTransactions = transactions?.[dateStr] || [];
-                if (dayTasks.length === 0 && dayTransactions.length === 0) {
-                    return null;
-                }
+        return rangeDateStrings().map((dateStr) => {
+            const dayTasks = tasks?.[dateStr] || [];
+            const dayTransactions = transactions?.[dateStr] || [];
 
-                const [year, month, day] = dateStr.split("-").map(Number);
-                const dateObj = new Date(year, month - 1, day);
+            const [year, month, day] = dateStr.split("-").map(Number);
+            const dateObj = new Date(year, month - 1, day);
 
-                return {
-                    dateStr,
-                    date: dateObj,
-                    day,
-                    isToday: dateStr === todayStr,
-                    tasks: dayTasks,
-                    transactions: dayTransactions,
-                    dayName: dateObj.toLocaleDateString("en-US", {
-                        weekday: "long",
-                    }),
-                    formattedDate: dateObj.toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                    }),
-                };
-            })
-            .filter(Boolean);
+            return {
+                dateStr,
+                date: dateObj,
+                day,
+                isToday: dateStr === todayStr,
+                isEmpty: dayTasks.length === 0 && dayTransactions.length === 0,
+                tasks: dayTasks,
+                transactions: dayTransactions,
+                dayName: dateObj.toLocaleDateString("en-US", {
+                    weekday: "long",
+                }),
+                formattedDate: dateObj.toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                }),
+            };
+        });
     };
 
     const dateGroups = buildDateGroups();
@@ -491,6 +510,11 @@ export default function Index({
 
                             {/* Tasks List */}
                             <div className="p-4 space-y-3">
+                                {dateGroup.isEmpty && (
+                                    <p className="text-sm text-gray-400 dark:text-gray-500 italic">
+                                        No items for this day.
+                                    </p>
+                                )}
                                 {visibleTasks.map((task) => (
                                     <div
                                         key={task.id}

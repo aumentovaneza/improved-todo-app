@@ -14,6 +14,7 @@ class Category extends Model
 
     protected $fillable = [
         'user_id',
+        'is_sample',
         'name',
         'color',
         'description',
@@ -22,6 +23,7 @@ class Category extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_sample' => 'boolean',
     ];
 
     public function user(): BelongsTo

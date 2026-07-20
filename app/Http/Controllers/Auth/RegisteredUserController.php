@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\InviteCode;
+use App\Services\SampleDataService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,7 +31,7 @@ class RegisteredUserController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, SampleDataService $sampleData): RedirectResponse
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -82,6 +83,10 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         Auth::login($user);
+
+        // Give the new user a small, clearly-marked starter set so their first
+        // dashboard/calendar/analytics view has something to explore.
+        $sampleData->seedFor($user);
 
         return redirect(route('dashboard', absolute: false));
     }

@@ -1,4 +1,5 @@
 import TourTooltip from "@/Components/TourTooltip";
+import { celebrate } from "@/lib/confetti";
 import { onboardingSteps } from "@/tours";
 import { usePage } from "@inertiajs/react";
 import { useEffect, useMemo, useState } from "react";
@@ -36,6 +37,8 @@ export default function OnboardingTour({
     steps = onboardingSteps,
     requireCompleted = [],
     disableOverlay = false,
+    startSignal = false,
+    celebrateOnFinish = false,
 }) {
     const page = usePage();
     const user = page.props?.auth?.user;
@@ -64,10 +67,15 @@ export default function OnboardingTour({
         Math.min(progress?.step ?? 0, resolvedSteps.length - 1)
     );
 
-    const prerequisitesMet = requireCompleted.every((key) => {
-        const p = allProgress[key];
-        return p?.completed || p?.skipped;
-    });
+    // `startSignal` lets a parent kick the tour off immediately (e.g. right
+    // after the welcome modal's "Take the tour") without waiting for a full
+    // page reload to refresh the persisted prerequisite in the Inertia props.
+    const prerequisitesMet =
+        startSignal ||
+        requireCompleted.every((key) => {
+            const p = allProgress[key];
+            return p?.completed || p?.skipped;
+        });
 
     const [run, setRun] = useState(false);
     const [stepIndex, setStepIndex] = useState(initialStep);
@@ -103,6 +111,8 @@ export default function OnboardingTour({
         if (status === STATUS.FINISHED) {
             setRun(false);
             persist({ completed: true, step: resolvedSteps.length });
+            // Celebrate finishing a welcome walkthrough.
+            if (celebrateOnFinish || tourKey === "onboarding") celebrate();
             return;
         }
         if (status === STATUS.SKIPPED || action === ACTIONS.CLOSE) {

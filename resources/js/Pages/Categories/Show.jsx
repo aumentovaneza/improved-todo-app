@@ -119,7 +119,7 @@ export default function Show({ category }) {
                     </div>
                     <Link
                         href={route("categories.edit", category.id)}
-                        className="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                        className="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-gradient-to-r from-wevie-teal to-wevie-mint border border-transparent text-white text-sm font-medium rounded-xl hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wevie-teal/40 transition-colors duration-200"
                     >
                         <Edit className="mr-2 h-4 w-4" />
                         Edit
@@ -503,7 +503,7 @@ export default function Show({ category }) {
                         </p>
                         <Link
                             href={route("tasks.index")}
-                            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-wevie-teal to-wevie-mint border border-transparent text-white text-sm font-medium rounded-xl hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wevie-teal/40 transition-colors duration-200"
                         >
                             View All Tasks
                         </Link>
@@ -514,7 +514,7 @@ export default function Show({ category }) {
                 <div className="flex flex-col sm:flex-row gap-3">
                     <Link
                         href={route("categories.edit", category.id)}
-                        className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                        className="inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-wevie-teal to-wevie-mint border border-transparent text-white text-sm font-medium rounded-xl hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wevie-teal/40 transition-colors duration-200"
                     >
                         <Edit className="mr-2 h-4 w-4" />
                         Edit Category

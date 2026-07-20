@@ -165,7 +165,7 @@ export default function Edit({ category }) {
                         <div className="flex flex-col sm:flex-row gap-3 pt-4">
                             <button
                                 type="submit"
-                                className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                                className="inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-wevie-teal to-wevie-mint border border-transparent text-white text-sm font-medium rounded-xl hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wevie-teal/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                                 disabled={processing}
                             >
                                 <Save className="mr-2 h-4 w-4" />
@@ -173,7 +173,7 @@ export default function Edit({ category }) {
                             </button>
                             <Link
                                 href={route("categories.index")}
-                                className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
+                                className="inline-flex items-center justify-center px-4 py-2 border border-light-border/70 dark:border-dark-border/70 text-light-secondary dark:text-dark-secondary text-sm font-medium rounded-xl hover:bg-light-hover dark:hover:bg-dark-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wevie-teal/40 transition-colors duration-200"
                             >
                                 Cancel
                             </Link>

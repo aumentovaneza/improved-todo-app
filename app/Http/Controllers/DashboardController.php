@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Task;
+use App\Modules\Finance\Models\FinanceAccount;
 use App\Modules\Finance\Models\FinanceTransaction;
 use App\Services\CategoryService;
 use App\Services\TaskService;
@@ -52,6 +54,17 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        // Getting Started checklist state, computed from real user data. The
+        // frontend combines these booleans with `tutorial_progress` to decide
+        // which onboarding steps are done and whether to show the widget.
+        $gettingStarted = [
+            'hasTask' => ($stats['total_tasks'] ?? 0) > 0,
+            'hasCategory' => $categories->isNotEmpty(),
+            'hasTransaction' => FinanceTransaction::where('user_id', $userId)->exists(),
+            'hasAccount' => FinanceAccount::where('user_id', $userId)->exists(),
+            'hasSampleData' => Task::where('user_id', $userId)->where('is_sample', true)->exists(),
+        ];
+
         return Inertia::render('Dashboard', [
             'currentTasks' => $currentTasks->values()->all(),
             'todayTasks' => $todayTasks->values()->all(),
@@ -61,6 +74,7 @@ class DashboardController extends Controller
             'upcomingPayments' => $upcomingPayments->values()->all(),
             'stats' => $stats,
             'categories' => $categories->values()->all(),
+            'gettingStarted' => $gettingStarted,
         ]);
     }
 }

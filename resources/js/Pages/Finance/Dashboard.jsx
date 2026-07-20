@@ -6,6 +6,8 @@ import Modal from "@/Components/Modal";
 import PrimaryButton from "@/Components/PrimaryButton";
 import TextInput from "@/Components/TextInput";
 import OnboardingTour from "@/Components/OnboardingTour";
+import WelcomeModal from "@/Components/WelcomeModal";
+import { walletWelcomeSlides } from "@/welcomeSlides";
 import { walletDashboardSteps } from "@/tours";
 import TodoLayout from "@/Layouts/TodoLayout";
 import useWalletMutation from "@/Hooks/useWalletMutation";
@@ -27,9 +29,46 @@ const RELOAD_KEYS = [
 ];
 
 export default function Dashboard(props) {
+    // WevieWallet gets its own first-run welcome (separate entity from the app).
+    // Gated behind the main onboarding so the two never overlap.
+    const walletUser = props.auth?.user;
+    const walletTutorial = walletUser?.tutorial_progress ?? {};
+    const onboardingDone =
+        !!walletTutorial.onboarding?.completed ||
+        !!walletTutorial.onboarding?.skipped;
+    const walletWelcome = walletTutorial.wallet_welcome ?? null;
+    const walletWelcomeSeen =
+        !!walletWelcome?.completed || !!walletWelcome?.skipped;
+    const [showWalletWelcome, setShowWalletWelcome] = useState(
+        () => !!walletUser && onboardingDone && !walletWelcomeSeen
+    );
+    const [walletTourSignal, setWalletTourSignal] = useState(false);
+
+    const persistWalletTutorial = (key, payload) => {
+        window.axios
+            .post(route("tutorials.update", { key }), payload)
+            .catch(() => {});
+    };
+
+    const handleWalletWelcomeDismiss = () => {
+        // Skipping the wallet welcome opts out of the wallet dashboard tour too.
+        persistWalletTutorial("wallet_welcome", { skipped: true });
+        persistWalletTutorial("wallet_dashboard", { skipped: true });
+        setShowWalletWelcome(false);
+    };
+
+    const handleWalletWelcomeTakeTour = () => {
+        persistWalletTutorial("wallet_welcome", { completed: true });
+        setShowWalletWelcome(false);
+        setWalletTourSignal(true);
+    };
+
     // Server state lives in Inertia props (rule #2). Partial reloads refresh
     // these in place — no local mirror, no window.location.reload().
-    const transactions = useMemo(() => props.transactions ?? [], [props.transactions]);
+    const transactions = useMemo(
+        () => props.transactions ?? [],
+        [props.transactions]
+    );
     const budgets = props.budgets ?? [];
     const savingsGoals = props.savingsGoals ?? [];
     const loans = props.loans ?? [];
@@ -1191,10 +1230,20 @@ export default function Dashboard(props) {
                     </div>
                 </div>
             </Modal>
+            <WelcomeModal
+                show={showWalletWelcome}
+                slides={walletWelcomeSlides}
+                tourCtaLabel="Tour WevieWallet →"
+                onDismiss={handleWalletWelcomeDismiss}
+                onTakeTour={handleWalletWelcomeTakeTour}
+            />
+
             <OnboardingTour
                 tourKey="wallet_dashboard"
                 steps={walletDashboardSteps}
-                requireCompleted={["onboarding"]}
+                requireCompleted={["onboarding", "wallet_welcome"]}
+                startSignal={walletTourSignal}
+                celebrateOnFinish
             />
         </TodoLayout>
     );

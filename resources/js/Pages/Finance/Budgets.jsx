@@ -8,7 +8,7 @@ import useWalletMutation from "@/Hooks/useWalletMutation";
 import { formatWholeCurrency, formatCurrency } from "@/Utils/currency";
 import { walletBudgetsSteps } from "@/tours";
 import { Head, Link, router } from "@inertiajs/react";
-import { Eye, Lock, Pencil, PiggyBank, Trash2 } from "lucide-react";
+import { Eye, Lock, Pencil, PiggyBank, Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 export default function Budgets({
@@ -20,6 +20,7 @@ export default function Budgets({
     filters = {},
 }) {
     const mutate = useWalletMutation(walletUserId);
+    const [showCreate, setShowCreate] = useState(false);
     const [activeBudget, setActiveBudget] = useState(null);
     const [closingBudget, setClosingBudget] = useState(null);
     const [deletingBudget, setDeletingBudget] = useState(null);
@@ -141,6 +142,14 @@ export default function Budgets({
         },
         [mutate, walletUserId]
     );
+
+    const handleCreateAndClose = async (payload) => {
+        const ok = await handleCreate(payload);
+        if (ok !== false) {
+            setShowCreate(false);
+        }
+        return ok;
+    };
 
     const handleDelete = useCallback(
         async (budget) => {
@@ -284,23 +293,26 @@ export default function Budgets({
                                 Track every budget you have set.
                             </p>
                         </div>
-                        <Link
-                            href={route("weviewallet.dashboard", {
-                                wallet_user_id: walletUserId || undefined,
-                            })}
-                            className="text-sm font-semibold text-wevie-teal hover:text-wevie-teal/80"
-                        >
-                            Back to dashboard
-                        </Link>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <button
+                                type="button"
+                                data-tour="budgets-create"
+                                onClick={() => setShowCreate(true)}
+                                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-wevie-teal to-wevie-mint px-4 py-2 text-sm font-medium text-white shadow-soft hover:opacity-90"
+                            >
+                                <Plus className="h-4 w-4" />
+                                New budget
+                            </button>
+                            <Link
+                                href={route("weviewallet.dashboard", {
+                                    wallet_user_id: walletUserId || undefined,
+                                })}
+                                className="rounded-xl border border-light-border/70 px-3 py-2 text-sm font-semibold text-light-secondary hover:bg-light-hover dark:border-dark-border/70 dark:text-dark-secondary dark:hover:bg-dark-hover"
+                            >
+                                Back to dashboard
+                            </Link>
+                        </div>
                     </div>
-                </div>
-
-                <div data-tour="budgets-create">
-                    <BudgetForm
-                        categories={categories}
-                        accounts={accounts}
-                        onSubmit={handleCreate}
-                    />
                 </div>
 
                 <form onSubmit={handleFilterSubmit} className="card p-4" data-tour="budgets-filters">
@@ -526,7 +538,7 @@ export default function Budgets({
                                             <EmptyState
                                                 icon={PiggyBank}
                                                 title="No budgets yet"
-                                                description="No budgets match your filters. Create one above to start tracking your spending."
+                                                description="No budgets match your filters. Use the New budget button to start tracking your spending."
                                             />
                                         </td>
                                     </tr>
@@ -572,6 +584,25 @@ export default function Budgets({
                     )}
                 </div>
             </div>
+
+            <Modal
+                show={showCreate}
+                onClose={() => setShowCreate(false)}
+                maxWidth="lg"
+            >
+                <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
+                    <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
+                        Add budget
+                    </h3>
+                </div>
+                <div className="px-6 py-4">
+                    <BudgetForm
+                        categories={categories}
+                        accounts={accounts}
+                        onSubmit={handleCreateAndClose}
+                    />
+                </div>
+            </Modal>
 
             <Modal
                 show={Boolean(activeBudget)}

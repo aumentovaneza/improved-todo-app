@@ -19,6 +19,7 @@ const maskAccountNumber = (value) => {
 export default function AccountsList({ accounts = [], onEdit, onDelete }) {
     const groupedAccounts = useMemo(() => {
         const groups = {
+            cash: [],
             bank: [],
             "e-wallet": [],
             "credit-card": [],
@@ -37,13 +38,14 @@ export default function AccountsList({ accounts = [], onEdit, onDelete }) {
     }, [accounts]);
 
     const groupLabels = {
+        cash: "Cash",
         bank: "Bank accounts",
         "e-wallet": "E-wallets",
         "credit-card": "Credit cards",
         other: "Other accounts",
     };
 
-    const groupOrder = ["bank", "e-wallet", "credit-card", "other"];
+    const groupOrder = ["cash", "bank", "e-wallet", "credit-card", "other"];
 
     return (
         <div className="card p-4">
@@ -74,9 +76,16 @@ export default function AccountsList({ accounts = [], onEdit, onDelete }) {
                                 >
                                     <div className="flex flex-wrap items-center justify-between gap-3">
                                         <div>
-                                            <p className="font-medium text-light-primary dark:text-dark-primary">
-                                                {account.label || account.name}
-                                            </p>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <p className="font-medium text-light-primary dark:text-dark-primary">
+                                                    {account.label || account.name}
+                                                </p>
+                                                {account.is_default && (
+                                                    <span className="inline-flex items-center rounded-full bg-wevie-teal/10 px-2 py-0.5 text-xs font-medium text-wevie-teal">
+                                                        Default
+                                                    </span>
+                                                )}
+                                            </div>
                                             {account.label && (
                                                 <p className="text-xs text-light-muted dark:text-dark-muted">
                                                     {account.name}
@@ -166,15 +175,17 @@ export default function AccountsList({ accounts = [], onEdit, onDelete }) {
                                                 <Pencil className="h-4 w-4" />
                                             </button>
                                         )}
-                                        <button
-                                            type="button"
-                                            onClick={() => onDelete?.(account)}
-                                            className="rounded-md p-1 text-rose-600 hover:text-rose-700 dark:text-rose-300"
-                                            title="Delete"
-                                            aria-label="Delete"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </button>
+                                        {!account.is_default && (
+                                            <button
+                                                type="button"
+                                                onClick={() => onDelete?.(account)}
+                                                className="rounded-md p-1 text-rose-600 hover:text-rose-700 dark:text-rose-300"
+                                                title="Delete"
+                                                aria-label="Delete"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             ))}

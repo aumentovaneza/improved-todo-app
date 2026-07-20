@@ -9,17 +9,17 @@ export const walletWelcomeSlides = [
     {
         icon: Wallet,
         title: "Meet WevieWallet 💰",
-        body: "Your money, right next to your tasks. Track income, spending, savings, budgets, and loans — no separate app, no spreadsheets.",
+        body: "Your money, right next to your tasks. Track income, spending, savings, budgets, and loans — no separate app, no spreadsheets. It works just as fully on your phone as on desktop.",
     },
     {
         icon: PiggyBank,
         title: "Know where it goes",
-        body: "Every transaction rolls up into clear summaries and charts, so you can see income vs. expenses and spot trends at a glance.",
+        body: "See your net worth and every number at a glance, then switch the time range — this month, last month, or year to date — and the summary and charts update instantly.",
     },
     {
         icon: Target,
         title: "Plan ahead with confidence",
-        body: "Set budgets and savings goals, track loans you owe or are owed, and stay ahead of recurring bills before they hit.",
+        body: "Set budgets and savings goals, track loans you owe or are owed, and stay ahead of recurring bills before they hit. Reach each one from the WevieWallet menu in the sidebar.",
     },
     {
         icon: Users,

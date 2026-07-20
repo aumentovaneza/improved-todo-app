@@ -8,7 +8,7 @@ import useWalletMutation from "@/Hooks/useWalletMutation";
 import { formatWholeCurrency, formatCurrency } from "@/Utils/currency";
 import { walletLoansSteps } from "@/tours";
 import { Head, Link, router } from "@inertiajs/react";
-import { Eye, Landmark, Pencil, Trash2 } from "lucide-react";
+import { Eye, Landmark, Pencil, Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 const formatDate = (value) =>
@@ -16,6 +16,7 @@ const formatDate = (value) =>
 
 export default function Loans({ loans = [], walletUserId, filters = {} }) {
     const mutate = useWalletMutation(walletUserId);
+    const [showCreate, setShowCreate] = useState(false);
     const [activeLoan, setActiveLoan] = useState(null);
     const [search, setSearch] = useState(filters.search ?? "");
     const [status, setStatus] = useState(filters.status ?? "all");
@@ -117,6 +118,14 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
         [mutate, walletUserId]
     );
 
+    const handleCreateAndClose = async (payload) => {
+        const ok = await handleCreate(payload);
+        if (ok !== false) {
+            setShowCreate(false);
+        }
+        return ok;
+    };
+
     const handleEdit = useCallback(
         async (formData) => {
             if (!formData?.id) {
@@ -178,20 +187,28 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
                                 Track every loan you are paying off.
                             </p>
                         </div>
-                        <Link
-                            href={route("weviewallet.dashboard", {
-                                wallet_user_id: walletUserId || undefined,
-                            })}
-                            className="text-sm font-semibold text-wevie-teal hover:text-wevie-teal/80"
-                        >
-                            Back to dashboard
-                        </Link>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <button
+                                type="button"
+                                data-tour="loans-create"
+                                onClick={() => setShowCreate(true)}
+                                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-wevie-teal to-wevie-mint px-4 py-2 text-sm font-medium text-white shadow-soft hover:opacity-90"
+                            >
+                                <Plus className="h-4 w-4" />
+                                New loan
+                            </button>
+                            <Link
+                                href={route("weviewallet.dashboard", {
+                                    wallet_user_id: walletUserId || undefined,
+                                })}
+                                className="rounded-xl border border-light-border/70 px-3 py-2 text-sm font-semibold text-light-secondary hover:bg-light-hover dark:border-dark-border/70 dark:text-dark-secondary dark:hover:bg-dark-hover"
+                            >
+                                Back to dashboard
+                            </Link>
+                        </div>
                     </div>
                 </div>
 
-                <div data-tour="loans-create">
-                    <LoanForm onSubmit={handleCreate} />
-                </div>
                 <form onSubmit={handleFilterSubmit} className="card p-4" data-tour="loans-filters">
                     <div className="grid gap-3 sm:grid-cols-2">
                         <div>
@@ -389,7 +406,7 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
                                             <EmptyState
                                                 icon={Landmark}
                                                 title="No loans yet"
-                                                description="No loans match your filters. Add a loan above to start tracking what you owe."
+                                                description="No loans match your filters. Use the New loan button to start tracking what you owe."
                                             />
                                         </td>
                                     </tr>
@@ -435,6 +452,21 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
                     </div>
                 )}
             </div>
+
+            <Modal
+                show={showCreate}
+                onClose={() => setShowCreate(false)}
+                maxWidth="lg"
+            >
+                <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
+                    <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
+                        Add loan
+                    </h3>
+                </div>
+                <div className="px-6 py-4">
+                    <LoanForm onSubmit={handleCreateAndClose} />
+                </div>
+            </Modal>
 
             <Modal
                 show={Boolean(activeLoan)}

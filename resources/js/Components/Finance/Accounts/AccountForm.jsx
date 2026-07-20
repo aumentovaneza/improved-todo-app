@@ -58,31 +58,32 @@ export default function AccountForm({
         <form onSubmit={handleSubmit} className="card p-4">
             <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                    <label className="text-sm text-light-secondary dark:text-dark-secondary">
                         Account label
                     </label>
                     <input
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                        className="mt-1 w-full rounded-xl border border-light-border/70 px-3 py-2 text-sm focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card"
                         value={form.label}
                         onChange={updateField("label")}
                         placeholder="Salary account, Daily wallet"
                     />
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                    <label className="text-sm text-light-secondary dark:text-dark-secondary">
                         Type
                     </label>
                     <div className="relative mt-1">
                         <select
-                            className="w-full appearance-none rounded-md border border-slate-300 bg-white px-3 py-2 pr-10 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                            className="w-full appearance-none rounded-xl border border-light-border/70 bg-white px-3 py-2 pr-10 text-sm focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card"
                             value={form.type}
                             onChange={updateField("type")}
                         >
+                            <option value="cash">Cash</option>
                             <option value="bank">Bank</option>
                             <option value="e-wallet">E-wallet</option>
                             <option value="credit-card">Credit card</option>
                         </select>
-                        <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">
+                        <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-light-muted dark:text-dark-muted">
                             <svg
                                 width="16"
                                 height="16"
@@ -94,64 +95,84 @@ export default function AccountForm({
                         </span>
                     </div>
                 </div>
-                <div>
-                    <label className="text-sm text-slate-500 dark:text-slate-400">
-                        Institution
-                    </label>
-                    <div className="relative mt-1">
-                        <select
-                            className="w-full appearance-none rounded-md border border-slate-300 bg-white px-3 py-2 pr-10 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                {form.type === "cash" ? (
+                    <div>
+                        <label className="text-sm text-light-secondary dark:text-dark-secondary">
+                            Account name
+                        </label>
+                        <input
+                            className="mt-1 w-full rounded-xl border border-light-border/70 px-3 py-2 text-sm focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card"
                             value={form.name}
                             onChange={updateField("name")}
+                            placeholder="Cash on hand"
                             required
-                        >
-                            <option value="">Select an institution</option>
-                            {accountSuggestions.map((name) => (
-                                <option key={name} value={name}>
-                                    {name}
-                                </option>
-                            ))}
-                        </select>
-                        <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">
-                            <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                            >
-                                <path d="M5.25 7.5L10 12.25L14.75 7.5H5.25Z" />
-                            </svg>
-                        </span>
+                        />
+                        <p className="mt-1 text-xs text-light-muted dark:text-dark-muted">
+                            Physical cash — no institution needed.
+                        </p>
                     </div>
-                    <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-                        Philippine institutions are suggested for now.
-                    </p>
-                </div>
-                <div>
-                    <label className="text-sm text-slate-500 dark:text-slate-400">
-                        {form.type === "credit-card"
-                            ? "Card number"
-                            : "Account number"}
-                    </label>
-                    <input
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
-                        value={form.account_number}
-                        onChange={updateField("account_number")}
-                        placeholder={
-                            form.type === "credit-card"
+                ) : (
+                    <div>
+                        <label className="text-sm text-light-secondary dark:text-dark-secondary">
+                            Institution
+                        </label>
+                        <div className="relative mt-1">
+                            <select
+                                className="w-full appearance-none rounded-xl border border-light-border/70 bg-white px-3 py-2 pr-10 text-sm focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card"
+                                value={form.name}
+                                onChange={updateField("name")}
+                                required
+                            >
+                                <option value="">Select an institution</option>
+                                {accountSuggestions.map((name) => (
+                                    <option key={name} value={name}>
+                                        {name}
+                                    </option>
+                                ))}
+                            </select>
+                            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-light-muted dark:text-dark-muted">
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
+                                >
+                                    <path d="M5.25 7.5L10 12.25L14.75 7.5H5.25Z" />
+                                </svg>
+                            </span>
+                        </div>
+                        <p className="mt-1 text-xs text-light-muted dark:text-dark-muted">
+                            Philippine institutions are suggested for now.
+                        </p>
+                    </div>
+                )}
+                {form.type !== "cash" && (
+                    <div>
+                        <label className="text-sm text-light-secondary dark:text-dark-secondary">
+                            {form.type === "credit-card"
                                 ? "Card number"
-                                : "Account number"
-                        }
-                    />
-                </div>
+                                : "Account number"}
+                        </label>
+                        <input
+                            className="mt-1 w-full rounded-xl border border-light-border/70 px-3 py-2 text-sm focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card"
+                            value={form.account_number}
+                            onChange={updateField("account_number")}
+                            placeholder={
+                                form.type === "credit-card"
+                                    ? "Card number"
+                                    : "Account number"
+                            }
+                        />
+                    </div>
+                )}
                 {form.type !== "credit-card" && (
                     <div>
-                        <label className="text-sm text-slate-500 dark:text-slate-400">
+                        <label className="text-sm text-light-secondary dark:text-dark-secondary">
                             Starting balance
                         </label>
                         <input
                             type="number"
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                            className="mt-1 w-full rounded-xl border border-light-border/70 px-3 py-2 text-sm focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card"
                             value={form.starting_balance}
                             onChange={updateField("starting_balance")}
                             min="0"
@@ -163,12 +184,12 @@ export default function AccountForm({
                 {form.type === "credit-card" && (
                     <>
                         <div>
-                            <label className="text-sm text-slate-500 dark:text-slate-400">
+                            <label className="text-sm text-light-secondary dark:text-dark-secondary">
                                 Credit limit
                             </label>
                             <input
                                 type="number"
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                                className="mt-1 w-full rounded-xl border border-light-border/70 px-3 py-2 text-sm focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card"
                                 value={form.credit_limit}
                                 onChange={updateField("credit_limit")}
                                 min="0"
@@ -177,41 +198,41 @@ export default function AccountForm({
                             />
                         </div>
                         <div>
-                            <label className="text-sm text-slate-500 dark:text-slate-400">
+                            <label className="text-sm text-light-secondary dark:text-dark-secondary">
                                 Used credit
                             </label>
                             <input
                                 type="number"
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                                className="mt-1 w-full rounded-xl border border-light-border/70 px-3 py-2 text-sm focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card"
                                 value={form.used_credit}
                                 onChange={updateField("used_credit")}
                                 min="0"
                                 step="0.01"
                                 placeholder="0.00"
                             />
-                            <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                            <p className="mt-1 text-xs text-light-muted dark:text-dark-muted">
                                 Set to 0 after paying the card in full.
                             </p>
                         </div>
                     </>
                 )}
                 <div>
-                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                    <label className="text-sm text-light-secondary dark:text-dark-secondary">
                         Currency
                     </label>
                     <input
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                        className="mt-1 w-full rounded-xl border border-light-border/70 px-3 py-2 text-sm focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card"
                         value={form.currency}
                         onChange={updateField("currency")}
                         placeholder="PHP"
                     />
                 </div>
                 <div className="sm:col-span-2">
-                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                    <label className="text-sm text-light-secondary dark:text-dark-secondary">
                         Notes
                     </label>
                     <textarea
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                        className="mt-1 w-full rounded-xl border border-light-border/70 px-3 py-2 text-sm focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card"
                         rows={2}
                         value={form.notes}
                         onChange={updateField("notes")}
@@ -222,13 +243,13 @@ export default function AccountForm({
                     <input
                         id="account_is_active"
                         type="checkbox"
-                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                        className="rounded border-light-border/70 text-wevie-teal shadow-sm focus:ring-wevie-teal/40 dark:border-dark-border/70 dark:bg-dark-card"
                         checked={form.is_active}
                         onChange={updateField("is_active")}
                     />
                     <label
                         htmlFor="account_is_active"
-                        className="text-sm text-slate-500 dark:text-slate-400"
+                        className="text-sm text-light-secondary dark:text-dark-secondary"
                     >
                         Active account
                     </label>
@@ -238,7 +259,7 @@ export default function AccountForm({
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="rounded-md bg-indigo-600 px-4 py-2 text-sm text-white shadow hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-wevie-teal to-wevie-mint px-4 py-2 text-sm font-medium text-white shadow-soft hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                     {isSubmitting ? "Saving..." : submitLabel}
                 </button>

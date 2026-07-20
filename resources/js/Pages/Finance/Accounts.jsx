@@ -6,6 +6,7 @@ import OnboardingTour from "@/Components/OnboardingTour";
 import useWalletMutation from "@/Hooks/useWalletMutation";
 import { walletAccountsSteps } from "@/tours";
 import { Head, Link } from "@inertiajs/react";
+import { Plus } from "lucide-react";
 import { useCallback, useState } from "react";
 
 export default function Accounts({
@@ -14,6 +15,7 @@ export default function Accounts({
     walletUserId,
 }) {
     const mutate = useWalletMutation(walletUserId);
+    const [showCreate, setShowCreate] = useState(false);
     const [activeAccount, setActiveAccount] = useState(null);
 
     const buildPayload = (formData) => ({
@@ -44,6 +46,14 @@ export default function Accounts({
         },
         [mutate, walletUserId]
     );
+
+    const handleCreateAndClose = async (payload) => {
+        const ok = await handleCreate(payload);
+        if (ok !== false) {
+            setShowCreate(false);
+        }
+        return ok;
+    };
 
     const handleDelete = useCallback(
         async (account) => {
@@ -93,21 +103,28 @@ export default function Accounts({
                                 Add bank accounts and e-wallets to track balances.
                             </p>
                         </div>
-                        <Link
-                            href={route("weviewallet.dashboard", {
-                                wallet_user_id: walletUserId || undefined,
-                            })}
-                            className="text-sm font-semibold text-wevie-teal hover:text-wevie-teal/80"
-                        >
-                            Back to dashboard
-                        </Link>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <button
+                                type="button"
+                                data-tour="accounts-create"
+                                onClick={() => setShowCreate(true)}
+                                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-wevie-teal to-wevie-mint px-4 py-2 text-sm font-medium text-white shadow-soft hover:opacity-90"
+                            >
+                                <Plus className="h-4 w-4" />
+                                New account
+                            </button>
+                            <Link
+                                href={route("weviewallet.dashboard", {
+                                    wallet_user_id: walletUserId || undefined,
+                                })}
+                                className="rounded-xl border border-light-border/70 px-3 py-2 text-sm font-semibold text-light-secondary hover:bg-light-hover dark:border-dark-border/70 dark:text-dark-secondary dark:hover:bg-dark-hover"
+                            >
+                                Back to dashboard
+                            </Link>
+                        </div>
                     </div>
                 </div>
 
-                <AccountForm
-                    onSubmit={handleCreate}
-                    suggestionsByType={accountSuggestions}
-                />
                 <div data-tour="accounts-list">
                     <AccountsList
                         accounts={accounts}
@@ -116,6 +133,24 @@ export default function Accounts({
                     />
                 </div>
             </div>
+
+            <Modal
+                show={showCreate}
+                onClose={() => setShowCreate(false)}
+                maxWidth="lg"
+            >
+                <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
+                    <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
+                        Add account
+                    </h3>
+                </div>
+                <div className="px-6 py-4">
+                    <AccountForm
+                        onSubmit={handleCreateAndClose}
+                        suggestionsByType={accountSuggestions}
+                    />
+                </div>
+            </Modal>
 
             <Modal
                 show={Boolean(activeAccount)}

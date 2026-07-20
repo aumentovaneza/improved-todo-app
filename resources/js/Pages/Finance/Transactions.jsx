@@ -1,4 +1,5 @@
 import TodoLayout from "@/Layouts/TodoLayout";
+import Modal from "@/Components/Modal";
 import OnboardingTour from "@/Components/OnboardingTour";
 import TransactionForm from "@/Components/Finance/Transactions/TransactionForm";
 import Badge from "@/Components/Finance/UI/Badge";
@@ -8,7 +9,7 @@ import { formatCurrency } from "@/Utils/currency";
 import { TRANSACTION_LABEL, TRANSACTION_TONE } from "@/Utils/finance";
 import { walletTransactionsSteps } from "@/tours";
 import { Head, router } from "@inertiajs/react";
-import { Receipt } from "lucide-react";
+import { Plus, Receipt } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const formatDateLabel = (dateKey) => {
@@ -50,6 +51,7 @@ export default function Transactions({
     accounts = [],
 }) {
     const mutate = useWalletMutation(walletUserId);
+    const [showCreate, setShowCreate] = useState(false);
     const [search, setSearch] = useState(filters.search ?? "");
     const [type, setType] = useState(filters.type ?? "");
     const [startDate, setStartDate] = useState(filters.start_date ?? "");
@@ -225,6 +227,14 @@ export default function Transactions({
         [mutate, walletUserId]
     );
 
+    const handleCreateAndClose = async (payload) => {
+        const ok = await handleCreateTransaction(payload);
+        if (ok !== false) {
+            setShowCreate(false);
+        }
+        return ok;
+    };
+
     return (
         <TodoLayout header="All Transactions">
             <Head title="All Transactions" />
@@ -239,17 +249,32 @@ export default function Transactions({
                                 Search, filter, and sort by date, type, or tags.
                             </p>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() =>
-                                router.get(route("weviewallet.dashboard"), {
-                                    wallet_user_id: walletUserId || undefined,
-                                })
-                            }
-                            className="rounded-xl border border-light-border/70 px-3 py-2 text-sm font-semibold text-light-secondary hover:bg-light-hover dark:border-dark-border/70 dark:text-dark-secondary dark:hover:bg-dark-hover"
-                        >
-                            Back to dashboard
-                        </button>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <button
+                                type="button"
+                                data-tour="transactions-form"
+                                onClick={() => setShowCreate(true)}
+                                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-wevie-teal to-wevie-mint px-4 py-2 text-sm font-medium text-white shadow-soft hover:opacity-90"
+                            >
+                                <Plus className="h-4 w-4" />
+                                New transaction
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    router.get(
+                                        route("weviewallet.dashboard"),
+                                        {
+                                            wallet_user_id:
+                                                walletUserId || undefined,
+                                        }
+                                    )
+                                }
+                                className="rounded-xl border border-light-border/70 px-3 py-2 text-sm font-semibold text-light-secondary hover:bg-light-hover dark:border-dark-border/70 dark:text-dark-secondary dark:hover:bg-dark-hover"
+                            >
+                                Back to dashboard
+                            </button>
+                        </div>
                     </div>
                     {type && (
                         <div className="mt-3 rounded-lg border border-light-border/70 bg-light-hover px-3 py-2 text-sm text-light-secondary dark:border-dark-border/70 dark:bg-dark-card/70 dark:text-dark-secondary">
@@ -366,35 +391,11 @@ export default function Transactions({
                     </form>
                 </div>
 
-                <div className="space-y-3" data-tour="transactions-form">
-                    <div className="card p-4">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div>
-                                <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
-                                    Add transaction
-                                </h3>
-                                <p className="text-sm text-light-muted dark:text-dark-muted">
-                                    Log income, expenses, transfers, and more.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <TransactionForm
-                        onSubmit={handleCreateTransaction}
-                        categories={categories}
-                        savingsGoals={savingsGoals}
-                        loans={loans}
-                        budgets={budgets}
-                        accounts={accounts}
-                        submitLabel="Add transaction"
-                    />
-                </div>
-
                 {loadedTransactions.length === 0 ? (
                     <EmptyState
                         icon={Receipt}
                         title="No transactions yet"
-                        description="No transactions match the current filters. Add one above or adjust your filters to see more."
+                        description="No transactions match the current filters. Use the New transaction button or adjust your filters to see more."
                     />
                 ) : (
                     <div className="space-y-6">
@@ -585,6 +586,29 @@ export default function Transactions({
                     </div>
                 )}
             </div>
+
+            <Modal
+                show={showCreate}
+                onClose={() => setShowCreate(false)}
+                maxWidth="2xl"
+            >
+                <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
+                    <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
+                        Add transaction
+                    </h3>
+                </div>
+                <div className="px-6 py-4">
+                    <TransactionForm
+                        onSubmit={handleCreateAndClose}
+                        categories={categories}
+                        savingsGoals={savingsGoals}
+                        loans={loans}
+                        budgets={budgets}
+                        accounts={accounts}
+                        submitLabel="Add transaction"
+                    />
+                </div>
+            </Modal>
             <OnboardingTour
                 tourKey="wallet_transactions"
                 steps={walletTransactionsSteps}

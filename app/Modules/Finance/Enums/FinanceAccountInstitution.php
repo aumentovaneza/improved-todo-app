@@ -73,6 +73,7 @@ enum FinanceAccountInstitution: string
             'bank' => [],
             'e-wallet' => [],
             'credit-card' => [],
+            'cash' => [],
         ];
 
         foreach (self::cases() as $case) {

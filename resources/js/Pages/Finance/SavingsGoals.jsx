@@ -8,7 +8,7 @@ import useWalletMutation from "@/Hooks/useWalletMutation";
 import { formatWholeCurrency, formatCurrency } from "@/Utils/currency";
 import { walletSavingsGoalsSteps } from "@/tours";
 import { Head, Link, router } from "@inertiajs/react";
-import { Eye, Pencil, Repeat2, Target, Trash2 } from "lucide-react";
+import { Eye, Pencil, Plus, Repeat2, Target, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 const formatDate = (value) =>
@@ -28,6 +28,7 @@ export default function SavingsGoals({
     filters = {},
 }) {
     const mutate = useWalletMutation(walletUserId);
+    const [showCreate, setShowCreate] = useState(false);
     const [activeGoal, setActiveGoal] = useState(null);
     const [search, setSearch] = useState(filters.search ?? "");
     const [status, setStatus] = useState(filters.status ?? "all");
@@ -127,6 +128,14 @@ export default function SavingsGoals({
         [mutate, walletUserId]
     );
 
+    const handleCreateAndClose = async (payload) => {
+        const ok = await handleCreate(payload);
+        if (ok !== false) {
+            setShowCreate(false);
+        }
+        return ok;
+    };
+
     const handleDelete = useCallback(
         async (goal) => {
             await mutate({
@@ -200,23 +209,28 @@ export default function SavingsGoals({
                                 Track all of your savings goals in one place.
                             </p>
                         </div>
-                        <Link
-                            href={route("weviewallet.dashboard", {
-                                wallet_user_id: walletUserId || undefined,
-                            })}
-                            className="text-sm font-semibold text-wevie-teal hover:text-wevie-teal/80"
-                        >
-                            Back to dashboard
-                        </Link>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <button
+                                type="button"
+                                data-tour="goals-create"
+                                onClick={() => setShowCreate(true)}
+                                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-wevie-teal to-wevie-mint px-4 py-2 text-sm font-medium text-white shadow-soft hover:opacity-90"
+                            >
+                                <Plus className="h-4 w-4" />
+                                New savings goal
+                            </button>
+                            <Link
+                                href={route("weviewallet.dashboard", {
+                                    wallet_user_id: walletUserId || undefined,
+                                })}
+                                className="rounded-xl border border-light-border/70 px-3 py-2 text-sm font-semibold text-light-secondary hover:bg-light-hover dark:border-dark-border/70 dark:text-dark-secondary dark:hover:bg-dark-hover"
+                            >
+                                Back to dashboard
+                            </Link>
+                        </div>
                     </div>
                 </div>
 
-                <div data-tour="goals-create">
-                    <SavingsGoalForm
-                        accounts={accounts}
-                        onSubmit={handleCreate}
-                    />
-                </div>
                 <form onSubmit={handleFilterSubmit} className="card p-4" data-tour="goals-filters">
                     <div className="grid gap-3 sm:grid-cols-2">
                         <div>
@@ -436,7 +450,7 @@ export default function SavingsGoals({
                                             <EmptyState
                                                 icon={Target}
                                                 title="No savings goals yet"
-                                                description="No savings goals match your filters. Create one above to start saving toward something."
+                                                description="No savings goals match your filters. Use the New savings goal button to start saving toward something."
                                             />
                                         </td>
                                     </tr>
@@ -482,6 +496,24 @@ export default function SavingsGoals({
                     </div>
                 )}
             </div>
+
+            <Modal
+                show={showCreate}
+                onClose={() => setShowCreate(false)}
+                maxWidth="lg"
+            >
+                <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
+                    <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
+                        Add savings goal
+                    </h3>
+                </div>
+                <div className="px-6 py-4">
+                    <SavingsGoalForm
+                        accounts={accounts}
+                        onSubmit={handleCreateAndClose}
+                    />
+                </div>
+            </Modal>
 
             <Modal
                 show={Boolean(activeGoal)}

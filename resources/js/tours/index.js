@@ -120,7 +120,17 @@ export const walletDashboardSteps = [
         emoji: "🔀",
         title: "Switch wallets",
         content:
-            "Collaborating on a shared wallet? Flip between your own and shared wallets here — the whole dashboard updates instantly.",
+            "Collaborating on a shared wallet? Flip between your own and shared wallets here — the whole dashboard updates instantly, no page reload.",
+        placement: "bottom",
+    },
+    {
+        target: '[data-tour="wallet-range"]',
+        mobileTarget: "body",
+        mobilePlacement: "center",
+        emoji: "🗓️",
+        title: "Pick your time range",
+        content:
+            "This month, last month, the last 3 months, or year to date — your summary and charts update to match whatever window you choose.",
         placement: "bottom",
     },
     {
@@ -130,7 +140,7 @@ export const walletDashboardSteps = [
         emoji: "📊",
         title: "Your numbers, up top",
         content:
-            "Income, expenses, savings, and net cash flow for the selected period — all in one row. Click any card to dig into the details.",
+            "Net worth, income, spending, savings, and more — all in one row. Tap any card with an arrow to drill into the details.",
         placement: "bottom",
     },
     {
@@ -140,7 +150,7 @@ export const walletDashboardSteps = [
         emoji: "📈",
         title: "See where it goes",
         content:
-            "Charts break your money down by income vs. expense and by category, so trends jump out at a glance.",
+            "Income vs. expense and a by-category breakdown make trends jump out. Hover any bar or slice for the exact amount.",
         placement: "top",
     },
     {
@@ -150,7 +160,7 @@ export const walletDashboardSteps = [
         emoji: "⚡",
         title: "Add things right here",
         content:
-            "Log a transaction or set up a budget, savings goal, or loan without leaving the dashboard. That's it — enjoy WevieWallet!",
+            "Log a transaction or set up a budget, savings goal, or loan without leaving the dashboard — updates appear instantly. Find the full Transactions, Budgets, Loans, and Accounts pages in the WevieWallet menu in the sidebar. Enjoy!",
         placement: "bottom",
     },
 ];

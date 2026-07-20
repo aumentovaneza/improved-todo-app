@@ -34,6 +34,7 @@ import {
     Target,
     CreditCard,
     BookOpen,
+    Tags,
 } from "lucide-react";
 
 export default function TodoLayout({ header, children }) {
@@ -369,15 +370,21 @@ export default function TodoLayout({ header, children }) {
                                                                 </button>
                                                                 <Link
                                                                     href={route(
-                                                                        "profile.weviewallet"
+                                                                        "profile.finance-categories"
                                                                     )}
                                                                     onClick={() =>
                                                                         setSidebarOpen(false)
                                                                     }
-                                                                    className="flex items-center px-3 py-2 text-sm text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary rounded-md transition-colors duration-150"
+                                                                    className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150 ${
+                                                                        route().current(
+                                                                            "profile.finance-categories"
+                                                                        )
+                                                                            ? "bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-[#2ED7A1]"
+                                                                            : "text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary"
+                                                                    }`}
                                                                 >
-                                                                    <Landmark className="h-4 w-4 mr-2" />
-                                                                    WevieWallet Management
+                                                                    <Tags className="h-4 w-4 mr-2" />
+                                                                    Categories
                                                                 </Link>
                                                             </div>
                                                         )}
@@ -609,11 +616,17 @@ export default function TodoLayout({ header, children }) {
                                                         Collaborators
                                                     </button>
                                                     <Link
-                                                        href={route("profile.weviewallet")}
-                                                        className="flex items-center px-3 py-2 text-sm text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary rounded-md transition-colors duration-150"
+                                                        href={route("profile.finance-categories")}
+                                                        className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150 ${
+                                                            route().current(
+                                                                "profile.finance-categories"
+                                                            )
+                                                                ? "bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-primary-300"
+                                                                : "text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary"
+                                                        }`}
                                                     >
-                                                        <Landmark className="h-4 w-4 mr-2" />
-                                                        WevieWallet Management
+                                                        <Tags className="h-4 w-4 mr-2" />
+                                                        Categories
                                                     </Link>
                                                 </div>
                                             )}

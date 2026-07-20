@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
-use App\Modules\Finance\Enums\FinanceAccountInstitution;
 use App\Modules\Finance\Models\FinanceCategory;
-use App\Modules\Finance\Repositories\FinanceAccountRepository;
 use App\Modules\Finance\Services\FinanceWalletService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
@@ -18,8 +16,7 @@ use Inertia\Response;
 class ProfileController extends Controller
 {
     public function __construct(
-        private FinanceWalletService $walletService,
-        private FinanceAccountRepository $accountRepository
+        private FinanceWalletService $walletService
     ) {}
 
     /**
@@ -54,28 +51,6 @@ class ProfileController extends Controller
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
-        ]);
-    }
-
-    /**
-     * Display WevieWallet management page.
-     */
-    public function weviewalletManagement(Request $request): Response
-    {
-        $userId = $request->user()->id;
-        $accounts = $this->accountRepository->getForUser($userId);
-        // name is encrypted at rest; keep the plaintext `type` ordering in SQL
-        // and resolve the name tiebreak in PHP against decrypted values.
-        $categories = FinanceCategory::where('user_id', $userId)
-            ->get()
-            ->sort(fn ($a, $b) => [$a->type, mb_strtolower(trim((string) $a->name))]
-                <=> [$b->type, mb_strtolower(trim((string) $b->name))])
-            ->values();
-
-        return Inertia::render('Profile/WevieWalletManagement', [
-            'accounts' => $accounts->values()->all(),
-            'categories' => $categories->values()->all(),
-            'accountSuggestions' => FinanceAccountInstitution::suggestionsByType(),
         ]);
     }
 

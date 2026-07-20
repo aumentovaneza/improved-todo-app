@@ -197,31 +197,6 @@ export const walletTransactionsSteps = [
     },
 ];
 
-export const walletManagementSteps = [
-    {
-        target: "body",
-        placement: "center",
-        title: "WevieWallet management",
-        content:
-            "Manage the building blocks of your wallet — Accounts and Categories — in one place.",
-        disableBeacon: true,
-    },
-    {
-        target: '[data-tour="management-tabs"]',
-        title: "Two tabs",
-        content:
-            "Switch between Accounts (banks, e-wallets, credit cards) and Categories (income/expense buckets).",
-        placement: "bottom",
-    },
-    {
-        target: '[data-tour="management-content"]',
-        title: "Add or edit",
-        content:
-            "Create new entries, edit existing ones, or remove items you no longer need from this section.",
-        placement: "top",
-    },
-];
-
 export const tasksSteps = [
     {
         target: "body",

@@ -1,5 +1,5 @@
 import { Link } from "@inertiajs/react";
-import { CheckSquare, Home, User, Wallet } from "lucide-react";
+import { BookOpen, CheckSquare, Home, User, Wallet } from "lucide-react";
 
 export default function MobileTabBar() {
     const tabs = [
@@ -16,6 +16,13 @@ export default function MobileTabBar() {
             icon: Wallet,
             isActive: route().current("weviewallet.*"),
             tourKey: "mobile-nav-weviewallet",
+        },
+        {
+            name: "Journal",
+            href: route("journal.index"),
+            icon: BookOpen,
+            isActive: route().current("journal.*"),
+            tourKey: "mobile-nav-journal",
         },
         {
             name: "Tasks",
@@ -41,7 +48,7 @@ export default function MobileTabBar() {
                 paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)",
             }}
         >
-            <div className="mx-auto flex max-w-md items-center justify-between px-6 pt-2">
+            <div className="mx-auto grid max-w-md grid-cols-5 items-center gap-1 px-4 pt-2">
                 {tabs.map((tab) => {
                     const Icon = tab.icon;
                     return (
@@ -49,7 +56,7 @@ export default function MobileTabBar() {
                             key={tab.name}
                             href={tab.href}
                             data-tour={tab.tourKey}
-                            className="flex min-w-[64px] flex-col items-center gap-1 rounded-xl px-2 py-2 text-xs font-medium text-light-muted transition-colors duration-150 hover:text-light-primary dark:text-dark-muted dark:hover:text-dark-primary"
+                            className="flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-[11px] font-medium text-light-muted transition-colors duration-150 hover:text-light-primary dark:text-dark-muted dark:hover:text-dark-primary"
                             aria-current={tab.isActive ? "page" : undefined}
                         >
                             <Icon
@@ -61,9 +68,7 @@ export default function MobileTabBar() {
                             />
                             <span
                                 className={`${
-                                    tab.isActive
-                                        ? "text-light-primary dark:text-dark-primary"
-                                        : ""
+                                    tab.isActive ? "text-light-primary dark:text-dark-primary" : ""
                                 }`}
                             >
                                 {tab.name}

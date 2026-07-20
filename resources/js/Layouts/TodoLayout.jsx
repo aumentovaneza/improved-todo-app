@@ -27,6 +27,7 @@ import {
     ChevronDown,
     ChevronRight,
     Landmark,
+    BookOpen,
 } from "lucide-react";
 
 export default function TodoLayout({ header, children }) {
@@ -118,6 +119,13 @@ export default function TodoLayout({ header, children }) {
             current: route().current("weviewallet.*"),
             hasSubmenu: true,
             tourKey: "nav-weviewallet",
+        },
+        {
+            name: "Journal",
+            href: route("journal.index"),
+            icon: BookOpen,
+            current: route().current("journal.*"),
+            tourKey: "nav-journal",
         },
     ];
 

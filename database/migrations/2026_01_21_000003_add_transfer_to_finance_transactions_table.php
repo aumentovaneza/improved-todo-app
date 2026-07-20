@@ -39,9 +39,10 @@ return new class extends Migration
                 DB::statement("ALTER TABLE finance_transactions DROP CONSTRAINT \"{$name}\"");
             }
             DB::statement("ALTER TABLE finance_transactions ADD CONSTRAINT finance_transactions_type_check CHECK (type IN ({$list}))");
-        } else {
+        } elseif ($driver === 'mysql') {
             DB::statement("ALTER TABLE finance_transactions MODIFY COLUMN type ENUM({$list}) NOT NULL");
         }
+        // sqlite is dynamically typed and does not enforce enums; no-op.
     }
 
     private function pgCheckConstraints(string $table, string $column): array

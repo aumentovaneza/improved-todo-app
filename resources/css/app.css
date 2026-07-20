@@ -237,3 +237,62 @@
         @apply text-cyan-300;
     }
 }
+
+/* Journal / TipTap editor content styling (typography plugin is not installed) */
+.journal-content {
+    @apply text-light-primary dark:text-dark-primary;
+    line-height: 1.7;
+}
+.journal-content:focus {
+    outline: none;
+}
+.journal-content > * + * {
+    margin-top: 0.75em;
+}
+.journal-content h1 {
+    @apply text-2xl font-bold mt-6 mb-2;
+}
+.journal-content h2 {
+    @apply text-xl font-bold mt-5 mb-2;
+}
+.journal-content h3 {
+    @apply text-lg font-semibold mt-4 mb-2;
+}
+.journal-content p {
+    @apply text-base;
+}
+.journal-content ul {
+    @apply list-disc pl-6 space-y-1;
+}
+.journal-content ol {
+    @apply list-decimal pl-6 space-y-1;
+}
+.journal-content li > p {
+    margin: 0;
+}
+.journal-content blockquote {
+    @apply border-l-4 border-wevie-teal/60 pl-4 italic text-light-secondary dark:text-dark-secondary;
+}
+.journal-content a {
+    @apply text-wevie-teal underline;
+}
+.journal-content code {
+    @apply rounded bg-light-hover px-1.5 py-0.5 text-sm dark:bg-dark-hover;
+}
+.journal-content pre {
+    @apply rounded-lg bg-neutral-800 p-4 text-sm text-neutral-100 overflow-x-auto;
+}
+.journal-content pre code {
+    @apply bg-transparent p-0 text-inherit;
+}
+.journal-content hr {
+    @apply my-4 border-light-border dark:border-dark-border;
+}
+/* Placeholder for empty editable editor */
+.journal-content p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    @apply text-light-muted dark:text-dark-muted;
+    float: left;
+    height: 0;
+    pointer-events: none;
+}

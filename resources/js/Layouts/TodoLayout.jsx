@@ -3,6 +3,7 @@ import Dropdown from "@/Components/Dropdown";
 import MobileFab from "@/Components/Mobile/MobileFab";
 import MobileTabBar from "@/Components/Mobile/MobileTabBar";
 import OnboardingTour from "@/Components/OnboardingTour";
+import WelcomeModal from "@/Components/WelcomeModal";
 import QuickAddTransactionModal from "@/Components/Mobile/QuickAddTransactionModal";
 import SyncQueueModal from "@/Components/Offline/SyncQueueModal";
 import Toast from "@/Components/Toast";
@@ -35,6 +36,36 @@ export default function TodoLayout({ header, children }) {
     const isFinanceRoute =
         route().current("finance.*") || route().current("weviewallet.*");
     const isWevieWalletRoute = route().current("weviewallet.*");
+
+    // First-run welcome carousel. Only auto-shows on the dashboard so it never
+    // pops over a deep link. Dismissal/tour-start persist the `welcome` tour key.
+    const welcomeProgress = user?.tutorial_progress?.welcome ?? null;
+    const welcomeSeen =
+        !!welcomeProgress?.completed || !!welcomeProgress?.skipped;
+    const [showWelcome, setShowWelcome] = useState(
+        () => !!user && !welcomeSeen && route().current("dashboard")
+    );
+    const [tourStartSignal, setTourStartSignal] = useState(false);
+
+    const persistTutorial = (key, payload) => {
+        window.axios
+            .post(route("tutorials.update", { key }), payload)
+            .catch(() => {});
+    };
+
+    const handleWelcomeDismiss = () => {
+        // Skipping the welcome opts out of the spotlight tour too.
+        persistTutorial("welcome", { skipped: true });
+        persistTutorial("onboarding", { skipped: true });
+        setShowWelcome(false);
+    };
+
+    const handleWelcomeTakeTour = () => {
+        persistTutorial("welcome", { completed: true });
+        setShowWelcome(false);
+        setTourStartSignal(true);
+    };
+
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showQuickAddTransaction, setShowQuickAddTransaction] =
         useState(false);
@@ -721,7 +752,16 @@ export default function TodoLayout({ header, children }) {
                 </div>
             )}
 
-            <OnboardingTour />
+            <WelcomeModal
+                show={showWelcome}
+                onDismiss={handleWelcomeDismiss}
+                onTakeTour={handleWelcomeTakeTour}
+            />
+
+            <OnboardingTour
+                requireCompleted={["welcome"]}
+                startSignal={tourStartSignal}
+            />
         </div>
     );
 }

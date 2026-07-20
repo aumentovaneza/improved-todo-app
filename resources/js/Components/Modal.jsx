@@ -12,6 +12,9 @@ export default function Modal({
     maxWidth = "2xl",
     closeable = true,
     onClose = () => {},
+    // Top-align the panel so it sizes to its content instead of stretching to
+    // the full viewport height (the flex container defaults to align stretch).
+    alignTop = false,
 }) {
     const close = () => {
         if (closeable) {
@@ -46,7 +49,9 @@ export default function Modal({
             <Dialog
                 as="div"
                 id="modal"
-                className="fixed inset-0 z-50 flex justify-center overflow-y-auto px-4 py-6 transition-all sm:px-0"
+                className={`fixed inset-0 z-50 flex justify-center overflow-y-auto px-4 py-6 transition-all sm:px-0 ${
+                    alignTop ? "items-start" : ""
+                }`}
                 onClose={close}
                 style={{ scrollbarGutter: 'stable' }}
             >

@@ -193,6 +193,9 @@ Route::middleware('auth')->group(function () {
         ->where('key', '[A-Za-z0-9_]+')
         ->name('tutorials.reset');
 
+    Route::delete('/sample-data', [\App\Http\Controllers\SampleDataController::class, 'destroy'])
+        ->name('sample-data.destroy');
+
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::get('/profile/weviewallet', [ProfileController::class, 'weviewalletManagement'])

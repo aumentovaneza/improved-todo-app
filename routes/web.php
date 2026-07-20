@@ -198,8 +198,6 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::get('/profile/weviewallet', [ProfileController::class, 'weviewalletManagement'])
-        ->name('profile.weviewallet');
     Route::get('/profile/finance-categories', [ProfileController::class, 'financeCategories'])
         ->name('profile.finance-categories');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

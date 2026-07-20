@@ -1,0 +1,517 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:reminders\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Console/Commands/SetupShowcaseUser.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:subtasks\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Console/Commands/SetupShowcaseUser.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:tags\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Console/Commands/SetupShowcaseUser.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AnalyticsController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$count\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/AnalyticsController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AnalyticsController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$day_of_week\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AnalyticsController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AnalyticsController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:swimlanes\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/BoardController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getOccurrencesInRange\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Controllers/CalendarController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$color\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/CategoryController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/CategoryController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/CategoryController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/CategoryController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:swimlanes\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/WorkspaceController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:isOrganizer\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Models/Board.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Task\:\:\$is_recurring_instance\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/Task.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Task\:\:\$original_task_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/Task.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Modules/Finance/Controllers/FinanceBudgetController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Modules/Finance/Controllers/FinanceSavingsGoalController.php
+
+		-
+			message: '#^Access to an undefined property App\\Modules\\Finance\\Models\\FinanceTransaction\:\:\$is_recurring_instance\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Modules/Finance/Models/FinanceTransaction.php
+
+		-
+			message: '#^Access to an undefined property App\\Modules\\Finance\\Models\\FinanceTransaction\:\:\$original_transaction_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Modules/Finance/Models/FinanceTransaction.php
+
+		-
+			message: '#^Method App\\Modules\\Finance\\Repositories\\FinanceAccountRepository\:\:validateCreditCardBounds\(\) returns void but does not have any side effects\.$#'
+			identifier: void.pure
+			count: 1
+			path: app/Modules/Finance/Repositories/FinanceAccountRepository.php
+
+		-
+			message: '#^Access to an undefined property App\\Modules\\Finance\\Models\\FinanceTransaction\:\:\$period\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Modules/Finance/Repositories/FinanceTransactionRepository.php
+
+		-
+			message: '#^Access to an undefined property App\\Modules\\Finance\\Models\\FinanceTransaction\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Modules/Finance/Repositories/FinanceTransactionRepository.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$period\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Modules/Finance/Services/FinanceReportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Modules/Finance/Services/FinanceReportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 5
+			path: app/Modules/Finance/Services/FinanceReportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$remaining_amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Modules/Finance/Services/FinanceService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$total_amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Modules/Finance/Services/FinanceService.php
+
+		-
+			message: '#^Method App\\Modules\\Finance\\Services\\FinanceService\:\:syncLoanFromTransaction\(\) returns void but does not have any side effects\.$#'
+			identifier: void.pure
+			count: 1
+			path: app/Modules/Finance/Services/FinanceService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\:\:overdue\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Repositories/Eloquent/TaskRepository.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:overdue\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Repositories/Eloquent/UserRepository.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Services/DatabaseOptimizationService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Task\:\:\$google_event_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$google_refresh_token\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$google_token\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$google_token_expires\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Call to method getAttendees\(\) on an unknown class App\\Services\\Event\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Call to method getDescription\(\) on an unknown class App\\Services\\Event\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Call to method getEnd\(\) on an unknown class App\\Services\\Event\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Call to method getId\(\) on an unknown class App\\Services\\Event\.$#'
+			identifier: class.notFound
+			count: 2
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Call to method getStart\(\) on an unknown class App\\Services\\Event\.$#'
+			identifier: class.notFound
+			count: 2
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Call to method getSummary\(\) on an unknown class App\\Services\\Event\.$#'
+			identifier: class.notFound
+			count: 2
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Call to method getTransparency\(\) on an unknown class App\\Services\\Event\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Call to method setColorId\(\) on an unknown class App\\Services\\Event\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Call to method setDescription\(\) on an unknown class App\\Services\\Event\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Call to method setEnd\(\) on an unknown class App\\Services\\Event\.$#'
+			identifier: class.notFound
+			count: 2
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Call to method setStart\(\) on an unknown class App\\Services\\Event\.$#'
+			identifier: class.notFound
+			count: 2
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Call to method setSummary\(\) on an unknown class App\\Services\\Event\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Instantiated class App\\Services\\Event not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Method App\\Services\\GoogleCalendarService\:\:createEventFromTask\(\) has invalid return type App\\Services\\Event\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Method App\\Services\\GoogleCalendarService\:\:getCalendarEvents\(\) should return Illuminate\\Database\\Eloquent\\Collection but returns Illuminate\\Support\\Collection\<\(int\|string\), mixed\>\.$#'
+			identifier: return.type
+			count: 3
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Parameter \$event of method App\\Services\\GoogleCalendarService\:\:shouldSyncEvent\(\) has invalid type App\\Services\\Event\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Parameter \$event of method App\\Services\\GoogleCalendarService\:\:syncEventToTask\(\) has invalid type App\\Services\\Event\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Services/GoogleCalendarService.php
+
+		-
+			message: '#^Variable \$recentActivity in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: app/Services/MonitoringService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Reminder\:\:\$message\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/NotificationService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Reminder\:\:\$remind_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/NotificationService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$phone\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/NotificationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/NotificationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 5
+			path: app/Services/NotificationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/NotificationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/NotificationService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Reminder\:\:\$remind_at\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/ReminderService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$due_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/ReminderService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/ReminderService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Services/ReminderService.php
+
+		-
+			message: '#^Method App\\Services\\ReminderService\:\:createMultipleReminders\(\) should return Illuminate\\Database\\Eloquent\\Collection but returns Illuminate\\Support\\Collection\<\(int\|string\), mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/ReminderService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$completed_at\.$#'
+			identifier: property.notFound
+			count: 10
+			path: app/Services/ReportingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 6
+			path: app/Services/ReportingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/ReportingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$due_date\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/ReportingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 5
+			path: app/Services/ReportingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/ReportingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$priority\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/ReportingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/ReportingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$tags\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/ReportingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/ReportingService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Task\:\:\$count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/SearchService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Services/SubtaskService.php
+
+		-
+			message: '#^Method App\\Services\\SubtaskService\:\:createMultipleSubtasks\(\) should return Illuminate\\Database\\Eloquent\\Collection but returns Illuminate\\Support\\Collection\<\(int\|string\), mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/SubtaskService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/TagService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/TagService.php
+
+		-
+			message: '#^Deprecated in PHP 8\.4\: Parameter \#2 \$limit \(int\) is implicitly nullable via default value null\.$#'
+			identifier: parameter.implicitlyNullable
+			count: 4
+			path: app/Services/TaskService.php

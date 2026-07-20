@@ -4,7 +4,9 @@ namespace App\Modules\Journal\Repositories\Eloquent;
 
 use App\Modules\Journal\Models\JournalEntry;
 use App\Modules\Journal\Repositories\Contracts\JournalEntryRepositoryInterface;
+use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 
 class JournalEntryRepository implements JournalEntryRepositoryInterface
 {
@@ -45,6 +47,18 @@ class JournalEntryRepository implements JournalEntryRepositoryInterface
             ->where('user_id', $userId)
             ->with('tags')
             ->find($id);
+    }
+
+    public function getForUserInRange(int $userId, ?Carbon $startDate, ?Carbon $endDate): Collection
+    {
+        return JournalEntry::query()
+            ->where('user_id', $userId)
+            ->with('tags')
+            ->when($startDate, fn ($query) => $query->whereDate('entry_date', '>=', $startDate->toDateString()))
+            ->when($endDate, fn ($query) => $query->whereDate('entry_date', '<=', $endDate->toDateString()))
+            ->orderBy('entry_date')
+            ->orderBy('id')
+            ->get();
     }
 
     public function create(array $data): JournalEntry

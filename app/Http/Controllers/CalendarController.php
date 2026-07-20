@@ -97,6 +97,28 @@ class CalendarController extends Controller
         }
         $upcomingTasks = $upcomingTaskOccurrences->where('status', 'pending');
 
+        // Get recently accomplished tasks (completed in the last 24 hours),
+        // ordered by most recently completed.
+        $recentlyAccomplishedTasks = $user->tasks()
+            ->with('category')
+            ->where('status', 'completed')
+            ->whereNotNull('completed_at')
+            ->where('completed_at', '>=', now()->subDay())
+            ->orderByDesc('completed_at')
+            ->get();
+
+        // Ensure a minimum of 5 are shown by backfilling with the most recent
+        // completions when the last 24 hours contain fewer than 5.
+        if ($recentlyAccomplishedTasks->count() < 5) {
+            $recentlyAccomplishedTasks = $user->tasks()
+                ->with('category')
+                ->where('status', 'completed')
+                ->whereNotNull('completed_at')
+                ->orderByDesc('completed_at')
+                ->limit(5)
+                ->get();
+        }
+
         // Get overdue tasks (only regular tasks can be overdue)
         $overdueTasks = Task::with(['category', 'subtasks', 'tags'])
             ->withCount([
@@ -130,6 +152,7 @@ class CalendarController extends Controller
             'tasks' => $tasks,
             'transactions' => $transactionsByDate,
             'upcomingTasks' => $upcomingTasks,
+            'recentlyAccomplishedTasks' => $recentlyAccomplishedTasks,
             'overdueTasks' => $overdueTasks,
             'currentDate' => $date->format('Y-m-d'),
             'monthName' => $date->format('F Y'),

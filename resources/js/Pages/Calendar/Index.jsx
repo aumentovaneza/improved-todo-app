@@ -36,6 +36,7 @@ export default function Index({
     tasks,
     transactions,
     upcomingTasks,
+    recentlyAccomplishedTasks = [],
     overdueTasks,
     currentDate,
     monthName,
@@ -252,6 +253,15 @@ export default function Index({
             day: "numeric",
         });
     };
+
+    const formatCompletedAt = (dateString) =>
+        new Date(dateString).toLocaleString("en-US", {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+        });
 
     const handleDayClick = (day) => {
         setSelectedDate(day.dateStr);
@@ -1337,6 +1347,57 @@ export default function Index({
                             ) : (
                                 <p className="text-gray-500 dark:text-gray-400 text-sm">
                                     No upcoming tasks in the next 7 days.
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Recently Accomplished Tasks */}
+                    <div className="card p-4 sm:p-6">
+                        <div className="flex items-center mb-4">
+                            <CheckCircle className="w-4 sm:w-5 h-4 sm:h-5 text-primary mr-2" />
+                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                Recently Accomplished (
+                                {recentlyAccomplishedTasks.length})
+                            </h3>
+                        </div>
+                        <div className="space-y-3 max-h-64 overflow-y-auto">
+                            {recentlyAccomplishedTasks.length > 0 ? (
+                                recentlyAccomplishedTasks.map((task) => (
+                                    <div
+                                        key={task.id}
+                                        className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800"
+                                    >
+                                        <div className="flex items-center space-x-2 mb-1">
+                                            <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm line-through decoration-green-500/60">
+                                                {task.title}
+                                            </h4>
+                                            {task.is_recurring && (
+                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
+                                                    Recurring
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-green-700 dark:text-green-400 mt-1">
+                                            Completed:{" "}
+                                            {formatCompletedAt(task.completed_at)}
+                                        </p>
+                                        {task.category && (
+                                            <span
+                                                className="inline-block text-xs px-2 py-1 rounded-full text-white mt-2"
+                                                style={{
+                                                    backgroundColor:
+                                                        task.category.color,
+                                                }}
+                                            >
+                                                {task.category.name}
+                                            </span>
+                                        )}
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                                    No tasks accomplished recently.
                                 </p>
                             )}
                         </div>

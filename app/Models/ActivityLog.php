@@ -23,8 +23,8 @@ class ActivityLog extends Model
     ];
 
     protected $casts = [
-        'old_values' => 'array',
-        'new_values' => 'array',
+        'old_values' => 'encrypted:array',
+        'new_values' => 'encrypted:array',
     ];
 
     public function user(): BelongsTo

@@ -64,10 +64,13 @@ class ProfileController extends Controller
     {
         $userId = $request->user()->id;
         $accounts = $this->accountRepository->getForUser($userId);
+        // name is encrypted at rest; keep the plaintext `type` ordering in SQL
+        // and resolve the name tiebreak in PHP against decrypted values.
         $categories = FinanceCategory::where('user_id', $userId)
-            ->orderBy('type')
-            ->orderBy('name')
-            ->get();
+            ->get()
+            ->sort(fn ($a, $b) => [$a->type, mb_strtolower(trim((string) $a->name))]
+                <=> [$b->type, mb_strtolower(trim((string) $b->name))])
+            ->values();
 
         return Inertia::render('Profile/WevieWalletManagement', [
             'accounts' => $accounts->values()->all(),
@@ -86,10 +89,13 @@ class ProfileController extends Controller
             $request->integer('wallet_user_id') ?: null
         );
 
+        // name is encrypted at rest; keep the plaintext `type` ordering in SQL
+        // and resolve the name tiebreak in PHP against decrypted values.
         $categories = FinanceCategory::where('user_id', $walletUserId)
-            ->orderBy('type')
-            ->orderBy('name')
-            ->get();
+            ->get()
+            ->sort(fn ($a, $b) => [$a->type, mb_strtolower(trim((string) $a->name))]
+                <=> [$b->type, mb_strtolower(trim((string) $b->name))])
+            ->values();
 
         return Inertia::render('Profile/FinanceCategories', [
             'categories' => $categories,
@@ -140,7 +146,7 @@ class ProfileController extends Controller
     public function getNewsCategory(Request $request)
     {
         return response()->json([
-            'news_category' => $request->user()->news_category ?? 'general'
+            'news_category' => $request->user()->news_category ?? 'general',
         ]);
     }
 
@@ -150,16 +156,16 @@ class ProfileController extends Controller
     public function updateNewsCategory(Request $request)
     {
         $request->validate([
-            'news_category' => 'required|string|in:business,entertainment,general,health,science,sports,technology'
+            'news_category' => 'required|string|in:business,entertainment,general,health,science,sports,technology',
         ]);
 
         $request->user()->update([
-            'news_category' => $request->news_category
+            'news_category' => $request->news_category,
         ]);
 
         return response()->json([
             'message' => 'News category updated successfully',
-            'news_category' => $request->news_category
+            'news_category' => $request->news_category,
         ]);
     }
 }

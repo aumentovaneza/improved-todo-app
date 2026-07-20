@@ -5,9 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Task extends Model
 {
@@ -37,11 +36,13 @@ class Task extends Model
 
     protected $casts = [
         'is_sample' => 'boolean',
+        'title' => 'encrypted',
+        'description' => 'encrypted',
         'due_date' => 'datetime',
         'is_all_day' => 'boolean',
         'completed_at' => 'datetime',
         'is_recurring' => 'boolean',
-        'recurrence_config' => 'array',
+        'recurrence_config' => 'encrypted:array',
         'recurring_until' => 'datetime',
     ];
 
@@ -94,6 +95,7 @@ class Task extends Model
     {
         if ($user) {
             $userToday = $user->todayInUserTimezone();
+
             return $query->where('due_date', '<', $userToday)->where('status', '!=', 'completed');
         }
 
@@ -103,6 +105,7 @@ class Task extends Model
     public function scopeOverdueForUser($query, $user)
     {
         $userToday = $user->todayInUserTimezone();
+
         return $query->where('user_id', $user->id)
             ->where('due_date', '<', $userToday)
             ->where('status', '!=', 'completed');
@@ -112,6 +115,7 @@ class Task extends Model
     {
         $userToday = $user->todayInUserTimezone();
         $userTomorrow = $userToday->copy()->addDay();
+
         return $query->where('user_id', $user->id)
             ->where('due_date', '>=', $userToday)
             ->where('due_date', '<', $userTomorrow)
@@ -120,11 +124,11 @@ class Task extends Model
 
     public function getFullStartDateTimeAttribute()
     {
-        if (!$this->due_date) {
+        if (! $this->due_date) {
             return null;
         }
 
-        if ($this->is_all_day || !$this->start_time) {
+        if ($this->is_all_day || ! $this->start_time) {
             return $this->due_date->startOfDay();
         }
 
@@ -134,11 +138,11 @@ class Task extends Model
 
     public function getFullEndDateTimeAttribute()
     {
-        if (!$this->due_date) {
+        if (! $this->due_date) {
             return null;
         }
 
-        if ($this->is_all_day || !$this->end_time) {
+        if ($this->is_all_day || ! $this->end_time) {
             return $this->due_date->endOfDay();
         }
 
@@ -148,13 +152,16 @@ class Task extends Model
 
     public function getFormattedTimeRangeAttribute()
     {
-        if ($this->is_all_day || (!$this->start_time && !$this->end_time)) {
+        if ($this->is_all_day || (! $this->start_time && ! $this->end_time)) {
             return 'All day';
         }
 
         $formatTime = function ($timeStr) {
-            if (!$timeStr) return '';
+            if (! $timeStr) {
+                return '';
+            }
             $time = \Carbon\Carbon::createFromFormat('H:i:s', $timeStr) ?: \Carbon\Carbon::createFromFormat('H:i', $timeStr);
+
             return $time ? $time->format('g:i A') : '';
         };
 
@@ -162,11 +169,11 @@ class Task extends Model
         $endTime = $this->end_time ? $formatTime($this->end_time) : '';
 
         if ($startTime && $endTime) {
-            return $startTime . ' - ' . $endTime;
+            return $startTime.' - '.$endTime;
         } elseif ($startTime) {
-            return 'From ' . $startTime;
+            return 'From '.$startTime;
         } elseif ($endTime) {
-            return 'Until ' . $endTime;
+            return 'Until '.$endTime;
         }
 
         return 'All day';
@@ -192,7 +199,7 @@ class Task extends Model
     {
         $occurrences = collect();
 
-        if (!$this->is_recurring) {
+        if (! $this->is_recurring) {
             // Non-recurring task - check if due_date falls within range
             if (
                 $this->due_date &&
@@ -202,7 +209,7 @@ class Task extends Model
             }
         } else {
             // Recurring task - generate occurrences
-            if (!$this->recurring_until || !$this->recurrence_type) {
+            if (! $this->recurring_until || ! $this->recurrence_type) {
                 return $occurrences;
             }
 
@@ -222,7 +229,7 @@ class Task extends Model
                 // Move to next occurrence
                 $currentDate = $this->getNextOccurrenceDate($currentDate);
 
-                if (!$currentDate || $currentDate > $endDateLimit) {
+                if (! $currentDate || $currentDate > $endDateLimit) {
                     break;
                 }
             }
@@ -255,11 +262,11 @@ class Task extends Model
      */
     public function isVisibleOnDate($date)
     {
-        if (!$this->is_recurring) {
+        if (! $this->is_recurring) {
             return $this->due_date && $this->due_date->format('Y-m-d') === $date->format('Y-m-d');
         }
 
-        if (!$this->recurring_until || !$this->recurrence_type) {
+        if (! $this->recurring_until || ! $this->recurrence_type) {
             return false;
         }
 

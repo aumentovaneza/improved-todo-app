@@ -19,6 +19,7 @@ class Subtask extends Model
     ];
 
     protected $casts = [
+        'title' => 'encrypted',
         'is_completed' => 'boolean',
         'completed_at' => 'datetime',
     ];

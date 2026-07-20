@@ -36,7 +36,10 @@ class FinanceAccount extends Model
         'credit_limit' => 'decimal:2',
         'available_credit' => 'decimal:2',
         'used_credit' => 'decimal:2',
+        'name' => 'encrypted',
+        'label' => 'encrypted',
         'account_number' => 'encrypted',
+        'notes' => 'encrypted',
         'is_active' => 'boolean',
     ];
 

@@ -21,6 +21,7 @@ class FinanceCategory extends Model
     ];
 
     protected $casts = [
+        'name' => 'encrypted',
         'is_active' => 'boolean',
     ];
 

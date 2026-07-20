@@ -4,7 +4,6 @@ namespace App\Modules\Finance\Models;
 
 use App\Models\Tag;
 use App\Models\User;
-use App\Modules\Finance\Models\FinanceLoan;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -39,7 +38,14 @@ class FinanceTransaction extends Model
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'description' => 'encrypted',
+        'notes' => 'encrypted',
+        'payment_method' => 'encrypted',
         'is_recurring' => 'boolean',
+        // metadata stays plaintext json: it is queried in SQL via JSON-path
+        // (metadata->transfer_destination) inside the SUM(amount) reporting
+        // aggregations in FinanceTransactionRepository, and holds structural
+        // routing data rather than free-text personal content.
         'metadata' => 'array',
         'occurred_at' => 'datetime',
     ];
@@ -102,11 +108,11 @@ class FinanceTransaction extends Model
     {
         $occurrences = collect();
 
-        if (!$this->occurred_at) {
+        if (! $this->occurred_at) {
             return $occurrences;
         }
 
-        if (!$this->is_recurring) {
+        if (! $this->is_recurring) {
             if ($this->occurred_at->between($startDate, $endDate)) {
                 $occurrences->push($this);
             }
@@ -114,7 +120,7 @@ class FinanceTransaction extends Model
             return $occurrences;
         }
 
-        if (!$this->recurring_frequency) {
+        if (! $this->recurring_frequency) {
             return $occurrences;
         }
 

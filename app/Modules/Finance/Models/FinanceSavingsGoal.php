@@ -27,6 +27,8 @@ class FinanceSavingsGoal extends Model
     ];
 
     protected $casts = [
+        'name' => 'encrypted',
+        'notes' => 'encrypted',
         'target_amount' => 'decimal:2',
         'current_amount' => 'decimal:2',
         'target_date' => 'date',

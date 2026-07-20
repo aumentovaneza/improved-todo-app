@@ -9,10 +9,16 @@ class FinanceAccountRepository
 {
     public function getForUser(int $userId): Collection
     {
+        // `name` is encrypted at rest. `is_active` stays a plaintext ordering,
+        // but the name tiebreak must be resolved in PHP against decrypted values.
         return FinanceAccount::where('user_id', $userId)
             ->orderByDesc('is_active')
-            ->orderBy('name')
-            ->get();
+            ->get()
+            ->sort(function (FinanceAccount $a, FinanceAccount $b) {
+                return ($b->is_active <=> $a->is_active)
+                    ?: (mb_strtolower(trim((string) $a->name)) <=> mb_strtolower(trim((string) $b->name)));
+            })
+            ->values();
     }
 
     public function findForUser(int $userId, int $accountId): FinanceAccount
@@ -94,10 +100,10 @@ class FinanceAccountRepository
             if (array_key_exists('credit_limit', $data) || array_key_exists('used_credit', $data)) {
                 $limit = (float) ($account->credit_limit ?? $originalCreditLimit);
                 $nextUsed = (float) ($account->used_credit ?? $originalUsedCredit);
-                
+
                 // Ensure used credit doesn't go negative
                 $nextUsed = max(0, $nextUsed);
-                
+
                 // If credit is fully paid (used_credit = 0), revert to full limit
                 if ($nextUsed === 0) {
                     $account->used_credit = 0;
@@ -122,10 +128,10 @@ class FinanceAccountRepository
             $limit = (float) ($account->credit_limit ?? 0);
             $nextAvailable = (float) ($account->available_credit ?? 0) + $delta;
             $nextUsed = (float) ($account->used_credit ?? 0) - $delta;
-            
+
             // Ensure used credit doesn't go negative
             $nextUsed = max(0, $nextUsed);
-            
+
             // If credit is fully paid (used_credit = 0), revert to full limit
             if ($nextUsed === 0) {
                 $nextAvailable = $limit;
@@ -135,7 +141,7 @@ class FinanceAccountRepository
                 $nextUsed = min($limit, $nextUsed);
                 $nextAvailable = $limit - $nextUsed;
             }
-            
+
             $account->available_credit = $nextAvailable;
             $account->used_credit = $nextUsed;
         } else {

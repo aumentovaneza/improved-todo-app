@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Task;
 use App\Models\Category;
+use App\Models\Task;
 use App\Modules\Finance\Models\FinanceTransaction;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
-use Carbon\Carbon;
 
 class CalendarController extends Controller
 {
@@ -34,7 +34,7 @@ class CalendarController extends Controller
                 'subtasks',
                 'subtasks as completed_subtasks_count' => function ($query) {
                     $query->where('is_completed', true);
-                }
+                },
             ])
             ->get();
 
@@ -50,6 +50,7 @@ class CalendarController extends Controller
             // Convert the task's due_date to user timezone for grouping
             $taskDueDate = $task->due_date; // This is already a Carbon instance from the cast
             $userDate = $user->toUserTimezone($taskDueDate);
+
             return $userDate->format('Y-m-d');
         });
 
@@ -67,6 +68,7 @@ class CalendarController extends Controller
         $transactionsByDate = $transactionOccurrences->groupBy(function ($transaction) use ($user) {
             $transactionDate = $transaction->occurred_at;
             $userDate = $user->toUserTimezone($transactionDate);
+
             return $userDate->format('Y-m-d');
         });
 
@@ -85,18 +87,19 @@ class CalendarController extends Controller
                 'subtasks',
                 'subtasks as completed_subtasks_count' => function ($query) {
                     $query->where('is_completed', true);
-                }
+                },
             ])
             ->overdueForUser($user)
             ->where('is_recurring', false)
             ->orderByDateTime()
             ->get();
 
-        // Get categories
+        // Get categories (name is encrypted at rest, so sort in PHP)
         $categories = Category::where('is_active', true)
             ->where('user_id', Auth::id())
-            ->orderBy('name')
-            ->get();
+            ->get()
+            ->sortBy(fn ($category) => mb_strtolower(trim((string) $category->name)))
+            ->values();
 
         return Inertia::render('Calendar/Index', [
             'tasks' => $tasks,

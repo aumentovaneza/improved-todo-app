@@ -4,9 +4,10 @@ namespace App\Repositories\Eloquent;
 
 use App\Models\Category;
 use App\Repositories\Contracts\CategoryRepositoryInterface;
+use App\Support\EncryptedSearch;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Builder;
 
 class CategoryRepository implements CategoryRepositoryInterface
 {
@@ -21,7 +22,7 @@ class CategoryRepository implements CategoryRepositoryInterface
             $query->where('is_active', true);
         }
 
-        return $query->orderBy('name')->get();
+        return $this->sortByName($query->get());
     }
 
     /**
@@ -37,7 +38,13 @@ class CategoryRepository implements CategoryRepositoryInterface
 
         $this->applyFilters($query, $filters);
 
-        return $query->orderBy('name')->paginate($perPage);
+        // `name`/`description` are encrypted, so both the search match and the
+        // name ordering are resolved in PHP against the decrypted values.
+        $categories = $this->sortByName(
+            $this->applySearchFilter($query->get(), $filters)
+        );
+
+        return EncryptedSearch::paginate($categories, $perPage);
     }
 
     /**
@@ -54,6 +61,7 @@ class CategoryRepository implements CategoryRepositoryInterface
     public function update(Category $category, array $data): Category
     {
         $category->update($data);
+
         return $category->fresh();
     }
 
@@ -96,7 +104,7 @@ class CategoryRepository implements CategoryRepositoryInterface
                     'subtasks',
                     'subtasks as completed_subtasks_count' => function ($query) {
                         $query->where('is_completed', true);
-                    }
+                    },
                 ])
                 ->orderByRaw("
                     CASE 
@@ -129,13 +137,15 @@ class CategoryRepository implements CategoryRepositoryInterface
      */
     public function nameExistsForUser(string $name, int $userId, ?int $excludeId = null): bool
     {
-        $query = Category::where('name', $name)->where('user_id', $userId);
+        // `categories.name` is encrypted, so a SQL equality check would never
+        // match. Compare the decrypted names in PHP instead (case-insensitive,
+        // mirroring the default MySQL collation).
+        $needle = mb_strtolower(trim($name));
 
-        if ($excludeId) {
-            $query->where('id', '!=', $excludeId);
-        }
-
-        return $query->exists();
+        return Category::where('user_id', $userId)
+            ->when($excludeId, fn ($query) => $query->where('id', '!=', $excludeId))
+            ->get(['id', 'name'])
+            ->contains(fn (Category $category) => mb_strtolower(trim((string) $category->name)) === $needle);
     }
 
     /**
@@ -143,13 +153,14 @@ class CategoryRepository implements CategoryRepositoryInterface
      */
     public function getCategoriesWithTaskCounts(int $userId): Collection
     {
-        return Category::withCount(['tasks' => function ($query) use ($userId) {
+        $categories = Category::withCount(['tasks' => function ($query) use ($userId) {
             $query->where('user_id', $userId);
         }])
             ->where('user_id', $userId)
             ->where('is_active', true)
-            ->orderBy('name')
             ->get();
+
+        return $this->sortByName($categories);
     }
 
     /**
@@ -173,13 +184,14 @@ class CategoryRepository implements CategoryRepositoryInterface
      */
     public function getCategoriesByTag(int $tagId, int $userId): Collection
     {
-        return Category::whereHas('tags', function ($query) use ($tagId) {
+        $categories = Category::whereHas('tags', function ($query) use ($tagId) {
             $query->where('tag_id', $tagId);
         })
             ->where('user_id', $userId)
             ->where('is_active', true)
-            ->orderBy('name')
             ->get();
+
+        return $this->sortByName($categories);
     }
 
     /**
@@ -187,18 +199,40 @@ class CategoryRepository implements CategoryRepositoryInterface
      */
     private function applyFilters(Builder $query, array $filters): void
     {
-        // Search functionality
-        if (!empty($filters['search'])) {
-            $search = $filters['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
+        // Note: `search` (name/description) is applied in PHP against decrypted
+        // values in applySearchFilter — those columns are encrypted at rest.
 
         // Filter by active status
         if (isset($filters['is_active'])) {
             $query->where('is_active', $filters['is_active']);
         }
+    }
+
+    /**
+     * Filter a category collection by the search term against decrypted columns.
+     */
+    private function applySearchFilter(Collection $categories, array $filters): Collection
+    {
+        $search = trim((string) ($filters['search'] ?? ''));
+
+        if ($search === '') {
+            return $categories;
+        }
+
+        return $categories->filter(function (Category $category) use ($search) {
+            return EncryptedSearch::matches($category->name, $search)
+                || EncryptedSearch::matches($category->description, $search);
+        })->values();
+    }
+
+    /**
+     * Sort a category collection by decrypted name (case-insensitive, ascending),
+     * mirroring the previous SQL `orderBy('name')`.
+     */
+    private function sortByName(Collection $categories): Collection
+    {
+        return $categories
+            ->sortBy(fn (Category $category) => mb_strtolower(trim((string) $category->name)))
+            ->values();
     }
 }

@@ -36,19 +36,39 @@ export default function TourTooltip({
             </button>
 
             {step.title && (
-                <h3 className="pr-6 text-base font-semibold text-light-primary dark:text-dark-primary">
-                    {step.title}
-                </h3>
+                <div className="flex items-center gap-2.5 pr-6">
+                    {step.emoji && (
+                        <span
+                            aria-hidden="true"
+                            className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-gradient-to-br from-primary-400/15 to-[#5FDDE0]/15 text-lg dark:from-primary-400/25 dark:to-[#5FDDE0]/25"
+                        >
+                            {step.emoji}
+                        </span>
+                    )}
+                    <h3 className="text-base font-semibold text-light-primary dark:text-dark-primary">
+                        {step.title}
+                    </h3>
+                </div>
             )}
 
             <div className="mt-2 text-sm leading-relaxed text-light-secondary dark:text-dark-secondary">
                 {step.content}
             </div>
 
-            <div className="mt-5 flex items-center justify-between gap-3">
-                <span className="text-xs font-medium text-light-muted dark:text-dark-muted">
+            {/* Progress bar */}
+            <div className="mt-4 flex items-center gap-3">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-light-hover dark:bg-dark-hover">
+                    <div
+                        className="h-full rounded-full bg-primary-400 transition-all duration-300 dark:bg-[#2ED7A1]"
+                        style={{ width: `${((index + 1) / size) * 100}%` }}
+                    />
+                </div>
+                <span className="flex-none text-xs font-medium text-light-muted dark:text-dark-muted">
                     {index + 1} / {size}
                 </span>
+            </div>
+
+            <div className="mt-4 flex items-center justify-end gap-3">
                 <div className="flex items-center gap-2">
                     {!step.hideSkip && skipProps && (
                         <button

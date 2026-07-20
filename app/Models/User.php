@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Modules\Finance\Models\FinanceAccount;
 use App\Modules\Finance\Models\FinanceBudget;
 use App\Modules\Finance\Models\FinanceCategory;
 use App\Modules\Finance\Models\FinanceSavingsGoal;
@@ -76,6 +77,11 @@ class User extends Authenticatable
     public function categories(): HasMany
     {
         return $this->hasMany(Category::class);
+    }
+
+    public function financeAccounts(): HasMany
+    {
+        return $this->hasMany(FinanceAccount::class);
     }
 
     public function financeTransactions(): HasMany

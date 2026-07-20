@@ -15,10 +15,16 @@ class FinanceReportService
         private FinanceReportRepository $reportRepository
     ) {}
 
-    public function buildDashboardData(int $userId): array
+    /**
+     * Allowed dashboard summary ranges. Trend/6-month charts stay rolling;
+     * these only scope the summary totals and the category breakdown.
+     */
+    public const RANGES = ['this_month', 'last_month', 'last_3_months', 'year_to_date'];
+
+    public function buildDashboardData(int $userId, ?string $range = null): array
     {
-        $periodStart = now()->startOfMonth();
-        $periodEnd = now()->endOfMonth();
+        $range = in_array($range, self::RANGES, true) ? $range : 'this_month';
+        [$periodStart, $periodEnd] = $this->resolvePeriod($range);
 
         $totals = $this->transactionRepository->getTotalsForUser($userId, $periodStart, $periodEnd);
         $budgets = $this->budgetRepository->getActiveForUser($userId);
@@ -36,6 +42,7 @@ class FinanceReportService
 
         return [
             'summary' => [
+                'range' => $range,
                 'period' => [
                     'start' => $periodStart->toDateString(),
                     'end' => $periodEnd->toDateString(),
@@ -55,6 +62,34 @@ class FinanceReportService
             ],
             'budgets' => $budgets->values()->all(),
         ];
+    }
+
+    /**
+     * Resolve a range key into [start, end] Carbon boundaries. Portable across
+     * MySQL/SQLite/Postgres — boundaries are computed in PHP, not SQL.
+     *
+     * @return array{0: Carbon, 1: Carbon}
+     */
+    private function resolvePeriod(string $range): array
+    {
+        return match ($range) {
+            'last_month' => [
+                now()->subMonthNoOverflow()->startOfMonth(),
+                now()->subMonthNoOverflow()->endOfMonth(),
+            ],
+            'last_3_months' => [
+                now()->subMonthsNoOverflow(2)->startOfMonth(),
+                now()->endOfMonth(),
+            ],
+            'year_to_date' => [
+                now()->startOfYear(),
+                now()->endOfDay(),
+            ],
+            default => [
+                now()->startOfMonth(),
+                now()->endOfMonth(),
+            ],
+        };
     }
 
     public function generateSnapshot(int $userId, string $reportType, Carbon $periodStart, Carbon $periodEnd): array

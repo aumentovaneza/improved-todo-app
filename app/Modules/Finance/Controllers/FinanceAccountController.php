@@ -60,7 +60,7 @@ class FinanceAccountController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'label' => ['nullable', 'string', 'max:255'],
             'account_number' => ['nullable', 'string', 'max:50'],
-            'type' => ['required', Rule::in(['bank', 'e-wallet', 'credit-card'])],
+            'type' => ['required', Rule::in(['bank', 'e-wallet', 'credit-card', 'cash'])],
             'currency' => ['nullable', 'string', 'max:8'],
             'starting_balance' => ['nullable', 'numeric', 'min:0'],
             'credit_limit' => ['nullable', 'numeric', 'min:0'],
@@ -84,7 +84,7 @@ class FinanceAccountController extends Controller
             'name' => ['nullable', 'string', 'max:255'],
             'label' => ['nullable', 'string', 'max:255'],
             'account_number' => ['nullable', 'string', 'max:50'],
-            'type' => ['nullable', Rule::in(['bank', 'e-wallet', 'credit-card'])],
+            'type' => ['nullable', Rule::in(['bank', 'e-wallet', 'credit-card', 'cash'])],
             'currency' => ['nullable', 'string', 'max:8'],
             'starting_balance' => ['nullable', 'numeric', 'min:0'],
             'credit_limit' => ['nullable', 'numeric', 'min:0'],
@@ -100,6 +100,10 @@ class FinanceAccountController extends Controller
 
     public function destroy(FinanceAccount $account): JsonResponse
     {
+        if ($account->is_default) {
+            return response()->json(['message' => 'The Cash on hand account cannot be deleted.'], 422);
+        }
+
         $this->financeService->deleteAccount($account, Auth::id());
 
         return response()->json(['status' => 'deleted']);

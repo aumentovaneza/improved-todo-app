@@ -1,12 +1,7 @@
 import { useMemo } from "react";
-import { Pencil, Trash2 } from "lucide-react";
-
-const formatCurrency = (value, currency = "PHP") =>
-    new Intl.NumberFormat("en-PH", {
-        style: "currency",
-        currency,
-        maximumFractionDigits: 2,
-    }).format(value ?? 0);
+import { CreditCard, Pencil, Trash2 } from "lucide-react";
+import EmptyState from "@/Components/Finance/UI/EmptyState";
+import { formatCurrency } from "@/Utils/currency";
 
 const formatType = (type) => (type || "").replace("-", " ");
 
@@ -24,6 +19,7 @@ const maskAccountNumber = (value) => {
 export default function AccountsList({ accounts = [], onEdit, onDelete }) {
     const groupedAccounts = useMemo(() => {
         const groups = {
+            cash: [],
             bank: [],
             "e-wallet": [],
             "credit-card": [],
@@ -42,20 +38,21 @@ export default function AccountsList({ accounts = [], onEdit, onDelete }) {
     }, [accounts]);
 
     const groupLabels = {
+        cash: "Cash",
         bank: "Bank accounts",
         "e-wallet": "E-wallets",
         "credit-card": "Credit cards",
         other: "Other accounts",
     };
 
-    const groupOrder = ["bank", "e-wallet", "credit-card", "other"];
+    const groupOrder = ["cash", "bank", "e-wallet", "credit-card", "other"];
 
     return (
         <div className="card p-4">
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+            <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                 Accounts
             </h3>
-            <div className="mt-4 space-y-4 text-sm text-slate-600 dark:text-slate-300">
+            <div className="mt-4 space-y-4 text-sm text-light-secondary dark:text-dark-secondary">
                 {groupOrder.map((groupKey) => {
                     const group = groupedAccounts[groupKey];
                     if (!group || group.length === 0) {
@@ -65,30 +62,37 @@ export default function AccountsList({ accounts = [], onEdit, onDelete }) {
                     return (
                         <div key={groupKey} className="space-y-3">
                             <div className="flex items-center justify-between">
-                                <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                                <h4 className="text-sm font-semibold uppercase tracking-wide text-light-muted dark:text-dark-muted">
                                     {groupLabels[groupKey]}
                                 </h4>
-                                <span className="text-xs text-slate-400">
+                                <span className="text-xs text-light-muted dark:text-dark-muted">
                                     {group.length}
                                 </span>
                             </div>
                             {group.map((account) => (
                                 <div
                                     key={account.id}
-                                    className="rounded-lg border border-light-border/70 px-3 py-2 dark:border-white/10"
+                                    className="rounded-lg border border-light-border/70 px-3 py-2 dark:border-dark-border/70"
                                 >
                                     <div className="flex flex-wrap items-center justify-between gap-3">
                                         <div>
-                                            <p className="font-medium text-slate-800 dark:text-slate-100">
-                                                {account.label || account.name}
-                                            </p>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <p className="font-medium text-light-primary dark:text-dark-primary">
+                                                    {account.label || account.name}
+                                                </p>
+                                                {account.is_default && (
+                                                    <span className="inline-flex items-center rounded-full bg-wevie-teal/10 px-2 py-0.5 text-xs font-medium text-wevie-teal">
+                                                        Default
+                                                    </span>
+                                                )}
+                                            </div>
                                             {account.label && (
-                                                <p className="text-xs text-slate-400">
+                                                <p className="text-xs text-light-muted dark:text-dark-muted">
                                                     {account.name}
                                                 </p>
                                             )}
                                             {account.account_number && (
-                                                <p className="text-xs text-slate-400">
+                                                <p className="text-xs text-light-muted dark:text-dark-muted">
                                                     {account.type === "credit-card"
                                                         ? "Card"
                                                         : "Account"}{" "}
@@ -98,7 +102,7 @@ export default function AccountsList({ accounts = [], onEdit, onDelete }) {
                                                     )}
                                                 </p>
                                             )}
-                                            <p className="text-xs capitalize text-slate-400">
+                                            <p className="text-xs capitalize text-light-muted dark:text-dark-muted">
                                                 {formatType(account.type)}
                                             </p>
                                             {!account.is_active && (
@@ -107,7 +111,7 @@ export default function AccountsList({ accounts = [], onEdit, onDelete }) {
                                                 </p>
                                             )}
                                             {account.notes && (
-                                                <p className="mt-1 text-xs text-slate-400">
+                                                <p className="mt-1 text-xs text-light-muted dark:text-dark-muted">
                                                     {account.notes}
                                                 </p>
                                             )}
@@ -115,7 +119,7 @@ export default function AccountsList({ accounts = [], onEdit, onDelete }) {
                                         <div className="text-right text-sm">
                                             {account.type === "credit-card" ? (
                                                 <>
-                                                    <p className="font-semibold text-slate-800 dark:text-slate-100">
+                                                    <p className="font-semibold text-light-primary dark:text-dark-primary">
                                                         Available:{" "}
                                                         {formatCurrency(
                                                             account.available_credit ??
@@ -123,7 +127,7 @@ export default function AccountsList({ accounts = [], onEdit, onDelete }) {
                                                             account.currency
                                                         )}
                                                     </p>
-                                                    <p className="text-xs text-slate-400">
+                                                    <p className="text-xs text-light-muted dark:text-dark-muted">
                                                         Used:{" "}
                                                         {formatCurrency(
                                                             account.used_credit ??
@@ -131,7 +135,7 @@ export default function AccountsList({ accounts = [], onEdit, onDelete }) {
                                                             account.currency
                                                         )}
                                                     </p>
-                                                    <p className="text-xs text-slate-400">
+                                                    <p className="text-xs text-light-muted dark:text-dark-muted">
                                                         Limit:{" "}
                                                         {formatCurrency(
                                                             account.credit_limit ??
@@ -142,13 +146,13 @@ export default function AccountsList({ accounts = [], onEdit, onDelete }) {
                                                 </>
                                             ) : (
                                                 <>
-                                                    <p className="font-semibold text-slate-800 dark:text-slate-100">
+                                                    <p className="font-semibold text-light-primary dark:text-dark-primary">
                                                         {formatCurrency(
                                                             account.current_balance,
                                                             account.currency
                                                         )}
                                                     </p>
-                                                    <p className="text-xs text-slate-400">
+                                                    <p className="text-xs text-light-muted dark:text-dark-muted">
                                                         Starting:{" "}
                                                         {formatCurrency(
                                                             account.starting_balance,
@@ -164,22 +168,24 @@ export default function AccountsList({ accounts = [], onEdit, onDelete }) {
                                             <button
                                                 type="button"
                                                 onClick={() => onEdit?.(account)}
-                                                className="rounded-md p-1 text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                                className="rounded-md p-1 text-wevie-teal hover:text-wevie-teal/80 dark:text-wevie-mint"
                                                 title="Edit"
                                                 aria-label="Edit"
                                             >
                                                 <Pencil className="h-4 w-4" />
                                             </button>
                                         )}
-                                        <button
-                                            type="button"
-                                            onClick={() => onDelete?.(account)}
-                                            className="rounded-md p-1 text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
-                                            title="Delete"
-                                            aria-label="Delete"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </button>
+                                        {!account.is_default && (
+                                            <button
+                                                type="button"
+                                                onClick={() => onDelete?.(account)}
+                                                className="rounded-md p-1 text-rose-600 hover:text-rose-700 dark:text-rose-300"
+                                                title="Delete"
+                                                aria-label="Delete"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             ))}
@@ -187,9 +193,11 @@ export default function AccountsList({ accounts = [], onEdit, onDelete }) {
                     );
                 })}
                 {(!accounts || accounts.length === 0) && (
-                    <p className="text-sm text-slate-400 dark:text-slate-500">
-                        No accounts yet.
-                    </p>
+                    <EmptyState
+                        icon={CreditCard}
+                        title="No accounts yet"
+                        description="Add a bank account, e-wallet, or credit card above to start tracking your balances."
+                    />
                 )}
             </div>
         </div>

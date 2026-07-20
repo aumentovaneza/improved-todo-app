@@ -1,17 +1,11 @@
-import { BarChart, Card, Title } from "@tremor/react";
+import { BarChart } from "@tremor/react";
+import ChartWrapper from "./ChartWrapper";
 import { getTremorColorsFromHex } from "./chartColors";
+import useIsDark from "@/Hooks/useIsDark";
+import { formatWholeCurrency } from "@/Utils/currency";
 
-const formatCurrency = (value, currency = "PHP") =>
-    new Intl.NumberFormat("en-PH", {
-        style: "currency",
-        currency,
-        maximumFractionDigits: 0,
-    }).format(value ?? 0);
-
-export default function IncomeExpenseChart({ data = [], currency = "PHP" }) {
-    const isDark =
-        typeof document !== "undefined" &&
-        document.documentElement.classList.contains("dark");
+export default function IncomeExpenseChart({ data = [], currency = "PHP", actions }) {
+    const isDark = useIsDark();
     const displayData = data.map((row) => ({
         ...row,
         Income: row.income ?? 0,
@@ -22,21 +16,20 @@ export default function IncomeExpenseChart({ data = [], currency = "PHP" }) {
     );
 
     return (
-        <Card>
-            <Title>Income vs Expenses</Title>
+        <ChartWrapper title="Income vs Expenses" actions={actions}>
             <BarChart
                 className="mt-4 h-64"
                 data={displayData}
                 index="period"
                 categories={["Income", "Expenses"]}
                 colors={chartColors}
-                valueFormatter={(value) => formatCurrency(value, currency)}
+                valueFormatter={(value) => formatWholeCurrency(value, currency)}
                 showLegend
-                showTooltip={false}
+                showTooltip
                 xAxisLabel="Period"
                 yAxisLabel={`Amount (${currency})`}
                 yAxisWidth={80}
             />
-        </Card>
+        </ChartWrapper>
     );
 }

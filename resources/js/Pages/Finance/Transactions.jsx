@@ -1,16 +1,16 @@
 import TodoLayout from "@/Layouts/TodoLayout";
+import Modal from "@/Components/Modal";
 import OnboardingTour from "@/Components/OnboardingTour";
 import TransactionForm from "@/Components/Finance/Transactions/TransactionForm";
+import Badge from "@/Components/Finance/UI/Badge";
+import EmptyState from "@/Components/Finance/UI/EmptyState";
+import useWalletMutation from "@/Hooks/useWalletMutation";
+import { formatCurrency } from "@/Utils/currency";
+import { TRANSACTION_LABEL, TRANSACTION_TONE } from "@/Utils/finance";
 import { walletTransactionsSteps } from "@/tours";
 import { Head, router } from "@inertiajs/react";
+import { Plus, Receipt } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
-const formatCurrency = (amount, currency = "PHP") =>
-    new Intl.NumberFormat("en-PH", {
-        style: "currency",
-        currency,
-        maximumFractionDigits: 2,
-    }).format(amount ?? 0);
 
 const formatDateLabel = (dateKey) => {
     const [year, month, day] = dateKey.split("-").map(Number);
@@ -34,13 +34,6 @@ const getDateKey = (dateValue) => {
     );
 };
 
-const typeStyles = {
-    income: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400",
-    expense: "bg-rose-100 text-rose-700 dark:bg-rose-900/20 dark:text-rose-400",
-    savings: "bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400",
-    loan: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/20 dark:text-cyan-400",
-    transfer: "bg-sky-100 text-sky-700 dark:bg-sky-900/20 dark:text-sky-400",
-};
 const typeOrder = ["income", "loan", "expense", "savings", "transfer"];
 
 export default function Transactions({
@@ -57,6 +50,8 @@ export default function Transactions({
     budgets = [],
     accounts = [],
 }) {
+    const mutate = useWalletMutation(walletUserId);
+    const [showCreate, setShowCreate] = useState(false);
     const [search, setSearch] = useState(filters.search ?? "");
     const [type, setType] = useState(filters.type ?? "");
     const [startDate, setStartDate] = useState(filters.start_date ?? "");
@@ -218,15 +213,27 @@ export default function Transactions({
                     : formData.finance_budget_id || null,
             };
 
-            await window.axios.post(
-                route("weviewallet.api.transactions.store"),
-                payload
-            );
-            window.location.reload();
-            return true;
+            const result = await mutate({
+                request: () =>
+                    window.axios.post(
+                        route("weviewallet.api.transactions.store"),
+                        payload
+                    ),
+                only: ["transactions", "totalAmount", "page", "hasMore"],
+                successMessage: "Transaction saved.",
+            });
+            return result !== false;
         },
-        [walletUserId]
+        [mutate, walletUserId]
     );
+
+    const handleCreateAndClose = async (payload) => {
+        const ok = await handleCreateTransaction(payload);
+        if (ok !== false) {
+            setShowCreate(false);
+        }
+        return ok;
+    };
 
     return (
         <TodoLayout header="All Transactions">
@@ -235,27 +242,42 @@ export default function Transactions({
                 <div className="card p-4" data-tour="transactions-filters">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                            <h2 className="text-xl font-semibold text-light-primary dark:text-dark-primary">
                                 All transactions
                             </h2>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">
+                            <p className="text-sm text-light-muted dark:text-dark-muted">
                                 Search, filter, and sort by date, type, or tags.
                             </p>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() =>
-                                router.get(route("weviewallet.dashboard"), {
-                                    wallet_user_id: walletUserId || undefined,
-                                })
-                            }
-                            className="rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-                        >
-                            Back to dashboard
-                        </button>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <button
+                                type="button"
+                                data-tour="transactions-form"
+                                onClick={() => setShowCreate(true)}
+                                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-wevie-teal to-wevie-mint px-4 py-2 text-sm font-medium text-white shadow-soft hover:opacity-90"
+                            >
+                                <Plus className="h-4 w-4" />
+                                New transaction
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    router.get(
+                                        route("weviewallet.dashboard"),
+                                        {
+                                            wallet_user_id:
+                                                walletUserId || undefined,
+                                        }
+                                    )
+                                }
+                                className="rounded-xl border border-light-border/70 px-3 py-2 text-sm font-semibold text-light-secondary hover:bg-light-hover dark:border-dark-border/70 dark:text-dark-secondary dark:hover:bg-dark-hover"
+                            >
+                                Back to dashboard
+                            </button>
+                        </div>
                     </div>
                     {type && (
-                        <div className="mt-3 rounded-lg border border-light-border/70 bg-light-hover px-3 py-2 text-sm text-slate-700 dark:border-white/10 dark:bg-dark-card/70 dark:text-slate-200">
+                        <div className="mt-3 rounded-lg border border-light-border/70 bg-light-hover px-3 py-2 text-sm text-light-secondary dark:border-dark-border/70 dark:bg-dark-card/70 dark:text-dark-secondary">
                             Total {type} transactions:{" "}
                             <span className="font-semibold">
                                 {formatCurrency(totalAmount)}
@@ -267,11 +289,11 @@ export default function Transactions({
                         className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4"
                     >
                         <div className="lg:col-span-2">
-                            <label className="text-xs font-semibold uppercase text-slate-400 dark:text-slate-500">
+                            <label className="text-xs font-semibold uppercase text-light-muted dark:text-dark-muted">
                                 Search
                             </label>
                             <input
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card dark:text-slate-100 dark:placeholder:text-slate-500"
+                                className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary dark:placeholder:text-dark-muted"
                                 placeholder="Search description, notes, category, or tags"
                                 value={search}
                                 onChange={(event) =>
@@ -280,11 +302,11 @@ export default function Transactions({
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-semibold uppercase text-slate-400 dark:text-slate-500">
+                            <label className="text-xs font-semibold uppercase text-light-muted dark:text-dark-muted">
                                 Type
                             </label>
                             <select
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card dark:text-slate-100"
+                                className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary"
                                 value={type}
                                 onChange={(event) =>
                                     setType(event.target.value)
@@ -299,11 +321,11 @@ export default function Transactions({
                             </select>
                         </div>
                         <div>
-                            <label className="text-xs font-semibold uppercase text-slate-400 dark:text-slate-500">
+                            <label className="text-xs font-semibold uppercase text-light-muted dark:text-dark-muted">
                                 Sort
                             </label>
                             <select
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card dark:text-slate-100"
+                                className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary"
                                 value={sort}
                                 onChange={(event) =>
                                     setSort(event.target.value)
@@ -324,12 +346,12 @@ export default function Transactions({
                             </select>
                         </div>
                         <div>
-                            <label className="text-xs font-semibold uppercase text-slate-400 dark:text-slate-500">
+                            <label className="text-xs font-semibold uppercase text-light-muted dark:text-dark-muted">
                                 Date from
                             </label>
                             <input
                                 type="date"
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card dark:text-slate-100"
+                                className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary"
                                 value={startDate}
                                 onChange={(event) =>
                                     setStartDate(event.target.value)
@@ -337,12 +359,12 @@ export default function Transactions({
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-semibold uppercase text-slate-400 dark:text-slate-500">
+                            <label className="text-xs font-semibold uppercase text-light-muted dark:text-dark-muted">
                                 Date to
                             </label>
                             <input
                                 type="date"
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card dark:text-slate-100"
+                                className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary"
                                 value={endDate}
                                 onChange={(event) =>
                                     setEndDate(event.target.value)
@@ -352,7 +374,7 @@ export default function Transactions({
                         <div className="flex items-end gap-2">
                             <button
                                 type="submit"
-                                className="w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-500"
+                                className="w-full rounded-xl bg-gradient-to-r from-wevie-teal to-wevie-mint px-3 py-2 text-sm font-medium text-white shadow-soft hover:opacity-90"
                             >
                                 Apply filters
                             </button>
@@ -361,7 +383,7 @@ export default function Transactions({
                             <button
                                 type="button"
                                 onClick={handleReset}
-                                className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                                className="w-full rounded-xl border border-light-border/70 px-3 py-2 text-sm font-semibold text-light-secondary hover:bg-light-hover dark:border-dark-border/70 dark:text-dark-secondary dark:hover:bg-dark-hover"
                             >
                                 Reset
                             </button>
@@ -369,39 +391,17 @@ export default function Transactions({
                     </form>
                 </div>
 
-                <div className="space-y-3" data-tour="transactions-form">
-                    <div className="card p-4">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div>
-                                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                                    Add transaction
-                                </h3>
-                                <p className="text-sm text-slate-500 dark:text-slate-400">
-                                    Log income, expenses, transfers, and more.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <TransactionForm
-                        onSubmit={handleCreateTransaction}
-                        categories={categories}
-                        savingsGoals={savingsGoals}
-                        loans={loans}
-                        budgets={budgets}
-                        accounts={accounts}
-                        submitLabel="Add transaction"
-                    />
-                </div>
-
                 {loadedTransactions.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-light-border/70 bg-white p-8 text-center text-slate-500 dark:border-white/10 dark:bg-dark-card dark:text-slate-400">
-                        No transactions match the current filters.
-                    </div>
+                    <EmptyState
+                        icon={Receipt}
+                        title="No transactions yet"
+                        description="No transactions match the current filters. Use the New transaction button or adjust your filters to see more."
+                    />
                 ) : (
                     <div className="space-y-6">
                         {sortedDateKeys.map((dateKey) => (
                                 <div key={dateKey} className="card p-4">
-                                    <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                                    <h3 className="text-base font-semibold text-light-primary dark:text-dark-primary">
                                         {formatDateLabel(dateKey)}
                                     </h3>
                                     <div className="mt-4 space-y-4">
@@ -414,12 +414,20 @@ export default function Transactions({
                                             .map((transactionType) => (
                                                 <div key={transactionType}>
                                                     <div className="mb-2 flex items-center gap-2">
-                                                        <span
-                                                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${typeStyles[transactionType]}`}
-                                                        >
-                                                            {transactionType}
-                                                        </span>
-                                                        <span className="text-xs text-slate-400">
+                                                        <Badge
+                                                            label={
+                                                                TRANSACTION_LABEL[
+                                                                    transactionType
+                                                                ] ??
+                                                                transactionType
+                                                            }
+                                                            tone={
+                                                                TRANSACTION_TONE[
+                                                                    transactionType
+                                                                ] ?? "neutral"
+                                                            }
+                                                        />
+                                                        <span className="text-xs text-light-muted dark:text-dark-muted">
                                                             {
                                                                 groupedTransactions[
                                                                     dateKey
@@ -438,16 +446,16 @@ export default function Transactions({
                                                                     key={
                                                                         transaction.id
                                                                     }
-                                                                    className="rounded-lg border border-slate-200 p-3 dark:border-slate-700"
+                                                                    className="rounded-lg border border-light-border/70 p-3 dark:border-dark-border/70"
                                                                 >
                                                                     <div className="flex flex-wrap items-center justify-between gap-2">
                                                                         <div>
-                                                                            <p className="font-medium text-slate-900 dark:text-slate-100">
+                                                                            <p className="font-medium text-light-primary dark:text-dark-primary">
                                                                                 {
                                                                                     transaction.description
                                                                                 }
                                                                             </p>
-                                                                            <p className="text-xs text-slate-400">
+                                                                            <p className="text-xs text-light-muted dark:text-dark-muted">
                                                                                 {transaction.category
                                                                                     ?.name ??
                                                                                     "Uncategorized"}
@@ -456,7 +464,7 @@ export default function Transactions({
                                                                                 ?.name ||
                                                                                 transaction.account
                                                                                     ?.label) && (
-                                                                                <p className="text-xs text-slate-400">
+                                                                                <p className="text-xs text-light-muted dark:text-dark-muted">
                                                                                     {transaction.type ===
                                                                                     "transfer"
                                                                                         ? `From: ${transaction.account.label ?? transaction.account.name}`
@@ -468,7 +476,7 @@ export default function Transactions({
                                                                                 transaction
                                                                                     .transfer_account
                                                                                     ?.name && (
-                                                                                    <p className="text-xs text-slate-400">
+                                                                                    <p className="text-xs text-light-muted dark:text-dark-muted">
                                                                                         To:{" "}
                                                                                         {
                                                                                             transaction
@@ -488,7 +496,7 @@ export default function Transactions({
                                                                                 transaction
                                                                                     .metadata
                                                                                     ?.external_account_name && (
-                                                                                    <p className="text-xs text-slate-400">
+                                                                                    <p className="text-xs text-light-muted dark:text-dark-muted">
                                                                                         To:{" "}
                                                                                         {
                                                                                             transaction
@@ -502,7 +510,7 @@ export default function Transactions({
                                                                                     .created_by
                                                                                     .id !==
                                                                                     transaction.user_id && (
-                                                                                    <p className="text-xs text-slate-400">
+                                                                                    <p className="text-xs text-light-muted dark:text-dark-muted">
                                                                                         Added by{" "}
                                                                                         {
                                                                                             transaction
@@ -513,14 +521,14 @@ export default function Transactions({
                                                                                 )}
                                                                         </div>
                                                                         <div className="text-right">
-                                                                            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                                                            <p className="text-sm font-semibold text-light-primary dark:text-dark-primary">
                                                                                 {formatCurrency(
                                                                                     transaction.amount,
                                                                                     transaction.currency ??
                                                                                         "PHP"
                                                                                 )}
                                                                             </p>
-                                                                            <p className="text-xs text-slate-400">
+                                                                            <p className="text-xs text-light-muted dark:text-dark-muted">
                                                                                 {transaction.payment_method ??
                                                                                     "—"}
                                                                             </p>
@@ -566,7 +574,7 @@ export default function Transactions({
                         {loadedTransactions.length > 0 && (
                             <div
                                 ref={loadMoreRef}
-                                className="py-4 text-center text-sm text-slate-500 dark:text-slate-400"
+                                className="py-4 text-center text-sm text-light-muted dark:text-dark-muted"
                             >
                                 {isLoadingMore
                                     ? "Loading more transactions..."
@@ -578,6 +586,29 @@ export default function Transactions({
                     </div>
                 )}
             </div>
+
+            <Modal
+                show={showCreate}
+                onClose={() => setShowCreate(false)}
+                maxWidth="2xl"
+            >
+                <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
+                    <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
+                        Add transaction
+                    </h3>
+                </div>
+                <div className="px-6 py-4">
+                    <TransactionForm
+                        onSubmit={handleCreateAndClose}
+                        categories={categories}
+                        savingsGoals={savingsGoals}
+                        loans={loans}
+                        budgets={budgets}
+                        accounts={accounts}
+                        submitLabel="Add transaction"
+                    />
+                </div>
+            </Modal>
             <OnboardingTour
                 tourKey="wallet_transactions"
                 steps={walletTransactionsSteps}

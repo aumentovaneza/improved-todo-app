@@ -28,14 +28,56 @@ import {
     ChevronDown,
     ChevronRight,
     Landmark,
+    LayoutDashboard,
+    Receipt,
+    PiggyBank,
+    Target,
+    CreditCard,
     BookOpen,
 } from "lucide-react";
 
 export default function TodoLayout({ header, children }) {
     const user = usePage().props.auth.user;
-    const isFinanceRoute =
-        route().current("finance.*") || route().current("weviewallet.*");
+    const isFinanceRoute = route().current("finance.*") || route().current("weviewallet.*");
     const isWevieWalletRoute = route().current("weviewallet.*");
+    const walletSubLinks = [
+        {
+            name: "Dashboard",
+            href: route("weviewallet.dashboard"),
+            icon: LayoutDashboard,
+            current: route().current("weviewallet.dashboard"),
+        },
+        {
+            name: "Transactions",
+            href: route("weviewallet.transactions.index"),
+            icon: Receipt,
+            current: route().current("weviewallet.transactions.*"),
+        },
+        {
+            name: "Budgets",
+            href: route("weviewallet.budgets.index"),
+            icon: PiggyBank,
+            current: route().current("weviewallet.budgets.*"),
+        },
+        {
+            name: "Savings Goals",
+            href: route("weviewallet.savings-goals.index"),
+            icon: Target,
+            current: route().current("weviewallet.savings-goals.*"),
+        },
+        {
+            name: "Loans",
+            href: route("weviewallet.loans.index"),
+            icon: Landmark,
+            current: route().current("weviewallet.loans.*"),
+        },
+        {
+            name: "Accounts",
+            href: route("weviewallet.accounts.index"),
+            icon: CreditCard,
+            current: route().current("weviewallet.accounts.*"),
+        },
+    ];
 
     // First-run welcome carousel. Only auto-shows on the dashboard so it never
     // pops over a deep link. Dismissal/tour-start persist the `welcome` tour key.
@@ -67,8 +109,7 @@ export default function TodoLayout({ header, children }) {
     };
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [showQuickAddTransaction, setShowQuickAddTransaction] =
-        useState(false);
+    const [showQuickAddTransaction, setShowQuickAddTransaction] = useState(false);
     const [showSyncQueue, setShowSyncQueue] = useState(false);
     const [wevieWalletSubmenuOpen, setWevieWalletSubmenuOpen] = useState(false);
     const {
@@ -125,8 +166,7 @@ export default function TodoLayout({ header, children }) {
             name: "Workspaces",
             href: route("workspaces.index"),
             icon: Users,
-            current:
-                route().current("workspaces.*") || route().current("boards.*"),
+            current: route().current("workspaces.*") || route().current("boards.*"),
             tourKey: "nav-workspaces",
         },
         {
@@ -188,9 +228,7 @@ export default function TodoLayout({ header, children }) {
     ];
 
     return (
-        <div
-            className={`min-h-screen bg-light-primary dark:bg-dark-primary lg:flex`}
-        >
+        <div className={`min-h-screen bg-light-primary dark:bg-dark-primary lg:flex`}>
             {/* Mobile sidebar overlay */}
             {sidebarOpen && (
                 <div className="fixed inset-0 z-50 lg:hidden">
@@ -242,7 +280,9 @@ export default function TodoLayout({ header, children }) {
                                                         <div className="flex items-center justify-between">
                                                             <Link
                                                                 href={item.href}
-                                                                onClick={() => setSidebarOpen(false)}
+                                                                onClick={() =>
+                                                                    setSidebarOpen(false)
+                                                                }
                                                                 className={`group flex items-center flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 ${
                                                                     item.current
                                                                         ? "bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-[#2ED7A1]"
@@ -259,7 +299,11 @@ export default function TodoLayout({ header, children }) {
                                                                 {item.name}
                                                             </Link>
                                                             <button
-                                                                onClick={() => setWevieWalletSubmenuOpen(!wevieWalletSubmenuOpen)}
+                                                                onClick={() =>
+                                                                    setWevieWalletSubmenuOpen(
+                                                                        !wevieWalletSubmenuOpen
+                                                                    )
+                                                                }
                                                                 className={`p-2 rounded-md transition-colors duration-150 ${
                                                                     item.current
                                                                         ? "text-primary-400 dark:text-[#2ED7A1] hover:bg-primary-200/50 dark:hover:bg-primary-900/30"
@@ -276,11 +320,36 @@ export default function TodoLayout({ header, children }) {
                                                         </div>
                                                         {wevieWalletSubmenuOpen && (
                                                             <div className="ml-8 mt-1 space-y-1">
+                                                                {walletSubLinks.map((sub) => {
+                                                                    const SubIcon = sub.icon;
+                                                                    return (
+                                                                        <Link
+                                                                            key={sub.name}
+                                                                            href={sub.href}
+                                                                            onClick={() =>
+                                                                                setSidebarOpen(
+                                                                                    false
+                                                                                )
+                                                                            }
+                                                                            className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150 ${
+                                                                                sub.current
+                                                                                    ? "bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-[#2ED7A1]"
+                                                                                    : "text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary"
+                                                                            }`}
+                                                                        >
+                                                                            <SubIcon className="h-4 w-4 mr-2" />
+                                                                            {sub.name}
+                                                                        </Link>
+                                                                    );
+                                                                })}
                                                                 <button
                                                                     onClick={() => {
                                                                         setSidebarOpen(false);
                                                                         // Open collaborators modal
-                                                                        const event = new CustomEvent('openCollaborators');
+                                                                        const event =
+                                                                            new CustomEvent(
+                                                                                "openCollaborators"
+                                                                            );
                                                                         window.dispatchEvent(event);
                                                                     }}
                                                                     disabled={!isWevieWalletRoute}
@@ -289,14 +358,22 @@ export default function TodoLayout({ header, children }) {
                                                                             ? "text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary"
                                                                             : "text-light-muted dark:text-dark-muted cursor-not-allowed opacity-50"
                                                                     }`}
-                                                                    title={isWevieWalletRoute ? "Manage collaborators" : "Only available on WevieWallet pages"}
+                                                                    title={
+                                                                        isWevieWalletRoute
+                                                                            ? "Manage collaborators"
+                                                                            : "Only available on WevieWallet pages"
+                                                                    }
                                                                 >
                                                                     <Users className="h-4 w-4 mr-2" />
                                                                     Collaborators
                                                                 </button>
                                                                 <Link
-                                                                    href={route("profile.weviewallet")}
-                                                                    onClick={() => setSidebarOpen(false)}
+                                                                    href={route(
+                                                                        "profile.weviewallet"
+                                                                    )}
+                                                                    onClick={() =>
+                                                                        setSidebarOpen(false)
+                                                                    }
                                                                     className="flex items-center px-3 py-2 text-sm text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary rounded-md transition-colors duration-150"
                                                                 >
                                                                     <Landmark className="h-4 w-4 mr-2" />
@@ -311,9 +388,7 @@ export default function TodoLayout({ header, children }) {
                                                 <Link
                                                     key={item.name}
                                                     href={item.href}
-                                                    onClick={() =>
-                                                        setSidebarOpen(false)
-                                                    }
+                                                    onClick={() => setSidebarOpen(false)}
                                                     className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 ${
                                                         item.current
                                                             ? "bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-[#2ED7A1]"
@@ -345,11 +420,7 @@ export default function TodoLayout({ header, children }) {
                                                         <Link
                                                             key={item.name}
                                                             href={item.href}
-                                                            onClick={() =>
-                                                                setSidebarOpen(
-                                                                    false
-                                                                )
-                                                            }
+                                                            onClick={() => setSidebarOpen(false)}
                                                             className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 ${
                                                                 item.current
                                                                     ? "bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300"
@@ -377,9 +448,7 @@ export default function TodoLayout({ header, children }) {
                                         <div className="flex-shrink-0">
                                             <div className="h-8 w-8 rounded-full bg-primary-400 dark:bg-[#2ED7A1] flex items-center justify-center">
                                                 <span className="text-sm font-medium text-white">
-                                                    {user.name
-                                                        .charAt(0)
-                                                        .toUpperCase()}
+                                                    {user.name.charAt(0).toUpperCase()}
                                                 </span>
                                             </div>
                                         </div>
@@ -413,14 +482,8 @@ export default function TodoLayout({ header, children }) {
                                                     className="bottom-full mb-2"
                                                 >
                                                     <Dropdown.Link
-                                                        href={route(
-                                                            "profile.show"
-                                                        )}
-                                                        onClick={() =>
-                                                            setSidebarOpen(
-                                                                false
-                                                            )
-                                                        }
+                                                        href={route("profile.show")}
+                                                        onClick={() => setSidebarOpen(false)}
                                                     >
                                                         Profile
                                                     </Dropdown.Link>
@@ -428,11 +491,7 @@ export default function TodoLayout({ header, children }) {
                                                         href={route("logout")}
                                                         method="post"
                                                         as="button"
-                                                        onClick={() =>
-                                                            setSidebarOpen(
-                                                                false
-                                                            )
-                                                        }
+                                                        onClick={() => setSidebarOpen(false)}
                                                     >
                                                         Log Out
                                                     </Dropdown.Link>
@@ -488,7 +547,11 @@ export default function TodoLayout({ header, children }) {
                                                     {item.name}
                                                 </Link>
                                                 <button
-                                                    onClick={() => setWevieWalletSubmenuOpen(!wevieWalletSubmenuOpen)}
+                                                    onClick={() =>
+                                                        setWevieWalletSubmenuOpen(
+                                                            !wevieWalletSubmenuOpen
+                                                        )
+                                                    }
                                                     className={`p-2 rounded-md transition-colors duration-150 ${
                                                         item.current
                                                             ? "text-primary-500 hover:bg-primary-200/50 dark:hover:bg-primary-900/30"
@@ -505,10 +568,29 @@ export default function TodoLayout({ header, children }) {
                                             </div>
                                             {wevieWalletSubmenuOpen && (
                                                 <div className="ml-8 mt-1 space-y-1">
+                                                    {walletSubLinks.map((sub) => {
+                                                        const SubIcon = sub.icon;
+                                                        return (
+                                                            <Link
+                                                                key={sub.name}
+                                                                href={sub.href}
+                                                                className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150 ${
+                                                                    sub.current
+                                                                        ? "bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-primary-300"
+                                                                        : "text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary"
+                                                                }`}
+                                                            >
+                                                                <SubIcon className="h-4 w-4 mr-2" />
+                                                                {sub.name}
+                                                            </Link>
+                                                        );
+                                                    })}
                                                     <button
                                                         onClick={() => {
                                                             // Open collaborators modal
-                                                            const event = new CustomEvent('openCollaborators');
+                                                            const event = new CustomEvent(
+                                                                "openCollaborators"
+                                                            );
                                                             window.dispatchEvent(event);
                                                         }}
                                                         disabled={!isWevieWalletRoute}
@@ -517,7 +599,11 @@ export default function TodoLayout({ header, children }) {
                                                                 ? "text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary"
                                                                 : "text-light-muted dark:text-dark-muted cursor-not-allowed opacity-50"
                                                         }`}
-                                                        title={isWevieWalletRoute ? "Manage collaborators" : "Only available on WevieWallet pages"}
+                                                        title={
+                                                            isWevieWalletRoute
+                                                                ? "Manage collaborators"
+                                                                : "Only available on WevieWallet pages"
+                                                        }
                                                     >
                                                         <Users className="h-4 w-4 mr-2" />
                                                         Collaborators
@@ -626,13 +712,8 @@ export default function TodoLayout({ header, children }) {
                                             </svg>
                                         </button>
                                     </Dropdown.Trigger>
-                                    <Dropdown.Content
-                                        align="right"
-                                        className="bottom-full mb-2"
-                                    >
-                                        <Dropdown.Link
-                                            href={route("profile.show")}
-                                        >
+                                    <Dropdown.Content align="right" className="bottom-full mb-2">
+                                        <Dropdown.Link href={route("profile.show")}>
                                             Profile
                                         </Dropdown.Link>
                                         <Dropdown.Link
@@ -683,9 +764,7 @@ export default function TodoLayout({ header, children }) {
                                     onClick={() => setShowSyncQueue(true)}
                                     className="relative rounded-md px-3 py-1 text-xs font-semibold text-light-secondary hover:text-light-primary dark:text-dark-secondary dark:hover:text-dark-primary"
                                 >
-                                    <span className="sr-only">
-                                        Pending sync items
-                                    </span>
+                                    <span className="sr-only">Pending sync items</span>
                                     Pending sync
                                     <span className="ml-2 inline-flex min-w-[20px] items-center justify-center rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-semibold text-white">
                                         {pendingCount}
@@ -696,11 +775,7 @@ export default function TodoLayout({ header, children }) {
                             <button
                                 onClick={toggleDarkMode}
                                 className="rounded-md p-2 text-light-secondary hover:text-light-primary dark:text-dark-secondary dark:hover:text-dark-primary transition-colors duration-200 hover:bg-light-hover dark:hover:bg-dark-hover"
-                                title={
-                                    darkMode
-                                        ? "Switch to light mode"
-                                        : "Switch to dark mode"
-                                }
+                                title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
                             >
                                 {darkMode ? (
                                     <Sun className="h-5 w-5" />
@@ -721,9 +796,7 @@ export default function TodoLayout({ header, children }) {
                 </main>
             </div>
 
-            <MobileFab
-                onClick={() => setShowQuickAddTransaction(true)}
-            />
+            <MobileFab onClick={() => setShowQuickAddTransaction(true)} />
             <QuickAddTransactionModal
                 show={showQuickAddTransaction}
                 onClose={() => setShowQuickAddTransaction(false)}

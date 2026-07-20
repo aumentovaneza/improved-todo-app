@@ -29,7 +29,7 @@ class TaskController extends Controller
     public function index(Request $request): Response
     {
 
-        $filters = $request->only(['search', 'status', 'priority', 'category_id', 'due_date_filter']);
+        $filters = $request->only(['search', 'status', 'priority', 'category_id', 'tag_id', 'due_date_filter']);
 
         $baseQuery = Task::with(['category', 'subtasks', 'tags'])
             ->where('status', '!=', 'completed')
@@ -102,7 +102,7 @@ class TaskController extends Controller
             'categorizedTasks' => $categorizedTasks,
             'categories' => $categories,
             'tags' => $tags,
-            'filters' => $request->only(['search', 'status', 'priority', 'category_id', 'due_date_filter']),
+            'filters' => $request->only(['search', 'status', 'priority', 'category_id', 'tag_id', 'due_date_filter']),
         ]);
     }
 

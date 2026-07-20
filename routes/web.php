@@ -1,21 +1,21 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\TaskController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\TagController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\SubtaskController;
-use App\Http\Controllers\ReminderController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\AnalyticsController;
-use App\Http\Controllers\GoogleCalendarController;
-use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\BoardController;
+use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GoogleCalendarController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReminderController;
+use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\SwimlaneController;
-use App\Modules\Finance\Controllers\FinanceBudgetController;
+use App\Http\Controllers\TagController;
+use App\Http\Controllers\TaskController;
+use App\Http\Controllers\WorkspaceController;
 use App\Modules\Finance\Controllers\FinanceAccountController;
+use App\Modules\Finance\Controllers\FinanceBudgetController;
 use App\Modules\Finance\Controllers\FinanceCategoryController;
 use App\Modules\Finance\Controllers\FinanceDashboardController;
 use App\Modules\Finance\Controllers\FinanceLoanController;
@@ -176,7 +176,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('users/{user}/edit', [AdminController::class, 'editUser'])->name('users.edit');
         Route::put('users/{user}', [AdminController::class, 'updateUser'])->name('users.update');
         Route::delete('users/{user}', [AdminController::class, 'deleteUser'])->name('users.destroy');
-        Route::get('activity-logs', [AdminController::class, 'activityLogs'])->name('activity-logs.index');
 
         // Invite codes
         Route::get('invite-codes', [AdminController::class, 'inviteCodes'])->name('invite-codes.index');
@@ -209,4 +208,4 @@ Route::middleware('auth')->group(function () {
     Route::get('/google/callback', [GoogleCalendarController::class, 'callback'])->name('google.callback');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

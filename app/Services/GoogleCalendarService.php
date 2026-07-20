@@ -4,19 +4,17 @@ namespace App\Services;
 
 use App\Models\Task;
 use App\Models\User;
-use App\Services\ActivityLogService;
-use App\Services\TaskService;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class GoogleCalendarService
 {
     private $client;
+
     private $service;
 
     public function __construct(
-        private ActivityLogService $activityLogService,
         private TaskService $taskService
     ) {
         $this->initializeClient();
@@ -28,16 +26,17 @@ class GoogleCalendarService
     private function initializeClient(): void
     {
         // Check if Google classes are available using string class names
-        if (!class_exists('Google\Client') || !class_exists('Google\Service\Calendar')) {
+        if (! class_exists('Google\Client') || ! class_exists('Google\Service\Calendar')) {
             Log::warning('Google API client classes not available. Google Calendar features will be disabled.');
             $this->client = null;
+
             return;
         }
 
         $clientClass = 'Google\Client';
         $calendarClass = 'Google\Service\Calendar';
-        
-        $this->client = new $clientClass();
+
+        $this->client = new $clientClass;
         $this->client->setClientId(config('services.google.client_id'));
         $this->client->setClientSecret(config('services.google.client_secret'));
         $this->client->setRedirectUri(config('services.google.redirect'));
@@ -61,7 +60,7 @@ class GoogleCalendarService
             $token = $this->client->fetchAccessTokenWithAuthCode($authCode);
 
             if (isset($token['error'])) {
-                throw new \Exception('Failed to fetch access token: ' . $token['error']);
+                throw new \Exception('Failed to fetch access token: '.$token['error']);
             }
 
             // Store tokens securely
@@ -73,18 +72,10 @@ class GoogleCalendarService
                 'google_token_expires' => now()->addSeconds($token['expires_in']),
             ]);
 
-            // Log activity
-            $this->activityLogService->logUserActivity(
-                'google_calendar_connected',
-                $user->id,
-                $user->name,
-                null,
-                ['connected_at' => now()->toDateTimeString()]
-            );
-
             return ['success' => true, 'message' => 'Google Calendar connected successfully'];
         } catch (\Exception $e) {
-            Log::error('Google Calendar callback error: ' . $e->getMessage());
+            Log::error('Google Calendar callback error: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to connect Google Calendar'];
         }
     }
@@ -101,18 +92,10 @@ class GoogleCalendarService
                 'google_token_expires' => null,
             ]);
 
-            // Log activity
-            $this->activityLogService->logUserActivity(
-                'google_calendar_disconnected',
-                $user->id,
-                $user->name,
-                ['connected' => true],
-                ['connected' => false]
-            );
-
             return true;
         } catch (\Exception $e) {
-            Log::error('Google Calendar disconnect error: ' . $e->getMessage());
+            Log::error('Google Calendar disconnect error: '.$e->getMessage());
+
             return false;
         }
     }
@@ -122,8 +105,8 @@ class GoogleCalendarService
      */
     public function isConnected(User $user): bool
     {
-        return !empty($user->google_token) &&
-            !empty($user->google_token_expires) &&
+        return ! empty($user->google_token) &&
+            ! empty($user->google_token_expires) &&
             $user->google_token_expires->isFuture();
     }
 
@@ -132,14 +115,14 @@ class GoogleCalendarService
      */
     private function setupServiceForUser(User $user): bool
     {
-        if (!$this->isConnected($user)) {
+        if (! $this->isConnected($user)) {
             return false;
         }
 
         try {
             // Check if token needs refresh
             if ($user->google_token_expires->isPast()) {
-                if (!$this->refreshToken($user)) {
+                if (! $this->refreshToken($user)) {
                     return false;
                 }
             }
@@ -147,9 +130,11 @@ class GoogleCalendarService
             $this->client->setAccessToken(decrypt($user->google_token));
             $calendarClass = 'Google\Service\Calendar';
             $this->service = new $calendarClass($this->client);
+
             return true;
         } catch (\Exception $e) {
-            Log::error('Failed to setup Google Calendar service: ' . $e->getMessage());
+            Log::error('Failed to setup Google Calendar service: '.$e->getMessage());
+
             return false;
         }
     }
@@ -165,13 +150,13 @@ class GoogleCalendarService
 
         try {
             $this->client->setAccessToken([
-                'refresh_token' => decrypt($user->google_refresh_token)
+                'refresh_token' => decrypt($user->google_refresh_token),
             ]);
 
             $newToken = $this->client->fetchAccessTokenWithRefreshToken();
 
             if (isset($newToken['error'])) {
-                throw new \Exception('Token refresh failed: ' . $newToken['error']);
+                throw new \Exception('Token refresh failed: '.$newToken['error']);
             }
 
             $user->update([
@@ -181,7 +166,8 @@ class GoogleCalendarService
 
             return true;
         } catch (\Exception $e) {
-            Log::error('Token refresh error: ' . $e->getMessage());
+            Log::error('Token refresh error: '.$e->getMessage());
+
             return false;
         }
     }
@@ -191,7 +177,7 @@ class GoogleCalendarService
      */
     public function syncFromCalendar(User $user): array
     {
-        if (!$this->setupServiceForUser($user)) {
+        if (! $this->setupServiceForUser($user)) {
             return ['success' => false, 'message' => 'Google Calendar not connected'];
         }
 
@@ -218,27 +204,15 @@ class GoogleCalendarService
                 }
             }
 
-            // Log activity
-            $this->activityLogService->logUserActivity(
-                'google_calendar_sync',
-                $user->id,
-                $user->name,
-                null,
-                [
-                    'synced_tasks' => $syncedCount,
-                    'updated_tasks' => $updatedCount,
-                    'sync_date' => now()->toDateTimeString()
-                ]
-            );
-
             return [
                 'success' => true,
                 'message' => "Synced {$syncedCount} new tasks and updated {$updatedCount} existing tasks",
                 'synced' => $syncedCount,
-                'updated' => $updatedCount
+                'updated' => $updatedCount,
             ];
         } catch (\Exception $e) {
-            Log::error('Calendar sync error: ' . $e->getMessage());
+            Log::error('Calendar sync error: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to sync calendar'];
         }
     }
@@ -249,7 +223,7 @@ class GoogleCalendarService
     public function pushTaskToCalendar(Task $task): array
     {
         $user = $task->user;
-        if (!$this->setupServiceForUser($user)) {
+        if (! $this->setupServiceForUser($user)) {
             return ['success' => false, 'message' => 'Google Calendar not connected'];
         }
 
@@ -267,19 +241,10 @@ class GoogleCalendarService
                 $action = 'created';
             }
 
-            // Log activity
-            $this->activityLogService->logTaskActivity(
-                'google_calendar_push',
-                $task->id,
-                $task->title,
-                null,
-                ['action' => $action, 'google_event_id' => $task->google_event_id],
-                $user->id
-            );
-
             return ['success' => true, 'message' => "Task {$action} in Google Calendar"];
         } catch (\Exception $e) {
-            Log::error('Push to calendar error: ' . $e->getMessage());
+            Log::error('Push to calendar error: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to push task to calendar'];
         }
     }
@@ -290,7 +255,7 @@ class GoogleCalendarService
     public function removeTaskFromCalendar(Task $task): array
     {
         $user = $task->user;
-        if (!$this->setupServiceForUser($user) || !$task->google_event_id) {
+        if (! $this->setupServiceForUser($user) || ! $task->google_event_id) {
             return ['success' => false, 'message' => 'Task not linked to Google Calendar'];
         }
 
@@ -298,19 +263,10 @@ class GoogleCalendarService
             $this->service->events->delete('primary', $task->google_event_id);
             $task->update(['google_event_id' => null]);
 
-            // Log activity
-            $this->activityLogService->logTaskActivity(
-                'google_calendar_remove',
-                $task->id,
-                $task->title,
-                ['google_event_id' => $task->google_event_id],
-                ['google_event_id' => null],
-                $user->id
-            );
-
             return ['success' => true, 'message' => 'Task removed from Google Calendar'];
         } catch (\Exception $e) {
-            Log::error('Remove from calendar error: ' . $e->getMessage());
+            Log::error('Remove from calendar error: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to remove task from calendar'];
         }
     }
@@ -320,7 +276,7 @@ class GoogleCalendarService
      */
     public function getCalendarEvents(User $user, Carbon $startDate, Carbon $endDate): Collection
     {
-        if (!$this->setupServiceForUser($user)) {
+        if (! $this->setupServiceForUser($user)) {
             return collect();
         }
 
@@ -341,7 +297,7 @@ class GoogleCalendarService
                     'description' => $event->getDescription(),
                     'start' => $event->getStart()->getDateTime() ?: $event->getStart()->getDate(),
                     'end' => $event->getEnd()->getDateTime() ?: $event->getEnd()->getDate(),
-                    'all_day' => !$event->getStart()->getDateTime(),
+                    'all_day' => ! $event->getStart()->getDateTime(),
                     'location' => $event->getLocation(),
                     'attendees' => $event->getAttendees(),
                 ]);
@@ -349,7 +305,8 @@ class GoogleCalendarService
 
             return $calendarEvents;
         } catch (\Exception $e) {
-            Log::error('Get calendar events error: ' . $e->getMessage());
+            Log::error('Get calendar events error: '.$e->getMessage());
+
             return collect();
         }
     }
@@ -404,7 +361,7 @@ class GoogleCalendarService
         }
 
         // Skip all-day events (optional)
-        if (!$event->getStart()->getDateTime()) {
+        if (! $event->getStart()->getDateTime()) {
             return false;
         }
 
@@ -441,7 +398,7 @@ class GoogleCalendarService
             'due_date' => $startTime ? Carbon::parse($startTime)->format('Y-m-d') : null,
             'start_time' => $startTime ? Carbon::parse($startTime)->format('H:i') : null,
             'end_time' => $endTime ? Carbon::parse($endTime)->format('H:i') : null,
-            'is_all_day' => !$startTime,
+            'is_all_day' => ! $startTime,
             'priority' => 'medium',
             'status' => 'pending',
             'google_event_id' => $event->getId(),
@@ -451,9 +408,11 @@ class GoogleCalendarService
 
         if ($existingTask) {
             $this->taskService->updateTask($existingTask, $taskData, $user->id);
+
             return ['created' => false, 'task' => $existingTask];
         } else {
             $task = $this->taskService->createTask($taskData, $user->id);
+
             return ['created' => true, 'task' => $task];
         }
     }
@@ -463,7 +422,7 @@ class GoogleCalendarService
      */
     private function createEventFromTask(Task $task): Event
     {
-        $event = new Event();
+        $event = new Event;
         $event->setSummary($task->title);
         $event->setDescription($task->description);
 

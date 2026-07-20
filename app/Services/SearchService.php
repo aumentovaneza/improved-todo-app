@@ -2,22 +2,17 @@
 
 namespace App\Services;
 
-use App\Models\Task;
 use App\Models\Category;
 use App\Models\Tag;
+use App\Models\Task;
 use App\Models\User;
-use App\Services\ActivityLogService;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class SearchService
 {
-    public function __construct(
-        private ActivityLogService $activityLogService
-    ) {}
-
     /**
      * Global search across all entities for a user
      */
@@ -28,18 +23,6 @@ class SearchService
             'categories' => $this->searchCategories($userId, $query, $options),
             'tags' => $this->searchTags($query, $options),
         ];
-
-        // Log search activity
-        $this->activityLogService->logUserActivity(
-            'global_search',
-            $userId,
-            User::find($userId)->name,
-            null,
-            [
-                'query' => $query,
-                'results_count' => array_sum(array_map('count', $searchResults))
-            ]
-        );
 
         return $searchResults;
     }
@@ -52,7 +35,7 @@ class SearchService
         $query = Task::where('user_id', $userId)->with(['category', 'tags', 'subtasks']);
 
         // Text search
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $searchTerm = $filters['search'];
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('title', 'like', "%{$searchTerm}%")
@@ -61,7 +44,7 @@ class SearchService
         }
 
         // Status filter
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             if (is_array($filters['status'])) {
                 $query->whereIn('status', $filters['status']);
             } else {
@@ -70,7 +53,7 @@ class SearchService
         }
 
         // Priority filter
-        if (!empty($filters['priority'])) {
+        if (! empty($filters['priority'])) {
             if (is_array($filters['priority'])) {
                 $query->whereIn('priority', $filters['priority']);
             } else {
@@ -79,7 +62,7 @@ class SearchService
         }
 
         // Category filter
-        if (!empty($filters['category_id'])) {
+        if (! empty($filters['category_id'])) {
             if (is_array($filters['category_id'])) {
                 $query->whereIn('category_id', $filters['category_id']);
             } else {
@@ -88,7 +71,7 @@ class SearchService
         }
 
         // Tags filter
-        if (!empty($filters['tags'])) {
+        if (! empty($filters['tags'])) {
             $tagIds = is_array($filters['tags']) ? $filters['tags'] : [$filters['tags']];
             $query->whereHas('tags', function ($q) use ($tagIds) {
                 $q->whereIn('tag_id', $tagIds);
@@ -96,24 +79,24 @@ class SearchService
         }
 
         // Date range filters
-        if (!empty($filters['created_from'])) {
+        if (! empty($filters['created_from'])) {
             $query->where('created_at', '>=', Carbon::parse($filters['created_from']));
         }
-        if (!empty($filters['created_to'])) {
+        if (! empty($filters['created_to'])) {
             $query->where('created_at', '<=', Carbon::parse($filters['created_to'])->endOfDay());
         }
-        if (!empty($filters['due_from'])) {
+        if (! empty($filters['due_from'])) {
             $query->where('due_date', '>=', $filters['due_from']);
         }
-        if (!empty($filters['due_to'])) {
+        if (! empty($filters['due_to'])) {
             $query->where('due_date', '<=', $filters['due_to']);
         }
 
         // Completion date filters
-        if (!empty($filters['completed_from'])) {
+        if (! empty($filters['completed_from'])) {
             $query->where('completed_at', '>=', Carbon::parse($filters['completed_from']));
         }
-        if (!empty($filters['completed_to'])) {
+        if (! empty($filters['completed_to'])) {
             $query->where('completed_at', '<=', Carbon::parse($filters['completed_to'])->endOfDay());
         }
 
@@ -123,7 +106,7 @@ class SearchService
         }
 
         // Overdue filter
-        if (!empty($filters['is_overdue'])) {
+        if (! empty($filters['is_overdue'])) {
             $query->where('due_date', '<', now())
                 ->where('status', '!=', 'completed');
         }
@@ -153,7 +136,7 @@ class SearchService
                 if ($sortOrder === 'desc') {
                     $priorityOrder = array_reverse($priorityOrder);
                 }
-                $query->orderByRaw("FIELD(priority, '" . implode("','", $priorityOrder) . "')");
+                $query->orderByRaw("FIELD(priority, '".implode("','", $priorityOrder)."')");
                 break;
             case 'status':
                 $query->orderBy('status', $sortOrder);
@@ -163,6 +146,7 @@ class SearchService
         }
 
         $perPage = $filters['per_page'] ?? 15;
+
         return $query->paginate($perPage);
     }
 
@@ -298,19 +282,6 @@ class SearchService
      */
     public function getSearchSuggestions(int $userId, int $limit = 10): array
     {
-        // Get recent search terms from activity logs
-        $recentSearches = $this->activityLogService->getActivityLogs([
-            'user_id' => $userId,
-            'action' => 'global_search'
-        ], $limit);
-
-        $suggestions = [];
-        foreach ($recentSearches as $activity) {
-            if (!empty($activity->new_values['query'])) {
-                $suggestions[] = $activity->new_values['query'];
-            }
-        }
-
         // Get popular task titles and category names
         $popularTasks = Task::where('user_id', $userId)
             ->select('title')
@@ -328,7 +299,7 @@ class SearchService
             ->toArray();
 
         return [
-            'recent_searches' => array_unique($suggestions),
+            'recent_searches' => [],
             'popular_tasks' => $popularTasks,
             'popular_categories' => $popularCategories,
         ];
@@ -345,11 +316,11 @@ class SearchService
         // Note: This requires FULLTEXT indexes on the columns
         $tasks = DB::table('tasks')
             ->select('*')
-            ->selectRaw("
+            ->selectRaw('
                 MATCH(title, description) AGAINST(? IN NATURAL LANGUAGE MODE) as relevance_score
-            ", [$query])
+            ', [$query])
             ->where('user_id', $userId)
-            ->whereRaw("MATCH(title, description) AGAINST(? IN NATURAL LANGUAGE MODE)", [$query])
+            ->whereRaw('MATCH(title, description) AGAINST(? IN NATURAL LANGUAGE MODE)', [$query])
             ->orderBy('relevance_score', 'desc')
             ->limit($limit)
             ->get();
@@ -366,7 +337,7 @@ class SearchService
         $baseQuery = Task::where('user_id', $userId);
 
         // Apply filters
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $baseQuery->where(function ($q) use ($filters) {
                 $q->where('title', 'like', "%{$filters['search']}%")
                     ->orWhere('description', 'like', "%{$filters['search']}%");
@@ -398,7 +369,7 @@ class SearchService
     {
         $query = Task::where('user_id', $userId);
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {
                 $q->where('title', 'like', "%{$filters['search']}%")
                     ->orWhere('description', 'like', "%{$filters['search']}%");
@@ -418,7 +389,7 @@ class SearchService
     {
         $query = Task::where('user_id', $userId);
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {
                 $q->where('title', 'like', "%{$filters['search']}%")
                     ->orWhere('description', 'like', "%{$filters['search']}%");
@@ -438,7 +409,7 @@ class SearchService
     {
         $query = Task::where('user_id', $userId)->with('category');
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {
                 $q->where('title', 'like', "%{$filters['search']}%")
                     ->orWhere('description', 'like', "%{$filters['search']}%");
@@ -462,7 +433,7 @@ class SearchService
     {
         $query = Task::where('user_id', $userId);
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {
                 $q->where('title', 'like', "%{$filters['search']}%")
                     ->orWhere('description', 'like', "%{$filters['search']}%");
@@ -503,7 +474,7 @@ class SearchService
         return [
             'data' => $exportData,
             'format' => $format,
-            'filename' => "tasks_export_" . now()->format('Y-m-d_H-i-s') . ".{$format}",
+            'filename' => 'tasks_export_'.now()->format('Y-m-d_H-i-s').".{$format}",
             'total' => $exportData->count(),
         ];
     }

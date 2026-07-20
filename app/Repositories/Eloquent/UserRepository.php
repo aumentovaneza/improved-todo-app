@@ -4,9 +4,9 @@ namespace App\Repositories\Eloquent;
 
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Builder;
 
 class UserRepository implements UserRepositoryInterface
 {
@@ -15,9 +15,9 @@ class UserRepository implements UserRepositoryInterface
      */
     public function getAllUsers(array $filters = [], array $relations = []): LengthAwarePaginator
     {
-        $query = User::withCount(['tasks', 'activityLogs']);
+        $query = User::withCount(['tasks']);
 
-        if (!empty($relations)) {
+        if (! empty($relations)) {
             $query->with($relations);
         }
 
@@ -40,6 +40,7 @@ class UserRepository implements UserRepositoryInterface
     public function update(User $user, array $data): User
     {
         $user->update($data);
+
         return $user->fresh();
     }
 
@@ -82,16 +83,8 @@ class UserRepository implements UserRepositoryInterface
             },
             'tasks as overdue_tasks_count' => function ($query) {
                 $query->overdue();
-            }
+            },
         ])->get();
-    }
-
-    /**
-     * Get users with activity log counts
-     */
-    public function getUsersWithActivityCounts(): Collection
-    {
-        return User::withCount('activityLogs')->get();
     }
 
     /**
@@ -112,7 +105,6 @@ class UserRepository implements UserRepositoryInterface
         $overdueCount = $user->tasks()->overdue()->count();
         $dueTodayCount = $user->tasks()->whereDate('due_date', today())->count();
         $categoryCount = $user->categories()->where('is_active', true)->count();
-        $activityCount = $user->activityLogs()->count();
 
         return [
             'total_tasks' => $taskStats->total_tasks ?? 0,
@@ -123,7 +115,6 @@ class UserRepository implements UserRepositoryInterface
             'overdue_tasks' => $overdueCount,
             'due_today_tasks' => $dueTodayCount,
             'categories_count' => $categoryCount,
-            'activity_logs_count' => $activityCount,
         ];
     }
 
@@ -179,6 +170,7 @@ class UserRepository implements UserRepositoryInterface
     public function updateTimezone(User $user, string $timezone): User
     {
         $user->update(['timezone' => $timezone]);
+
         return $user->fresh();
     }
 
@@ -191,6 +183,7 @@ class UserRepository implements UserRepositoryInterface
         $filteredPreferences = array_intersect_key($preferences, array_flip($allowedPreferences));
 
         $user->update($filteredPreferences);
+
         return $user->fresh();
     }
 
@@ -200,7 +193,7 @@ class UserRepository implements UserRepositoryInterface
     private function applyFilters(Builder $query, array $filters): void
     {
         // Search functionality
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -209,12 +202,12 @@ class UserRepository implements UserRepositoryInterface
         }
 
         // Filter by role
-        if (!empty($filters['role'])) {
+        if (! empty($filters['role'])) {
             $query->where('role', $filters['role']);
         }
 
         // Filter by timezone
-        if (!empty($filters['timezone'])) {
+        if (! empty($filters['timezone'])) {
             $query->where('timezone', $filters['timezone']);
         }
 
@@ -228,11 +221,11 @@ class UserRepository implements UserRepositoryInterface
         }
 
         // Filter by creation date range
-        if (!empty($filters['created_from'])) {
+        if (! empty($filters['created_from'])) {
             $query->whereDate('created_at', '>=', $filters['created_from']);
         }
 
-        if (!empty($filters['created_to'])) {
+        if (! empty($filters['created_to'])) {
             $query->whereDate('created_at', '<=', $filters['created_to']);
         }
     }

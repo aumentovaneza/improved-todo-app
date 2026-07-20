@@ -16,7 +16,6 @@ import {
     FolderOpen,
     Users,
     Settings,
-    Activity,
     Sun,
     Moon,
     Bell,
@@ -219,12 +218,6 @@ export default function TodoLayout({ header, children }) {
             href: route("admin.invite-codes.index"),
             icon: Users,
             current: route().current("admin.invite-codes.*"),
-        },
-        {
-            name: "Activity Logs",
-            href: route("admin.activity-logs.index"),
-            icon: Activity,
-            current: route().current("admin.activity-logs.index"),
         },
     ];
 

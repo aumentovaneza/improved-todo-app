@@ -14,7 +14,10 @@ import {
     Activity,
 } from "lucide-react";
 import { toast } from "react-toastify";
+import { formatDistanceToNowStrict } from "date-fns";
 import Toast from "@/Components/Toast";
+
+const RECENT_ACTIVE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
 
 export default function Index({ users, filters }) {
     const [search, setSearch] = useState(filters.search || "");
@@ -87,6 +90,46 @@ export default function Index({ users, filters }) {
             default:
                 return <Users className="h-4 w-4" />;
         }
+    };
+
+    const renderLastActive = (lastActiveAt) => {
+        if (!lastActiveAt) {
+            return (
+                <span className="text-gray-400 dark:text-gray-500">
+                    Never
+                </span>
+            );
+        }
+
+        const lastActive = new Date(lastActiveAt);
+        const fullTimestamp = lastActive.toLocaleString();
+        const isRecentlyActive =
+            Date.now() - lastActive.getTime() < RECENT_ACTIVE_THRESHOLD_MS;
+
+        if (isRecentlyActive) {
+            return (
+                <span
+                    className="inline-flex items-center gap-1.5 text-primary-600 dark:text-primary-400 font-medium"
+                    title={fullTimestamp}
+                >
+                    <span
+                        className="h-2 w-2 rounded-full bg-primary-500 dark:bg-primary-400"
+                        aria-hidden="true"
+                    />
+                    Active now
+                </span>
+            );
+        }
+
+        return (
+            <time
+                dateTime={lastActive.toISOString()}
+                title={fullTimestamp}
+                className="text-gray-500 dark:text-gray-400"
+            >
+                {formatDistanceToNowStrict(lastActive, { addSuffix: true })}
+            </time>
+        );
     };
 
     return (
@@ -198,7 +241,7 @@ export default function Index({ users, filters }) {
                                             Tasks
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Activity
+                                            Last active
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                             Joined
@@ -253,12 +296,10 @@ export default function Index({ users, filters }) {
                                                     {user.tasks_count || 0}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                <div className="flex items-center">
-                                                    <Activity className="h-4 w-4 mr-1" />
-                                                    {user.activity_logs_count ||
-                                                        0}
-                                                </div>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                {renderLastActive(
+                                                    user.last_active_at
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                 <div className="flex items-center">

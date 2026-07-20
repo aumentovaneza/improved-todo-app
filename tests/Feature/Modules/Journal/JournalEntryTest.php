@@ -44,13 +44,15 @@ it('creates a journal entry and derives an excerpt', function () {
 
     $response->assertRedirect(route('journal.index'));
 
+    // title is encrypted at rest, so assert plaintext columns via the DB and
+    // the encrypted title through the decrypting model.
     $this->assertDatabaseHas('journal_entries', [
         'user_id' => $user->id,
-        'title' => 'A great morning',
         'mood' => 'great',
     ]);
 
     $entry = JournalEntry::where('user_id', $user->id)->firstOrFail();
+    expect($entry->title)->toBe('A great morning');
     expect($entry->excerpt)->toBe('Today was a wonderful day of writing.');
     expect($entry->tags->pluck('name')->sort()->values()->all())->toBe(['gratitude', 'morning']);
     expect(JournalTag::where('user_id', $user->id)->count())->toBe(2);
@@ -59,9 +61,8 @@ it('creates a journal entry and derives an excerpt', function () {
 it('updates a journal entry and syncs tags', function () {
     $user = User::factory()->create();
     $entry = makeEntry($user);
-    $entry->tags()->sync([
-        JournalTag::create(['user_id' => $user->id, 'name' => 'old'])->id,
-    ]);
+    $oldTag = JournalTag::create(['user_id' => $user->id, 'name' => 'old']);
+    $entry->tags()->sync([$oldTag->id]);
 
     $response = $this->actingAs($user)->put(route('journal.update', $entry->id), [
         'entry_date' => '2026-07-22',
@@ -84,7 +85,7 @@ it('updates a journal entry and syncs tags', function () {
     ]);
     $this->assertDatabaseMissing('journal_entry_journal_tag', [
         'journal_entry_id' => $entry->id,
-        'journal_tag_id' => JournalTag::where('name', 'old')->first()->id,
+        'journal_tag_id' => $oldTag->id,
     ]);
 });
 
@@ -114,9 +115,10 @@ it('blocks a second user from viewing another users entry', function () {
 
     $this->assertDatabaseHas('journal_entries', [
         'id' => $entry->id,
-        'title' => 'My day',
         'deleted_at' => null,
     ]);
+    // title is encrypted; verify the unchanged value through the model.
+    expect(JournalEntry::find($entry->id)->title)->toBe('My day');
 });
 
 it('index only returns the acting users entries', function () {

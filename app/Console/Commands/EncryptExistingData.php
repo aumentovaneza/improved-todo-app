@@ -51,6 +51,9 @@ class EncryptExistingData extends Command
         'finance_savings_goals' => ['name', 'notes'],
         'finance_loans' => ['name', 'notes'],
         'finance_reports' => ['payload'],
+        'journal_entries' => ['title', 'content', 'excerpt'],
+        'journal_tags' => ['name'],
+        'calendar_month_titles' => ['title'],
     ];
 
     public function handle(): int

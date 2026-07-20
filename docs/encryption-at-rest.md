@@ -23,6 +23,8 @@ Free-text / personal content and JSON blobs:
 - **Finance:** transaction `description`/`notes`/`payment_method`; account
   `name`/`label`/`account_number`/`notes`; category/budget/savings-goal/loan
   `name` (+ savings-goal/loan `notes`); report `payload`
+- **Journal:** entry `title`, `content` (the rich-text diary body), `excerpt`;
+  tag `name`; **Calendar:** custom month `title`
 
 ## What stays plaintext (by design)
 
@@ -30,8 +32,9 @@ Structural / queryable columns: all foreign keys, `status`, `priority`, `type`,
 dates (`due_date`, `occurred_at`), `is_active`, `color`, `currency`, `position`,
 numeric `amount`/balance decimals (needed for `SUM`/reports), `users.email`
 (login identifier), `users.name`, `tags.name`, `invite_codes.code`,
-`activity_logs.description`, and `finance_transactions.metadata` (queried in SQL
-via JSON-path inside the reporting aggregations).
+`activity_logs.description`, `finance_transactions.metadata` (queried in SQL
+via JSON-path inside the reporting aggregations), and `journal_entries.mood`
+(indexed, low-cardinality enum filtered in SQL).
 
 Because encrypted columns cannot be used in SQL `WHERE`/`LIKE`/`ORDER BY`, search
 and sort over them run in PHP — see `app/Support/EncryptedSearch.php`.

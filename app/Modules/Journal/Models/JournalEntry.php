@@ -35,7 +35,11 @@ class JournalEntry extends Model
 
     protected $casts = [
         'entry_date' => 'date',
-        'content' => 'array',
+        'title' => 'encrypted',
+        'content' => 'encrypted:array',
+        'excerpt' => 'encrypted',
+        // mood stays plaintext: it is a low-cardinality enum filtered in SQL
+        // (where('mood', ...)) and backs an index, like task status/priority.
         'mood' => JournalMood::class,
     ];
 

@@ -9,6 +9,18 @@ enum JournalMood: string
     case Okay = 'okay';
     case Bad = 'bad';
     case Awful = 'awful';
+    case Happy = 'happy';
+    case Excited = 'excited';
+    case Loved = 'loved';
+    case Grateful = 'grateful';
+    case Calm = 'calm';
+    case Motivated = 'motivated';
+    case Tired = 'tired';
+    case Anxious = 'anxious';
+    case Stressed = 'stressed';
+    case Sad = 'sad';
+    case Angry = 'angry';
+    case Sick = 'sick';
 
     public function label(): string
     {
@@ -18,6 +30,18 @@ enum JournalMood: string
             self::Okay => 'Okay',
             self::Bad => 'Bad',
             self::Awful => 'Awful',
+            self::Happy => 'Happy',
+            self::Excited => 'Excited',
+            self::Loved => 'Loved',
+            self::Grateful => 'Grateful',
+            self::Calm => 'Calm',
+            self::Motivated => 'Motivated',
+            self::Tired => 'Tired',
+            self::Anxious => 'Anxious',
+            self::Stressed => 'Stressed',
+            self::Sad => 'Sad',
+            self::Angry => 'Angry',
+            self::Sick => 'Sick',
         };
     }
 
@@ -29,6 +53,18 @@ enum JournalMood: string
             self::Okay => '😐',
             self::Bad => '🙁',
             self::Awful => '😢',
+            self::Happy => '😊',
+            self::Excited => '🤩',
+            self::Loved => '🥰',
+            self::Grateful => '🙏',
+            self::Calm => '😌',
+            self::Motivated => '💪',
+            self::Tired => '😴',
+            self::Anxious => '😰',
+            self::Stressed => '😫',
+            self::Sad => '😔',
+            self::Angry => '😠',
+            self::Sick => '🤒',
         };
     }
 

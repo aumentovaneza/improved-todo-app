@@ -1,17 +1,15 @@
 import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
 import { useEffect } from "react";
+import { journalExtensions } from "./journalExtensions";
 
 const EMPTY_DOC = { type: "doc", content: [{ type: "paragraph" }] };
 
 export default function JournalContentViewer({ content }) {
     const editor = useEditor({
         editable: false,
-        extensions: [
-            StarterKit.configure({
-                heading: { levels: [1, 2, 3] },
-            }),
-        ],
+        // Same extension set as the editor (via the shared source of truth) so
+        // links, images, tables, task lists and footnotes all render here.
+        extensions: journalExtensions({ editable: false }),
         content: content || EMPTY_DOC,
         editorProps: {
             attributes: {

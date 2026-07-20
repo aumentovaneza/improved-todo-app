@@ -274,7 +274,74 @@
     @apply border-l-4 border-wevie-teal/60 pl-4 italic text-light-secondary dark:text-dark-secondary;
 }
 .journal-content a {
-    @apply text-wevie-teal underline;
+    @apply text-wevie-teal underline decoration-wevie-teal/50 underline-offset-2 transition-colors hover:text-primary-600 dark:text-secondary-300 dark:hover:text-secondary-200;
+}
+.journal-content img {
+    @apply my-3 block h-auto max-w-full rounded-lg border border-light-border dark:border-dark-border;
+}
+/* Single-color fallback (older entries without `data-color`). Multicolor marks
+   set `background-color` inline via `data-color`, which overrides this. */
+.journal-content mark {
+    @apply rounded bg-warning-200;
+    padding: 0 0.1em;
+}
+/* Highlights use a light background in BOTH themes. TipTap's multicolor mark
+   emits inline `color: inherit`, which in dark mode inherits light body text and
+   becomes unreadable on a light highlight — so force a dark, readable neutral
+   (neutral-900 / #1f2937) regardless of theme. `!important` beats the inline. */
+.journal-content mark,
+.journal-content mark[data-color] {
+    color: #1f2937 !important;
+}
+/* Task lists (checkboxes) */
+.journal-content ul[data-type="taskList"] {
+    @apply list-none space-y-1 pl-0;
+}
+.journal-content ul[data-type="taskList"] li {
+    @apply flex items-start gap-2;
+}
+.journal-content ul[data-type="taskList"] li > label {
+    @apply mt-1 flex-shrink-0 select-none;
+}
+.journal-content ul[data-type="taskList"] li > div {
+    @apply min-w-0 flex-1;
+}
+.journal-content ul[data-type="taskList"] li > label input[type="checkbox"] {
+    @apply h-4 w-4 cursor-pointer rounded border-light-border text-primary-500 focus:ring-wevie-teal/40 dark:border-dark-border dark:bg-dark-primary;
+}
+.journal-content ul[data-type="taskList"] li[data-checked="true"] > div {
+    @apply text-light-muted line-through dark:text-dark-muted;
+}
+/* Tables */
+.journal-content table {
+    @apply my-3 w-full table-fixed border-collapse overflow-hidden;
+}
+.journal-content table td,
+.journal-content table th {
+    @apply relative min-w-[3rem] border border-light-border px-3 py-1.5 align-top dark:border-dark-border;
+}
+.journal-content table th {
+    @apply bg-light-hover text-left font-semibold dark:bg-dark-hover;
+}
+.journal-content table .selectedCell::after {
+    @apply pointer-events-none absolute inset-0 z-10 bg-wevie-teal/15 content-[''];
+}
+.journal-content table .column-resize-handle {
+    @apply pointer-events-none absolute bottom-0 right-[-2px] top-0 z-20 w-1 bg-wevie-teal;
+}
+.journal-content .tableWrapper {
+    @apply overflow-x-auto;
+}
+/* Footnotes */
+.journal-content sup.footnote-ref,
+.journal-content sup.footnote-ref a {
+    @apply font-semibold text-wevie-teal no-underline dark:text-secondary-300;
+}
+.journal-content ol.footnotes {
+    @apply mt-6 list-decimal space-y-1 border-t border-light-border pl-6 pt-4 text-sm text-light-secondary dark:border-dark-border dark:text-dark-secondary;
+}
+.journal-content ol.footnotes li {
+    @apply pl-1;
 }
 .journal-content code {
     @apply rounded bg-light-hover px-1.5 py-0.5 text-sm dark:bg-dark-hover;
@@ -295,4 +362,26 @@
     float: left;
     height: 0;
     pointer-events: none;
+}
+
+/* Toolbar tooltip (portaled to body, so styled outside .journal-content). */
+@keyframes journalTooltipIn {
+    from {
+        opacity: 0;
+        transform: translate(var(--tooltip-tx, -50%), var(--tooltip-ty, 0))
+            scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translate(var(--tooltip-tx, -50%), var(--tooltip-ty, 0))
+            scale(1);
+    }
+}
+.journal-tooltip {
+    animation: journalTooltipIn 120ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+    .journal-tooltip {
+        animation: none;
+    }
 }

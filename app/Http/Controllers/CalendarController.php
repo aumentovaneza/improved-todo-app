@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Task;
+use App\Http\Requests\UpdateMonthTitleRequest;
+use App\Models\CalendarMonthTitle;
 use App\Models\Category;
+use App\Models\Task;
 use App\Modules\Finance\Models\FinanceTransaction;
+use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
-use Carbon\Carbon;
 
 class CalendarController extends Controller
 {
@@ -52,7 +55,7 @@ class CalendarController extends Controller
                 'subtasks',
                 'subtasks as completed_subtasks_count' => function ($query) {
                     $query->where('is_completed', true);
-                }
+                },
             ])
             ->get();
 
@@ -68,6 +71,7 @@ class CalendarController extends Controller
             // Convert the task's due_date to user timezone for grouping
             $taskDueDate = $task->due_date; // This is already a Carbon instance from the cast
             $userDate = $user->toUserTimezone($taskDueDate);
+
             return $userDate->format('Y-m-d');
         });
 
@@ -85,6 +89,7 @@ class CalendarController extends Controller
         $transactionsByDate = $transactionOccurrences->groupBy(function ($transaction) use ($user) {
             $transactionDate = $transaction->occurred_at;
             $userDate = $user->toUserTimezone($transactionDate);
+
             return $userDate->format('Y-m-d');
         });
 
@@ -125,7 +130,7 @@ class CalendarController extends Controller
                 'subtasks',
                 'subtasks as completed_subtasks_count' => function ($query) {
                     $query->where('is_completed', true);
-                }
+                },
             ])
             ->overdueForUser($user)
             ->where('is_recurring', false)
@@ -137,6 +142,13 @@ class CalendarController extends Controller
             ->where('user_id', Auth::id())
             ->orderBy('name')
             ->get();
+
+        // Optional user-authored title/theme for the month the current date
+        // falls in (e.g. "Sprint 4" or "Wedding season"). Null when unset.
+        $monthTitle = CalendarMonthTitle::where('user_id', $user->id)
+            ->where('year', (int) $date->format('Y'))
+            ->where('month', (int) $date->format('n'))
+            ->value('title');
 
         // Human-readable label for the active range (in the user's timezone).
         $rangeLabel = match ($range) {
@@ -156,10 +168,35 @@ class CalendarController extends Controller
             'overdueTasks' => $overdueTasks,
             'currentDate' => $date->format('Y-m-d'),
             'monthName' => $date->format('F Y'),
+            'monthTitle' => $monthTitle,
             'range' => $range,
             'rangeLabel' => $rangeLabel,
             'categories' => $categories,
         ]);
+    }
+
+    /**
+     * Create, update, or clear the current user's custom title for a month.
+     * An empty title removes the record so the month falls back to no title.
+     */
+    public function updateMonthTitle(UpdateMonthTitleRequest $request): RedirectResponse
+    {
+        $data = $request->validated();
+        $title = trim($data['title'] ?? '');
+
+        $attributes = [
+            'user_id' => Auth::id(),
+            'year' => $data['year'],
+            'month' => $data['month'],
+        ];
+
+        if ($title === '') {
+            CalendarMonthTitle::where($attributes)->delete();
+        } else {
+            CalendarMonthTitle::updateOrCreate($attributes, ['title' => $title]);
+        }
+
+        return back();
     }
 
     /**
@@ -169,13 +206,13 @@ class CalendarController extends Controller
     private function weekRangeLabel(Carbon $start, Carbon $end): string
     {
         if ($start->year !== $end->year) {
-            return $start->format('M j, Y') . ' – ' . $end->format('M j, Y');
+            return $start->format('M j, Y').' – '.$end->format('M j, Y');
         }
 
         if ($start->month !== $end->month) {
-            return $start->format('M j') . ' – ' . $end->format('M j, Y');
+            return $start->format('M j').' – '.$end->format('M j, Y');
         }
 
-        return $start->format('M j') . ' – ' . $end->format('j, Y');
+        return $start->format('M j').' – '.$end->format('j, Y');
     }
 }

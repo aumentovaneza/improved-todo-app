@@ -76,6 +76,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Calendar
     Route::get('calendar', [CalendarController::class, 'index'])->name('calendar.index');
+    Route::post('calendar/month-title', [CalendarController::class, 'updateMonthTitle'])
+        ->name('calendar.month-title.update');
 
     // Analytics
     Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');

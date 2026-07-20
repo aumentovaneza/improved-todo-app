@@ -5,18 +5,15 @@ namespace App\Services;
 use App\Models\Category;
 use App\Models\Tag;
 use App\Repositories\Contracts\CategoryRepositoryInterface;
-use App\Services\ActivityLogService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class CategoryService
 {
     public function __construct(
-        private CategoryRepositoryInterface $categoryRepository,
-        private ActivityLogService $activityLogService
+        private CategoryRepositoryInterface $categoryRepository
     ) {}
 
     /**
@@ -62,13 +59,10 @@ class CategoryService
             $category = $this->categoryRepository->create($data);
 
             // Handle tags
-            if (!empty($data['tags'])) {
+            if (! empty($data['tags'])) {
                 $tagIds = $this->processCategoryTags($data['tags']);
                 $this->categoryRepository->syncTags($category, $tagIds);
             }
-
-            // Log activity
-            $this->activityLogService->logCategoryActivity('create', $category->id, $category->name, null, $data);
 
             return $category->load(['tags']);
         });
@@ -85,8 +79,6 @@ class CategoryService
         }
 
         return DB::transaction(function () use ($category, $data) {
-            $oldValues = $category->toArray();
-
             // Check if category name already exists for user (excluding current category)
             if (isset($data['name']) && $this->categoryRepository->nameExistsForUser($data['name'], $category->user_id, $category->id)) {
                 throw new \InvalidArgumentException('A category with this name already exists.');
@@ -97,12 +89,9 @@ class CategoryService
 
             // Handle tags
             if (array_key_exists('tags', $data)) {
-                $tagIds = !empty($data['tags']) ? $this->processCategoryTags($data['tags']) : [];
+                $tagIds = ! empty($data['tags']) ? $this->processCategoryTags($data['tags']) : [];
                 $this->categoryRepository->syncTags($updatedCategory, $tagIds);
             }
-
-            // Log activity
-            $this->activityLogService->logCategoryActivity('update', $updatedCategory->id, $updatedCategory->name, $oldValues, $data);
 
             return $updatedCategory->load(['tags']);
         });
@@ -125,11 +114,6 @@ class CategoryService
         }
 
         return DB::transaction(function () use ($category) {
-            $oldValues = $category->toArray();
-
-            // Log activity before deletion
-            $this->activityLogService->logCategoryActivity('delete', $category->id, $category->name, $oldValues, null);
-
             return $this->categoryRepository->delete($category);
         });
     }
@@ -187,12 +171,7 @@ class CategoryService
         }
 
         return DB::transaction(function () use ($category) {
-            $oldValues = $category->toArray();
-
             $updatedCategory = $this->categoryRepository->update($category, ['is_active' => false]);
-
-            // Log activity
-            $this->activityLogService->logCategoryActivity('deactivate', $updatedCategory->id, $updatedCategory->name, $oldValues, ['is_active' => false]);
 
             return $updatedCategory;
         });
@@ -209,12 +188,7 @@ class CategoryService
         }
 
         return DB::transaction(function () use ($category) {
-            $oldValues = $category->toArray();
-
             $updatedCategory = $this->categoryRepository->update($category, ['is_active' => true]);
-
-            // Log activity
-            $this->activityLogService->logCategoryActivity('reactivate', $updatedCategory->id, $updatedCategory->name, $oldValues, ['is_active' => true]);
 
             return $updatedCategory;
         });
@@ -228,7 +202,7 @@ class CategoryService
         $tagIds = [];
 
         foreach ($tags as $tagData) {
-            if (!empty($tagData['is_new']) && $tagData['is_new']) {
+            if (! empty($tagData['is_new']) && $tagData['is_new']) {
                 // Create new tag
                 $tag = Tag::firstOrCreate(
                     ['name' => $tagData['name']],
@@ -238,7 +212,7 @@ class CategoryService
                     ]
                 );
                 $tagIds[] = $tag->id;
-            } elseif (!empty($tagData['id'])) {
+            } elseif (! empty($tagData['id'])) {
                 // Existing tag
                 $tagIds[] = $tagData['id'];
             }

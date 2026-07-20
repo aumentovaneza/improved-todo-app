@@ -2,21 +2,16 @@
 
 namespace App\Services;
 
-use App\Models\User;
 use App\Models\Task;
-use App\Services\ActivityLogService;
-use App\Services\CacheService;
-use App\Services\QueueService;
-use App\Services\DatabaseOptimizationService;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class MonitoringService
 {
     public function __construct(
-        private ActivityLogService $activityLogService,
         private CacheService $cacheService,
         private QueueService $queueService,
         private DatabaseOptimizationService $databaseService
@@ -33,7 +28,7 @@ class MonitoringService
             'components' => [],
             'metrics' => [],
             'issues' => [],
-            'recommendations' => []
+            'recommendations' => [],
         ];
 
         try {
@@ -67,10 +62,10 @@ class MonitoringService
 
             // Collect all issues and recommendations
             foreach ($health['components'] as $component) {
-                if (!empty($component['issues'])) {
+                if (! empty($component['issues'])) {
                     $health['issues'] = array_merge($health['issues'], $component['issues']);
                 }
-                if (!empty($component['recommendations'])) {
+                if (! empty($component['recommendations'])) {
                     $health['recommendations'] = array_merge($health['recommendations'], $component['recommendations']);
                 }
             }
@@ -78,9 +73,9 @@ class MonitoringService
             // Add system metrics
             $health['metrics'] = $this->getSystemMetrics();
         } catch (\Exception $e) {
-            Log::error('Failed to get system health: ' . $e->getMessage());
+            Log::error('Failed to get system health: '.$e->getMessage());
             $health['overall_status'] = 'error';
-            $health['issues'][] = 'Failed to perform health check: ' . $e->getMessage();
+            $health['issues'][] = 'Failed to perform health check: '.$e->getMessage();
         }
 
         return $health;
@@ -96,11 +91,11 @@ class MonitoringService
                 'operation' => $operation,
                 'duration_ms' => round($duration * 1000, 2),
                 'timestamp' => now()->toDateTimeString(),
-                'metadata' => $metadata
+                'metadata' => $metadata,
             ];
 
             // Store in cache for recent metrics
-            $cacheKey = "performance_metrics:" . date('Y-m-d-H');
+            $cacheKey = 'performance_metrics:'.date('Y-m-d-H');
             $metrics = Cache::get($cacheKey, []);
             $metrics[] = $performanceData;
 
@@ -113,10 +108,10 @@ class MonitoringService
 
             // Log slow operations
             if ($duration > 5.0) { // 5 seconds
-                Log::warning("Slow operation detected", $performanceData);
+                Log::warning('Slow operation detected', $performanceData);
             }
         } catch (\Exception $e) {
-            Log::error('Failed to track performance: ' . $e->getMessage());
+            Log::error('Failed to track performance: '.$e->getMessage());
         }
     }
 
@@ -136,27 +131,16 @@ class MonitoringService
                 'user_id' => auth()->id(),
                 'url' => request()->fullUrl(),
                 'ip' => request()->ip(),
-                'user_agent' => request()->userAgent()
+                'user_agent' => request()->userAgent(),
             ];
 
             // Log to Laravel log
             Log::error('Application Error', $errorData);
 
-            // Store in database for analysis
-            $this->activityLogService->log(
-                'error_occurred',
-                'Error',
-                $error->getCode(),
-                $error->getMessage(),
-                null,
-                $errorData,
-                auth()->id()
-            );
-
             // Track error frequency
             $this->trackErrorFrequency($error);
         } catch (\Exception $e) {
-            Log::critical('Failed to log error: ' . $e->getMessage());
+            Log::critical('Failed to log error: '.$e->getMessage());
         }
     }
 
@@ -172,10 +156,11 @@ class MonitoringService
                 'cache_performance' => $this->getCachePerformanceAnalytics($startDate, $endDate),
                 'error_rates' => $this->getErrorRateAnalytics($startDate, $endDate),
                 'user_activity' => $this->getUserActivityAnalytics($startDate, $endDate),
-                'resource_usage' => $this->getResourceUsageAnalytics($startDate, $endDate)
+                'resource_usage' => $this->getResourceUsageAnalytics($startDate, $endDate),
             ];
         } catch (\Exception $e) {
-            Log::error('Failed to get performance analytics: ' . $e->getMessage());
+            Log::error('Failed to get performance analytics: '.$e->getMessage());
+
             return ['error' => 'Unable to retrieve performance analytics'];
         }
     }
@@ -192,10 +177,11 @@ class MonitoringService
                 'error_by_endpoint' => $this->getErrorsByEndpoint($startDate, $endDate),
                 'error_trends' => $this->getErrorTrends($startDate, $endDate),
                 'most_frequent_errors' => $this->getMostFrequentErrors($startDate, $endDate),
-                'error_resolution_time' => $this->getErrorResolutionTime($startDate, $endDate)
+                'error_resolution_time' => $this->getErrorResolutionTime($startDate, $endDate),
             ];
         } catch (\Exception $e) {
-            Log::error('Failed to get error analytics: ' . $e->getMessage());
+            Log::error('Failed to get error analytics: '.$e->getMessage());
+
             return ['error' => 'Unable to retrieve error analytics'];
         }
     }
@@ -212,10 +198,11 @@ class MonitoringService
                 'feature_usage' => $this->getFeatureUsageAnalytics($startDate, $endDate),
                 'peak_usage_hours' => $this->getPeakUsageHours($startDate, $endDate),
                 'user_engagement' => $this->getUserEngagementMetrics($startDate, $endDate),
-                'conversion_metrics' => $this->getConversionMetrics($startDate, $endDate)
+                'conversion_metrics' => $this->getConversionMetrics($startDate, $endDate),
             ];
         } catch (\Exception $e) {
-            Log::error('Failed to get usage analytics: ' . $e->getMessage());
+            Log::error('Failed to get usage analytics: '.$e->getMessage());
+
             return ['error' => 'Unable to retrieve usage analytics'];
         }
     }
@@ -230,7 +217,7 @@ class MonitoringService
                 'period' => [
                     'start' => $startDate->toDateString(),
                     'end' => $endDate->toDateString(),
-                    'days' => $startDate->diffInDays($endDate)
+                    'days' => $startDate->diffInDays($endDate),
                 ],
                 'executive_summary' => [],
                 'system_health' => $this->getSystemHealth(),
@@ -238,7 +225,7 @@ class MonitoringService
                 'errors' => $this->getErrorAnalytics($startDate, $endDate),
                 'usage' => $this->getUsageAnalytics($startDate, $endDate),
                 'recommendations' => [],
-                'generated_at' => now()->toDateTimeString()
+                'generated_at' => now()->toDateTimeString(),
             ];
 
             // Generate executive summary
@@ -249,7 +236,8 @@ class MonitoringService
 
             return $report;
         } catch (\Exception $e) {
-            Log::error('Failed to generate monitoring report: ' . $e->getMessage());
+            Log::error('Failed to generate monitoring report: '.$e->getMessage());
+
             return ['error' => 'Unable to generate monitoring report'];
         }
     }
@@ -261,7 +249,7 @@ class MonitoringService
     {
         $alerts = [
             'configured_alerts' => [],
-            'thresholds' => []
+            'thresholds' => [],
         ];
 
         try {
@@ -279,12 +267,12 @@ class MonitoringService
                 'disk_space_low',
                 'memory_usage_high',
                 'queue_backlog',
-                'failed_jobs_high'
+                'failed_jobs_high',
             ];
 
             Log::info('Monitoring alerts configured', $alerts);
         } catch (\Exception $e) {
-            Log::error('Failed to setup alerts: ' . $e->getMessage());
+            Log::error('Failed to setup alerts: '.$e->getMessage());
             $alerts['error'] = $e->getMessage();
         }
 
@@ -300,7 +288,7 @@ class MonitoringService
                 'status' => 'healthy',
                 'issues' => [],
                 'recommendations' => [],
-                'metrics' => []
+                'metrics' => [],
             ];
 
             // Check database connection
@@ -322,9 +310,9 @@ class MonitoringService
         } catch (\Exception $e) {
             return [
                 'status' => 'critical',
-                'issues' => ['Database connection failed: ' . $e->getMessage()],
+                'issues' => ['Database connection failed: '.$e->getMessage()],
                 'recommendations' => ['Check database server status and connectivity'],
-                'metrics' => []
+                'metrics' => [],
             ];
         }
     }
@@ -336,11 +324,11 @@ class MonitoringService
                 'status' => 'healthy',
                 'issues' => [],
                 'recommendations' => [],
-                'metrics' => []
+                'metrics' => [],
             ];
 
             // Test cache connection
-            $testKey = 'health_check_' . time();
+            $testKey = 'health_check_'.time();
             $testValue = 'test_value';
 
             Cache::put($testKey, $testValue, 60);
@@ -366,9 +354,9 @@ class MonitoringService
         } catch (\Exception $e) {
             return [
                 'status' => 'critical',
-                'issues' => ['Cache health check failed: ' . $e->getMessage()],
+                'issues' => ['Cache health check failed: '.$e->getMessage()],
                 'recommendations' => ['Check cache server status'],
-                'metrics' => []
+                'metrics' => [],
             ];
         }
     }
@@ -377,18 +365,19 @@ class MonitoringService
     {
         try {
             $queueHealth = $this->queueService->monitorQueueHealth();
+
             return [
                 'status' => $queueHealth['status'],
                 'issues' => $queueHealth['issues'],
                 'recommendations' => $queueHealth['recommendations'],
-                'metrics' => $this->queueService->getQueueStats()
+                'metrics' => $this->queueService->getQueueStats(),
             ];
         } catch (\Exception $e) {
             return [
                 'status' => 'error',
-                'issues' => ['Queue health check failed: ' . $e->getMessage()],
+                'issues' => ['Queue health check failed: '.$e->getMessage()],
                 'recommendations' => ['Check queue workers and Redis connection'],
-                'metrics' => []
+                'metrics' => [],
             ];
         }
     }
@@ -399,7 +388,7 @@ class MonitoringService
             'status' => 'healthy',
             'issues' => [],
             'recommendations' => [],
-            'metrics' => []
+            'metrics' => [],
         ];
 
         try {
@@ -410,9 +399,9 @@ class MonitoringService
             $health['metrics']['total_users'] = $userCount;
             $health['metrics']['total_tasks'] = $taskCount;
 
-            // Check for recent activity
-            $recentActivity = $this->activityLogService->getActivityLogs(['limit' => 1]);
-            if (empty($recentActivity)) {
+            // Check for recent user activity
+            $hasRecentActivity = User::where('last_active_at', '>=', now()->subDay())->exists();
+            if (! $hasRecentActivity) {
                 $health['status'] = 'warning';
                 $health['issues'][] = 'No recent user activity detected';
                 $health['recommendations'][] = 'Monitor user engagement and system usage';
@@ -437,7 +426,7 @@ class MonitoringService
             }
         } catch (\Exception $e) {
             $health['status'] = 'error';
-            $health['issues'][] = 'Application health check failed: ' . $e->getMessage();
+            $health['issues'][] = 'Application health check failed: '.$e->getMessage();
         }
 
         return $health;
@@ -449,7 +438,7 @@ class MonitoringService
             'status' => 'healthy',
             'issues' => [],
             'recommendations' => [],
-            'metrics' => []
+            'metrics' => [],
         ];
 
         try {
@@ -475,7 +464,7 @@ class MonitoringService
             }
         } catch (\Exception $e) {
             $health['status'] = 'error';
-            $health['issues'][] = 'Disk space check failed: ' . $e->getMessage();
+            $health['issues'][] = 'Disk space check failed: '.$e->getMessage();
         }
 
         return $health;
@@ -488,14 +477,14 @@ class MonitoringService
             'laravel_version' => app()->version(),
             'server_time' => now()->toDateTimeString(),
             'uptime' => $this->getServerUptime(),
-            'load_average' => $this->getLoadAverage()
+            'load_average' => $this->getLoadAverage(),
         ];
     }
 
     private function trackErrorFrequency(\Throwable $error): void
     {
         try {
-            $errorKey = md5($error->getFile() . ':' . $error->getLine() . ':' . $error->getMessage());
+            $errorKey = md5($error->getFile().':'.$error->getLine().':'.$error->getMessage());
             $cacheKey = "error_frequency:{$errorKey}";
 
             $frequency = Cache::get($cacheKey, 0) + 1;
@@ -503,15 +492,15 @@ class MonitoringService
 
             // Alert on frequent errors
             if ($frequency > 10) {
-                Log::critical("Frequent error detected", [
+                Log::critical('Frequent error detected', [
                     'error' => $error->getMessage(),
                     'file' => $error->getFile(),
                     'line' => $error->getLine(),
-                    'frequency' => $frequency
+                    'frequency' => $frequency,
                 ]);
             }
         } catch (\Exception $e) {
-            Log::error('Failed to track error frequency: ' . $e->getMessage());
+            Log::error('Failed to track error frequency: '.$e->getMessage());
         }
     }
 
@@ -538,8 +527,10 @@ class MonitoringService
             if (function_exists('sys_getloadavg') && PHP_OS_FAMILY === 'Linux') {
                 $uptime = file_get_contents('/proc/uptime');
                 $uptimeSeconds = (int) explode(' ', $uptime)[0];
+
                 return gmdate('H:i:s', $uptimeSeconds);
             }
+
             return 'N/A';
         } catch (\Exception $e) {
             return 'N/A';
@@ -552,6 +543,7 @@ class MonitoringService
             if (function_exists('sys_getloadavg')) {
                 return sys_getloadavg();
             }
+
             return [0, 0, 0];
         } catch (\Exception $e) {
             return [0, 0, 0];
@@ -568,8 +560,8 @@ class MonitoringService
             'slowest_endpoints' => [
                 '/tasks' => 450,
                 '/dashboard' => 380,
-                '/analytics' => 620
-            ]
+                '/analytics' => 620,
+            ],
         ];
     }
 
@@ -579,7 +571,7 @@ class MonitoringService
             'average_query_time' => 15,
             'slow_queries' => 5,
             'total_queries' => 15000,
-            'connection_pool_usage' => 65
+            'connection_pool_usage' => 65,
         ];
     }
 
@@ -589,7 +581,7 @@ class MonitoringService
             'hit_rate' => 85.5,
             'miss_rate' => 14.5,
             'total_requests' => 50000,
-            'average_response_time' => 2
+            'average_response_time' => 2,
         ];
     }
 
@@ -599,7 +591,7 @@ class MonitoringService
             'total_errors' => 25,
             'error_rate_percent' => 0.5,
             'critical_errors' => 2,
-            'warning_errors' => 23
+            'warning_errors' => 23,
         ];
     }
 
@@ -609,7 +601,7 @@ class MonitoringService
             'daily_active_users' => 150,
             'weekly_active_users' => 500,
             'monthly_active_users' => 1200,
-            'user_retention_rate' => 78.5
+            'user_retention_rate' => 78.5,
         ];
     }
 
@@ -619,7 +611,7 @@ class MonitoringService
             'cpu_usage_avg' => 45.2,
             'memory_usage_avg' => 67.8,
             'disk_io_avg' => 23.4,
-            'network_io_avg' => 12.1
+            'network_io_avg' => 12.1,
         ];
     }
 
@@ -635,7 +627,7 @@ class MonitoringService
             'ValidationException' => 15,
             'ModelNotFoundException' => 8,
             'QueryException' => 3,
-            'AuthenticationException' => 2
+            'AuthenticationException' => 2,
         ];
     }
 
@@ -645,7 +637,7 @@ class MonitoringService
             '/api/tasks' => 12,
             '/api/users' => 8,
             '/dashboard' => 5,
-            '/login' => 3
+            '/login' => 3,
         ];
     }
 
@@ -654,7 +646,7 @@ class MonitoringService
         return [
             'trend' => 'decreasing',
             'change_percent' => -15.2,
-            'daily_averages' => [2, 3, 1, 4, 2, 1, 2]
+            'daily_averages' => [2, 3, 1, 4, 2, 1, 2],
         ];
     }
 
@@ -663,7 +655,7 @@ class MonitoringService
         return [
             ['message' => 'Task not found', 'count' => 15],
             ['message' => 'Validation failed', 'count' => 12],
-            ['message' => 'Unauthorized access', 'count' => 8]
+            ['message' => 'Unauthorized access', 'count' => 8],
         ];
     }
 
@@ -672,7 +664,7 @@ class MonitoringService
         return [
             'average_minutes' => 45,
             'median_minutes' => 30,
-            'max_minutes' => 180
+            'max_minutes' => 180,
         ];
     }
 
@@ -682,7 +674,7 @@ class MonitoringService
             'total' => 1250,
             'new_users' => 85,
             'returning_users' => 1165,
-            'growth_rate' => 6.8
+            'growth_rate' => 6.8,
         ];
     }
 
@@ -692,7 +684,7 @@ class MonitoringService
             'total_created' => 2500,
             'daily_average' => 125,
             'trend' => 'increasing',
-            'growth_rate' => 12.5
+            'growth_rate' => 12.5,
         ];
     }
 
@@ -703,7 +695,7 @@ class MonitoringService
             'tags' => 78,
             'reminders' => 65,
             'subtasks' => 45,
-            'calendar_sync' => 25
+            'calendar_sync' => 25,
         ];
     }
 
@@ -713,7 +705,7 @@ class MonitoringService
             'peak_hour' => 14, // 2 PM
             'peak_usage' => 350,
             'low_hour' => 3, // 3 AM
-            'low_usage' => 15
+            'low_usage' => 15,
         ];
     }
 
@@ -723,7 +715,7 @@ class MonitoringService
             'session_duration_avg' => 25.5,
             'pages_per_session' => 4.2,
             'bounce_rate' => 15.8,
-            'return_user_rate' => 78.5
+            'return_user_rate' => 78.5,
         ];
     }
 
@@ -732,7 +724,7 @@ class MonitoringService
         return [
             'task_completion_rate' => 85.2,
             'feature_adoption_rate' => 45.8,
-            'user_activation_rate' => 92.1
+            'user_activation_rate' => 92.1,
         ];
     }
 
@@ -748,13 +740,13 @@ class MonitoringService
             'key_achievements' => [
                 'System maintained 99.8% uptime',
                 'Error rate decreased by 15.2%',
-                'User engagement increased by 6.8%'
+                'User engagement increased by 6.8%',
             ],
             'areas_for_improvement' => [
                 'Optimize slow database queries',
                 'Reduce memory usage during peak hours',
-                'Implement additional monitoring alerts'
-            ]
+                'Implement additional monitoring alerts',
+            ],
         ];
     }
 
@@ -788,7 +780,7 @@ class MonitoringService
             'Set up automated monitoring alerts for critical metrics',
             'Implement log aggregation for better error tracking',
             'Schedule regular performance optimization reviews',
-            'Create automated backup and recovery procedures'
+            'Create automated backup and recovery procedures',
         ]);
 
         return array_unique($recommendations);

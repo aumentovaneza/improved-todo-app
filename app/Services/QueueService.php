@@ -4,24 +4,23 @@ namespace App\Services;
 
 use App\Models\Task;
 use App\Models\User;
-use App\Services\ActivityLogService;
-use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
 
 class QueueService
 {
     // Queue names
     const HIGH_PRIORITY_QUEUE = 'high';
-    const DEFAULT_QUEUE = 'default';
-    const LOW_PRIORITY_QUEUE = 'low';
-    const EMAIL_QUEUE = 'emails';
-    const SYNC_QUEUE = 'sync';
 
-    public function __construct(
-        private ActivityLogService $activityLogService
-    ) {}
+    const DEFAULT_QUEUE = 'default';
+
+    const LOW_PRIORITY_QUEUE = 'low';
+
+    const EMAIL_QUEUE = 'emails';
+
+    const SYNC_QUEUE = 'sync';
 
     /**
      * Queue task notification
@@ -33,22 +32,16 @@ class QueueService
         try {
             // For now, we'll log the job instead of actually queuing
             // In a real implementation, you would create actual Job classes
-            Log::info("Queuing task notification", [
+            Log::info('Queuing task notification', [
                 'job_id' => $jobId,
                 'task_id' => $task->id,
                 'type' => $type,
-                'queue' => self::EMAIL_QUEUE
-            ]);
-
-            $this->logJobQueued('task_notification', $jobId, [
-                'task_id' => $task->id,
-                'type' => $type,
-                'user_id' => $task->user_id
+                'queue' => self::EMAIL_QUEUE,
             ]);
 
             return $jobId;
         } catch (\Exception $e) {
-            Log::error("Failed to queue task notification: " . $e->getMessage());
+            Log::error('Failed to queue task notification: '.$e->getMessage());
             throw $e;
         }
     }
@@ -61,20 +54,15 @@ class QueueService
         $jobId = $this->generateJobId();
 
         try {
-            Log::info("Queuing daily digest", [
+            Log::info('Queuing daily digest', [
                 'job_id' => $jobId,
                 'user_id' => $user->id,
-                'queue' => self::EMAIL_QUEUE
-            ]);
-
-            $this->logJobQueued('daily_digest', $jobId, [
-                'user_id' => $user->id,
-                'scheduled_for' => now()->toDateTimeString()
+                'queue' => self::EMAIL_QUEUE,
             ]);
 
             return $jobId;
         } catch (\Exception $e) {
-            Log::error("Failed to queue daily digest: " . $e->getMessage());
+            Log::error('Failed to queue daily digest: '.$e->getMessage());
             throw $e;
         }
     }
@@ -87,20 +75,15 @@ class QueueService
         $jobId = $this->generateJobId();
 
         try {
-            Log::info("Queuing weekly summary", [
+            Log::info('Queuing weekly summary', [
                 'job_id' => $jobId,
                 'user_id' => $user->id,
-                'queue' => self::EMAIL_QUEUE
-            ]);
-
-            $this->logJobQueued('weekly_summary', $jobId, [
-                'user_id' => $user->id,
-                'scheduled_for' => now()->toDateTimeString()
+                'queue' => self::EMAIL_QUEUE,
             ]);
 
             return $jobId;
         } catch (\Exception $e) {
-            Log::error("Failed to queue weekly summary: " . $e->getMessage());
+            Log::error('Failed to queue weekly summary: '.$e->getMessage());
             throw $e;
         }
     }
@@ -113,20 +96,15 @@ class QueueService
         $jobId = $this->generateJobId();
 
         try {
-            Log::info("Queuing calendar sync", [
+            Log::info('Queuing calendar sync', [
                 'job_id' => $jobId,
                 'user_id' => $user->id,
-                'queue' => self::SYNC_QUEUE
-            ]);
-
-            $this->logJobQueued('calendar_sync', $jobId, [
-                'user_id' => $user->id,
-                'scheduled_for' => now()->toDateTimeString()
+                'queue' => self::SYNC_QUEUE,
             ]);
 
             return $jobId;
         } catch (\Exception $e) {
-            Log::error("Failed to queue calendar sync: " . $e->getMessage());
+            Log::error('Failed to queue calendar sync: '.$e->getMessage());
             throw $e;
         }
     }
@@ -139,22 +117,16 @@ class QueueService
         $jobId = $this->generateJobId();
 
         try {
-            Log::info("Queuing bulk task operation", [
+            Log::info('Queuing bulk task operation', [
                 'job_id' => $jobId,
                 'task_count' => $tasks->count(),
                 'operation' => $operation,
-                'queue' => self::DEFAULT_QUEUE
-            ]);
-
-            $this->logJobQueued('bulk_task_operation', $jobId, [
-                'task_count' => $tasks->count(),
-                'operation' => $operation,
-                'data' => $data
+                'queue' => self::DEFAULT_QUEUE,
             ]);
 
             return $jobId;
         } catch (\Exception $e) {
-            Log::error("Failed to queue bulk task operation: " . $e->getMessage());
+            Log::error('Failed to queue bulk task operation: '.$e->getMessage());
             throw $e;
         }
     }
@@ -167,18 +139,14 @@ class QueueService
         $jobId = $this->generateJobId();
 
         try {
-            Log::info("Queuing recurring task reset", [
+            Log::info('Queuing recurring task reset', [
                 'job_id' => $jobId,
-                'queue' => self::DEFAULT_QUEUE
-            ]);
-
-            $this->logJobQueued('recurring_task_reset', $jobId, [
-                'scheduled_for' => now()->toDateTimeString()
+                'queue' => self::DEFAULT_QUEUE,
             ]);
 
             return $jobId;
         } catch (\Exception $e) {
-            Log::error("Failed to queue recurring task reset: " . $e->getMessage());
+            Log::error('Failed to queue recurring task reset: '.$e->getMessage());
             throw $e;
         }
     }
@@ -191,20 +159,15 @@ class QueueService
         $jobId = $this->generateJobId();
 
         try {
-            Log::info("Queuing cache warm-up", [
+            Log::info('Queuing cache warm-up', [
                 'job_id' => $jobId,
                 'user_id' => $user->id,
-                'queue' => self::LOW_PRIORITY_QUEUE
-            ]);
-
-            $this->logJobQueued('cache_warmup', $jobId, [
-                'user_id' => $user->id,
-                'scheduled_for' => now()->toDateTimeString()
+                'queue' => self::LOW_PRIORITY_QUEUE,
             ]);
 
             return $jobId;
         } catch (\Exception $e) {
-            Log::error("Failed to queue cache warm-up: " . $e->getMessage());
+            Log::error('Failed to queue cache warm-up: '.$e->getMessage());
             throw $e;
         }
     }
@@ -217,24 +180,17 @@ class QueueService
         $jobId = $this->generateJobId();
 
         try {
-            Log::info("Queuing data export", [
+            Log::info('Queuing data export', [
                 'job_id' => $jobId,
                 'user_id' => $user->id,
                 'type' => $type,
                 'format' => $format,
-                'queue' => self::DEFAULT_QUEUE
-            ]);
-
-            $this->logJobQueued('data_export', $jobId, [
-                'user_id' => $user->id,
-                'export_type' => $type,
-                'format' => $format,
-                'filters' => $filters
+                'queue' => self::DEFAULT_QUEUE,
             ]);
 
             return $jobId;
         } catch (\Exception $e) {
-            Log::error("Failed to queue data export: " . $e->getMessage());
+            Log::error('Failed to queue data export: '.$e->getMessage());
             throw $e;
         }
     }
@@ -261,9 +217,9 @@ class QueueService
                 }
             }
 
-            Log::info("Scheduled daily digests", $results);
+            Log::info('Scheduled daily digests', $results);
         } catch (\Exception $e) {
-            Log::error("Failed to schedule daily digests: " . $e->getMessage());
+            Log::error('Failed to schedule daily digests: '.$e->getMessage());
             $results['errors'][] = $e->getMessage();
         }
 
@@ -292,9 +248,9 @@ class QueueService
                 }
             }
 
-            Log::info("Scheduled weekly summaries", $results);
+            Log::info('Scheduled weekly summaries', $results);
         } catch (\Exception $e) {
-            Log::error("Failed to schedule weekly summaries: " . $e->getMessage());
+            Log::error('Failed to schedule weekly summaries: '.$e->getMessage());
             $results['errors'][] = $e->getMessage();
         }
 
@@ -324,9 +280,9 @@ class QueueService
                 }
             }
 
-            Log::info("Scheduled calendar syncs", $results);
+            Log::info('Scheduled calendar syncs', $results);
         } catch (\Exception $e) {
-            Log::error("Failed to schedule calendar syncs: " . $e->getMessage());
+            Log::error('Failed to schedule calendar syncs: '.$e->getMessage());
             $results['errors'][] = $e->getMessage();
         }
 
@@ -360,9 +316,9 @@ class QueueService
                 }
             }
 
-            Log::info("Processed due reminders", $results);
+            Log::info('Processed due reminders', $results);
         } catch (\Exception $e) {
-            Log::error("Failed to process due reminders: " . $e->getMessage());
+            Log::error('Failed to process due reminders: '.$e->getMessage());
             $results['errors'][] = $e->getMessage();
         }
 
@@ -395,9 +351,9 @@ class QueueService
                 }
             }
 
-            Log::info("Processed overdue notifications", $results);
+            Log::info('Processed overdue notifications', $results);
         } catch (\Exception $e) {
-            Log::error("Failed to process overdue notifications: " . $e->getMessage());
+            Log::error('Failed to process overdue notifications: '.$e->getMessage());
             $results['errors'][] = $e->getMessage();
         }
 
@@ -424,7 +380,8 @@ class QueueService
                 'queue_health' => $this->getQueueHealth(),
             ];
         } catch (\Exception $e) {
-            Log::error('Failed to get queue stats: ' . $e->getMessage());
+            Log::error('Failed to get queue stats: '.$e->getMessage());
+
             return ['error' => 'Unable to retrieve queue statistics'];
         }
     }
@@ -437,7 +394,7 @@ class QueueService
         $health = [
             'status' => 'healthy',
             'issues' => [],
-            'recommendations' => []
+            'recommendations' => [],
         ];
 
         try {
@@ -456,18 +413,18 @@ class QueueService
             if ($stats['failed_jobs'] > 50) {
                 $health['status'] = 'critical';
                 $health['issues'][] = "High number of failed jobs: {$stats['failed_jobs']}";
-                $health['recommendations'][] = "Review and retry failed jobs";
+                $health['recommendations'][] = 'Review and retry failed jobs';
             }
 
             // Check processing time
             if ($stats['average_processing_time'] > 300) { // 5 minutes
                 $health['status'] = 'warning';
                 $health['issues'][] = "High average processing time: {$stats['average_processing_time']}s";
-                $health['recommendations'][] = "Optimize job processing or increase worker count";
+                $health['recommendations'][] = 'Optimize job processing or increase worker count';
             }
         } catch (\Exception $e) {
             $health['status'] = 'error';
-            $health['issues'][] = "Failed to monitor queue health: " . $e->getMessage();
+            $health['issues'][] = 'Failed to monitor queue health: '.$e->getMessage();
         }
 
         return $health;
@@ -494,7 +451,7 @@ class QueueService
                 }
             }
         } catch (\Exception $e) {
-            Log::error("Failed to retry jobs: " . $e->getMessage());
+            Log::error('Failed to retry jobs: '.$e->getMessage());
             $results['errors'][] = $e->getMessage();
         }
 
@@ -509,9 +466,11 @@ class QueueService
         try {
             $count = $this->getFailedJobsCount();
             Log::info("Simulated clearing of {$count} failed jobs");
+
             return $count;
         } catch (\Exception $e) {
-            Log::error("Failed to clear failed jobs: " . $e->getMessage());
+            Log::error('Failed to clear failed jobs: '.$e->getMessage());
+
             return 0;
         }
     }
@@ -520,24 +479,7 @@ class QueueService
 
     private function generateJobId(): string
     {
-        return 'job_' . uniqid() . '_' . now()->timestamp;
-    }
-
-    private function logJobQueued(string $type, string $jobId, array $data): void
-    {
-        $this->activityLogService->log(
-            'job_queued',
-            'Job',
-            $jobId,
-            "Queued {$type} job",
-            null,
-            array_merge($data, [
-                'job_id' => $jobId,
-                'job_type' => $type,
-                'queued_at' => now()->toDateTimeString()
-            ]),
-            $data['user_id'] ?? null
-        );
+        return 'job_'.uniqid().'_'.now()->timestamp;
     }
 
     private function getQueueSize(string $queueName): int
@@ -545,7 +487,8 @@ class QueueService
         try {
             return Queue::size($queueName);
         } catch (\Exception $e) {
-            Log::error("Failed to get queue size for {$queueName}: " . $e->getMessage());
+            Log::error("Failed to get queue size for {$queueName}: ".$e->getMessage());
+
             return 0;
         }
     }
@@ -555,7 +498,8 @@ class QueueService
         try {
             return DB::table('failed_jobs')->count();
         } catch (\Exception $e) {
-            Log::error("Failed to get failed jobs count: " . $e->getMessage());
+            Log::error('Failed to get failed jobs count: '.$e->getMessage());
+
             return 0;
         }
     }

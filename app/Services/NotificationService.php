@@ -2,21 +2,18 @@
 
 namespace App\Services;
 
+use App\Models\Reminder;
 use App\Models\Task;
 use App\Models\User;
-use App\Models\Reminder;
-use App\Services\ActivityLogService;
-use App\Services\ReminderService;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 
 class NotificationService
 {
     public function __construct(
-        private ActivityLogService $activityLogService,
         private ReminderService $reminderService
     ) {}
 
@@ -35,7 +32,7 @@ class NotificationService
                 'task_id' => $task->id,
                 'due_date' => $task->due_date,
                 'priority' => $task->priority,
-                'type' => 'task_due_reminder'
+                'type' => 'task_due_reminder',
             ];
 
             // Send email notification
@@ -43,19 +40,10 @@ class NotificationService
                 $this->sendEmail($user, 'task-due-reminder', $notificationData);
             }
 
-            // Log activity
-            $this->activityLogService->logTaskActivity(
-                'reminder_sent',
-                $task->id,
-                $task->title,
-                null,
-                ['notification_type' => 'due_reminder'],
-                $user->id
-            );
-
             return ['success' => true, 'message' => 'Due reminder sent successfully'];
         } catch (\Exception $e) {
-            Log::error('Task due reminder error: ' . $e->getMessage());
+            Log::error('Task due reminder error: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to send due reminder'];
         }
     }
@@ -75,7 +63,7 @@ class NotificationService
                 'due_date' => $task->due_date,
                 'days_overdue' => now()->diffInDays($task->due_date),
                 'priority' => $task->priority,
-                'type' => 'task_overdue'
+                'type' => 'task_overdue',
             ];
 
             // Send email notification
@@ -83,19 +71,10 @@ class NotificationService
                 $this->sendEmail($user, 'task-overdue', $notificationData);
             }
 
-            // Log activity
-            $this->activityLogService->logTaskActivity(
-                'overdue_notification_sent',
-                $task->id,
-                $task->title,
-                null,
-                ['days_overdue' => $notificationData['days_overdue']],
-                $user->id
-            );
-
             return ['success' => true, 'message' => 'Overdue notification sent successfully'];
         } catch (\Exception $e) {
-            Log::error('Task overdue notification error: ' . $e->getMessage());
+            Log::error('Task overdue notification error: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to send overdue notification'];
         }
     }
@@ -113,7 +92,7 @@ class NotificationService
                 'message' => "Congratulations! You've completed '{$task->title}'.",
                 'task_id' => $task->id,
                 'completed_at' => $task->completed_at,
-                'type' => 'task_completed'
+                'type' => 'task_completed',
             ];
 
             // Send email notification
@@ -121,19 +100,10 @@ class NotificationService
                 $this->sendEmail($user, 'task-completed', $notificationData);
             }
 
-            // Log activity
-            $this->activityLogService->logTaskActivity(
-                'completion_notification_sent',
-                $task->id,
-                $task->title,
-                null,
-                ['completed_at' => $task->completed_at->toDateTimeString()],
-                $user->id
-            );
-
             return ['success' => true, 'message' => 'Completion notification sent successfully'];
         } catch (\Exception $e) {
-            Log::error('Task completion notification error: ' . $e->getMessage());
+            Log::error('Task completion notification error: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to send completion notification'];
         }
     }
@@ -153,7 +123,7 @@ class NotificationService
                 'task_id' => $task->id,
                 'reminder_id' => $reminder->id,
                 'remind_at' => $reminder->remind_at,
-                'type' => $reminder->type
+                'type' => $reminder->type,
             ];
 
             // Send notification based on type
@@ -175,7 +145,8 @@ class NotificationService
 
             return ['success' => true, 'message' => 'Custom reminder sent successfully'];
         } catch (\Exception $e) {
-            Log::error('Custom reminder error: ' . $e->getMessage());
+            Log::error('Custom reminder error: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to send custom reminder'];
         }
     }
@@ -214,32 +185,20 @@ class NotificationService
                 'total_completed_today' => $user->tasks()
                     ->whereDate('completed_at', today())
                     ->count(),
-                'type' => 'daily_digest'
+                'type' => 'daily_digest',
             ];
 
             // Only send if there are tasks to report
             if ($todayTasks->count() > 0 || $overdueTasks->count() > 0 || $upcomingTasks->count() > 0) {
                 $this->sendEmail($user, 'daily-digest', $digestData);
 
-                // Log activity
-                $this->activityLogService->logUserActivity(
-                    'daily_digest_sent',
-                    $user->id,
-                    $user->name,
-                    null,
-                    [
-                        'today_tasks' => $todayTasks->count(),
-                        'overdue_tasks' => $overdueTasks->count(),
-                        'upcoming_tasks' => $upcomingTasks->count()
-                    ]
-                );
-
                 return ['success' => true, 'message' => 'Daily digest sent successfully'];
             }
 
             return ['success' => true, 'message' => 'No tasks to report in daily digest'];
         } catch (\Exception $e) {
-            Log::error('Daily digest error: ' . $e->getMessage());
+            Log::error('Daily digest error: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to send daily digest'];
         }
     }
@@ -279,23 +238,15 @@ class NotificationService
                 'created_tasks' => $createdThisWeek,
                 'overdue_tasks' => $overdueCount,
                 'productivity_score' => $productivityScore,
-                'type' => 'weekly_summary'
+                'type' => 'weekly_summary',
             ];
 
             $this->sendEmail($user, 'weekly-summary', $summaryData);
 
-            // Log activity
-            $this->activityLogService->logUserActivity(
-                'weekly_summary_sent',
-                $user->id,
-                $user->name,
-                null,
-                $summaryData
-            );
-
             return ['success' => true, 'message' => 'Weekly summary sent successfully'];
         } catch (\Exception $e) {
-            Log::error('Weekly summary error: ' . $e->getMessage());
+            Log::error('Weekly summary error: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to send weekly summary'];
         }
     }
@@ -323,10 +274,11 @@ class NotificationService
                 'success' => true,
                 'message' => "Processed {$processedCount} reminders, {$failedCount} failed",
                 'processed' => $processedCount,
-                'failed' => $failedCount
+                'failed' => $failedCount,
             ];
         } catch (\Exception $e) {
-            Log::error('Process due reminders error: ' . $e->getMessage());
+            Log::error('Process due reminders error: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to process due reminders'];
         }
     }
@@ -345,7 +297,7 @@ class NotificationService
             } catch (\Exception $e) {
                 $results['failed']++;
                 $results['errors'][] = "User {$user->email}: {$e->getMessage()}";
-                Log::error("Bulk notification failed for user {$user->id}: " . $e->getMessage());
+                Log::error("Bulk notification failed for user {$user->id}: ".$e->getMessage());
             }
         }
 
@@ -382,18 +334,10 @@ class NotificationService
                 'reminder_notifications_enabled' => $preferences['reminder_notifications'] ?? true,
             ]);
 
-            // Log activity
-            $this->activityLogService->logUserActivity(
-                'notification_preferences_updated',
-                $user->id,
-                $user->name,
-                null,
-                $preferences
-            );
-
             return true;
         } catch (\Exception $e) {
-            Log::error('Update notification preferences error: ' . $e->getMessage());
+            Log::error('Update notification preferences error: '.$e->getMessage());
+
             return false;
         }
     }
@@ -407,7 +351,7 @@ class NotificationService
         // For now, we'll just log it
         Log::info("Email notification sent to {$user->email}", [
             'template' => $template,
-            'data' => $data
+            'data' => $data,
         ]);
 
         // In a real implementation, you would do:
@@ -421,7 +365,7 @@ class NotificationService
     {
         // This would integrate with SMS service (Twilio, etc.)
         Log::info("SMS notification sent to {$user->phone}", [
-            'message' => $data['message']
+            'message' => $data['message'],
         ]);
     }
 

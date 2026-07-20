@@ -2,14 +2,14 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use Database\Seeders\ProductionShowcaseSeeder;
-use Database\Seeders\FinanceSeeder;
 use App\Models\User;
 use App\Modules\Finance\Models\FinanceAccount;
 use App\Modules\Finance\Models\FinanceCategory;
 use App\Modules\Finance\Models\FinanceLoan;
 use App\Modules\Finance\Models\FinanceTransaction;
+use Database\Seeders\FinanceSeeder;
+use Database\Seeders\ProductionShowcaseSeeder;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 class SetupShowcaseUser extends Command
@@ -38,10 +38,11 @@ class SetupShowcaseUser extends Command
         // Check if showcase user already exists
         $existingUser = User::where('email', 'showcase@todoapp.com')->first();
 
-        if ($existingUser && !$this->option('force')) {
+        if ($existingUser && ! $this->option('force')) {
             $this->warn('Showcase user already exists!');
             $this->line('Email: showcase@todoapp.com');
             $this->line('Use --force option to recreate the user and data.');
+
             return 1;
         }
 
@@ -57,7 +58,6 @@ class SetupShowcaseUser extends Command
             });
 
             $existingUser->reminders()->delete();
-            $existingUser->activityLogs()->delete();
             $transactionIds = FinanceTransaction::where('user_id', $existingUser->id)
                 ->pluck('id');
             if ($transactionIds->isNotEmpty()) {
@@ -89,12 +89,12 @@ class SetupShowcaseUser extends Command
         // Run the seeder
         $this->info('Creating showcase user with comprehensive demo data...');
 
-        $seeder = new ProductionShowcaseSeeder();
+        $seeder = new ProductionShowcaseSeeder;
         $seeder->setCommand($this);
         $seeder->run();
         $showcaseUser = User::where('email', 'showcase@todoapp.com')->first();
         if ($showcaseUser) {
-            $financeSeeder = new FinanceSeeder();
+            $financeSeeder = new FinanceSeeder;
             $financeSeeder->setCommand($this);
             $financeSeeder->setUsers(collect([$showcaseUser]));
             $financeSeeder->run();

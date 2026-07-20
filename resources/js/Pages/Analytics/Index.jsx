@@ -4,11 +4,9 @@ import {
     BarChart3,
     TrendingUp,
     Clock,
-    Target,
     CheckCircle,
     AlertTriangle,
     Calendar,
-    Activity,
     Filter,
     Download,
 } from "lucide-react";
@@ -20,7 +18,6 @@ export default function Index({
     tasksByCategory,
     tasksByStatus,
     weeklyProductivity,
-    recentActivity,
     avgCompletionTime,
     tasksThisWeek,
     period,
@@ -40,26 +37,6 @@ export default function Index({
         stats.total_tasks > 0
             ? Math.round((stats.completed_tasks / stats.total_tasks) * 100)
             : 0;
-
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-        });
-    };
-
-    const getActivityIcon = (action) => {
-        switch (action) {
-            case "created":
-                return <Target className="w-4 h-4 text-blue-500" />;
-            case "completed":
-                return <CheckCircle className="w-4 h-4 text-green-500" />;
-            case "updated":
-                return <Activity className="w-4 h-4 text-yellow-500" />;
-            default:
-                return <Activity className="w-4 h-4 text-gray-500" />;
-        }
-    };
 
     // Generate chart data for weekly productivity
     const weeklyChartData = [
@@ -247,104 +224,44 @@ export default function Index({
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-                    {/* Performance Metrics */}
-                    <div className="card p-4 sm:p-6">
-                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                            Performance Metrics
-                        </h3>
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                                <span className="text-sm text-gray-600 dark:text-gray-400">
-                                    Completion Rate
-                                </span>
-                                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                    {completionRate}%
-                                </span>
-                            </div>
-                            <div className="w-full bg-gray-200 dark:bg-dark-card/70 rounded-full h-2">
-                                <div
-                                    className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                                    style={{ width: `${completionRate}%` }}
-                                ></div>
-                            </div>
-
-                            <div className="flex justify-between items-center pt-2">
-                                <span className="text-sm text-gray-600 dark:text-gray-400">
-                                    Avg. Completion Time
-                                </span>
-                                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                    {avgCompletionTime} days
-                                </span>
-                            </div>
-
-                            <div className="flex justify-between items-center">
-                                <span className="text-sm text-gray-600 dark:text-gray-400">
-                                    Tasks This Week
-                                </span>
-                                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                    {tasksThisWeek.length}
-                                </span>
-                            </div>
+                {/* Performance Metrics */}
+                {/* Performance Metrics */}
+                <div className="card p-4 sm:p-6">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                        Performance Metrics
+                    </h3>
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                                Completion Rate
+                            </span>
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                {completionRate}%
+                            </span>
                         </div>
-                    </div>
+                        <div className="w-full bg-gray-200 dark:bg-dark-card/70 rounded-full h-2">
+                            <div
+                                className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${completionRate}%` }}
+                            ></div>
+                        </div>
 
-                    {/* Recent Activity */}
-                    <div className="lg:col-span-2 card p-4 sm:p-6">
-                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                            Recent Activity
-                        </h3>
-                        <div className="space-y-4 max-h-80 overflow-y-auto">
-                            {recentActivity.length > 0 ? (
-                                recentActivity.map((activity, index) => (
-                                    <div
-                                        key={index}
-                                        className="flex items-start space-x-3"
-                                    >
-                                        <div className="flex-shrink-0 mt-1">
-                                            {getActivityIcon(activity.action)}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm text-gray-900 dark:text-gray-100">
-                                                <span className="font-medium">
-                                                    {activity.action}
-                                                </span>{" "}
-                                                task
-                                                {activity.task && (
-                                                    <span className="mx-1 font-medium">
-                                                        "{activity.task.title}"
-                                                    </span>
-                                                )}
-                                                {activity.task?.category && (
-                                                    <span
-                                                        className="ml-2 inline-block text-xs px-2 py-1 rounded-full text-white"
-                                                        style={{
-                                                            backgroundColor:
-                                                                activity.task
-                                                                    .category
-                                                                    .color,
-                                                        }}
-                                                    >
-                                                        {
-                                                            activity.task
-                                                                .category.name
-                                                        }
-                                                    </span>
-                                                )}
-                                            </p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                {formatDate(
-                                                    activity.created_at
-                                                )}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="text-gray-500 dark:text-gray-400 text-sm">
-                                    No recent activity to display.
-                                </p>
-                            )}
+                        <div className="flex justify-between items-center pt-2">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                                Avg. Completion Time
+                            </span>
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                {avgCompletionTime} days
+                            </span>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                                Tasks This Week
+                            </span>
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                {tasksThisWeek.length}
+                            </span>
                         </div>
                     </div>
                 </div>

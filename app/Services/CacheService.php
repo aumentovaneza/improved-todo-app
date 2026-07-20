@@ -2,29 +2,29 @@
 
 namespace App\Services;
 
-use App\Models\Task;
-use App\Models\User;
 use App\Models\Category;
 use App\Models\Tag;
-use App\Services\ActivityLogService;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Redis;
-use Illuminate\Support\Facades\Log;
+use App\Models\Task;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 
 class CacheService
 {
     // Cache TTL constants (in seconds)
     const USER_CACHE_TTL = 3600; // 1 hour
-    const TASK_CACHE_TTL = 1800; // 30 minutes
-    const CATEGORY_CACHE_TTL = 7200; // 2 hours
-    const STATS_CACHE_TTL = 900; // 15 minutes
-    const SEARCH_CACHE_TTL = 600; // 10 minutes
-    const DASHBOARD_CACHE_TTL = 300; // 5 minutes
 
-    public function __construct(
-        private ActivityLogService $activityLogService
-    ) {}
+    const TASK_CACHE_TTL = 1800; // 30 minutes
+
+    const CATEGORY_CACHE_TTL = 7200; // 2 hours
+
+    const STATS_CACHE_TTL = 900; // 15 minutes
+
+    const SEARCH_CACHE_TTL = 600; // 10 minutes
+
+    const DASHBOARD_CACHE_TTL = 300; // 5 minutes
 
     /**
      * Cache user's tasks with smart invalidation
@@ -33,7 +33,7 @@ class CacheService
     {
         $cacheKey = $this->generateTasksCacheKey($userId, $filters);
 
-        if (!Cache::has($cacheKey)) {
+        if (! Cache::has($cacheKey)) {
             $tasks = $this->fetchUserTasks($userId, $filters);
             Cache::put($cacheKey, $tasks, self::TASK_CACHE_TTL);
 
@@ -57,10 +57,12 @@ class CacheService
 
         if ($cached) {
             $this->trackCacheMetric('tasks', 'hit', $cacheKey);
+
             return $cached;
         }
 
         $this->trackCacheMetric('tasks', 'miss', $cacheKey);
+
         return null;
     }
 
@@ -85,11 +87,7 @@ class CacheService
                     ->count(),
                 'total_pending' => $user->tasks()->where('status', 'pending')->count(),
                 'categories_count' => $user->categories()->count(),
-                'recent_activity' => $this->activityLogService->getActivityLogs([
-                    'user_id' => $userId,
-                    'limit' => 5
-                ]),
-                'cached_at' => now()->toDateTimeString()
+                'cached_at' => now()->toDateTimeString(),
             ];
         });
     }
@@ -99,7 +97,7 @@ class CacheService
      */
     public function cacheUserStats(int $userId, Carbon $startDate, Carbon $endDate): array
     {
-        $cacheKey = "stats:user:{$userId}:" . $startDate->format('Y-m-d') . ':' . $endDate->format('Y-m-d');
+        $cacheKey = "stats:user:{$userId}:".$startDate->format('Y-m-d').':'.$endDate->format('Y-m-d');
 
         return Cache::remember($cacheKey, self::STATS_CACHE_TTL, function () use ($userId, $startDate, $endDate) {
             $user = User::find($userId);
@@ -114,7 +112,7 @@ class CacheService
                 'productivity_score' => $this->calculateProductivityScore($user, $startDate, $endDate),
                 'category_breakdown' => $this->getCategoryBreakdown($user, $startDate, $endDate),
                 'priority_distribution' => $this->getPriorityDistribution($user, $startDate, $endDate),
-                'cached_at' => now()->toDateTimeString()
+                'cached_at' => now()->toDateTimeString(),
             ];
         });
     }
@@ -126,7 +124,7 @@ class CacheService
     {
         $cacheKey = $this->generateSearchCacheKey($userId, $query, $filters);
 
-        if (!Cache::has($cacheKey)) {
+        if (! Cache::has($cacheKey)) {
             // This would be populated by SearchService
             Cache::put($cacheKey, [], self::SEARCH_CACHE_TTL);
             $this->trackCacheMetric('search', 'miss', $cacheKey);
@@ -177,7 +175,7 @@ class CacheService
      */
     public function cacheGlobalStats(): array
     {
-        $cacheKey = "stats:global";
+        $cacheKey = 'stats:global';
 
         return Cache::remember($cacheKey, self::STATS_CACHE_TTL, function () {
             return [
@@ -191,7 +189,7 @@ class CacheService
                 'total_tags' => Tag::count(),
                 'avg_tasks_per_user' => round(Task::count() / max(User::count(), 1), 2),
                 'completion_rate_today' => $this->getGlobalCompletionRateToday(),
-                'cached_at' => now()->toDateTimeString()
+                'cached_at' => now()->toDateTimeString(),
             ];
         });
     }
@@ -206,7 +204,7 @@ class CacheService
             "stats:user:{$userId}:*",
             "categories:user:{$userId}",
             "tasks:user:{$userId}:*",
-            "search:user:{$userId}:*"
+            "search:user:{$userId}:*",
         ];
 
         foreach ($patterns as $pattern) {
@@ -216,15 +214,6 @@ class CacheService
                 Cache::forget($pattern);
             }
         }
-
-        // Log cache invalidation
-        $this->activityLogService->logUserActivity(
-            'cache_invalidated',
-            $userId,
-            User::find($userId)->name ?? 'Unknown',
-            null,
-            ['patterns' => $patterns]
-        );
     }
 
     /**
@@ -235,7 +224,7 @@ class CacheService
         $patterns = [
             "tasks:user:{$userId}:*",
             "dashboard:user:{$userId}",
-            "stats:user:{$userId}:*"
+            "stats:user:{$userId}:*",
         ];
 
         if ($categoryId) {
@@ -259,7 +248,7 @@ class CacheService
         $patterns = [
             "categories:user:{$userId}",
             "stats:user:{$userId}:*",
-            "dashboard:user:{$userId}"
+            "dashboard:user:{$userId}",
         ];
 
         foreach ($patterns as $pattern) {
@@ -278,7 +267,7 @@ class CacheService
     {
         $keys = [
             'stats:global',
-            'tags:popular:*'
+            'tags:popular:*',
         ];
 
         foreach ($keys as $key) {
@@ -314,7 +303,7 @@ class CacheService
                 ['status' => 'pending'],
                 ['status' => 'completed'],
                 ['priority' => 'high'],
-                []  // No filters
+                [],  // No filters
             ];
 
             foreach ($commonFilters as $filters) {
@@ -324,7 +313,7 @@ class CacheService
 
             Log::info("Cache warmed up for user {$userId}", $results);
         } catch (\Exception $e) {
-            Log::error("Failed to warm up cache for user {$userId}: " . $e->getMessage());
+            Log::error("Failed to warm up cache for user {$userId}: ".$e->getMessage());
             $results['error'] = $e->getMessage();
         }
 
@@ -347,7 +336,8 @@ class CacheService
                 'top_cache_keys' => $this->getTopCacheKeys(),
             ];
         } catch (\Exception $e) {
-            Log::error('Failed to get cache stats: ' . $e->getMessage());
+            Log::error('Failed to get cache stats: '.$e->getMessage());
+
             return ['error' => 'Unable to retrieve cache statistics'];
         }
     }
@@ -376,7 +366,7 @@ class CacheService
 
             Log::info("Cleared {$cleared} expired cache keys");
         } catch (\Exception $e) {
-            Log::error('Failed to clear expired caches: ' . $e->getMessage());
+            Log::error('Failed to clear expired caches: '.$e->getMessage());
         }
 
         return $cleared;
@@ -402,7 +392,7 @@ class CacheService
             $results['memory_after'] = $this->getMemoryUsage();
             $results['memory_saved'] = $results['memory_before'] - $results['memory_after'];
         } catch (\Exception $e) {
-            Log::error('Cache optimization failed: ' . $e->getMessage());
+            Log::error('Cache optimization failed: '.$e->getMessage());
             $results['error'] = $e->getMessage();
         }
 
@@ -414,6 +404,7 @@ class CacheService
     private function generateTasksCacheKey(int $userId, array $filters): string
     {
         $filterHash = md5(serialize($filters));
+
         return "tasks:user:{$userId}:filters:{$filterHash}";
     }
 
@@ -421,6 +412,7 @@ class CacheService
     {
         $filterHash = md5(serialize($filters));
         $queryHash = md5($query);
+
         return "search:user:{$userId}:query:{$queryHash}:filters:{$filterHash}";
     }
 
@@ -429,13 +421,13 @@ class CacheService
         $query = Task::where('user_id', $userId)->with(['category', 'tags']);
 
         // Apply filters
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
-        if (!empty($filters['priority'])) {
+        if (! empty($filters['priority'])) {
             $query->where('priority', $filters['priority']);
         }
-        if (!empty($filters['category_id'])) {
+        if (! empty($filters['category_id'])) {
             $query->where('category_id', $filters['category_id']);
         }
 
@@ -448,11 +440,11 @@ class CacheService
             $redis = Redis::connection();
             $keys = $redis->keys($pattern);
 
-            if (!empty($keys)) {
+            if (! empty($keys)) {
                 $redis->del($keys);
             }
         } catch (\Exception $e) {
-            Log::error("Failed to invalidate cache pattern {$pattern}: " . $e->getMessage());
+            Log::error("Failed to invalidate cache pattern {$pattern}: ".$e->getMessage());
         }
     }
 
@@ -464,7 +456,7 @@ class CacheService
             $redis->incr($metricKey);
             $redis->expire($metricKey, 86400); // 24 hours
         } catch (\Exception $e) {
-            Log::error("Failed to track cache metric: " . $e->getMessage());
+            Log::error('Failed to track cache metric: '.$e->getMessage());
         }
     }
 
@@ -476,6 +468,7 @@ class CacheService
             $misses = (int) ($redis->get('cache_metrics:*:miss') ?? 0);
 
             $total = $hits + $misses;
+
             return $total > 0 ? round(($hits / $total) * 100, 2) : 0;
         } catch (\Exception $e) {
             return 0;
@@ -512,7 +505,7 @@ class CacheService
                 $keyData[] = [
                     'key' => $key,
                     'size' => $size,
-                    'ttl' => $ttl
+                    'ttl' => $ttl,
                 ];
             }
 
@@ -532,6 +525,7 @@ class CacheService
         try {
             $redis = Redis::connection();
             $info = $redis->info('memory');
+
             return (int) ($info['used_memory'] ?? 0);
         } catch (\Exception $e) {
             return 0;
@@ -552,7 +546,7 @@ class CacheService
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Failed to clear low-value caches: ' . $e->getMessage());
+            Log::error('Failed to clear low-value caches: '.$e->getMessage());
         }
     }
 

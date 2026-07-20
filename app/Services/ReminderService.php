@@ -4,19 +4,13 @@ namespace App\Services;
 
 use App\Models\Reminder;
 use App\Models\Task;
-use App\Services\ActivityLogService;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class ReminderService
 {
-    public function __construct(
-        private ActivityLogService $activityLogService
-    ) {}
-
     /**
      * Get all reminders for a user
      */
@@ -102,16 +96,6 @@ class ReminderService
             // Create the reminder
             $reminder = Reminder::create($data);
 
-            // Log activity
-            $this->activityLogService->logReminderActivity(
-                'create',
-                $reminder->id,
-                $reminder->type,
-                null,
-                $data,
-                $userId
-            );
-
             return $reminder->load('task');
         });
     }
@@ -126,8 +110,6 @@ class ReminderService
             if ($reminder->task->user_id !== $userId) {
                 throw new \InvalidArgumentException('You do not have permission to update this reminder.');
             }
-
-            $oldValues = $reminder->toArray();
 
             // Validate reminder time if being updated
             if (isset($data['remind_at'])) {
@@ -145,16 +127,6 @@ class ReminderService
             // Update the reminder
             $reminder->update($data);
 
-            // Log activity
-            $this->activityLogService->logReminderActivity(
-                'update',
-                $reminder->id,
-                $reminder->type,
-                $oldValues,
-                $data,
-                $userId
-            );
-
             return $reminder->fresh(['task']);
         });
     }
@@ -169,19 +141,7 @@ class ReminderService
             throw new \InvalidArgumentException('You do not have permission to delete this reminder.');
         }
 
-        return DB::transaction(function () use ($reminder, $userId) {
-            $oldValues = $reminder->toArray();
-
-            // Log activity before deletion
-            $this->activityLogService->logReminderActivity(
-                'delete',
-                $reminder->id,
-                $reminder->type,
-                $oldValues,
-                null,
-                $userId
-            );
-
+        return DB::transaction(function () use ($reminder) {
             return $reminder->delete();
         });
     }
@@ -192,21 +152,10 @@ class ReminderService
     public function markReminderAsSent(Reminder $reminder): Reminder
     {
         return DB::transaction(function () use ($reminder) {
-            $oldValues = ['is_sent' => $reminder->is_sent];
-
             $reminder->update([
                 'is_sent' => true,
-                'sent_at' => now()
+                'sent_at' => now(),
             ]);
-
-            // Log activity
-            $this->activityLogService->logReminderActivity(
-                'sent',
-                $reminder->id,
-                $reminder->type,
-                $oldValues,
-                ['is_sent' => true, 'sent_at' => now()->toDateTimeString()]
-            );
 
             return $reminder;
         });
@@ -239,7 +188,7 @@ class ReminderService
                 $processedCount++;
             } catch (\Exception $e) {
                 // Log error but continue processing other reminders
-                Log::error("Failed to process reminder {$reminder->id}: " . $e->getMessage());
+                Log::error("Failed to process reminder {$reminder->id}: ".$e->getMessage());
             }
         }
 
@@ -306,21 +255,10 @@ class ReminderService
             throw new \InvalidArgumentException('You do not have permission to snooze this reminder.');
         }
 
-        return DB::transaction(function () use ($reminder, $minutes, $userId) {
-            $oldValues = ['remind_at' => $reminder->remind_at];
+        return DB::transaction(function () use ($reminder, $minutes) {
             $newRemindAt = Carbon::parse($reminder->remind_at)->addMinutes($minutes);
 
             $reminder->update(['remind_at' => $newRemindAt]);
-
-            // Log activity
-            $this->activityLogService->logReminderActivity(
-                'snooze',
-                $reminder->id,
-                $reminder->type,
-                $oldValues,
-                ['remind_at' => $newRemindAt->toDateTimeString(), 'snoozed_minutes' => $minutes],
-                $userId
-            );
 
             return $reminder->fresh(['task']);
         });

@@ -3,11 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
-use App\Models\Tag;
-use App\Models\ActivityLog;
 use App\Services\CategoryService;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -55,6 +53,7 @@ class CategoryController extends Controller
 
         try {
             $category = $this->categoryService->createCategory($validated, Auth::id());
+
             return redirect()->route('categories.index')->with('message', 'Category created successfully');
         } catch (\InvalidArgumentException $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()])->withInput();
@@ -70,7 +69,7 @@ class CategoryController extends Controller
     {
         $categoryWithTasks = $this->categoryService->getCategoryWithTasks($category->id, Auth::id());
 
-        if (!$categoryWithTasks) {
+        if (! $categoryWithTasks) {
             abort(404);
         }
 
@@ -86,7 +85,7 @@ class CategoryController extends Controller
     {
         $categoryData = $this->categoryService->findCategoryForUser($category->id, Auth::id());
 
-        if (!$categoryData) {
+        if (! $categoryData) {
             abort(404);
         }
 
@@ -132,6 +131,7 @@ class CategoryController extends Controller
 
         try {
             $this->categoryService->updateCategory($category, $validated, Auth::id());
+
             return redirect()->route('categories.index')->with('message', 'Category updated successfully');
         } catch (\InvalidArgumentException $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()])->withInput();
@@ -147,6 +147,7 @@ class CategoryController extends Controller
     {
         try {
             $this->categoryService->deleteCategory($category, Auth::id());
+
             return redirect()->route('categories.index')->with('message', 'Category deleted successfully');
         } catch (\InvalidArgumentException $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()]);

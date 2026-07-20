@@ -229,12 +229,6 @@ parameters:
 			path: app/Services/GoogleCalendarService.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Services/GoogleCalendarService.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
 			identifier: property.notFound
 			count: 1
@@ -343,12 +337,6 @@ parameters:
 			path: app/Services/GoogleCalendarService.php
 
 		-
-			message: '#^Variable \$recentActivity in empty\(\) always exists and is not falsy\.$#'
-			identifier: empty.variable
-			count: 1
-			path: app/Services/MonitoringService.php
-
-		-
 			message: '#^Access to an undefined property App\\Models\\Reminder\:\:\$message\.$#'
 			identifier: property.notFound
 			count: 1
@@ -375,7 +363,7 @@ parameters:
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
 			identifier: property.notFound
-			count: 5
+			count: 2
 			path: app/Services/NotificationService.php
 
 		-
@@ -393,7 +381,7 @@ parameters:
 		-
 			message: '#^Access to an undefined property App\\Models\\Reminder\:\:\$remind_at\.$#'
 			identifier: property.notFound
-			count: 2
+			count: 1
 			path: app/Services/ReminderService.php
 
 		-
@@ -497,21 +485,3 @@ parameters:
 			identifier: return.type
 			count: 1
 			path: app/Services/SubtaskService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/TagService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/TagService.php
-
-		-
-			message: '#^Deprecated in PHP 8\.4\: Parameter \#2 \$limit \(int\) is implicitly nullable via default value null\.$#'
-			identifier: parameter.implicitlyNullable
-			count: 4
-			path: app/Services/TaskService.php

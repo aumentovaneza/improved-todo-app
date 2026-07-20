@@ -44,11 +44,6 @@ interface UserRepositoryInterface
     public function getUsersWithTaskCounts(): Collection;
 
     /**
-     * Get users with activity log counts
-     */
-    public function getUsersWithActivityCounts(): Collection;
-
-    /**
      * Get user statistics
      */
     public function getUserStats(User $user): array;

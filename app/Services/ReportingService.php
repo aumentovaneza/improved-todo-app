@@ -2,20 +2,13 @@
 
 namespace App\Services;
 
+use App\Models\Category;
 use App\Models\Task;
 use App\Models\User;
-use App\Models\Category;
-use App\Services\ActivityLogService;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class ReportingService
 {
-    public function __construct(
-        private ActivityLogService $activityLogService
-    ) {}
-
     /**
      * Generate comprehensive productivity report for user
      */
@@ -35,19 +28,6 @@ class ReportingService
             'time_analysis' => $this->getTimeAnalysis($user, $startDate, $endDate),
             'recommendations' => $this->generateRecommendations($user, $startDate, $endDate),
         ];
-
-        // Log report generation
-        $this->activityLogService->logUserActivity(
-            'productivity_report_generated',
-            $user->id,
-            $user->name,
-            null,
-            [
-                'period_start' => $startDate->format('Y-m-d'),
-                'period_end' => $endDate->format('Y-m-d'),
-                'total_tasks' => $report['task_summary']['total_tasks']
-            ]
-        );
 
         return $report;
     }
@@ -213,13 +193,13 @@ class ReportingService
         $query = Task::query();
 
         // Apply filters
-        if (!empty($filters['start_date'])) {
+        if (! empty($filters['start_date'])) {
             $query->where('created_at', '>=', $filters['start_date']);
         }
-        if (!empty($filters['end_date'])) {
+        if (! empty($filters['end_date'])) {
             $query->where('created_at', '<=', $filters['end_date']);
         }
-        if (!empty($filters['user_id'])) {
+        if (! empty($filters['user_id'])) {
             $query->where('user_id', $filters['user_id']);
         }
 
@@ -258,7 +238,7 @@ class ReportingService
         return [
             'data' => $data,
             'format' => $format,
-            'filename' => "{$type}_export_" . now()->format('Y-m-d_H-i-s') . ".{$format}",
+            'filename' => "{$type}_export_".now()->format('Y-m-d_H-i-s').".{$format}",
             'total_records' => count($data),
         ];
     }
@@ -346,7 +326,7 @@ class ReportingService
             $recommendations[] = [
                 'type' => 'completion_rate',
                 'message' => 'Your task completion rate is below 70%. Consider breaking down large tasks into smaller, manageable subtasks.',
-                'priority' => 'high'
+                'priority' => 'high',
             ];
         }
 
@@ -354,7 +334,7 @@ class ReportingService
             $recommendations[] = [
                 'type' => 'overdue_tasks',
                 'message' => 'You have many overdue tasks. Review your time estimates and consider adjusting deadlines.',
-                'priority' => 'high'
+                'priority' => 'high',
             ];
         }
 
@@ -362,7 +342,7 @@ class ReportingService
             $recommendations[] = [
                 'type' => 'consistency',
                 'message' => 'Your productivity varies significantly day-to-day. Try establishing a more consistent daily routine.',
-                'priority' => 'medium'
+                'priority' => 'medium',
             ];
         }
 
@@ -392,6 +372,7 @@ class ReportingService
         }, $dailyCompletions)) / count($dailyCompletions);
 
         $coefficient = $mean > 0 ? sqrt($variance) / $mean : 0;
+
         return max(0, min(100, intval((1 - $coefficient) * 100)));
     }
 
@@ -413,20 +394,27 @@ class ReportingService
 
     private function calculateRiskLevel(int $riskScore): string
     {
-        if ($riskScore >= 4) return 'high';
-        if ($riskScore >= 2) return 'medium';
+        if ($riskScore >= 4) {
+            return 'high';
+        }
+        if ($riskScore >= 2) {
+            return 'medium';
+        }
+
         return 'low';
     }
 
     private function checkHighTaskVolume(User $user, Carbon $since): int
     {
         $taskCount = $user->tasks()->where('created_at', '>=', $since)->count();
+
         return $taskCount > 100 ? 1 : 0; // More than 100 tasks in 30 days
     }
 
     private function checkLowCompletionRate(User $user, Carbon $since): int
     {
         $completionRate = $this->calculateCompletionRate($user, $since, now());
+
         return $completionRate < 60 ? 1 : 0; // Less than 60% completion rate
     }
 
@@ -510,6 +498,7 @@ class ReportingService
         }
 
         arsort($hourlyCompletions);
+
         return array_slice($hourlyCompletions, 0, 3, true);
     }
 
@@ -524,7 +513,7 @@ class ReportingService
             'morning' => 0,   // 6-12
             'afternoon' => 0, // 12-18
             'evening' => 0,   // 18-22
-            'night' => 0      // 22-6
+            'night' => 0,      // 22-6
         ];
 
         $completedTasks = $user->tasks()
@@ -580,8 +569,8 @@ class ReportingService
 
     private function getGlobalCompletionTrends(array $filters): array
     {
-        $startDate = !empty($filters['start_date']) ? Carbon::parse($filters['start_date']) : now()->subDays(30);
-        $endDate = !empty($filters['end_date']) ? Carbon::parse($filters['end_date']) : now();
+        $startDate = ! empty($filters['start_date']) ? Carbon::parse($filters['start_date']) : now()->subDays(30);
+        $endDate = ! empty($filters['end_date']) ? Carbon::parse($filters['end_date']) : now();
 
         $trends = [];
         $currentDate = $startDate->copy();
@@ -606,14 +595,14 @@ class ReportingService
     {
         $query = User::query();
 
-        if (!empty($filters['start_date'])) {
+        if (! empty($filters['start_date'])) {
             $query->where('created_at', '>=', $filters['start_date']);
         }
 
         return [
             'total_users' => $query->count(),
             'active_users' => $query->whereHas('tasks', function ($q) use ($filters) {
-                if (!empty($filters['start_date'])) {
+                if (! empty($filters['start_date'])) {
                     $q->where('created_at', '>=', $filters['start_date']);
                 }
             })->count(),
@@ -630,6 +619,7 @@ class ReportingService
             ->get()
             ->filter(function ($task) {
                 $hour = (int) $task->completed_at->format('H');
+
                 return $hour < 8 || $hour > 18; // Outside 8 AM - 6 PM
             });
 
@@ -703,8 +693,8 @@ class ReportingService
 
     private function exportProductivityReport(User $user, array $filters): array
     {
-        $startDate = !empty($filters['start_date']) ? Carbon::parse($filters['start_date']) : now()->subDays(30);
-        $endDate = !empty($filters['end_date']) ? Carbon::parse($filters['end_date']) : now();
+        $startDate = ! empty($filters['start_date']) ? Carbon::parse($filters['start_date']) : now()->subDays(30);
+        $endDate = ! empty($filters['end_date']) ? Carbon::parse($filters['end_date']) : now();
 
         $report = $this->generateProductivityReport($user, $startDate, $endDate);
 
@@ -721,10 +711,10 @@ class ReportingService
     {
         $query = $user->tasks()->where('status', 'completed')->whereNotNull('completed_at');
 
-        if (!empty($filters['start_date'])) {
+        if (! empty($filters['start_date'])) {
             $query->where('completed_at', '>=', $filters['start_date']);
         }
-        if (!empty($filters['end_date'])) {
+        if (! empty($filters['end_date'])) {
             $query->where('completed_at', '<=', $filters['end_date']);
         }
 
@@ -742,8 +732,8 @@ class ReportingService
 
     private function exportCategoryAnalysis(User $user, array $filters): array
     {
-        $startDate = !empty($filters['start_date']) ? Carbon::parse($filters['start_date']) : now()->subDays(30);
-        $endDate = !empty($filters['end_date']) ? Carbon::parse($filters['end_date']) : now();
+        $startDate = ! empty($filters['start_date']) ? Carbon::parse($filters['start_date']) : now()->subDays(30);
+        $endDate = ! empty($filters['end_date']) ? Carbon::parse($filters['end_date']) : now();
 
         return $this->getCategoryPerformance($user, $startDate, $endDate);
     }
@@ -752,10 +742,10 @@ class ReportingService
     {
         $query = $user->tasks()->with(['category', 'tags']);
 
-        if (!empty($filters['start_date'])) {
+        if (! empty($filters['start_date'])) {
             $query->where('created_at', '>=', $filters['start_date']);
         }
-        if (!empty($filters['end_date'])) {
+        if (! empty($filters['end_date'])) {
             $query->where('created_at', '<=', $filters['end_date']);
         }
 

@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
-use Carbon\Carbon;
-use App\Models\Task;
 
 class AnalyticsController extends Controller
 {
@@ -80,16 +79,9 @@ class AnalyticsController extends Controller
             ->get()
             ->mapWithKeys(function ($item) {
                 $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
                 return [$days[$item->day_of_week - 1] => $item->count];
             });
-
-        // Recent activity (last 10 activities) - only task-related
-        $recentActivity = $user->activityLogs()
-            ->where('model_type', Task::class)
-            ->with(['task', 'task.category'])
-            ->orderBy('created_at', 'desc')
-            ->take(10)
-            ->get();
 
         // Average completion time
         $avgCompletionTime = $user->tasks()
@@ -99,6 +91,7 @@ class AnalyticsController extends Controller
             ->map(function ($task) {
                 $created = Carbon::parse($task->created_at);
                 $completed = Carbon::parse($task->updated_at);
+
                 return $completed->diffInDays($created);
             })
             ->average();
@@ -117,7 +110,6 @@ class AnalyticsController extends Controller
             'tasksByCategory' => $tasksByCategory,
             'tasksByStatus' => $tasksByStatus,
             'weeklyProductivity' => $weeklyProductivity,
-            'recentActivity' => $recentActivity,
             'avgCompletionTime' => round($avgCompletionTime ?? 0, 1),
             'tasksThisWeek' => $tasksThisWeek,
             'period' => $period,

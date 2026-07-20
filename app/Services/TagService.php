@@ -4,17 +4,14 @@ namespace App\Services;
 
 use App\Models\Tag;
 use App\Repositories\Contracts\TagRepositoryInterface;
-use App\Services\ActivityLogService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class TagService
 {
     public function __construct(
-        private TagRepositoryInterface $tagRepository,
-        private ActivityLogService $activityLogService
+        private TagRepositoryInterface $tagRepository
     ) {}
 
     /**
@@ -50,15 +47,6 @@ class TagService
             // Create the tag
             $tag = $this->tagRepository->create($data);
 
-            // Log activity
-            $this->activityLogService->logTagActivity(
-                'create',
-                $tag->id,
-                $tag->name,
-                null,
-                $data
-            );
-
             return $tag;
         });
     }
@@ -69,8 +57,6 @@ class TagService
     public function updateTag(Tag $tag, array $data): Tag
     {
         return DB::transaction(function () use ($tag, $data) {
-            $oldValues = $tag->toArray();
-
             // Check if tag name already exists (excluding current tag)
             if (isset($data['name']) && $this->tagRepository->nameExists($data['name'], $tag->id)) {
                 throw new \InvalidArgumentException('A tag with this name already exists.');
@@ -78,15 +64,6 @@ class TagService
 
             // Update the tag
             $updatedTag = $this->tagRepository->update($tag, $data);
-
-            // Log activity
-            $this->activityLogService->logTagActivity(
-                'update',
-                $updatedTag->id,
-                $updatedTag->name,
-                $oldValues,
-                $data
-            );
 
             return $updatedTag;
         });
@@ -106,17 +83,6 @@ class TagService
         }
 
         return DB::transaction(function () use ($tag) {
-            $oldValues = $tag->toArray();
-
-            // Log activity before deletion
-            $this->activityLogService->logTagActivity(
-                'delete',
-                $tag->id,
-                $tag->name,
-                $oldValues,
-                null
-            );
-
             return $this->tagRepository->delete($tag);
         });
     }
@@ -197,7 +163,7 @@ class TagService
         $tagIds = [];
 
         foreach ($tagsData as $tagData) {
-            if (!empty($tagData['is_new']) && $tagData['is_new']) {
+            if (! empty($tagData['is_new']) && $tagData['is_new']) {
                 // Create new tag
                 $tag = $this->tagRepository->firstOrCreate(
                     ['name' => $tagData['name']],
@@ -207,10 +173,10 @@ class TagService
                     ]
                 );
                 $tagIds[] = $tag->id;
-            } elseif (!empty($tagData['id'])) {
+            } elseif (! empty($tagData['id'])) {
                 // Existing tag
                 $tagIds[] = $tagData['id'];
-            } elseif (!empty($tagData['name'])) {
+            } elseif (! empty($tagData['name'])) {
                 // Try to find existing tag by name, create if not found
                 $tag = $this->getOrCreateTag($tagData['name'], [
                     'color' => $tagData['color'] ?? '#6B7280',
@@ -233,15 +199,6 @@ class TagService
 
         DB::transaction(function () use ($unusedTags, &$deletedCount) {
             foreach ($unusedTags as $tag) {
-                // Log activity before deletion
-                $this->activityLogService->logTagActivity(
-                    'bulk_delete',
-                    $tag->id,
-                    $tag->name,
-                    $tag->toArray(),
-                    null
-                );
-
                 $this->tagRepository->delete($tag);
                 $deletedCount++;
             }
@@ -300,7 +257,7 @@ class TagService
         return DB::transaction(function () use ($sourceTag, $targetTag) {
             // Move task associations
             $sourceTag->tasks()->each(function ($task) use ($targetTag) {
-                if (!$task->tags()->where('tag_id', $targetTag->id)->exists()) {
+                if (! $task->tags()->where('tag_id', $targetTag->id)->exists()) {
                     $task->tags()->attach($targetTag->id);
                 }
             });
@@ -308,7 +265,7 @@ class TagService
 
             // Move category associations
             $sourceTag->categories()->each(function ($category) use ($targetTag) {
-                if (!$category->tags()->where('tag_id', $targetTag->id)->exists()) {
+                if (! $category->tags()->where('tag_id', $targetTag->id)->exists()) {
                     $category->tags()->attach($targetTag->id);
                 }
             });
@@ -316,20 +273,11 @@ class TagService
 
             // Move finance transaction associations
             $sourceTag->financeTransactions()->each(function ($transaction) use ($targetTag) {
-                if (!$transaction->tags()->where('tag_id', $targetTag->id)->exists()) {
+                if (! $transaction->tags()->where('tag_id', $targetTag->id)->exists()) {
                     $transaction->tags()->attach($targetTag->id);
                 }
             });
             $sourceTag->financeTransactions()->detach();
-
-            // Log the merge activity
-            $this->activityLogService->logTagActivity(
-                'merge',
-                $sourceTag->id,
-                $sourceTag->name,
-                ['merged_into' => $targetTag->name],
-                null
-            );
 
             // Delete the source tag
             return $this->tagRepository->delete($sourceTag);

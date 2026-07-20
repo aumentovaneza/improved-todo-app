@@ -4,17 +4,11 @@ namespace App\Services;
 
 use App\Models\Subtask;
 use App\Models\Task;
-use App\Services\ActivityLogService;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class SubtaskService
 {
-    public function __construct(
-        private ActivityLogService $activityLogService
-    ) {}
-
     /**
      * Get all subtasks for a task
      */
@@ -65,16 +59,6 @@ class SubtaskService
             // Create the subtask
             $subtask = Subtask::create($data);
 
-            // Log activity
-            $this->activityLogService->logSubtaskActivity(
-                'create',
-                $subtask->id,
-                $subtask->title,
-                null,
-                $data,
-                $userId
-            );
-
             // Update parent task completion status if needed
             $this->updateParentTaskCompletion($task);
 
@@ -93,34 +77,8 @@ class SubtaskService
                 throw new \InvalidArgumentException('You do not have permission to update this subtask.');
             }
 
-            $oldValues = $subtask->toArray();
-            $wasCompleted = $subtask->is_completed;
-
             // Update the subtask
             $subtask->update($data);
-
-            // Log activity
-            $this->activityLogService->logSubtaskActivity(
-                'update',
-                $subtask->id,
-                $subtask->title,
-                $oldValues,
-                $data,
-                $userId
-            );
-
-            // If completion status changed, log specific activity
-            if (isset($data['is_completed']) && $data['is_completed'] !== $wasCompleted) {
-                $action = $data['is_completed'] ? 'complete' : 'reopen';
-                $this->activityLogService->logSubtaskActivity(
-                    $action,
-                    $subtask->id,
-                    $subtask->title,
-                    ['is_completed' => $wasCompleted],
-                    ['is_completed' => $data['is_completed']],
-                    $userId
-                );
-            }
 
             // Update parent task completion status if needed
             $this->updateParentTaskCompletion($subtask->task);
@@ -139,19 +97,8 @@ class SubtaskService
             throw new \InvalidArgumentException('You do not have permission to delete this subtask.');
         }
 
-        return DB::transaction(function () use ($subtask, $userId) {
-            $oldValues = $subtask->toArray();
+        return DB::transaction(function () use ($subtask) {
             $task = $subtask->task;
-
-            // Log activity before deletion
-            $this->activityLogService->logSubtaskActivity(
-                'delete',
-                $subtask->id,
-                $subtask->title,
-                $oldValues,
-                null,
-                $userId
-            );
 
             $result = $subtask->delete();
 
@@ -172,22 +119,11 @@ class SubtaskService
             throw new \InvalidArgumentException('You do not have permission to update this subtask.');
         }
 
-        return DB::transaction(function () use ($subtask, $userId) {
+        return DB::transaction(function () use ($subtask) {
             $wasCompleted = $subtask->is_completed;
-            $newStatus = !$wasCompleted;
+            $newStatus = ! $wasCompleted;
 
             $subtask->update(['is_completed' => $newStatus]);
-
-            // Log activity
-            $action = $newStatus ? 'complete' : 'reopen';
-            $this->activityLogService->logSubtaskActivity(
-                $action,
-                $subtask->id,
-                $subtask->title,
-                ['is_completed' => $wasCompleted],
-                ['is_completed' => $newStatus],
-                $userId
-            );
 
             // Update parent task completion status
             $this->updateParentTaskCompletion($subtask->task);
@@ -357,6 +293,7 @@ class SubtaskService
     private function getNextPositionForTask(int $taskId): int
     {
         $maxPosition = Subtask::where('task_id', $taskId)->max('position');
+
         return ($maxPosition ?? 0) + 1;
     }
 
@@ -373,35 +310,15 @@ class SubtaskService
             if ($task->status !== 'completed') {
                 $task->update([
                     'status' => 'completed',
-                    'completed_at' => now()
+                    'completed_at' => now(),
                 ]);
-
-                // Log the auto-completion
-                $this->activityLogService->logTaskActivity(
-                    'auto_complete',
-                    $task->id,
-                    $task->title,
-                    ['status' => 'pending'],
-                    ['status' => 'completed', 'completed_at' => now()->toDateTimeString()],
-                    $task->user_id
-                );
             }
         } elseif ($task->status === 'completed' && $subtaskStats['pending_subtasks'] > 0) {
             // Reopen the task if it was completed but now has pending subtasks
             $task->update([
                 'status' => 'pending',
-                'completed_at' => null
+                'completed_at' => null,
             ]);
-
-            // Log the auto-reopening
-            $this->activityLogService->logTaskActivity(
-                'auto_reopen',
-                $task->id,
-                $task->title,
-                ['status' => 'completed'],
-                ['status' => 'pending', 'completed_at' => null],
-                $task->user_id
-            );
         }
     }
 }

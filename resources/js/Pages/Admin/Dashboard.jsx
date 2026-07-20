@@ -4,14 +4,13 @@ import {
     Users,
     CheckSquare,
     FolderOpen,
-    Activity,
     TrendingUp,
     Clock,
     AlertTriangle,
     CheckCircle,
 } from "lucide-react";
 
-export default function Dashboard({ stats, recent_activities }) {
+export default function Dashboard({ stats }) {
     const StatCard = ({ title, value, icon: Icon, color, description }) => (
         <div className="card overflow-hidden">
             <div className="p-5">
@@ -38,32 +37,6 @@ export default function Dashboard({ stats, recent_activities }) {
             </div>
         </div>
     );
-
-    const getActivityIcon = (action) => {
-        switch (action) {
-            case "create":
-                return <CheckCircle className="h-4 w-4 text-green-500" />;
-            case "update":
-                return <Activity className="h-4 w-4 text-blue-500" />;
-            case "delete":
-                return <AlertTriangle className="h-4 w-4 text-red-500" />;
-            default:
-                return <Activity className="h-4 w-4 text-gray-500" />;
-        }
-    };
-
-    const getActivityColor = (action) => {
-        switch (action) {
-            case "create":
-                return "text-green-600 dark:text-green-400";
-            case "update":
-                return "text-blue-600 dark:text-blue-400";
-            case "delete":
-                return "text-red-600 dark:text-red-400";
-            default:
-                return "text-gray-600 dark:text-gray-400";
-        }
-    };
 
     return (
         <TodoLayout
@@ -139,111 +112,6 @@ export default function Dashboard({ stats, recent_activities }) {
                         color="text-indigo-600"
                         description="Overall progress"
                     />
-                </div>
-
-                {/* Recent Activity */}
-                <div className="card">
-                    <div className="px-4 py-5 sm:p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
-                                Recent Activity
-                            </h3>
-                            <Link
-                                href={route("admin.activity-logs.index")}
-                                className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
-                            >
-                                View all
-                            </Link>
-                        </div>
-                        {recent_activities && recent_activities.length > 0 ? (
-                            <div className="flow-root">
-                                <ul className="-mb-8">
-                                    {recent_activities.map(
-                                        (activity, index) => (
-                                            <li key={activity.id}>
-                                                <div className="relative pb-8">
-                                                    {index !==
-                                                        recent_activities.length -
-                                                            1 && (
-                                                        <span
-                                                            className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200 dark:bg-gray-700"
-                                                            aria-hidden="true"
-                                                        />
-                                                    )}
-                                                    <div className="relative flex space-x-3">
-                                                        <div>
-                                                            <span className="h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center ring-8 ring-white dark:ring-gray-800">
-                                                                {getActivityIcon(
-                                                                    activity.action
-                                                                )}
-                                                            </span>
-                                                        </div>
-                                                        <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                                                            <div>
-                                                                <p className="text-sm text-gray-900 dark:text-gray-100">
-                                                                    <span className="font-medium">
-                                                                        {activity.user
-                                                                            ? activity
-                                                                                  .user
-                                                                                  .name
-                                                                            : "System"}
-                                                                    </span>{" "}
-                                                                    <span
-                                                                        className={getActivityColor(
-                                                                            activity.action
-                                                                        )}
-                                                                    >
-                                                                        {
-                                                                            activity.action
-                                                                        }
-                                                                        d
-                                                                    </span>{" "}
-                                                                    {activity.model_type.toLowerCase()}{" "}
-                                                                    <span className="font-medium">
-                                                                        {activity.description?.split(
-                                                                            ": "
-                                                                        )[1] ||
-                                                                            `#${activity.model_id}`}
-                                                                    </span>
-                                                                </p>
-                                                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                                    {
-                                                                        activity.description
-                                                                    }
-                                                                </p>
-                                                            </div>
-                                                            <div className="text-right text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                                                <time
-                                                                    dateTime={
-                                                                        activity.created_at
-                                                                    }
-                                                                >
-                                                                    {new Date(
-                                                                        activity.created_at
-                                                                    ).toLocaleDateString()}
-                                                                </time>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        )
-                                    )}
-                                </ul>
-                            </div>
-                        ) : (
-                            <div className="text-center py-6">
-                                <Activity className="mx-auto h-12 w-12 text-gray-400" />
-                                <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-                                    No recent activity
-                                </h3>
-                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                    User activities will appear here as they
-                                    happen.
-                                </p>
-                            </div>
-                        )}
-                    </div>
                 </div>
 
                 {/* Quick Actions */}
@@ -333,27 +201,6 @@ export default function Dashboard({ stats, recent_activities }) {
                                     </p>
                                     <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                                         Manage categories
-                                    </p>
-                                </div>
-                            </Link>
-
-                            <Link
-                                href={route("admin.activity-logs.index")}
-                                className="relative rounded-lg border border-light-border/70 dark:border-white/10 bg-light-card dark:bg-dark-card px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-light-border dark:hover:border-white/20 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
-                            >
-                                <div className="flex-shrink-0">
-                                    <Activity className="h-6 w-6 text-orange-600" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <span
-                                        className="absolute inset-0"
-                                        aria-hidden="true"
-                                    />
-                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        Activity Logs
-                                    </p>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                        View system logs
                                     </p>
                                 </div>
                             </Link>

@@ -1,0 +1,18 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    # Existing findings are baselined so the tool passes clean and only NEW
+    # errors fail. Shrink the baseline over time; regenerate with:
+    #   vendor/bin/phpstan analyse --generate-baseline=phpstan-baseline.neon
+    - phpstan-baseline.neon
+
+parameters:
+    # Low baseline so it's adoptable incrementally. Raise the level as the
+    # codebase is annotated/cleaned. Levels go 0 (loosest) to 10 (strictest).
+    level: 3
+
+    paths:
+        - app
+
+    # Test doubles / Eloquent dynamics produce noise at higher levels; add
+    # targeted ignores here rather than lowering the level for everyone.
+    ignoreErrors: []

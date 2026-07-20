@@ -4,9 +4,14 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "lint": "eslint resources/js",
+        "lint:fix": "eslint resources/js --fix",
+        "format": "prettier --write \"resources/js/**/*.{js,jsx}\"",
+        "format:check": "prettier --check \"resources/js/**/*.{js,jsx}\""
     },
     "devDependencies": {
+        "@eslint/js": "^9.0.0",
         "@headlessui/react": "^2.0.0",
         "@inertiajs/react": "^2.0.0",
         "@tailwindcss/forms": "^0.5.3",
@@ -15,8 +20,15 @@
         "autoprefixer": "^10.4.12",
         "axios": "^1.8.2",
         "concurrently": "^9.0.1",
+        "eslint": "^9.0.0",
+        "eslint-config-prettier": "^9.1.0",
+        "eslint-plugin-jsx-a11y": "^6.10.0",
+        "eslint-plugin-react": "^7.37.0",
+        "eslint-plugin-react-hooks": "^5.0.0",
+        "globals": "^15.0.0",
         "laravel-vite-plugin": "^1.2.0",
         "postcss": "^8.4.31",
+        "prettier": "^3.3.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "tailwindcss": "^3.2.1",

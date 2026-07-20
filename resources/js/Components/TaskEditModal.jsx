@@ -5,6 +5,7 @@ import PrimaryButton from "./PrimaryButton";
 import SubtaskManager from "./SubtaskManager";
 import TagInput from "./TagInput";
 import CategoryTagSelector from "./CategoryTagSelector";
+import RecurrenceConfigFields from "./RecurrenceConfigFields";
 import { useEffect } from "react";
 
 export default function TaskEditModal({
@@ -298,6 +299,7 @@ export default function TaskEditModal({
                                         if (!e.target.checked) {
                                             // Clear recurring fields when switching to non-recurring
                                             setData("recurrence_type", "");
+                                            setData("recurrence_config", {});
                                             setData("recurring_until", "");
                                         } else {
                                             // Clear due_date when switching to recurring
@@ -322,12 +324,17 @@ export default function TaskEditModal({
                                         <select
                                             className="w-full input-primary"
                                             value={data.recurrence_type}
-                                            onChange={(e) =>
+                                            onChange={(e) => {
                                                 setData(
                                                     "recurrence_type",
                                                     e.target.value
-                                                )
-                                            }
+                                                );
+                                                // Reset pattern-specific config on change
+                                                setData(
+                                                    "recurrence_config",
+                                                    {}
+                                                );
+                                            }}
                                             required={data.is_recurring}
                                         >
                                             <option value="">
@@ -350,6 +357,13 @@ export default function TaskEditModal({
                                             </div>
                                         )}
                                     </div>
+                                    <RecurrenceConfigFields
+                                        recurrenceType={data.recurrence_type}
+                                        config={data.recurrence_config}
+                                        onChange={(config) =>
+                                            setData("recurrence_config", config)
+                                        }
+                                    />
                                     <div>
                                         <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
                                             Repeat until

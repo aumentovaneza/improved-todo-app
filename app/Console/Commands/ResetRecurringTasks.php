@@ -140,15 +140,41 @@ class ResetRecurringTasks extends Command
      */
     private function getNextOccurrenceDate(Task $task, Carbon $fromDate): ?Carbon
     {
+        $config = $task->recurrence_config ?? [];
+
         switch ($task->recurrence_type) {
             case 'daily':
                 return $fromDate->copy()->addDay();
+
             case 'weekly':
+                $days = $config['days_of_week'] ?? null;
+                if (!empty($days)) {
+                    $days = array_map('intval', $days);
+                    // Next selected weekday strictly after $fromDate
+                    for ($i = 1; $i <= 7; $i++) {
+                        $candidate = $fromDate->copy()->addDays($i);
+                        if (in_array((int) $candidate->dayOfWeek, $days, true)) {
+                            return $candidate;
+                        }
+                    }
+                }
+
                 return $fromDate->copy()->addWeek();
+
             case 'monthly':
+                $dayOfMonth = isset($config['day_of_month']) ? (int) $config['day_of_month'] : null;
+                if ($dayOfMonth) {
+                    $next = $fromDate->copy()->addMonthNoOverflow()->startOfMonth();
+                    $target = min($dayOfMonth, (int) $next->copy()->endOfMonth()->day);
+
+                    return $next->day($target);
+                }
+
                 return $fromDate->copy()->addMonth();
+
             case 'yearly':
                 return $fromDate->copy()->addYear();
+
             default:
                 return null;
         }

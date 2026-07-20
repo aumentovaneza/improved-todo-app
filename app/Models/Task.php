@@ -207,24 +207,22 @@ class Task extends Model
             }
 
             // Start from the task creation date or start date, whichever is later
-            $currentDate = max($this->created_at->startOfDay(), $startDate->copy()->startOfDay());
+            $currentDate = max($this->created_at->copy()->startOfDay(), $startDate->copy()->startOfDay());
             $endDateLimit = min($endDate->copy()->endOfDay(), $this->recurring_until->copy()->endOfDay());
 
+            // Walk day-by-day and emit an occurrence whenever the date matches
+            // the recurrence pattern (supports multiple weekdays / day-of-month).
             while ($currentDate <= $endDateLimit) {
-                // Create a virtual occurrence for this date
-                $occurrence = clone $this;
-                $occurrence->due_date = $currentDate->copy();
-                $occurrence->is_recurring_instance = true;
-                $occurrence->original_task_id = $this->id;
+                if ($this->matchesRecurrenceOnDate($currentDate)) {
+                    $occurrence = clone $this;
+                    $occurrence->due_date = $currentDate->copy();
+                    $occurrence->is_recurring_instance = true;
+                    $occurrence->original_task_id = $this->id;
 
-                $occurrences->push($occurrence);
-
-                // Move to next occurrence
-                $currentDate = $this->getNextOccurrenceDate($currentDate);
-
-                if (!$currentDate || $currentDate > $endDateLimit) {
-                    break;
+                    $occurrences->push($occurrence);
                 }
+
+                $currentDate = $currentDate->copy()->addDay();
             }
         }
 
@@ -232,21 +230,46 @@ class Task extends Model
     }
 
     /**
-     * Get the next occurrence date based on recurrence type
+     * Determine whether the recurrence pattern lands on the given date.
+     *
+     * Reads the optional `recurrence_config`:
+     *   weekly  -> ['days_of_week' => [0-6]]  (0 = Sunday ... 6 = Saturday)
+     *   monthly -> ['day_of_month' => 1-31]
+     * When the config is absent, it falls back to the task's creation date.
      */
-    private function getNextOccurrenceDate($currentDate)
+    public function matchesRecurrenceOnDate($date)
     {
+        $baseDate = $this->created_at;
+        $config = $this->recurrence_config ?? [];
+
         switch ($this->recurrence_type) {
             case 'daily':
-                return $currentDate->copy()->addDay();
+                return true;
+
             case 'weekly':
-                return $currentDate->copy()->addWeek();
+                $days = $config['days_of_week'] ?? null;
+                if (!empty($days)) {
+                    return in_array((int) $date->dayOfWeek, array_map('intval', $days), true);
+                }
+
+                // Fall back to the weekday the task was created on
+                return (int) $date->dayOfWeek === (int) $baseDate->dayOfWeek;
+
             case 'monthly':
-                return $currentDate->copy()->addMonth();
+                $dayOfMonth = isset($config['day_of_month'])
+                    ? (int) $config['day_of_month']
+                    : (int) $baseDate->day;
+
+                // Clamp to the last day for shorter months (e.g. 31 -> Feb 28)
+                $target = min($dayOfMonth, (int) $date->copy()->endOfMonth()->day);
+
+                return (int) $date->day === $target;
+
             case 'yearly':
-                return $currentDate->copy()->addYear();
+                return $baseDate->month === $date->month && $baseDate->day === $date->day;
+
             default:
-                return null;
+                return false;
         }
     }
 
@@ -267,21 +290,11 @@ class Task extends Model
             return false;
         }
 
-        // Check if the date matches the recurrence pattern
-        $baseDate = $this->created_at;
-        $daysDiff = $baseDate->diffInDays($date);
-
-        switch ($this->recurrence_type) {
-            case 'daily':
-                return true;
-            case 'weekly':
-                return $daysDiff % 7 === 0;
-            case 'monthly':
-                return $baseDate->day === $date->day;
-            case 'yearly':
-                return $baseDate->month === $date->month && $baseDate->day === $date->day;
-            default:
-                return false;
+        // A recurrence never starts before the task exists
+        if ($date->copy()->startOfDay() < $this->created_at->copy()->startOfDay()) {
+            return false;
         }
+
+        return $this->matchesRecurrenceOnDate($date);
     }
 }

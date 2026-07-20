@@ -6,6 +6,7 @@ import SecondaryButton from "./SecondaryButton";
 import PrimaryButton from "./PrimaryButton";
 import TagInput from "./TagInput";
 import CategoryTagSelector from "./CategoryTagSelector";
+import RecurrenceConfigFields from "./RecurrenceConfigFields";
 import { addTaskFormSteps } from "@/tours";
 
 export default function TaskModal({
@@ -28,6 +29,7 @@ export default function TaskModal({
         is_all_day: true,
         is_recurring: false,
         recurrence_type: "",
+        recurrence_config: {},
         recurring_until: "",
         tags: [],
     };
@@ -50,6 +52,7 @@ export default function TaskModal({
                 is_all_day: true,
                 is_recurring: false,
                 recurrence_type: "",
+                recurrence_config: {},
                 recurring_until: "",
                 tags: [],
             });
@@ -249,6 +252,7 @@ export default function TaskModal({
                                     if (!e.target.checked) {
                                         // Clear recurring fields when switching to non-recurring
                                         setData("recurrence_type", "");
+                                        setData("recurrence_config", {});
                                         setData("recurring_until", "");
                                     } else {
                                         // Clear due_date when switching to recurring
@@ -273,12 +277,14 @@ export default function TaskModal({
                                     <select
                                         className="w-full input-primary"
                                         value={data.recurrence_type}
-                                        onChange={(e) =>
+                                        onChange={(e) => {
                                             setData(
                                                 "recurrence_type",
                                                 e.target.value
-                                            )
-                                        }
+                                            );
+                                            // Reset pattern-specific config on change
+                                            setData("recurrence_config", {});
+                                        }}
                                         required={data.is_recurring}
                                     >
                                         <option value="">Choose a rhythm</option>
@@ -293,6 +299,13 @@ export default function TaskModal({
                                         </div>
                                     )}
                                 </div>
+                                <RecurrenceConfigFields
+                                    recurrenceType={data.recurrence_type}
+                                    config={data.recurrence_config}
+                                    onChange={(config) =>
+                                        setData("recurrence_config", config)
+                                    }
+                                />
                                 <div>
                                     <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
                                         Repeat until

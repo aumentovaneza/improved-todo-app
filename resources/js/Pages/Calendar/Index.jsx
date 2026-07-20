@@ -15,6 +15,7 @@ import {
     Grid3X3,
     ChevronDown,
     ChevronUp,
+    Pencil,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import DayTasksModal from "@/Components/DayTasksModal";
@@ -32,6 +33,101 @@ const readStoredPreference = (key, allowed, fallback) => {
     return allowed.includes(stored) ? stored : fallback;
 };
 
+// Subtle, optional per-month title/theme shown beneath the calendar heading.
+// When empty it renders a quiet "Add a title" affordance so it stays out of the
+// way for people who don't use it; click to edit inline, clear to remove.
+function MonthTitle({ currentDate, monthTitle }) {
+    const [isEditing, setIsEditing] = useState(false);
+    const [value, setValue] = useState(monthTitle ?? "");
+    const [saving, setSaving] = useState(false);
+
+    // Keep the local draft in sync when navigating between months.
+    useEffect(() => {
+        if (!isEditing) setValue(monthTitle ?? "");
+    }, [monthTitle, isEditing]);
+
+    const save = () => {
+        const trimmed = value.trim();
+        // Nothing changed — just leave edit mode without a round-trip.
+        if (trimmed === (monthTitle ?? "")) {
+            setIsEditing(false);
+            setValue(monthTitle ?? "");
+            return;
+        }
+
+        const [year, month] = currentDate.split("-").map(Number);
+        setSaving(true);
+        router.post(
+            route("calendar.month-title.update"),
+            { year, month, title: trimmed },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onFinish: () => {
+                    setSaving(false);
+                    setIsEditing(false);
+                },
+            }
+        );
+    };
+
+    const cancel = () => {
+        setValue(monthTitle ?? "");
+        setIsEditing(false);
+    };
+
+    if (isEditing) {
+        return (
+            <input
+                type="text"
+                autoFocus
+                value={value}
+                maxLength={60}
+                disabled={saving}
+                onChange={(e) => setValue(e.target.value)}
+                onBlur={save}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        save();
+                    } else if (e.key === "Escape") {
+                        e.preventDefault();
+                        cancel();
+                    }
+                }}
+                placeholder="Name this month…"
+                aria-label="Month title"
+                className="mt-0.5 w-full max-w-xs bg-transparent border-b border-gray-300 dark:border-gray-600 px-0 py-0.5 text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-wevie-teal"
+            />
+        );
+    }
+
+    if (monthTitle) {
+        return (
+            <button
+                type="button"
+                onClick={() => setIsEditing(true)}
+                title="Edit month title"
+                className="group mt-0.5 flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+            >
+                <span>{monthTitle}</span>
+                <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+        );
+    }
+
+    return (
+        <button
+            type="button"
+            onClick={() => setIsEditing(true)}
+            className="mt-0.5 inline-flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+        >
+            <Pencil className="w-3 h-3" />
+            <span>Add a title</span>
+        </button>
+    );
+}
+
 export default function Index({
     tasks,
     transactions,
@@ -39,6 +135,7 @@ export default function Index({
     overdueTasks,
     currentDate,
     monthName,
+    monthTitle,
     range,
     rangeLabel,
     categories,
@@ -807,9 +904,15 @@ export default function Index({
                             className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 gap-4"
                             data-tour="calendar-header"
                         >
-                            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                {rangeLabel ?? monthName}
-                            </h2>
+                            <div className="min-w-0">
+                                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                    {rangeLabel ?? monthName}
+                                </h2>
+                                <MonthTitle
+                                    currentDate={currentDate}
+                                    monthTitle={monthTitle}
+                                />
+                            </div>
                             <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                                 {/* View + range controls (wrap together on mobile) */}
                                 <div className="flex flex-wrap items-center gap-2">

@@ -20,6 +20,8 @@ import {
     Eye,
 } from "lucide-react";
 import TaskModal from "@/Components/TaskModal";
+import GettingStartedChecklist from "@/Components/GettingStartedChecklist";
+import SampleDataBanner from "@/Components/SampleDataBanner";
 import TaskViewModal from "@/Components/TaskViewModal";
 import TaskEditModal from "@/Components/TaskEditModal";
 import ScheduleModal from "@/Components/ScheduleModal";
@@ -33,6 +35,7 @@ export default function Dashboard({
     upcomingPayments = [],
     stats = {},
     categories = [],
+    gettingStarted = {},
 }) {
     const [localCurrentTasks, setLocalCurrentTasks] = useState(
         currentTasks || []
@@ -275,6 +278,13 @@ export default function Dashboard({
             <Head title="Dashboard" />
 
             <div className="space-y-4 sm:space-y-6">
+                <SampleDataBanner show={!!gettingStarted.hasSampleData} />
+
+                <GettingStartedChecklist
+                    gettingStarted={gettingStarted}
+                    onAddTask={() => setShowQuickTask(true)}
+                />
+
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                     <div className="card">
@@ -642,14 +652,24 @@ export default function Dashboard({
                         </div>
                         <div className="p-4 sm:p-6">
                             {localTodayTasks.length === 0 ? (
-                                <div className="text-center py-8">
-                                    <CalendarDays className="mx-auto h-12 w-12 text-light-muted dark:text-dark-muted" />
-                                    <h3 className="mt-2 text-sm font-medium text-light-primary dark:text-dark-primary">
-                                        No tasks today
+                                <div className="flex flex-col items-center py-8 text-center">
+                                    <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-400/15 to-[#5FDDE0]/15 dark:from-primary-400/25 dark:to-[#5FDDE0]/25">
+                                        <CalendarDays className="h-7 w-7 text-primary-500 dark:text-[#2ED7A1]" />
+                                    </span>
+                                    <h3 className="mt-3 text-sm font-semibold text-light-primary dark:text-dark-primary">
+                                        A clear day ahead
                                     </h3>
-                                    <p className="mt-1 text-sm text-light-muted dark:text-dark-muted">
-                                        Still here whenever you need it.
+                                    <p className="mt-1 max-w-xs text-sm text-light-muted dark:text-dark-muted">
+                                        Add your first task and Wevie will keep it
+                                        front and center when it's due.
                                     </p>
+                                    <button
+                                        onClick={() => setShowQuickTask(true)}
+                                        className="btn-primary mt-4"
+                                    >
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Add your first task
+                                    </button>
                                 </div>
                             ) : (
                                 <div className="space-y-3">

@@ -15,6 +15,7 @@ class Task extends Model
 
     protected $fillable = [
         'user_id',
+        'is_sample',
         'category_id',
         'board_id',
         'swimlane_id',
@@ -35,6 +36,7 @@ class Task extends Model
     ];
 
     protected $casts = [
+        'is_sample' => 'boolean',
         'due_date' => 'datetime',
         'is_all_day' => 'boolean',
         'completed_at' => 'datetime',

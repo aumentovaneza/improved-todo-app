@@ -100,7 +100,10 @@ export default function FinanceDashboard({
                         </p>
                     </div>
                 </div>
-                <div className="mt-4 flex flex-wrap gap-3">
+                <div
+                    className="mt-4 flex flex-wrap gap-3"
+                    data-tour="wallet-actions"
+                >
                     <button
                         type="button"
                         onClick={() =>
@@ -141,18 +144,20 @@ export default function FinanceDashboard({
                 </div>
             </div>
 
-            <SummaryCards
-                summary={summary}
-                onIncomeClick={onIncomeSummary}
-                onUnallocatedClick={onUnallocatedSummary}
-                onAvailableCreditClick={onAvailableCreditSummary}
-                onExpensesClick={onExpensesSummary}
-                onSavingsClick={onSavingsSummary}
-                onNetClick={onNetSummary}
-                onLoansClick={onLoansSummary}
-            />
+            <div data-tour="wallet-summary">
+                <SummaryCards
+                    summary={summary}
+                    onIncomeClick={onIncomeSummary}
+                    onUnallocatedClick={onUnallocatedSummary}
+                    onAvailableCreditClick={onAvailableCreditSummary}
+                    onExpensesClick={onExpensesSummary}
+                    onSavingsClick={onSavingsSummary}
+                    onNetClick={onNetSummary}
+                    onLoansClick={onLoansSummary}
+                />
+            </div>
 
-            <div className="grid gap-6 lg:grid-cols-3">
+            <div className="grid gap-6 lg:grid-cols-3" data-tour="wallet-charts">
                 <div className="lg:col-span-2 space-y-6">
                     <IncomeExpenseChart data={charts?.income_vs_expense} />
                 </div>

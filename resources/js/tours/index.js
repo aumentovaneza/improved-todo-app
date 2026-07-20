@@ -7,60 +7,68 @@ export const onboardingSteps = [
     {
         target: "body",
         placement: "center",
-        title: "Welcome to Wevie 👋",
+        emoji: "👋",
+        title: "Welcome to Wevie",
         content:
-            "Take a quick tour of the main features. You can skip at any time.",
+            "In 60 seconds we'll show you how Wevie keeps your day and your money in one calm place. Tap Next to begin — or skip anytime.",
         disableBeacon: true,
     },
     {
         target: '[data-tour="logo-dashboard"]',
         mobileTarget: '[data-tour="mobile-nav-dashboard"]',
-        title: "Dashboard",
+        emoji: "🏠",
+        title: "Your day, at a glance",
         content:
-            "Your daily overview. On mobile, tap the Dashboard tab at the bottom.",
+            "The Dashboard greets you with what's due today, what's overdue, and what's coming up — so you always know your next move. On mobile, it's the Home tab.",
         placement: "right",
         mobilePlacement: "top",
     },
     {
         target: '[data-tour="nav-tasks"]',
         mobileTarget: '[data-tour="mobile-nav-tasks"]',
-        title: "Tasks",
+        emoji: "✅",
+        title: "Never drop a task again",
         content:
-            "Create tasks with subtasks, tags, reminders, recurrence, and start/end times.",
+            "Capture everything — with subtasks, tags, reminders, and recurring schedules. Wevie resurfaces each task at the right time so nothing slips.",
         placement: "right",
         mobilePlacement: "top",
     },
     {
         target: '[data-tour="nav-categories"]',
-        title: "Categories",
+        emoji: "🎨",
+        title: "Bring order with color",
         content:
-            "Group your tasks by topic — Work, Personal, Health — and color-code them.",
+            "Group tasks into Work, Personal, or Health and give each a color. One glance and you know what kind of day you're looking at.",
         placement: "right",
         mobilePlacement: "center",
         mobileTarget: "body",
     },
     {
         target: '[data-tour="nav-workspaces"]',
-        title: "Workspaces & Boards",
-        content: "Plan visually with kanban-style boards inside shared workspaces.",
+        emoji: "🗂️",
+        title: "Plan bigger, together",
+        content:
+            "Workspaces hold kanban-style boards for projects and sprints. Drag tasks between stages and invite collaborators to plan as a team.",
         placement: "right",
         mobilePlacement: "center",
         mobileTarget: "body",
     },
     {
         target: '[data-tour="nav-calendar"]',
-        title: "Calendar",
+        emoji: "📅",
+        title: "See your whole week",
         content:
-            "See your tasks and events laid out across days, weeks, and months.",
+            "Your tasks and finance events, laid out by day, week, and month. Spot a packed day before it packs you.",
         placement: "right",
         mobilePlacement: "center",
         mobileTarget: "body",
     },
     {
         target: '[data-tour="nav-analytics"]',
-        title: "Analytics",
+        emoji: "📈",
+        title: "Watch your progress add up",
         content:
-            "Track your productivity — completion rates, weekly patterns, and trends.",
+            "Completion rates, weekly patterns, and trends turn your effort into momentum you can actually see.",
         placement: "right",
         mobilePlacement: "center",
         mobileTarget: "body",
@@ -68,27 +76,30 @@ export const onboardingSteps = [
     {
         target: '[data-tour="nav-weviewallet"]',
         mobileTarget: '[data-tour="mobile-nav-weviewallet"]',
-        title: "WevieWallet",
+        emoji: "💸",
+        title: "Money that stays in check",
         content:
-            "Track accounts, budgets, savings goals, and transactions — all in one place.",
+            "WevieWallet tracks accounts, budgets, savings goals, and loans right beside your tasks — so you know what's coming before it hits.",
         placement: "right",
         mobilePlacement: "top",
     },
     {
         target: '[data-tour="user-menu"]',
         mobileTarget: '[data-tour="mobile-user-menu"]',
+        emoji: "🔁",
         title: "Replay this tour anytime",
         content:
-            'Open the menu and click "Replay tour" to see this walkthrough again.',
+            'Lost the thread? Open this menu and hit "Replay tour" to walk through it again whenever you like.',
         placement: "top",
         mobilePlacement: "top",
     },
     {
         target: "body",
         placement: "center",
-        title: "You're all set 🎉",
+        emoji: "🎉",
+        title: "You're all set!",
         content:
-            "Have fun exploring. You can always replay this tour from your profile menu.",
+            "That's Wevie. Add your first task, log a transaction, and watch your Getting Started checklist fill up. Have fun!",
     },
 ];
 
@@ -96,38 +107,51 @@ export const walletDashboardSteps = [
     {
         target: "body",
         placement: "center",
+        emoji: "💰",
         title: "Welcome to WevieWallet",
         content:
-            "This is your finance hub — accounts, budgets, savings goals, loans, and transactions all live here.",
+            "This dashboard is your money at a glance — a quick tour of what's on this page. It takes 30 seconds.",
         disableBeacon: true,
     },
     {
         target: '[data-tour="wallet-selector"]',
+        mobileTarget: "body",
+        mobilePlacement: "center",
+        emoji: "🔀",
         title: "Switch wallets",
         content:
-            "If you collaborate on shared wallets, switch between yours and shared ones from this menu.",
+            "Collaborating on a shared wallet? Flip between your own and shared wallets here — the whole dashboard updates instantly.",
         placement: "bottom",
     },
     {
-        target: "body",
-        placement: "center",
-        title: "Net summary",
+        target: '[data-tour="wallet-summary"]',
+        mobileTarget: "body",
+        mobilePlacement: "center",
+        emoji: "📊",
+        title: "Your numbers, up top",
         content:
-            "Scroll the page for income, expenses, savings, and net cash flow over the selected period.",
+            "Income, expenses, savings, and net cash flow for the selected period — all in one row. Click any card to dig into the details.",
+        placement: "bottom",
     },
     {
-        target: "body",
-        placement: "center",
-        title: "Manage everything from one page",
+        target: '[data-tour="wallet-charts"]',
+        mobileTarget: "body",
+        mobilePlacement: "center",
+        emoji: "📈",
+        title: "See where it goes",
         content:
-            "Add transactions, budgets, savings goals, loans, and accounts via the action buttons in each section.",
+            "Charts break your money down by income vs. expense and by category, so trends jump out at a glance.",
+        placement: "top",
     },
     {
-        target: "body",
-        placement: "center",
-        title: "WevieWallet Management",
+        target: '[data-tour="wallet-actions"]',
+        mobileTarget: "body",
+        mobilePlacement: "center",
+        emoji: "⚡",
+        title: "Add things right here",
         content:
-            "Need to set up accounts or categories? Open the user menu → Profile, or visit WevieWallet Management for the full editor.",
+            "Log a transaction or set up a budget, savings goal, or loan without leaving the dashboard. That's it — enjoy WevieWallet!",
+        placement: "bottom",
     },
 ];
 

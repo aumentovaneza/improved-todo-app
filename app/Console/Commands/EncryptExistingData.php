@@ -42,7 +42,6 @@ class EncryptExistingData extends Command
         'workspaces' => ['name', 'description'],
         'boards' => ['name', 'description'],
         'swimlanes' => ['name'],
-        'activity_logs' => ['old_values', 'new_values'],
         'users' => ['tutorial_progress'],
         'finance_transactions' => ['description', 'notes', 'payment_method'],
         'finance_accounts' => ['name', 'label', 'account_number', 'notes'],

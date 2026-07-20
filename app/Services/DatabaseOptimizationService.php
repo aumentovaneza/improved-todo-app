@@ -2,18 +2,13 @@
 
 namespace App\Services;
 
-use App\Services\ActivityLogService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
-use Carbon\Carbon;
 
 class DatabaseOptimizationService
 {
-    public function __construct(
-        private ActivityLogService $activityLogService
-    ) {}
-
     /**
      * Analyze query performance
      */
@@ -23,7 +18,7 @@ class DatabaseOptimizationService
             'slow_queries' => $this->getSlowQueries(),
             'query_patterns' => $this->analyzeQueryPatterns(),
             'table_scans' => $this->getFullTableScans(),
-            'recommendations' => []
+            'recommendations' => [],
         ];
 
         // Generate recommendations based on analysis
@@ -42,7 +37,7 @@ class DatabaseOptimizationService
             'unused_indexes' => $this->findUnusedIndexes(),
             'duplicate_indexes' => $this->findDuplicateIndexes(),
             'index_usage_stats' => $this->getIndexUsageStats(),
-            'recommendations' => []
+            'recommendations' => [],
         ];
 
         $indexAnalysis['recommendations'] = $this->generateIndexRecommendations($indexAnalysis);
@@ -58,7 +53,7 @@ class DatabaseOptimizationService
         $results = [
             'optimized_tables' => [],
             'analyzed_tables' => [],
-            'errors' => []
+            'errors' => [],
         ];
 
         $tables = $this->getDatabaseTables();
@@ -75,20 +70,10 @@ class DatabaseOptimizationService
 
                 Log::info("Optimized table: {$table}");
             } catch (\Exception $e) {
-                $results['errors'][] = "Failed to optimize {$table}: " . $e->getMessage();
-                Log::error("Failed to optimize table {$table}: " . $e->getMessage());
+                $results['errors'][] = "Failed to optimize {$table}: ".$e->getMessage();
+                Log::error("Failed to optimize table {$table}: ".$e->getMessage());
             }
         }
-
-        $this->activityLogService->log(
-            'database_optimization',
-            'System',
-            'tables',
-            'Optimized database tables',
-            null,
-            $results,
-            null
-        );
 
         return $results;
     }
@@ -101,22 +86,12 @@ class DatabaseOptimizationService
         $results = [
             'cleaned_tables' => [],
             'records_deleted' => 0,
-            'errors' => []
+            'errors' => [],
         ];
 
         $cutoffDate = Carbon::now()->subDays($daysToKeep);
 
         try {
-            // Clean old activity logs
-            $deletedLogs = DB::table('activity_logs')
-                ->where('created_at', '<', $cutoffDate)
-                ->delete();
-
-            if ($deletedLogs > 0) {
-                $results['cleaned_tables']['activity_logs'] = $deletedLogs;
-                $results['records_deleted'] += $deletedLogs;
-            }
-
             // Clean completed tasks older than cutoff (optional)
             $deletedTasks = DB::table('tasks')
                 ->where('status', 'completed')
@@ -138,10 +113,10 @@ class DatabaseOptimizationService
                 $results['records_deleted'] += $deletedJobs;
             }
 
-            Log::info("Database cleanup completed", $results);
+            Log::info('Database cleanup completed', $results);
         } catch (\Exception $e) {
             $results['errors'][] = $e->getMessage();
-            Log::error("Database cleanup failed: " . $e->getMessage());
+            Log::error('Database cleanup failed: '.$e->getMessage());
         }
 
         return $results;
@@ -163,7 +138,8 @@ class DatabaseOptimizationService
 
             return $stats;
         } catch (\Exception $e) {
-            Log::error('Failed to get database stats: ' . $e->getMessage());
+            Log::error('Failed to get database stats: '.$e->getMessage());
+
             return ['error' => 'Unable to retrieve database statistics'];
         }
     }
@@ -177,7 +153,7 @@ class DatabaseOptimizationService
             'status' => 'healthy',
             'metrics' => [],
             'issues' => [],
-            'recommendations' => []
+            'recommendations' => [],
         ];
 
         try {
@@ -188,7 +164,7 @@ class DatabaseOptimizationService
             if ($connections > 100) {
                 $performance['status'] = 'warning';
                 $performance['issues'][] = "High connection count: {$connections}";
-                $performance['recommendations'][] = "Consider connection pooling or increasing max_connections";
+                $performance['recommendations'][] = 'Consider connection pooling or increasing max_connections';
             }
 
             // Check slow queries
@@ -198,7 +174,7 @@ class DatabaseOptimizationService
             if ($slowQueries > 10) {
                 $performance['status'] = 'warning';
                 $performance['issues'][] = "High slow query count: {$slowQueries}";
-                $performance['recommendations'][] = "Review and optimize slow queries";
+                $performance['recommendations'][] = 'Review and optimize slow queries';
             }
 
             // Check table locks
@@ -208,7 +184,7 @@ class DatabaseOptimizationService
             if ($tableLocks > 5) {
                 $performance['status'] = 'critical';
                 $performance['issues'][] = "High table lock waits: {$tableLocks}";
-                $performance['recommendations'][] = "Review queries causing table locks";
+                $performance['recommendations'][] = 'Review queries causing table locks';
             }
 
             // Check disk usage
@@ -218,11 +194,11 @@ class DatabaseOptimizationService
             if ($diskUsage > 10000) { // 10GB
                 $performance['status'] = 'warning';
                 $performance['issues'][] = "Large database size: {$diskUsage}MB";
-                $performance['recommendations'][] = "Consider data archiving or cleanup";
+                $performance['recommendations'][] = 'Consider data archiving or cleanup';
             }
         } catch (\Exception $e) {
             $performance['status'] = 'error';
-            $performance['issues'][] = "Failed to monitor performance: " . $e->getMessage();
+            $performance['issues'][] = 'Failed to monitor performance: '.$e->getMessage();
         }
 
         return $performance;
@@ -236,7 +212,7 @@ class DatabaseOptimizationService
         $results = [
             'created_indexes' => [],
             'skipped_indexes' => [],
-            'errors' => []
+            'errors' => [],
         ];
 
         $recommendations = $this->getIndexRecommendations();
@@ -245,6 +221,7 @@ class DatabaseOptimizationService
             try {
                 if ($this->indexExists($recommendation['table'], $recommendation['columns'])) {
                     $results['skipped_indexes'][] = $recommendation;
+
                     continue;
                 }
 
@@ -256,8 +233,8 @@ class DatabaseOptimizationService
                 $results['created_indexes'][] = array_merge($recommendation, ['index_name' => $indexName]);
                 Log::info("Created index: {$indexName} on {$recommendation['table']}");
             } catch (\Exception $e) {
-                $results['errors'][] = "Failed to create index on {$recommendation['table']}: " . $e->getMessage();
-                Log::error("Failed to create index: " . $e->getMessage());
+                $results['errors'][] = "Failed to create index on {$recommendation['table']}: ".$e->getMessage();
+                Log::error('Failed to create index: '.$e->getMessage());
             }
         }
 
@@ -274,7 +251,7 @@ class DatabaseOptimizationService
             'success' => false,
             'stats_before' => [],
             'stats_after' => [],
-            'error' => null
+            'error' => null,
         ];
 
         try {
@@ -291,7 +268,7 @@ class DatabaseOptimizationService
             Log::info("Successfully optimized table: {$tableName}");
         } catch (\Exception $e) {
             $result['error'] = $e->getMessage();
-            Log::error("Failed to optimize table {$tableName}: " . $e->getMessage());
+            Log::error("Failed to optimize table {$tableName}: ".$e->getMessage());
         }
 
         return $result;
@@ -309,17 +286,12 @@ class DatabaseOptimizationService
                     'query' => 'SELECT * FROM tasks WHERE user_id = ? AND status = ?',
                     'execution_time' => 2.5,
                     'rows_examined' => 15000,
-                    'recommendation' => 'Add composite index on (user_id, status)'
+                    'recommendation' => 'Add composite index on (user_id, status)',
                 ],
-                [
-                    'query' => 'SELECT COUNT(*) FROM activity_logs WHERE created_at > ?',
-                    'execution_time' => 1.8,
-                    'rows_examined' => 50000,
-                    'recommendation' => 'Add index on created_at column'
-                ]
             ];
         } catch (\Exception $e) {
-            Log::error('Failed to get slow queries: ' . $e->getMessage());
+            Log::error('Failed to get slow queries: '.$e->getMessage());
+
             return [];
         }
     }
@@ -329,33 +301,34 @@ class DatabaseOptimizationService
         // This would analyze actual query logs
         // For now, return common patterns
         return [
-            'most_frequent_tables' => ['tasks', 'users', 'categories', 'activity_logs'],
+            'most_frequent_tables' => ['tasks', 'users', 'categories'],
             'common_where_clauses' => ['user_id', 'status', 'created_at', 'due_date'],
             'join_patterns' => ['tasks-categories', 'tasks-users', 'tasks-tags'],
-            'order_by_patterns' => ['created_at DESC', 'due_date ASC', 'priority DESC']
+            'order_by_patterns' => ['created_at DESC', 'due_date ASC', 'priority DESC'],
         ];
     }
 
     private function getFullTableScans(): array
     {
         try {
-            $result = DB::select("
+            $result = DB::select('
                 SELECT table_name, 
                        ROUND((data_length + index_length) / 1024 / 1024, 2) AS size_mb
                 FROM information_schema.tables 
                 WHERE table_schema = DATABASE()
                 ORDER BY (data_length + index_length) DESC
-            ");
+            ');
 
             return array_map(function ($row) {
                 return [
                     'table' => $row->table_name,
                     'size_mb' => $row->size_mb,
-                    'scan_risk' => $row->size_mb > 100 ? 'high' : ($row->size_mb > 10 ? 'medium' : 'low')
+                    'scan_risk' => $row->size_mb > 100 ? 'high' : ($row->size_mb > 10 ? 'medium' : 'low'),
                 ];
             }, $result);
         } catch (\Exception $e) {
-            Log::error('Failed to analyze table scans: ' . $e->getMessage());
+            Log::error('Failed to analyze table scans: '.$e->getMessage());
+
             return [];
         }
     }
@@ -366,9 +339,8 @@ class DatabaseOptimizationService
         return [
             ['table' => 'tasks', 'columns' => ['user_id', 'status'], 'reason' => 'Frequent filtering'],
             ['table' => 'tasks', 'columns' => ['due_date'], 'reason' => 'Date range queries'],
-            ['table' => 'activity_logs', 'columns' => ['user_id', 'created_at'], 'reason' => 'User activity queries'],
             ['table' => 'reminders', 'columns' => ['task_id'], 'reason' => 'Foreign key lookups'],
-            ['table' => 'subtasks', 'columns' => ['task_id'], 'reason' => 'Foreign key lookups']
+            ['table' => 'subtasks', 'columns' => ['task_id'], 'reason' => 'Foreign key lookups'],
         ];
     }
 
@@ -388,7 +360,7 @@ class DatabaseOptimizationService
     private function findDuplicateIndexes(): array
     {
         try {
-            $result = DB::select("
+            $result = DB::select('
                 SELECT table_name, 
                        GROUP_CONCAT(index_name) as index_names,
                        GROUP_CONCAT(column_name ORDER BY seq_in_index) as columns
@@ -396,17 +368,18 @@ class DatabaseOptimizationService
                 WHERE table_schema = DATABASE()
                 GROUP BY table_name, GROUP_CONCAT(column_name ORDER BY seq_in_index)
                 HAVING COUNT(*) > 1
-            ");
+            ');
 
             return array_map(function ($row) {
                 return [
                     'table' => $row->table_name,
                     'duplicate_indexes' => explode(',', $row->index_names),
-                    'columns' => $row->columns
+                    'columns' => $row->columns,
                 ];
             }, $result);
         } catch (\Exception $e) {
-            Log::error('Failed to find duplicate indexes: ' . $e->getMessage());
+            Log::error('Failed to find duplicate indexes: '.$e->getMessage());
+
             return [];
         }
     }
@@ -418,21 +391,22 @@ class DatabaseOptimizationService
             'total_indexes' => $this->getTotalIndexCount(),
             'used_indexes' => 0, // Would be calculated from performance schema
             'unused_indexes' => 0,
-            'usage_percentage' => 0
+            'usage_percentage' => 0,
         ];
     }
 
     private function getDatabaseTables(): array
     {
         try {
-            $result = DB::select("SHOW TABLES");
-            $tableKey = 'Tables_in_' . env('DB_DATABASE');
+            $result = DB::select('SHOW TABLES');
+            $tableKey = 'Tables_in_'.env('DB_DATABASE');
 
             return array_map(function ($row) use ($tableKey) {
                 return $row->$tableKey;
             }, $result);
         } catch (\Exception $e) {
-            Log::error('Failed to get database tables: ' . $e->getMessage());
+            Log::error('Failed to get database tables: '.$e->getMessage());
+
             return [];
         }
     }
@@ -440,15 +414,16 @@ class DatabaseOptimizationService
     private function getDatabaseSize(): float
     {
         try {
-            $result = DB::selectOne("
+            $result = DB::selectOne('
                 SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS size_mb
                 FROM information_schema.tables 
                 WHERE table_schema = DATABASE()
-            ");
+            ');
 
             return $result->size_mb ?? 0;
         } catch (\Exception $e) {
-            Log::error('Failed to get database size: ' . $e->getMessage());
+            Log::error('Failed to get database size: '.$e->getMessage());
+
             return 0;
         }
     }
@@ -456,7 +431,7 @@ class DatabaseOptimizationService
     private function getTableStats(?string $tableName = null): array
     {
         try {
-            $query = "
+            $query = '
                 SELECT table_name,
                        table_rows,
                        ROUND((data_length + index_length) / 1024 / 1024, 2) AS size_mb,
@@ -464,7 +439,7 @@ class DatabaseOptimizationService
                        ROUND(index_length / 1024 / 1024, 2) AS index_mb
                 FROM information_schema.tables 
                 WHERE table_schema = DATABASE()
-            ";
+            ';
 
             if ($tableName) {
                 $query .= " AND table_name = '{$tableName}'";
@@ -478,11 +453,12 @@ class DatabaseOptimizationService
                     'rows' => $row->table_rows,
                     'size_mb' => $row->size_mb,
                     'data_mb' => $row->data_mb,
-                    'index_mb' => $row->index_mb
+                    'index_mb' => $row->index_mb,
                 ];
             }, $result);
         } catch (\Exception $e) {
-            Log::error('Failed to get table stats: ' . $e->getMessage());
+            Log::error('Failed to get table stats: '.$e->getMessage());
+
             return [];
         }
     }
@@ -496,10 +472,11 @@ class DatabaseOptimizationService
             return [
                 'active_connections' => $result->Value ?? 0,
                 'max_connections' => $maxConnections->Value ?? 0,
-                'connection_usage_percent' => round(($result->Value / $maxConnections->Value) * 100, 2)
+                'connection_usage_percent' => round(($result->Value / $maxConnections->Value) * 100, 2),
             ];
         } catch (\Exception $e) {
-            Log::error('Failed to get connection stats: ' . $e->getMessage());
+            Log::error('Failed to get connection stats: '.$e->getMessage());
+
             return [];
         }
     }
@@ -516,7 +493,8 @@ class DatabaseOptimizationService
 
             return $result;
         } catch (\Exception $e) {
-            Log::error('Failed to get query cache stats: ' . $e->getMessage());
+            Log::error('Failed to get query cache stats: '.$e->getMessage());
+
             return [];
         }
     }
@@ -524,17 +502,18 @@ class DatabaseOptimizationService
     private function getInnoDBStats(): array
     {
         try {
-            $stats = DB::select("SHOW ENGINE INNODB STATUS");
+            $stats = DB::select('SHOW ENGINE INNODB STATUS');
 
             // This would parse the InnoDB status output
             // For now, return basic info
             return [
                 'buffer_pool_size' => 'N/A',
                 'buffer_pool_hit_rate' => 'N/A',
-                'log_waits' => 'N/A'
+                'log_waits' => 'N/A',
             ];
         } catch (\Exception $e) {
-            Log::error('Failed to get InnoDB stats: ' . $e->getMessage());
+            Log::error('Failed to get InnoDB stats: '.$e->getMessage());
+
             return [];
         }
     }
@@ -543,6 +522,7 @@ class DatabaseOptimizationService
     {
         try {
             $result = DB::selectOne("SHOW STATUS LIKE 'Threads_connected'");
+
             return (int) ($result->Value ?? 0);
         } catch (\Exception $e) {
             return 0;
@@ -553,6 +533,7 @@ class DatabaseOptimizationService
     {
         try {
             $result = DB::selectOne("SHOW STATUS LIKE 'Slow_queries'");
+
             return (int) ($result->Value ?? 0);
         } catch (\Exception $e) {
             return 0;
@@ -563,6 +544,7 @@ class DatabaseOptimizationService
     {
         try {
             $result = DB::selectOne("SHOW STATUS LIKE 'Table_locks_waited'");
+
             return (int) ($result->Value ?? 0);
         } catch (\Exception $e) {
             return 0;
@@ -573,17 +555,17 @@ class DatabaseOptimizationService
     {
         $recommendations = [];
 
-        if (!empty($analysis['slow_queries'])) {
-            $recommendations[] = "Review and optimize " . count($analysis['slow_queries']) . " slow queries";
+        if (! empty($analysis['slow_queries'])) {
+            $recommendations[] = 'Review and optimize '.count($analysis['slow_queries']).' slow queries';
         }
 
-        if (!empty($analysis['table_scans'])) {
+        if (! empty($analysis['table_scans'])) {
             $highRiskScans = array_filter($analysis['table_scans'], function ($scan) {
                 return $scan['scan_risk'] === 'high';
             });
 
-            if (!empty($highRiskScans)) {
-                $recommendations[] = "Add indexes to tables with high scan risk: " .
+            if (! empty($highRiskScans)) {
+                $recommendations[] = 'Add indexes to tables with high scan risk: '.
                     implode(', ', array_column($highRiskScans, 'table'));
             }
         }
@@ -595,16 +577,16 @@ class DatabaseOptimizationService
     {
         $recommendations = [];
 
-        if (!empty($analysis['missing_indexes'])) {
-            $recommendations[] = "Create " . count($analysis['missing_indexes']) . " missing indexes for better performance";
+        if (! empty($analysis['missing_indexes'])) {
+            $recommendations[] = 'Create '.count($analysis['missing_indexes']).' missing indexes for better performance';
         }
 
-        if (!empty($analysis['unused_indexes'])) {
-            $recommendations[] = "Consider removing " . count($analysis['unused_indexes']) . " unused indexes";
+        if (! empty($analysis['unused_indexes'])) {
+            $recommendations[] = 'Consider removing '.count($analysis['unused_indexes']).' unused indexes';
         }
 
-        if (!empty($analysis['duplicate_indexes'])) {
-            $recommendations[] = "Remove " . count($analysis['duplicate_indexes']) . " duplicate indexes";
+        if (! empty($analysis['duplicate_indexes'])) {
+            $recommendations[] = 'Remove '.count($analysis['duplicate_indexes']).' duplicate indexes';
         }
 
         return $recommendations;
@@ -619,16 +601,16 @@ class DatabaseOptimizationService
     {
         try {
             $columnList = implode(',', $columns);
-            $result = DB::select("
+            $result = DB::select('
                 SELECT COUNT(*) as count
                 FROM information_schema.statistics 
                 WHERE table_schema = DATABASE() 
                 AND table_name = ? 
                 AND GROUP_CONCAT(column_name ORDER BY seq_in_index) = ?
                 GROUP BY index_name
-            ", [$table, $columnList]);
+            ', [$table, $columnList]);
 
-            return !empty($result);
+            return ! empty($result);
         } catch (\Exception $e) {
             return false;
         }
@@ -637,6 +619,7 @@ class DatabaseOptimizationService
     private function generateIndexName(string $table, array $columns): string
     {
         $columnStr = implode('_', $columns);
+
         return "idx_{$table}_{$columnStr}";
     }
 

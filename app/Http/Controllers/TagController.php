@@ -3,9 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tag;
-use App\Models\ActivityLog;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -48,18 +47,6 @@ class TagController extends Controller
 
         $tag = Tag::create($validated);
 
-        // Log activity
-        ActivityLog::create([
-            'user_id' => Auth::id(),
-            'action' => 'create',
-            'model_type' => 'Tag',
-            'model_id' => $tag->id,
-            'new_values' => $validated,
-            'description' => "Created tag: {$tag->name}",
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
-
         return redirect()->route('tags.index')->with('message', 'Tag created successfully');
     }
 
@@ -91,27 +78,13 @@ class TagController extends Controller
     public function update(Request $request, Tag $tag): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:tags,name,' . $tag->id,
+            'name' => 'required|string|max:255|unique:tags,name,'.$tag->id,
             'color' => 'required|string|regex:/^#[0-9A-F]{6}$/i',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
 
-        $oldValues = $tag->toArray();
         $tag->update($validated);
-
-        // Log activity
-        ActivityLog::create([
-            'user_id' => Auth::id(),
-            'action' => 'update',
-            'model_type' => 'Tag',
-            'model_id' => $tag->id,
-            'old_values' => $oldValues,
-            'new_values' => $validated,
-            'description' => "Updated tag: {$tag->name}",
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
 
         return redirect()->route('tags.index')->with('message', 'Tag updated successfully');
     }
@@ -121,19 +94,7 @@ class TagController extends Controller
      */
     public function destroy(Tag $tag): RedirectResponse
     {
-        $tagName = $tag->name;
         $tag->delete();
-
-        // Log activity
-        ActivityLog::create([
-            'user_id' => Auth::id(),
-            'action' => 'delete',
-            'model_type' => 'Tag',
-            'model_id' => $tag->id,
-            'description' => "Deleted tag: {$tagName}",
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
 
         return redirect()->route('tags.index')->with('message', 'Tag deleted successfully');
     }

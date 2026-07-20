@@ -19,7 +19,7 @@ Free-text / personal content and JSON blobs:
 - **Tasks:** `title`, `description`, `recurrence_config`; **Subtasks:** `title`
 - **Categories:** `name`, `description`
 - **Workspaces / Boards:** `name`, `description`; **Swimlanes:** `name`
-- **Activity logs:** `old_values`, `new_values`; **Users:** `tutorial_progress`
+- **Users:** `tutorial_progress`
 - **Finance:** transaction `description`/`notes`/`payment_method`; account
   `name`/`label`/`account_number`/`notes`; category/budget/savings-goal/loan
   `name` (+ savings-goal/loan `notes`); report `payload`
@@ -32,9 +32,9 @@ Structural / queryable columns: all foreign keys, `status`, `priority`, `type`,
 dates (`due_date`, `occurred_at`), `is_active`, `color`, `currency`, `position`,
 numeric `amount`/balance decimals (needed for `SUM`/reports), `users.email`
 (login identifier), `users.name`, `tags.name`, `invite_codes.code`,
-`activity_logs.description`, `finance_transactions.metadata` (queried in SQL
-via JSON-path inside the reporting aggregations), and `journal_entries.mood`
-(indexed, low-cardinality enum filtered in SQL).
+`finance_transactions.metadata` (queried in SQL via JSON-path inside the
+reporting aggregations), and `journal_entries.mood` (indexed, low-cardinality
+enum filtered in SQL).
 
 Because encrypted columns cannot be used in SQL `WHERE`/`LIKE`/`ORDER BY`, search
 and sort over them run in PHP — see `app/Support/EncryptedSearch.php`.

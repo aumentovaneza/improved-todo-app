@@ -13,10 +13,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class SearchService
 {
-    public function __construct(
-        private ActivityLogService $activityLogService
-    ) {}
-
     /**
      * Global search across all entities for a user
      */
@@ -27,18 +23,6 @@ class SearchService
             'categories' => $this->searchCategories($userId, $query, $options),
             'tags' => $this->searchTags($query, $options),
         ];
-
-        // Log search activity
-        $this->activityLogService->logUserActivity(
-            'global_search',
-            $userId,
-            User::find($userId)->name,
-            null,
-            [
-                'query' => $query,
-                'results_count' => array_sum(array_map('count', $searchResults)),
-            ]
-        );
 
         return $searchResults;
     }
@@ -318,19 +302,6 @@ class SearchService
      */
     public function getSearchSuggestions(int $userId, int $limit = 10): array
     {
-        // Get recent search terms from activity logs
-        $recentSearches = $this->activityLogService->getActivityLogs([
-            'user_id' => $userId,
-            'action' => 'global_search',
-        ], $limit);
-
-        $suggestions = [];
-        foreach ($recentSearches as $activity) {
-            if (! empty($activity->new_values['query'])) {
-                $suggestions[] = $activity->new_values['query'];
-            }
-        }
-
         // Get popular task titles and category names. title/name are encrypted,
         // so aggregation and ordering happen in PHP against decrypted values.
         $popularTasks = Task::where('user_id', $userId)
@@ -354,7 +325,7 @@ class SearchService
             ->all();
 
         return [
-            'recent_searches' => array_unique($suggestions),
+            'recent_searches' => [],
             'popular_tasks' => $popularTasks,
             'popular_categories' => $popularCategories,
         ];

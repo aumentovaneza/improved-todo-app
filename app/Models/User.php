@@ -33,6 +33,7 @@ class User extends Authenticatable
         'timezone',
         'news_category',
         'tutorial_progress',
+        'last_active_at',
     ];
 
     /**
@@ -56,6 +57,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'tutorial_progress' => 'encrypted:array',
+            'last_active_at' => 'datetime',
         ];
     }
 
@@ -67,11 +69,6 @@ class User extends Authenticatable
     public function reminders(): HasMany
     {
         return $this->hasMany(Reminder::class);
-    }
-
-    public function activityLogs(): HasMany
-    {
-        return $this->hasMany(ActivityLog::class);
     }
 
     public function categories(): HasMany

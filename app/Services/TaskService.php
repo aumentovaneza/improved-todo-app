@@ -2,25 +2,20 @@
 
 namespace App\Services;
 
+use App\Models\Category;
+use App\Models\Tag;
 use App\Models\Task;
 use App\Models\User;
-use App\Models\Tag;
-use App\Models\Category;
 use App\Repositories\Contracts\TaskRepositoryInterface;
-use App\Services\ActivityLogService;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class TaskService
 {
     public function __construct(
-        private TaskRepositoryInterface $taskRepository,
-        private ActivityLogService $activityLogService
+        private TaskRepositoryInterface $taskRepository
     ) {}
 
     /**
@@ -45,7 +40,7 @@ class TaskService
 
             $categorizedTasks[] = [
                 'category' => $category,
-                'tasks' => $tasks
+                'tasks' => $tasks,
             ];
         }
 
@@ -58,9 +53,9 @@ class TaskService
                     'id' => null,
                     'name' => 'Uncategorized',
                     'color' => '#6B7280',
-                    'is_active' => true
+                    'is_active' => true,
                 ],
-                'tasks' => $uncategorizedTasks
+                'tasks' => $uncategorizedTasks,
             ];
         }
 
@@ -74,12 +69,12 @@ class TaskService
     {
         return DB::transaction(function () use ($data, $userId) {
             // Validate recurring task logic
-            if (!empty($data['is_recurring']) && $data['is_recurring']) {
+            if (! empty($data['is_recurring']) && $data['is_recurring']) {
                 if (empty($data['recurring_until'])) {
                     throw new \InvalidArgumentException('Recurring until date is required for recurring tasks.');
                 }
 
-                if (!empty($data['recurrence_type']) && !in_array($data['recurrence_type'], ['daily', 'weekly', 'monthly', 'yearly'])) {
+                if (! empty($data['recurrence_type']) && ! in_array($data['recurrence_type'], ['daily', 'weekly', 'monthly', 'yearly'])) {
                     throw new \InvalidArgumentException('Invalid recurrence type.');
                 }
 
@@ -89,7 +84,7 @@ class TaskService
             }
 
             // Validate time logic
-            if (!empty($data['start_time']) && !empty($data['end_time'])) {
+            if (! empty($data['start_time']) && ! empty($data['end_time'])) {
                 $startTime = Carbon::createFromFormat('H:i', $data['start_time']);
                 $endTime = Carbon::createFromFormat('H:i', $data['end_time']);
 
@@ -107,13 +102,10 @@ class TaskService
             $task = $this->taskRepository->create($data);
 
             // Handle tags
-            if (!empty($data['tags'])) {
+            if (! empty($data['tags'])) {
                 $tagIds = $this->processTaskTags($data['tags']);
                 $this->taskRepository->syncTags($task, $tagIds);
             }
-
-            // Log activity
-            $this->logActivity('create', $task, null, $data);
 
             return $task->load(['category', 'subtasks', 'tags']);
         });
@@ -130,15 +122,13 @@ class TaskService
         }
 
         return DB::transaction(function () use ($task, $data) {
-            $oldValues = $task->toArray();
-
             // Validate recurring task logic (same as create)
-            if (!empty($data['is_recurring']) && $data['is_recurring']) {
+            if (! empty($data['is_recurring']) && $data['is_recurring']) {
                 if (empty($data['recurring_until'])) {
                     throw new \InvalidArgumentException('Recurring until date is required for recurring tasks.');
                 }
 
-                if (!empty($data['recurrence_type']) && !in_array($data['recurrence_type'], ['daily', 'weekly', 'monthly', 'yearly'])) {
+                if (! empty($data['recurrence_type']) && ! in_array($data['recurrence_type'], ['daily', 'weekly', 'monthly', 'yearly'])) {
                     throw new \InvalidArgumentException('Invalid recurrence type.');
                 }
 
@@ -148,7 +138,7 @@ class TaskService
             }
 
             // Validate time logic
-            if (!empty($data['start_time']) && !empty($data['end_time'])) {
+            if (! empty($data['start_time']) && ! empty($data['end_time'])) {
                 $startTime = Carbon::createFromFormat('H:i', $data['start_time']);
                 $endTime = Carbon::createFromFormat('H:i', $data['end_time']);
 
@@ -162,12 +152,9 @@ class TaskService
 
             // Handle tags
             if (array_key_exists('tags', $data)) {
-                $tagIds = !empty($data['tags']) ? $this->processTaskTags($data['tags']) : [];
+                $tagIds = ! empty($data['tags']) ? $this->processTaskTags($data['tags']) : [];
                 $this->taskRepository->syncTags($updatedTask, $tagIds);
             }
-
-            // Log activity
-            $this->logActivity('update', $updatedTask, $oldValues, $data);
 
             return $updatedTask->load(['category', 'subtasks', 'tags']);
         });
@@ -184,11 +171,6 @@ class TaskService
         }
 
         return DB::transaction(function () use ($task) {
-            $oldValues = $task->toArray();
-
-            // Log activity before deletion
-            $this->logActivity('delete', $task, $oldValues, null);
-
             return $this->taskRepository->delete($task);
         });
     }
@@ -218,15 +200,12 @@ class TaskService
             throw new UnauthorizedHttpException('', 'You do not have permission to update this task.');
         }
 
-        if (!in_array($status, ['pending', 'in_progress', 'completed', 'cancelled'])) {
+        if (! in_array($status, ['pending', 'in_progress', 'completed', 'cancelled'])) {
             throw new \InvalidArgumentException('Invalid task status.');
         }
 
         $oldStatus = $task->status;
         $updatedTask = $this->taskRepository->toggleStatus($task, $status);
-
-        // Log activity
-        $this->logActivity('status_change', $updatedTask, ['status' => $oldStatus], ['status' => $status]);
 
         return $updatedTask;
     }
@@ -274,19 +253,20 @@ class TaskService
     /**
      * Get overdue tasks for user
      */
-    public function getOverdueTasksForUser(int $userId, int $limit = null): Collection
+    public function getOverdueTasksForUser(int $userId, ?int $limit = null): Collection
     {
         $filters = ['overdue' => true, 'status' => 'not_completed'];
         if ($limit) {
             $filters['limit'] = $limit;
         }
+
         return $this->taskRepository->getTasksForUser($userId, $filters);
     }
 
     /**
      * Get tasks due today for user
      */
-    public function getTodayTasksForUser(int $userId, int $limit = null): Collection
+    public function getTodayTasksForUser(int $userId, ?int $limit = null): Collection
     {
         $user = User::findOrFail($userId);
         $today = $user->todayInUserTimezone()->format('Y-m-d');
@@ -295,13 +275,14 @@ class TaskService
         if ($limit) {
             $filters['limit'] = $limit;
         }
+
         return $this->taskRepository->getTasksForUser($userId, $filters);
     }
 
     /**
      * Get upcoming tasks for user
      */
-    public function getUpcomingTasksForUser(int $userId, int $limit = null): Collection
+    public function getUpcomingTasksForUser(int $userId, ?int $limit = null): Collection
     {
         $user = User::findOrFail($userId);
         $tomorrow = $user->todayInUserTimezone()->addDay()->format('Y-m-d');
@@ -310,23 +291,25 @@ class TaskService
         $filters = [
             'due_date_from' => $tomorrow,
             'due_date_to' => $nextWeek,
-            'status' => 'not_completed'
+            'status' => 'not_completed',
         ];
         if ($limit) {
             $filters['limit'] = $limit;
         }
+
         return $this->taskRepository->getTasksForUser($userId, $filters);
     }
 
     /**
      * Get in-progress tasks for user
      */
-    public function getInProgressTasksForUser(int $userId, int $limit = null): Collection
+    public function getInProgressTasksForUser(int $userId, ?int $limit = null): Collection
     {
         $filters = ['status' => 'in_progress'];
         if ($limit) {
             $filters['limit'] = $limit;
         }
+
         return $this->taskRepository->getTasksForUser($userId, $filters);
     }
 
@@ -364,7 +347,7 @@ class TaskService
         $tagIds = [];
 
         foreach ($tags as $tagData) {
-            if (!empty($tagData['is_new']) && $tagData['is_new']) {
+            if (! empty($tagData['is_new']) && $tagData['is_new']) {
                 // Create new tag
                 $tag = Tag::firstOrCreate(
                     ['name' => $tagData['name']],
@@ -374,7 +357,7 @@ class TaskService
                     ]
                 );
                 $tagIds[] = $tag->id;
-            } elseif (!empty($tagData['id'])) {
+            } elseif (! empty($tagData['id'])) {
                 // Existing tag
                 $tagIds[] = $tagData['id'];
             }
@@ -389,6 +372,7 @@ class TaskService
     private function getNextPositionForUser(int $userId): int
     {
         $maxPosition = Task::where('user_id', $userId)->max('position');
+
         return ($maxPosition ?? 0) + 1;
     }
 
@@ -397,7 +381,7 @@ class TaskService
      */
     private function shouldResetRecurringTask(Task $task): bool
     {
-        if (!$task->is_recurring || !$task->recurring_until || !$task->recurrence_type) {
+        if (! $task->is_recurring || ! $task->recurring_until || ! $task->recurrence_type) {
             return false;
         }
 
@@ -427,9 +411,6 @@ class TaskService
             'status' => 'pending',
             'completed_at' => null,
         ]);
-
-        // Log activity
-        $this->logActivity('recurring_reset', $task, null, ['status' => 'pending']);
     }
 
     /**
@@ -442,20 +423,5 @@ class TaskService
         }
 
         return (int) round(($completed / $total) * 100);
-    }
-
-    /**
-     * Log activity for task operations
-     */
-    private function logActivity(string $action, Task $task, ?array $oldValues, ?array $newValues): void
-    {
-        $this->activityLogService->logTaskActivity(
-            $action,
-            $task->id,
-            $task->title,
-            $oldValues,
-            $newValues,
-            Auth::id() ?? $task->user_id
-        );
     }
 }

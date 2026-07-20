@@ -26,10 +26,6 @@ class CacheService
 
     const DASHBOARD_CACHE_TTL = 300; // 5 minutes
 
-    public function __construct(
-        private ActivityLogService $activityLogService
-    ) {}
-
     /**
      * Cache user's tasks with smart invalidation
      */
@@ -91,10 +87,6 @@ class CacheService
                     ->count(),
                 'total_pending' => $user->tasks()->where('status', 'pending')->count(),
                 'categories_count' => $user->categories()->count(),
-                'recent_activity' => $this->activityLogService->getActivityLogs([
-                    'user_id' => $userId,
-                    'limit' => 5,
-                ]),
                 'cached_at' => now()->toDateTimeString(),
             ];
         });
@@ -224,15 +216,6 @@ class CacheService
                 Cache::forget($pattern);
             }
         }
-
-        // Log cache invalidation
-        $this->activityLogService->logUserActivity(
-            'cache_invalidated',
-            $userId,
-            User::find($userId)->name ?? 'Unknown',
-            null,
-            ['patterns' => $patterns]
-        );
     }
 
     /**

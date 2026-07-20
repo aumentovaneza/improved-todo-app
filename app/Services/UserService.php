@@ -4,19 +4,15 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
-use App\Services\ActivityLogService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class UserService
 {
     public function __construct(
-        private UserRepositoryInterface $userRepository,
-        private ActivityLogService $activityLogService
+        private UserRepositoryInterface $userRepository
     ) {}
 
     /**
@@ -32,19 +28,19 @@ class UserService
      */
     public function createUser(array $data, int $createdBy): User
     {
-        return DB::transaction(function () use ($data, $createdBy) {
+        return DB::transaction(function () use ($data) {
             // Check if email already exists
             if ($this->userRepository->emailExists($data['email'])) {
                 throw new \InvalidArgumentException('A user with this email already exists.');
             }
 
             // Validate role
-            if (!in_array($data['role'], ['admin', 'member'])) {
+            if (! in_array($data['role'], ['admin', 'member'])) {
                 throw new \InvalidArgumentException('Invalid user role.');
             }
 
             // Hash password if provided
-            if (!empty($data['password'])) {
+            if (! empty($data['password'])) {
                 $data['password'] = Hash::make($data['password']);
             }
 
@@ -53,9 +49,6 @@ class UserService
 
             // Create the user
             $user = $this->userRepository->create($data);
-
-            // Log activity
-            $this->activityLogService->logUserActivity('create', $user->id, $user->name, null, $data, $createdBy);
 
             return $user;
         });
@@ -66,21 +59,19 @@ class UserService
      */
     public function updateUser(User $user, array $data, int $updatedBy): User
     {
-        return DB::transaction(function () use ($user, $data, $updatedBy) {
-            $oldValues = $user->toArray();
-
+        return DB::transaction(function () use ($user, $data) {
             // Check if email already exists (excluding current user)
             if (isset($data['email']) && $this->userRepository->emailExists($data['email'], $user->id)) {
                 throw new \InvalidArgumentException('A user with this email already exists.');
             }
 
             // Validate role if provided
-            if (isset($data['role']) && !in_array($data['role'], ['admin', 'member'])) {
+            if (isset($data['role']) && ! in_array($data['role'], ['admin', 'member'])) {
                 throw new \InvalidArgumentException('Invalid user role.');
             }
 
             // Hash password if provided
-            if (!empty($data['password'])) {
+            if (! empty($data['password'])) {
                 $data['password'] = Hash::make($data['password']);
             } else {
                 // Remove password from update data if empty
@@ -89,9 +80,6 @@ class UserService
 
             // Update the user
             $updatedUser = $this->userRepository->update($user, $data);
-
-            // Log activity
-            $this->activityLogService->logUserActivity('update', $updatedUser->id, $updatedUser->name, $oldValues, $data, $updatedBy);
 
             return $updatedUser;
         });
@@ -107,12 +95,7 @@ class UserService
             throw new \InvalidArgumentException('You cannot delete your own account.');
         }
 
-        return DB::transaction(function () use ($user, $deletedBy) {
-            $oldValues = $user->toArray();
-
-            // Log activity before deletion
-            $this->activityLogService->logUserActivity('delete', $user->id, $user->name, $oldValues, null, $deletedBy);
-
+        return DB::transaction(function () use ($user) {
             return $this->userRepository->delete($user);
         });
     }
@@ -123,8 +106,6 @@ class UserService
     public function updateProfile(User $user, array $data): User
     {
         return DB::transaction(function () use ($user, $data) {
-            $oldValues = $user->toArray();
-
             // Check if email already exists (excluding current user)
             if (isset($data['email']) && $this->userRepository->emailExists($data['email'], $user->id)) {
                 throw new \InvalidArgumentException('A user with this email already exists.');
@@ -137,9 +118,6 @@ class UserService
             // Update the user
             $updatedUser = $this->userRepository->update($user, $filteredData);
 
-            // Log activity
-            $this->activityLogService->logUserActivity('profile_update', $updatedUser->id, $updatedUser->name, $oldValues, $filteredData, $user->id);
-
             return $updatedUser;
         });
     }
@@ -150,21 +128,15 @@ class UserService
     public function updatePassword(User $user, string $currentPassword, string $newPassword): User
     {
         // Verify current password
-        if (!Hash::check($currentPassword, $user->password)) {
+        if (! Hash::check($currentPassword, $user->password)) {
             throw new \InvalidArgumentException('Current password is incorrect.');
         }
 
         return DB::transaction(function () use ($user, $newPassword) {
-            $oldValues = ['password' => '[HIDDEN]'];
-            $newValues = ['password' => '[HIDDEN]'];
-
             // Update password
             $updatedUser = $this->userRepository->update($user, [
-                'password' => Hash::make($newPassword)
+                'password' => Hash::make($newPassword),
             ]);
-
-            // Log activity
-            $this->activityLogService->logUserActivity('password_update', $updatedUser->id, $updatedUser->name, $oldValues, $newValues, $user->id);
 
             return $updatedUser;
         });
@@ -218,12 +190,7 @@ class UserService
     public function updateUserTimezone(User $user, string $timezone): User
     {
         return DB::transaction(function () use ($user, $timezone) {
-            $oldValues = ['timezone' => $user->timezone];
-
             $updatedUser = $this->userRepository->updateTimezone($user, $timezone);
-
-            // Log activity
-            $this->activityLogService->logUserActivity('timezone_update', $updatedUser->id, $updatedUser->name, $oldValues, ['timezone' => $timezone], $user->id);
 
             return $updatedUser;
         });
@@ -235,12 +202,7 @@ class UserService
     public function updateUserPreferences(User $user, array $preferences): User
     {
         return DB::transaction(function () use ($user, $preferences) {
-            $oldValues = $user->only(array_keys($preferences));
-
             $updatedUser = $this->userRepository->updatePreferences($user, $preferences);
-
-            // Log activity
-            $this->activityLogService->logUserActivity('preferences_update', $updatedUser->id, $updatedUser->name, $oldValues, $preferences, $user->id);
 
             return $updatedUser;
         });
@@ -271,13 +233,8 @@ class UserService
             throw new \InvalidArgumentException('User is already an admin.');
         }
 
-        return DB::transaction(function () use ($user, $promotedBy) {
-            $oldValues = ['role' => $user->role];
-
+        return DB::transaction(function () use ($user) {
             $updatedUser = $this->userRepository->update($user, ['role' => 'admin']);
-
-            // Log activity
-            $this->activityLogService->logUserActivity('promote_to_admin', $updatedUser->id, $updatedUser->name, $oldValues, ['role' => 'admin'], $promotedBy);
 
             return $updatedUser;
         });
@@ -297,13 +254,8 @@ class UserService
             throw new \InvalidArgumentException('You cannot demote yourself.');
         }
 
-        return DB::transaction(function () use ($user, $demotedBy) {
-            $oldValues = ['role' => $user->role];
-
+        return DB::transaction(function () use ($user) {
             $updatedUser = $this->userRepository->update($user, ['role' => 'member']);
-
-            // Log activity
-            $this->activityLogService->logUserActivity('demote_to_member', $updatedUser->id, $updatedUser->name, $oldValues, ['role' => 'member'], $demotedBy);
 
             return $updatedUser;
         });

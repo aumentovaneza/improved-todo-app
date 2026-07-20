@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\Task;
 use App\Models\User;
@@ -94,27 +93,15 @@ it('encrypts category, finance account and transaction content at rest', functio
     expect(rawValue('finance_transactions', $transaction->id, 'amount'))->toBe('42.50');
 });
 
-it('encrypts array-cast columns (activity log values, tutorial progress) at rest', function () {
+it('encrypts array-cast columns (tutorial progress) at rest', function () {
     $user = User::factory()->create([
         'tutorial_progress' => ['dashboard' => true, 'secretStep' => 'done'],
     ]);
 
-    $log = ActivityLog::create([
-        'user_id' => $user->id,
-        'action' => 'updated',
-        'model_type' => Task::class,
-        'model_id' => 1,
-        'old_values' => ['title' => 'Old secret title'],
-        'new_values' => ['title' => 'New secret title'],
-        'description' => 'Updated a task',
-    ]);
+    expect(rawValue('users', $user->id, 'tutorial_progress'))->not->toContain('secretStep');
 
-    expect(rawValue('users', $user->id, 'tutorial_progress'))->not->toContain('secretStep')
-        ->and(rawValue('activity_logs', $log->id, 'old_values'))->not->toContain('Old secret title');
-
-    // Round-trips back to arrays.
-    expect(User::find($user->id)->tutorial_progress)->toBe(['dashboard' => true, 'secretStep' => 'done'])
-        ->and(ActivityLog::find($log->id)->new_values)->toBe(['title' => 'New secret title']);
+    // Round-trips back to an array.
+    expect(User::find($user->id)->tutorial_progress)->toBe(['dashboard' => true, 'secretStep' => 'done']);
 });
 
 it('backfills pre-existing plaintext rows and is idempotent', function () {

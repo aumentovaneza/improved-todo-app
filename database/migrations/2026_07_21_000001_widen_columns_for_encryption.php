@@ -39,10 +39,6 @@ return new class extends Migration
         'swimlanes' => [
             ['name', false],
         ],
-        'activity_logs' => [
-            ['old_values', true],
-            ['new_values', true],
-        ],
         'users' => [
             ['tutorial_progress', true],
         ],
@@ -112,7 +108,6 @@ return new class extends Migration
             'workspaces' => [['name', 'string', false]],
             'boards' => [['name', 'string', false]],
             'swimlanes' => [['name', 'string', false]],
-            'activity_logs' => [['old_values', 'json', true], ['new_values', 'json', true]],
             'users' => [['tutorial_progress', 'json', true]],
             'finance_categories' => [['name', 'string', false]],
             'finance_transactions' => [['description', 'string', false], ['payment_method', 'string', true]],

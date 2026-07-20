@@ -221,13 +221,29 @@ export default function SubtaskManager({
             {
                 preserveScroll: true,
                 preserveState: true,
-                only: [], // Don't reload any data
-                onSuccess: () => {
+                only: ["flash"], // Only pull back the flashed subtask
+                onSuccess: (page) => {
+                    // Reconcile the temporary client id with the real
+                    // database id returned from the server, otherwise later
+                    // edit/toggle/delete requests would target a non-existent
+                    // subtask.
+                    const created = page?.props?.flash?.subtask;
+                    const reconcile = (list) =>
+                        created?.id
+                            ? list.map((s) =>
+                                  s.id === tempSubtask.id
+                                      ? { ...s, ...created }
+                                      : s
+                              )
+                            : list;
+
+                    setSubtasks((prev) => reconcile(prev));
+
                     // Update parent component's task data if callback provided
                     if (onTaskUpdate) {
                         onTaskUpdate({
                             ...task,
-                            subtasks: subtasks,
+                            subtasks: reconcile(subtasks),
                         });
                     }
                     toast.success("Subtask saved.");

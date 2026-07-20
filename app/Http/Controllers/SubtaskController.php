@@ -23,7 +23,18 @@ class SubtaskController extends Controller
 
             $subtask = $this->subtaskService->createSubtask($validated, Auth::id());
 
-            return back()->with('message', 'Subtask created successfully');
+            // Flash the created subtask so the client can reconcile its
+            // temporary (client-generated) id with the real database id.
+            return back()
+                ->with('message', 'Subtask created successfully')
+                ->with('subtask', $subtask->only([
+                    'id',
+                    'title',
+                    'is_completed',
+                    'completed_at',
+                    'position',
+                    'task_id',
+                ]));
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Failed to create subtask: ' . $e->getMessage()]);
         }

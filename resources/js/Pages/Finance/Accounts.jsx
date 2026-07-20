@@ -3,6 +3,7 @@ import AccountsList from "@/Components/Finance/Accounts/AccountsList";
 import Modal from "@/Components/Modal";
 import TodoLayout from "@/Layouts/TodoLayout";
 import OnboardingTour from "@/Components/OnboardingTour";
+import useWalletMutation from "@/Hooks/useWalletMutation";
 import { walletAccountsSteps } from "@/tours";
 import { Head, Link } from "@inertiajs/react";
 import { useCallback, useState } from "react";
@@ -12,10 +13,8 @@ export default function Accounts({
     accountSuggestions = {},
     walletUserId,
 }) {
+    const mutate = useWalletMutation(walletUserId);
     const [activeAccount, setActiveAccount] = useState(null);
-    const refreshPage = useCallback(() => {
-        window.location.reload();
-    }, []);
 
     const buildPayload = (formData) => ({
         ...formData,
@@ -32,24 +31,32 @@ export default function Accounts({
 
     const handleCreate = useCallback(
         async (formData) => {
-            await window.axios.post(
-                route("weviewallet.api.accounts.store"),
-                buildPayload(formData)
-            );
-            refreshPage();
-            return true;
+            const result = await mutate({
+                request: () =>
+                    window.axios.post(
+                        route("weviewallet.api.accounts.store"),
+                        buildPayload(formData)
+                    ),
+                only: ["accounts"],
+                successMessage: "Account created.",
+            });
+            return result !== false;
         },
-        [refreshPage, walletUserId]
+        [mutate, walletUserId]
     );
 
     const handleDelete = useCallback(
         async (account) => {
-            await window.axios.delete(
-                `${route("weviewallet.api.accounts.index")}/${account.id}`
-            );
-            refreshPage();
+            await mutate({
+                request: () =>
+                    window.axios.delete(
+                        `${route("weviewallet.api.accounts.index")}/${account.id}`
+                    ),
+                only: ["accounts"],
+                successMessage: "Account deleted.",
+            });
         },
-        [refreshPage]
+        [mutate]
     );
 
     const handleEdit = useCallback(
@@ -58,14 +65,18 @@ export default function Accounts({
                 return false;
             }
 
-            await window.axios.put(
-                `${route("weviewallet.api.accounts.index")}/${formData.id}`,
-                buildPayload(formData)
-            );
-            refreshPage();
-            return true;
+            const result = await mutate({
+                request: () =>
+                    window.axios.put(
+                        `${route("weviewallet.api.accounts.index")}/${formData.id}`,
+                        buildPayload(formData)
+                    ),
+                only: ["accounts"],
+                successMessage: "Account updated.",
+            });
+            return result !== false;
         },
-        [refreshPage, walletUserId]
+        [mutate, walletUserId]
     );
 
     return (
@@ -75,10 +86,10 @@ export default function Accounts({
                 <div className="card p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                            <h2 className="text-xl font-semibold text-light-primary dark:text-dark-primary">
                                 Accounts
                             </h2>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">
+                            <p className="text-sm text-light-muted dark:text-dark-muted">
                                 Add bank accounts and e-wallets to track balances.
                             </p>
                         </div>
@@ -86,7 +97,7 @@ export default function Accounts({
                             href={route("weviewallet.dashboard", {
                                 wallet_user_id: walletUserId || undefined,
                             })}
-                            className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+                            className="text-sm font-semibold text-wevie-teal hover:text-wevie-teal/80"
                         >
                             Back to dashboard
                         </Link>
@@ -111,8 +122,8 @@ export default function Accounts({
                 onClose={() => setActiveAccount(null)}
                 maxWidth="lg"
             >
-                <div className="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
+                    <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                         Edit account
                     </h3>
                 </div>

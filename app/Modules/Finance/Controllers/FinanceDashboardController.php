@@ -32,7 +32,10 @@ class FinanceDashboardController extends Controller
             ->select(['id', 'name', 'email'])
             ->find($walletUserId);
 
-        $data = $this->financeService->getDashboardData($walletUserId);
+        $data = $this->financeService->getDashboardData(
+            $walletUserId,
+            $request->string('range')->toString() ?: null
+        );
 
         return Inertia::render('Finance/Dashboard', [
             'transactions' => $data['transactions'],

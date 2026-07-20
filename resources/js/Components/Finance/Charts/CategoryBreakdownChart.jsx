@@ -1,12 +1,8 @@
-import { Card, DonutChart, Title } from "@tremor/react";
+import { DonutChart } from "@tremor/react";
+import ChartWrapper from "./ChartWrapper";
 import { getNearestTremorColorName } from "./chartColors";
-
-const formatCurrency = (value, currency = "PHP") =>
-    new Intl.NumberFormat("en-PH", {
-        style: "currency",
-        currency,
-        maximumFractionDigits: 0,
-    }).format(value ?? 0);
+import useIsDark from "@/Hooks/useIsDark";
+import { formatWholeCurrency as formatCurrency } from "@/Utils/currency";
 
 const getCenterSummary = (data, currency) => {
     const totals = data.reduce(
@@ -34,10 +30,7 @@ const getCenterSummary = (data, currency) => {
 
     if (totals.expense > totals.savings) {
         return {
-            label: `Spending leads · ${formatCurrency(
-                totals.expense,
-                currency
-            )}`,
+            label: `Spending leads · ${formatCurrency(totals.expense, currency)}`,
             tone: "spending",
         };
     }
@@ -67,14 +60,8 @@ const formatPeriodLabel = (period) => {
     return label;
 };
 
-export default function CategoryBreakdownChart({
-    data = [],
-    currency = "PHP",
-    period,
-}) {
-    const isDark =
-        typeof document !== "undefined" &&
-        document.documentElement.classList.contains("dark");
+export default function CategoryBreakdownChart({ data = [], currency = "PHP", period, actions }) {
+    const isDark = useIsDark();
     const expenseColor = isDark ? "#9F1239" : "#F43F5E";
     const savingsColor = isDark ? "#047857" : "#10B981";
     const chartColors = data.map((item) => {
@@ -97,13 +84,11 @@ export default function CategoryBreakdownChart({
     const periodLabel = formatPeriodLabel(period);
 
     return (
-        <Card>
-            <Title>Spending & Savings by category</Title>
-            {periodLabel && (
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                    Current month · {periodLabel}
-                </p>
-            )}
+        <ChartWrapper
+            title="Spending & Savings by category"
+            subtitle={periodLabel || undefined}
+            actions={actions}
+        >
             <div className="relative">
                 <DonutChart
                     className="mt-4 h-64"
@@ -113,16 +98,14 @@ export default function CategoryBreakdownChart({
                     valueFormatter={(value) => formatCurrency(value, currency)}
                     colors={chartColors}
                     showLabel={false}
-                    showTooltip={false}
+                    showTooltip
                 />
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                    <span
-                        className={`text-center text-sm font-semibold ${centerTextClass}`}
-                    >
+                    <span className={`text-center text-sm font-semibold ${centerTextClass}`}>
                         {centerSummary.label}
                     </span>
                 </div>
             </div>
-        </Card>
+        </ChartWrapper>
     );
 }

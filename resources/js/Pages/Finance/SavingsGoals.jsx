@@ -2,20 +2,24 @@ import SavingsGoalForm from "@/Components/Finance/SavingsGoals/SavingsGoalForm";
 import Modal from "@/Components/Modal";
 import TodoLayout from "@/Layouts/TodoLayout";
 import OnboardingTour from "@/Components/OnboardingTour";
+import Badge from "@/Components/Finance/UI/Badge";
+import EmptyState from "@/Components/Finance/UI/EmptyState";
+import useWalletMutation from "@/Hooks/useWalletMutation";
+import { formatWholeCurrency, formatCurrency } from "@/Utils/currency";
 import { walletSavingsGoalsSteps } from "@/tours";
 import { Head, Link, router } from "@inertiajs/react";
-import { Eye, Pencil, Repeat2, Trash2 } from "lucide-react";
+import { Eye, Pencil, Repeat2, Target, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-
-const formatCurrency = (value, currency = "PHP") =>
-    new Intl.NumberFormat("en-PH", {
-        style: "currency",
-        currency,
-        maximumFractionDigits: 0,
-    }).format(value ?? 0);
 
 const formatDate = (value) =>
     value ? new Date(value).toLocaleDateString() : "-";
+
+const STATUS_TONE = {
+    Active: "success",
+    Converted: "purple",
+    Completed: "neutral",
+    Closed: "danger",
+};
 
 export default function SavingsGoals({
     savingsGoals = [],
@@ -23,6 +27,7 @@ export default function SavingsGoals({
     walletUserId,
     filters = {},
 }) {
+    const mutate = useWalletMutation(walletUserId);
     const [activeGoal, setActiveGoal] = useState(null);
     const [search, setSearch] = useState(filters.search ?? "");
     const [status, setStatus] = useState(filters.status ?? "all");
@@ -31,9 +36,6 @@ export default function SavingsGoals({
     const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
     const [page, setPage] = useState(1);
     const perPage = 8;
-    const refreshPage = useCallback(() => {
-        window.location.reload();
-    }, []);
 
     const totalPages = useMemo(
         () => Math.max(1, Math.ceil(savingsGoals.length / perPage)),
@@ -111,34 +113,46 @@ export default function SavingsGoals({
                     : 0,
             };
 
-            await window.axios.post(
-                route("weviewallet.api.savings-goals.store"),
-                payload
-            );
-            refreshPage();
-            return true;
+            const result = await mutate({
+                request: () =>
+                    window.axios.post(
+                        route("weviewallet.api.savings-goals.store"),
+                        payload
+                    ),
+                only: ["savingsGoals"],
+                successMessage: "Savings goal created.",
+            });
+            return result !== false;
         },
-        [refreshPage, walletUserId]
+        [mutate, walletUserId]
     );
 
     const handleDelete = useCallback(
         async (goal) => {
-            await window.axios.delete(
-                `${route("weviewallet.api.savings-goals.index")}/${goal.id}`
-            );
-            refreshPage();
+            await mutate({
+                request: () =>
+                    window.axios.delete(
+                        `${route("weviewallet.api.savings-goals.index")}/${goal.id}`
+                    ),
+                only: ["savingsGoals"],
+                successMessage: "Savings goal deleted.",
+            });
         },
-        [refreshPage]
+        [mutate]
     );
 
     const handleConvert = useCallback(
         async (goal) => {
-            await window.axios.post(
-                `${route("weviewallet.api.savings-goals.index")}/${goal.id}/convert`
-            );
-            refreshPage();
+            await mutate({
+                request: () =>
+                    window.axios.post(
+                        `${route("weviewallet.api.savings-goals.index")}/${goal.id}/convert`
+                    ),
+                only: ["savingsGoals"],
+                successMessage: "Savings goal converted to a budget.",
+            });
         },
-        [refreshPage]
+        [mutate]
     );
 
     const handleEdit = useCallback(
@@ -158,14 +172,18 @@ export default function SavingsGoals({
                     : 0,
             };
 
-            await window.axios.put(
-                `${route("weviewallet.api.savings-goals.index")}/${formData.id}`,
-                payload
-            );
-            refreshPage();
-            return true;
+            const result = await mutate({
+                request: () =>
+                    window.axios.put(
+                        `${route("weviewallet.api.savings-goals.index")}/${formData.id}`,
+                        payload
+                    ),
+                only: ["savingsGoals"],
+                successMessage: "Savings goal updated.",
+            });
+            return result !== false;
         },
-        [refreshPage]
+        [mutate]
     );
 
     return (
@@ -175,10 +193,10 @@ export default function SavingsGoals({
                 <div className="card p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                            <h2 className="text-xl font-semibold text-light-primary dark:text-dark-primary">
                                 Savings goals
                             </h2>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">
+                            <p className="text-sm text-light-muted dark:text-dark-muted">
                                 Track all of your savings goals in one place.
                             </p>
                         </div>
@@ -186,7 +204,7 @@ export default function SavingsGoals({
                             href={route("weviewallet.dashboard", {
                                 wallet_user_id: walletUserId || undefined,
                             })}
-                            className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+                            className="text-sm font-semibold text-wevie-teal hover:text-wevie-teal/80"
                         >
                             Back to dashboard
                         </Link>
@@ -202,11 +220,11 @@ export default function SavingsGoals({
                 <form onSubmit={handleFilterSubmit} className="card p-4" data-tour="goals-filters">
                     <div className="grid gap-3 sm:grid-cols-2">
                         <div>
-                            <label className="text-xs font-semibold uppercase text-slate-400 dark:text-slate-500">
+                            <label className="text-xs font-semibold uppercase text-light-muted dark:text-dark-muted">
                                 Search
                             </label>
                             <input
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                                className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary"
                                 placeholder="Search goals, notes, or account"
                                 value={search}
                                 onChange={(event) =>
@@ -215,11 +233,11 @@ export default function SavingsGoals({
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-semibold uppercase text-slate-400 dark:text-slate-500">
+                            <label className="text-xs font-semibold uppercase text-light-muted dark:text-dark-muted">
                                 Status
                             </label>
                             <select
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                                className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary"
                                 value={status}
                                 onChange={(event) =>
                                     setStatus(event.target.value)
@@ -235,14 +253,14 @@ export default function SavingsGoals({
                         <div className="flex items-end gap-2 sm:col-span-2">
                             <button
                                 type="submit"
-                                className="w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-500"
+                                className="w-full rounded-xl bg-gradient-to-r from-wevie-teal to-wevie-mint px-3 py-2 text-sm font-medium text-white shadow-soft hover:opacity-90"
                             >
                                 Apply filters
                             </button>
                             <button
                                 type="button"
                                 onClick={handleResetFilters}
-                                className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                                className="w-full rounded-xl border border-light-border/70 px-3 py-2 text-sm font-semibold text-light-secondary hover:bg-light-hover dark:border-dark-border/70 dark:text-dark-secondary dark:hover:bg-dark-hover"
                             >
                                 Reset
                             </button>
@@ -250,12 +268,12 @@ export default function SavingsGoals({
                     </div>
                 </form>
                 <div className="card p-4" data-tour="goals-list">
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                    <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                         All savings goals
                     </h3>
                     <div className="mt-4 overflow-x-auto">
-                        <table className="min-w-[920px] w-full text-left text-sm text-slate-600 dark:text-slate-300">
-                            <thead className="text-xs uppercase text-slate-400 dark:text-slate-500">
+                        <table className="min-w-[920px] w-full text-left text-sm text-light-secondary dark:text-dark-secondary">
+                            <thead className="text-xs uppercase text-light-muted dark:text-dark-muted">
                                 <tr>
                                     <th className="py-2 pr-4">Goal</th>
                                     <th className="py-2 pr-4">Account</th>
@@ -305,42 +323,35 @@ export default function SavingsGoals({
                                     return (
                                         <tr
                                             key={goal.id}
-                                            className="border-t border-slate-200 dark:border-slate-700"
+                                            className="border-t border-light-border/70 dark:border-dark-border/70"
                                         >
                                             <td className="py-3 pr-4">
-                                                <p className="font-medium text-slate-800 dark:text-slate-100">
+                                                <p className="font-medium text-light-primary dark:text-dark-primary">
                                                     {goal.name}
                                                 </p>
                                             </td>
-                                            <td className="py-3 pr-4 text-xs text-slate-400">
+                                            <td className="py-3 pr-4 text-xs text-light-muted dark:text-dark-muted">
                                                 {goal.account?.name ?? "—"}
                                             </td>
-                                            <td className="py-3 pr-4 text-xs text-slate-400">
+                                            <td className="py-3 pr-4 text-xs text-light-muted dark:text-dark-muted">
                                                 {formatDate(goal.target_date)}
                                             </td>
                                             <td className="py-3 hidden md:table-cell">
-                                                <span
-                                                    className={`text-xs font-semibold ${
-                                                        statusLabel === "Active"
-                                                            ? "text-emerald-600 dark:text-emerald-300"
-                                                            : statusLabel ===
-                                                                "Converted"
-                                                              ? "text-indigo-600 dark:text-indigo-300"
-                                                              : statusLabel ===
-                                                                  "Completed"
-                                                                ? "text-slate-500 dark:text-slate-400"
-                                                                : "text-rose-500 dark:text-rose-300"
-                                                    }`}
-                                                >
-                                                    {statusLabel}
-                                                </span>
+                                                <Badge
+                                                    label={statusLabel}
+                                                    tone={
+                                                        STATUS_TONE[
+                                                            statusLabel
+                                                        ] ?? "neutral"
+                                                    }
+                                                />
                                             </td>
                                             <td className="py-3 min-w-[160px] hidden md:table-cell">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-xs text-slate-400">
+                                                    <span className="text-xs text-light-muted dark:text-dark-muted">
                                                         {progress}%
                                                     </span>
-                                                    <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-dark-card/70">
+                                                    <div className="h-2 w-full rounded-full bg-light-hover dark:bg-dark-hover">
                                                         <div
                                                             className="h-2 rounded-full bg-emerald-500 dark:bg-emerald-500/80"
                                                             style={{
@@ -350,14 +361,14 @@ export default function SavingsGoals({
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="py-3 text-right font-semibold text-slate-800 dark:text-slate-100">
-                                                {formatCurrency(
+                                            <td className="py-3 text-right font-semibold text-light-primary dark:text-dark-primary">
+                                                {formatWholeCurrency(
                                                     current,
                                                     goal.currency
                                                 )}
                                             </td>
-                                            <td className="py-3 text-right text-xs text-slate-400">
-                                                {formatCurrency(
+                                            <td className="py-3 text-right text-xs text-light-muted dark:text-dark-muted">
+                                                {formatWholeCurrency(
                                                     target,
                                                     goal.currency
                                                 )}
@@ -369,7 +380,7 @@ export default function SavingsGoals({
                                                         onClick={() =>
                                                             setActiveGoal(goal)
                                                         }
-                                                        className="rounded-md p-1 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-300"
+                                                        className="rounded-md p-1 text-wevie-teal hover:text-wevie-teal/80 dark:text-wevie-mint"
                                                         title="Edit goal"
                                                         aria-label="Edit goal"
                                                     >
@@ -382,7 +393,7 @@ export default function SavingsGoals({
                                                                 goal
                                                             )
                                                         }
-                                                        className="rounded-md p-1 text-slate-600 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                                                        className="rounded-md p-1 text-light-secondary hover:text-light-primary dark:text-dark-secondary dark:hover:text-dark-primary"
                                                         title="View transactions"
                                                         aria-label="View transactions"
                                                     >
@@ -396,7 +407,7 @@ export default function SavingsGoals({
                                                                     goal
                                                                 )
                                                             }
-                                                            className="rounded-md p-1 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-900/20 dark:hover:text-emerald-300"
+                                                            className="rounded-md p-1 text-emerald-600 hover:text-emerald-700 dark:text-emerald-300"
                                                             title="Convert to budget"
                                                             aria-label="Convert to budget"
                                                         >
@@ -408,7 +419,7 @@ export default function SavingsGoals({
                                                         onClick={() =>
                                                             handleDelete(goal)
                                                         }
-                                                        className="rounded-md p-1 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-900/20 dark:hover:text-rose-300"
+                                                        className="rounded-md p-1 text-rose-600 hover:text-rose-700 dark:text-rose-300"
                                                         title="Delete goal"
                                                         aria-label="Delete goal"
                                                     >
@@ -421,11 +432,12 @@ export default function SavingsGoals({
                                 })}
                                 {(!pagedGoals || pagedGoals.length === 0) && (
                                     <tr>
-                                        <td
-                                            colSpan={8}
-                                            className="py-6 text-center text-sm text-slate-400 dark:text-slate-500"
-                                        >
-                                            No savings goals match your filters.
+                                        <td colSpan={8} className="py-6">
+                                            <EmptyState
+                                                icon={Target}
+                                                title="No savings goals yet"
+                                                description="No savings goals match your filters. Create one above to start saving toward something."
+                                            />
                                         </td>
                                     </tr>
                                 )}
@@ -434,7 +446,7 @@ export default function SavingsGoals({
                     </div>
                 </div>
                 {savingsGoals.length > perPage && (
-                    <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-300">
+                    <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-light-secondary dark:text-dark-secondary">
                         <span>
                             Showing {(page - 1) * perPage + 1}-
                             {Math.min(page * perPage, savingsGoals.length)} of{" "}
@@ -447,11 +459,11 @@ export default function SavingsGoals({
                                     setPage((prev) => Math.max(1, prev - 1))
                                 }
                                 disabled={page === 1}
-                                className="rounded-md border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:text-slate-700 disabled:cursor-not-allowed disabled:text-slate-300 dark:border-slate-700 dark:text-slate-300 dark:hover:text-slate-100"
+                                className="rounded-xl border border-light-border/70 px-3 py-1 text-xs font-semibold text-light-secondary hover:bg-light-hover disabled:cursor-not-allowed disabled:text-light-muted dark:border-dark-border/70 dark:text-dark-secondary dark:hover:bg-dark-hover dark:disabled:text-dark-muted"
                             >
                                 Prev
                             </button>
-                            <span className="text-xs text-slate-400">
+                            <span className="text-xs text-light-muted dark:text-dark-muted">
                                 Page {page} of {totalPages}
                             </span>
                             <button
@@ -462,7 +474,7 @@ export default function SavingsGoals({
                                     )
                                 }
                                 disabled={page === totalPages}
-                                className="rounded-md border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:text-slate-700 disabled:cursor-not-allowed disabled:text-slate-300 dark:border-slate-700 dark:text-slate-300 dark:hover:text-slate-100"
+                                className="rounded-xl border border-light-border/70 px-3 py-1 text-xs font-semibold text-light-secondary hover:bg-light-hover disabled:cursor-not-allowed disabled:text-light-muted dark:border-dark-border/70 dark:text-dark-secondary dark:hover:bg-dark-hover dark:disabled:text-dark-muted"
                             >
                                 Next
                             </button>
@@ -476,8 +488,8 @@ export default function SavingsGoals({
                 onClose={() => setActiveGoal(null)}
                 maxWidth="lg"
             >
-                <div className="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
+                    <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                         Edit savings goal
                     </h3>
                 </div>
@@ -502,48 +514,47 @@ export default function SavingsGoals({
                 }}
                 maxWidth="2xl"
             >
-                <div className="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
+                    <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                         {viewGoal?.name} transactions
                     </h3>
                 </div>
                 <div className="px-6 py-4">
                     {isLoadingTransactions ? (
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                        <p className="text-sm text-light-muted dark:text-dark-muted">
                             Loading transactions...
                         </p>
                     ) : relatedTransactions.length === 0 ? (
-                        <p className="text-sm text-slate-400 dark:text-slate-500">
-                            No transactions linked to this goal yet.
-                        </p>
+                        <EmptyState
+                            icon={Target}
+                            title="No linked transactions"
+                            description="No transactions are linked to this goal yet."
+                        />
                     ) : (
-                        <div className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                        <div className="space-y-3 text-sm text-light-secondary dark:text-dark-secondary">
                             {relatedTransactions.map((transaction) => (
                                 <div
                                     key={transaction.id}
-                                    className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-700"
+                                    className="rounded-lg border border-light-border/70 px-3 py-2 dark:border-dark-border/70"
                                 >
                                     <div className="flex flex-wrap items-center justify-between gap-3">
                                         <div>
-                                            <p className="font-medium text-slate-800 dark:text-slate-100">
+                                            <p className="font-medium text-light-primary dark:text-dark-primary">
                                                 {transaction.description}
                                             </p>
-                                            <p className="text-xs text-slate-400">
+                                            <p className="text-xs text-light-muted dark:text-dark-muted">
                                                 {transaction.category?.name ??
                                                     "Uncategorized"}
                                             </p>
                                         </div>
                                         <div className="text-right">
                                             <p className="font-semibold">
-                                                {new Intl.NumberFormat("en-PH", {
-                                                    style: "currency",
-                                                    currency:
-                                                        transaction.currency ??
-                                                        "PHP",
-                                                    maximumFractionDigits: 2,
-                                                }).format(transaction.amount ?? 0)}
+                                                {formatCurrency(
+                                                    transaction.amount,
+                                                    transaction.currency ?? "PHP"
+                                                )}
                                             </p>
-                                            <p className="text-xs text-slate-400">
+                                            <p className="text-xs text-light-muted dark:text-dark-muted">
                                                 {transaction.occurred_at
                                                     ? new Date(
                                                           transaction.occurred_at

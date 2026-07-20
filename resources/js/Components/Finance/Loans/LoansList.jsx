@@ -1,24 +1,11 @@
 import { Link } from "@inertiajs/react";
+import { formatWholeCurrency as formatCurrency } from "@/Utils/currency";
 
-const formatCurrency = (value, currency = "PHP") =>
-    new Intl.NumberFormat("en-PH", {
-        style: "currency",
-        currency,
-        maximumFractionDigits: 0,
-    }).format(value ?? 0);
-
-const formatDate = (value) =>
-    value ? new Date(value).toLocaleDateString() : "-";
+const formatDate = (value) => (value ? new Date(value).toLocaleDateString() : "-");
 
 import { Eye, Pencil, Trash2 } from "lucide-react";
 
-export default function LoansList({
-    loans = [],
-    onDelete,
-    onEdit,
-    onView,
-    showAllHref,
-}) {
+export default function LoansList({ loans = [], onDelete, onEdit, onView, showAllHref }) {
     return (
         <div className="card p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -41,8 +28,7 @@ export default function LoansList({
                             ? Math.min(
                                   100,
                                   Math.round(
-                                      ((loan.total_amount -
-                                          loan.remaining_amount) /
+                                      ((loan.total_amount - loan.remaining_amount) /
                                           loan.total_amount) *
                                           100
                                   )
@@ -64,10 +50,7 @@ export default function LoansList({
                                     </p>
                                 </div>
                                 <p className="font-semibold">
-                                    {formatCurrency(
-                                        loan.remaining_amount,
-                                        loan.currency
-                                    )}
+                                    {formatCurrency(loan.remaining_amount, loan.currency)}
                                 </p>
                             </div>
                             <div className="mt-2">
@@ -79,12 +62,7 @@ export default function LoansList({
                                 </div>
                                 <div className="mt-1 flex items-center justify-between text-xs text-light-muted dark:text-dark-muted">
                                     <span>{progress}% paid</span>
-                                    <span>
-                                        {formatCurrency(
-                                            loan.total_amount,
-                                            loan.currency
-                                        )}
-                                    </span>
+                                    <span>{formatCurrency(loan.total_amount, loan.currency)}</span>
                                 </div>
                                 <div className="mt-2 flex justify-end gap-2">
                                     {onEdit && (

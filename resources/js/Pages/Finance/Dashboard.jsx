@@ -2,30 +2,41 @@ import FinanceDashboard from "@/Components/Finance/Dashboard/FinanceDashboard";
 import Dropdown from "@/Components/Dropdown";
 import InputError from "@/Components/InputError";
 import InputLabel from "@/Components/InputLabel";
-import MobileWalletDashboard from "@/Components/Mobile/MobileWalletDashboard";
 import Modal from "@/Components/Modal";
 import PrimaryButton from "@/Components/PrimaryButton";
 import TextInput from "@/Components/TextInput";
 import OnboardingTour from "@/Components/OnboardingTour";
 import { walletDashboardSteps } from "@/tours";
 import TodoLayout from "@/Layouts/TodoLayout";
+import useWalletMutation from "@/Hooks/useWalletMutation";
+import { formatCurrency } from "@/Utils/currency";
 import { Head, router, useForm } from "@inertiajs/react";
 import { UserPlus, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+// Dashboard props refreshed after a mutation via router.reload({ only }).
+// Keys map 1:1 to FinanceDashboardController@index return keys.
+const RELOAD_KEYS = [
+    "summary",
+    "transactions",
+    "charts",
+    "accounts",
+    "budgets",
+    "savingsGoals",
+    "loans",
+];
+
 export default function Dashboard(props) {
-    const [transactions, setTransactions] = useState(props.transactions ?? []);
-    const [budgets, setBudgets] = useState(props.budgets ?? []);
-    const [savingsGoals, setSavingsGoals] = useState(
-        props.savingsGoals ?? []
-    );
-    const [loans, setLoans] = useState(props.loans ?? []);
-    const accounts = props.accounts ?? [];
-    const [summary, setSummary] = useState(props.summary ?? {});
-    const [charts, setCharts] = useState(props.charts ?? {});
-    const [categories, setCategories] = useState(props.categories ?? []);
-    const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
-    const [isReloading, setIsReloading] = useState(false);
+    // Server state lives in Inertia props (rule #2). Partial reloads refresh
+    // these in place — no local mirror, no window.location.reload().
+    const transactions = useMemo(() => props.transactions ?? [], [props.transactions]);
+    const budgets = props.budgets ?? [];
+    const savingsGoals = props.savingsGoals ?? [];
+    const loans = props.loans ?? [];
+    const accounts = useMemo(() => props.accounts ?? [], [props.accounts]);
+    const summary = props.summary ?? {};
+    const charts = props.charts ?? {};
+    const categories = props.categories ?? [];
     const [showCollaboratorsModal, setShowCollaboratorsModal] = useState(false);
     const [activeWalletId, setActiveWalletId] = useState(
         props.walletUserId ?? props.activeWallet?.id ?? null
@@ -36,8 +47,7 @@ export default function Dashboard(props) {
     const addCollaboratorForm = useForm({ email: "", user_id: null });
     const [collaboratorQuery, setCollaboratorQuery] = useState("");
     const [collaboratorResults, setCollaboratorResults] = useState([]);
-    const [isSearchingCollaborators, setIsSearchingCollaborators] =
-        useState(false);
+    const [isSearchingCollaborators, setIsSearchingCollaborators] = useState(false);
     const [showNetModal, setShowNetModal] = useState(false);
     const [showUnallocatedModal, setShowUnallocatedModal] = useState(false);
     const [showCreditModal, setShowCreditModal] = useState(false);
@@ -52,10 +62,7 @@ export default function Dashboard(props) {
     });
 
     const walletSelection = useMemo(() => props.wallets ?? [], [props.wallets]);
-    const collaborators = useMemo(
-        () => props.collaborators ?? [],
-        [props.collaborators]
-    );
+    const collaborators = useMemo(() => props.collaborators ?? [], [props.collaborators]);
     const creditCardAccounts = useMemo(
         () => accounts.filter((account) => account.type === "credit-card"),
         [accounts]
@@ -64,8 +71,7 @@ export default function Dashboard(props) {
         () =>
             transactions.filter(
                 (transaction) =>
-                    transaction.finance_credit_card_account_id &&
-                    transaction.type === "expense"
+                    transaction.finance_credit_card_account_id && transaction.type === "expense"
             ),
         [transactions]
     );
@@ -80,9 +86,9 @@ export default function Dashboard(props) {
             setShowCollaboratorsModal(true);
         };
 
-        window.addEventListener('openCollaborators', handleOpenCollaborators);
+        window.addEventListener("openCollaborators", handleOpenCollaborators);
         return () => {
-            window.removeEventListener('openCollaborators', handleOpenCollaborators);
+            window.removeEventListener("openCollaborators", handleOpenCollaborators);
         };
     }, []);
 
@@ -112,66 +118,27 @@ export default function Dashboard(props) {
         return () => window.clearTimeout(handle);
     }, [collaboratorQuery, showCollaboratorsModal]);
 
-    const transactionsStoreUrl = useMemo(
-        () => route("weviewallet.api.transactions.store"),
-        []
-    );
-    const transactionsDeleteUrl = useMemo(
-        () => route("weviewallet.api.transactions.index"),
-        []
-    );
-    const transactionsUpdateUrl = useMemo(
-        () => route("weviewallet.api.transactions.index"),
-        []
-    );
-    const budgetsStoreUrl = useMemo(
-        () => route("weviewallet.api.budgets.store"),
-        []
-    );
-    const budgetsDeleteUrl = useMemo(
-        () => route("weviewallet.api.budgets.index"),
-        []
-    );
-    const savingsGoalsStoreUrl = useMemo(
-        () => route("weviewallet.api.savings-goals.store"),
-        []
-    );
-    const savingsGoalsDeleteUrl = useMemo(
-        () => route("weviewallet.api.savings-goals.index"),
-        []
-    );
-    const loansStoreUrl = useMemo(
-        () => route("weviewallet.api.loans.store"),
-        []
-    );
-    const loansDeleteUrl = useMemo(
-        () => route("weviewallet.api.loans.index"),
-        []
-    );
-    const loansUpdateUrl = useMemo(
-        () => route("weviewallet.api.loans.index"),
-        []
-    );
-    const refreshDashboardPage = useCallback(() => {
-        setIsReloading(true);
-        window.setTimeout(() => {
-            window.location.reload();
-        }, 100);
-    }, []);
+    const transactionsStoreUrl = useMemo(() => route("weviewallet.api.transactions.store"), []);
+    const transactionsDeleteUrl = useMemo(() => route("weviewallet.api.transactions.index"), []);
+    const transactionsUpdateUrl = useMemo(() => route("weviewallet.api.transactions.index"), []);
+    const budgetsStoreUrl = useMemo(() => route("weviewallet.api.budgets.store"), []);
+    const budgetsDeleteUrl = useMemo(() => route("weviewallet.api.budgets.index"), []);
+    const savingsGoalsStoreUrl = useMemo(() => route("weviewallet.api.savings-goals.store"), []);
+    const savingsGoalsDeleteUrl = useMemo(() => route("weviewallet.api.savings-goals.index"), []);
+    const loansStoreUrl = useMemo(() => route("weviewallet.api.loans.store"), []);
+    const loansDeleteUrl = useMemo(() => route("weviewallet.api.loans.index"), []);
+    const loansUpdateUrl = useMemo(() => route("weviewallet.api.loans.index"), []);
+    const mutate = useWalletMutation(activeWalletId);
 
-    const handleViewAll = useCallback(async () => {
-        setIsLoadingTransactions(true);
+    const handleViewAll = useCallback(() => {
         router.get(route("weviewallet.transactions.index"), {
             wallet_user_id: activeWalletId || undefined,
         });
-        window.setTimeout(() => setIsLoadingTransactions(false), 300);
     }, [activeWalletId]);
 
     const handleWalletChange = useCallback(
         (event) => {
-            const nextId = event.target.value
-                ? Number(event.target.value)
-                : null;
+            const nextId = event.target.value ? Number(event.target.value) : null;
             setActiveWalletId(nextId);
             router.get(
                 route("weviewallet.dashboard"),
@@ -187,33 +154,25 @@ export default function Dashboard(props) {
     const handleAddCollaborator = useCallback(
         (event) => {
             event.preventDefault();
-            addCollaboratorForm.post(
-                route("weviewallet.collaborators.store"),
-                {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        addCollaboratorForm.reset();
-                        setCollaboratorQuery("");
-                        setCollaboratorResults([]);
-                    },
-                }
-            );
+            addCollaboratorForm.post(route("weviewallet.collaborators.store"), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    addCollaboratorForm.reset();
+                    setCollaboratorQuery("");
+                    setCollaboratorResults([]);
+                },
+            });
         },
         [addCollaboratorForm]
     );
 
     const handleRemoveCollaborator = useCallback((collaboratorId) => {
-        if (
-            !window.confirm(
-                "Remove this collaborator? You can invite them again anytime."
-            )
-        ) {
+        if (!window.confirm("Remove this collaborator? You can invite them again anytime.")) {
             return;
         }
-        router.delete(
-            route("weviewallet.collaborators.destroy", collaboratorId),
-            { preserveScroll: true }
-        );
+        router.delete(route("weviewallet.collaborators.destroy", collaboratorId), {
+            preserveScroll: true,
+        });
     }, []);
 
     const handleSelectCollaborator = useCallback(
@@ -249,18 +208,18 @@ export default function Dashboard(props) {
                     transferDestination === "external"
                         ? formData.external_account_name || null
                         : null,
-                finance_credit_card_account_id:
-                    formData.finance_credit_card_account_id || null,
-                finance_budget_id: loanSelected
-                    ? null
-                    : formData.finance_budget_id || null,
+                finance_credit_card_account_id: formData.finance_credit_card_account_id || null,
+                finance_budget_id: loanSelected ? null : formData.finance_budget_id || null,
             };
 
-            await window.axios.post(transactionsStoreUrl, payload);
-            refreshDashboardPage();
-            return true;
+            const result = await mutate({
+                request: () => window.axios.post(transactionsStoreUrl, payload),
+                only: RELOAD_KEYS,
+                successMessage: "Transaction saved.",
+            });
+            return result !== false;
         },
-        [activeWalletId, refreshDashboardPage, transactionsStoreUrl]
+        [activeWalletId, mutate, transactionsStoreUrl]
     );
 
     const normalizeBudgetPayload = useCallback(
@@ -285,11 +244,14 @@ export default function Dashboard(props) {
         async (formData) => {
             const payload = normalizeBudgetPayload(formData);
 
-            await window.axios.post(budgetsStoreUrl, payload);
-            refreshDashboardPage();
-            return true;
+            const result = await mutate({
+                request: () => window.axios.post(budgetsStoreUrl, payload),
+                only: RELOAD_KEYS,
+                successMessage: "Budget saved.",
+            });
+            return result !== false;
         },
-        [budgetsStoreUrl, normalizeBudgetPayload, refreshDashboardPage]
+        [budgetsStoreUrl, mutate, normalizeBudgetPayload]
     );
 
     const handleEditBudget = useCallback(
@@ -300,14 +262,14 @@ export default function Dashboard(props) {
 
             const payload = normalizeBudgetPayload(formData);
 
-            await window.axios.put(
-                `${budgetsDeleteUrl}/${formData.id}`,
-                payload
-            );
-            refreshDashboardPage();
-            return true;
+            const result = await mutate({
+                request: () => window.axios.put(`${budgetsDeleteUrl}/${formData.id}`, payload),
+                only: RELOAD_KEYS,
+                successMessage: "Budget updated.",
+            });
+            return result !== false;
         },
-        [budgetsDeleteUrl, normalizeBudgetPayload, refreshDashboardPage]
+        [budgetsDeleteUrl, mutate, normalizeBudgetPayload]
     );
 
     const handleCreateSavingsGoal = useCallback(
@@ -316,19 +278,18 @@ export default function Dashboard(props) {
                 ...formData,
                 wallet_user_id: activeWalletId || undefined,
                 finance_account_id: formData.finance_account_id || null,
-                target_amount: formData.target_amount
-                    ? Number(formData.target_amount)
-                    : 0,
-                current_amount: formData.current_amount
-                    ? Number(formData.current_amount)
-                    : 0,
+                target_amount: formData.target_amount ? Number(formData.target_amount) : 0,
+                current_amount: formData.current_amount ? Number(formData.current_amount) : 0,
             };
 
-            await window.axios.post(savingsGoalsStoreUrl, payload);
-            refreshDashboardPage();
-            return true;
+            const result = await mutate({
+                request: () => window.axios.post(savingsGoalsStoreUrl, payload),
+                only: RELOAD_KEYS,
+                successMessage: "Savings goal saved.",
+            });
+            return result !== false;
         },
-        [activeWalletId, refreshDashboardPage, savingsGoalsStoreUrl]
+        [activeWalletId, mutate, savingsGoalsStoreUrl]
     );
 
     const handleEditSavingsGoal = useCallback(
@@ -340,22 +301,18 @@ export default function Dashboard(props) {
             const payload = {
                 ...formData,
                 finance_account_id: formData.finance_account_id || null,
-                target_amount: formData.target_amount
-                    ? Number(formData.target_amount)
-                    : 0,
-                current_amount: formData.current_amount
-                    ? Number(formData.current_amount)
-                    : 0,
+                target_amount: formData.target_amount ? Number(formData.target_amount) : 0,
+                current_amount: formData.current_amount ? Number(formData.current_amount) : 0,
             };
 
-            await window.axios.put(
-                `${savingsGoalsDeleteUrl}/${formData.id}`,
-                payload
-            );
-            refreshDashboardPage();
-            return true;
+            const result = await mutate({
+                request: () => window.axios.put(`${savingsGoalsDeleteUrl}/${formData.id}`, payload),
+                only: RELOAD_KEYS,
+                successMessage: "Savings goal updated.",
+            });
+            return result !== false;
         },
-        [refreshDashboardPage, savingsGoalsDeleteUrl]
+        [mutate, savingsGoalsDeleteUrl]
     );
 
     const handleCreateLoan = useCallback(
@@ -363,9 +320,7 @@ export default function Dashboard(props) {
             const payload = {
                 ...formData,
                 wallet_user_id: activeWalletId || undefined,
-                total_amount: formData.total_amount
-                    ? Number(formData.total_amount)
-                    : 0,
+                total_amount: formData.total_amount ? Number(formData.total_amount) : 0,
                 remaining_amount:
                     formData.remaining_amount === "" ||
                     formData.remaining_amount === null ||
@@ -374,20 +329,21 @@ export default function Dashboard(props) {
                         : Number(formData.remaining_amount),
             };
 
-            await window.axios.post(loansStoreUrl, payload);
-            refreshDashboardPage();
-            return true;
+            const result = await mutate({
+                request: () => window.axios.post(loansStoreUrl, payload),
+                only: RELOAD_KEYS,
+                successMessage: "Loan saved.",
+            });
+            return result !== false;
         },
-        [activeWalletId, loansStoreUrl, refreshDashboardPage]
+        [activeWalletId, loansStoreUrl, mutate]
     );
-
 
     const handleDeleteBudget = useCallback(
         async (budget) => {
             const remaining = Math.max(
                 0,
-                Number(budget.amount ?? 0) -
-                    Number(budget.current_spent ?? 0)
+                Number(budget.amount ?? 0) - Number(budget.current_spent ?? 0)
             );
             if (budget.is_active && remaining > 0) {
                 setDeletingBudget(budget);
@@ -401,38 +357,46 @@ export default function Dashboard(props) {
                 });
                 return;
             }
-            await window.axios.post(`${budgetsDeleteUrl}/${budget.id}/delete`);
-            refreshDashboardPage();
+            await mutate({
+                request: () => window.axios.post(`${budgetsDeleteUrl}/${budget.id}/delete`),
+                only: RELOAD_KEYS,
+                successMessage: "Budget removed.",
+            });
         },
-        [budgetsDeleteUrl, refreshDashboardPage]
+        [budgetsDeleteUrl, mutate]
     );
 
     const handleDeleteSavingsGoal = useCallback(
         async (goal) => {
-            await window.axios.delete(
-                `${savingsGoalsDeleteUrl}/${goal.id}`
-            );
-            refreshDashboardPage();
+            await mutate({
+                request: () => window.axios.delete(`${savingsGoalsDeleteUrl}/${goal.id}`),
+                only: RELOAD_KEYS,
+                successMessage: "Savings goal removed.",
+            });
         },
-        [refreshDashboardPage, savingsGoalsDeleteUrl]
+        [mutate, savingsGoalsDeleteUrl]
     );
 
     const handleConvertSavingsGoal = useCallback(
         async (goal) => {
-            await window.axios.post(
-                `${savingsGoalsDeleteUrl}/${goal.id}/convert`
-            );
-            refreshDashboardPage();
+            await mutate({
+                request: () => window.axios.post(`${savingsGoalsDeleteUrl}/${goal.id}/convert`),
+                only: RELOAD_KEYS,
+                successMessage: "Savings goal converted to a budget.",
+            });
         },
-        [refreshDashboardPage, savingsGoalsDeleteUrl]
+        [mutate, savingsGoalsDeleteUrl]
     );
 
     const handleDeleteLoan = useCallback(
         async (loan) => {
-            await window.axios.delete(`${loansDeleteUrl}/${loan.id}`);
-            refreshDashboardPage();
+            await mutate({
+                request: () => window.axios.delete(`${loansDeleteUrl}/${loan.id}`),
+                only: RELOAD_KEYS,
+                successMessage: "Loan removed.",
+            });
         },
-        [loansDeleteUrl, refreshDashboardPage]
+        [loansDeleteUrl, mutate]
     );
 
     const handleEditLoan = useCallback(
@@ -443,9 +407,7 @@ export default function Dashboard(props) {
 
             const payload = {
                 ...formData,
-                total_amount: formData.total_amount
-                    ? Number(formData.total_amount)
-                    : 0,
+                total_amount: formData.total_amount ? Number(formData.total_amount) : 0,
                 remaining_amount:
                     formData.remaining_amount === "" ||
                     formData.remaining_amount === null ||
@@ -454,24 +416,25 @@ export default function Dashboard(props) {
                         : Number(formData.remaining_amount),
             };
 
-            await window.axios.put(
-                `${loansUpdateUrl}/${formData.id}`,
-                payload
-            );
-            refreshDashboardPage();
-            return true;
+            const result = await mutate({
+                request: () => window.axios.put(`${loansUpdateUrl}/${formData.id}`, payload),
+                only: RELOAD_KEYS,
+                successMessage: "Loan updated.",
+            });
+            return result !== false;
         },
-        [loansUpdateUrl, refreshDashboardPage]
+        [loansUpdateUrl, mutate]
     );
 
     const handleDeleteTransaction = useCallback(
         async (transaction) => {
-            await window.axios.delete(
-                `${transactionsDeleteUrl}/${transaction.id}`
-            );
-            refreshDashboardPage();
+            await mutate({
+                request: () => window.axios.delete(`${transactionsDeleteUrl}/${transaction.id}`),
+                only: RELOAD_KEYS,
+                successMessage: "Transaction removed.",
+            });
         },
-        [refreshDashboardPage, transactionsDeleteUrl]
+        [mutate, transactionsDeleteUrl]
     );
 
     const handleDeleteBudgetSubmit = useCallback(async () => {
@@ -489,9 +452,7 @@ export default function Dashboard(props) {
                     ? deleteForm.target_goal_id || null
                     : null,
             new_budget_name:
-                deleteForm.action === "create_budget"
-                    ? deleteForm.new_budget_name || null
-                    : null,
+                deleteForm.action === "create_budget" ? deleteForm.new_budget_name || null : null,
             new_budget_category_id:
                 deleteForm.action === "create_budget"
                     ? deleteForm.new_budget_category_id || null
@@ -501,13 +462,14 @@ export default function Dashboard(props) {
                     ? deleteForm.new_budget_account_id || null
                     : null,
         };
-        await window.axios.post(
-            `${budgetsDeleteUrl}/${deletingBudget.id}/delete`,
-            payload
-        );
-        refreshDashboardPage();
+        await mutate({
+            request: () =>
+                window.axios.post(`${budgetsDeleteUrl}/${deletingBudget.id}/delete`, payload),
+            only: RELOAD_KEYS,
+            successMessage: "Budget removed.",
+        });
         setDeletingBudget(null);
-    }, [budgetsDeleteUrl, deleteForm, deletingBudget, refreshDashboardPage]);
+    }, [budgetsDeleteUrl, deleteForm, deletingBudget, mutate]);
 
     const handleViewRelatedTransactions = useCallback(
         async (payload) => {
@@ -557,26 +519,21 @@ export default function Dashboard(props) {
                     transferDestination === "external"
                         ? formData.external_account_name || null
                         : null,
-                finance_credit_card_account_id:
-                    formData.finance_credit_card_account_id || null,
-                finance_budget_id: loanSelected
-                    ? null
-                    : formData.finance_budget_id || null,
+                finance_credit_card_account_id: formData.finance_credit_card_account_id || null,
+                finance_budget_id: loanSelected ? null : formData.finance_budget_id || null,
             };
 
-            await window.axios.put(
-                `${transactionsUpdateUrl}/${formData.id}`,
-                payload
-            );
-            refreshDashboardPage();
-            return true;
+            const result = await mutate({
+                request: () => window.axios.put(`${transactionsUpdateUrl}/${formData.id}`, payload),
+                only: RELOAD_KEYS,
+                successMessage: "Transaction updated.",
+            });
+            return result !== false;
         },
-        [refreshDashboardPage, transactionsUpdateUrl]
+        [mutate, transactionsUpdateUrl]
     );
 
-    const activeWalletLabel = props.isWalletOwner
-        ? "Mine"
-        : activeWallet?.name ?? "Wallet";
+    const activeWalletLabel = props.isWalletOwner ? "Mine" : (activeWallet?.name ?? "Wallet");
 
     return (
         <TodoLayout
@@ -584,159 +541,121 @@ export default function Dashboard(props) {
                 <div className="flex flex-wrap items-center gap-2">
                     <span>WevieWallet</span>
                     <span data-tour="wallet-selector">
-                    <Dropdown>
-                        <Dropdown.Trigger>
-                            <button
-                                type="button"
-                                className="rounded-full bg-light-hover px-3 py-1 text-xs font-semibold text-light-secondary hover:bg-light-border/70 dark:bg-dark-hover dark:text-dark-secondary dark:hover:bg-dark-border/70"
-                                title="Select wallet"
-                            >
-                                {activeWalletLabel}
-                            </button>
-                        </Dropdown.Trigger>
-                        <Dropdown.Content
-                            align="left"
-                            width="48"
-                            contentClasses="py-1 bg-white dark:bg-dark-card"
-                        >
-                            {walletSelection.map((wallet) => (
+                        <Dropdown>
+                            <Dropdown.Trigger>
                                 <button
-                                    key={wallet.id}
                                     type="button"
-                                    onClick={() =>
-                                        handleWalletChange({
-                                            target: {
-                                                value: String(wallet.id),
-                                            },
-                                        })
-                                    }
-                                    className="flex w-full items-center justify-between px-4 py-2 text-left text-sm text-light-secondary hover:bg-light-hover dark:text-dark-secondary dark:hover:bg-dark-hover"
+                                    className="rounded-full bg-light-hover px-3 py-1 text-xs font-semibold text-light-secondary hover:bg-light-border/70 dark:bg-dark-hover dark:text-dark-secondary dark:hover:bg-dark-border/70"
+                                    title="Select wallet"
                                 >
-                                    <span>{wallet.name}</span>
-                                    <span className="text-xs text-light-muted dark:text-dark-muted">
-                                        {wallet.type === "owned"
-                                            ? "Mine"
-                                            : "Shared"}
-                                    </span>
+                                    {activeWalletLabel}
                                 </button>
-                            ))}
-                        </Dropdown.Content>
-                    </Dropdown>
+                            </Dropdown.Trigger>
+                            <Dropdown.Content
+                                align="left"
+                                width="48"
+                                contentClasses="py-1 bg-white dark:bg-dark-card"
+                            >
+                                {walletSelection.map((wallet) => (
+                                    <button
+                                        key={wallet.id}
+                                        type="button"
+                                        onClick={() =>
+                                            handleWalletChange({
+                                                target: {
+                                                    value: String(wallet.id),
+                                                },
+                                            })
+                                        }
+                                        className="flex w-full items-center justify-between px-4 py-2 text-left text-sm text-light-secondary hover:bg-light-hover dark:text-dark-secondary dark:hover:bg-dark-hover"
+                                    >
+                                        <span>{wallet.name}</span>
+                                        <span className="text-xs text-light-muted dark:text-dark-muted">
+                                            {wallet.type === "owned" ? "Mine" : "Shared"}
+                                        </span>
+                                    </button>
+                                ))}
+                            </Dropdown.Content>
+                        </Dropdown>
                     </span>
                 </div>
             }
         >
             <Head title="WevieWallet" />
             <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
-                <MobileWalletDashboard
+                <FinanceDashboard
                     summary={summary}
+                    charts={charts}
                     transactions={transactions}
+                    categories={categories}
+                    budgets={budgets}
+                    savingsGoals={savingsGoals}
+                    loans={loans}
+                    accounts={accounts}
+                    tier={props.tier ?? "free"}
+                    canAccessAdvancedCharts={props.canAccessAdvancedCharts ?? true}
                     onViewAllTransactions={handleViewAll}
+                    onCreateTransaction={handleCreateTransaction}
+                    onCreateBudget={handleCreateBudget}
+                    onCreateSavingsGoal={handleCreateSavingsGoal}
+                    onCreateLoan={handleCreateLoan}
+                    onDeleteBudget={handleDeleteBudget}
+                    onDeleteSavingsGoal={handleDeleteSavingsGoal}
+                    onConvertSavingsGoal={handleConvertSavingsGoal}
+                    onDeleteLoan={handleDeleteLoan}
+                    onDeleteTransaction={handleDeleteTransaction}
+                    onEditLoan={handleEditLoan}
+                    onEditBudget={handleEditBudget}
+                    onEditSavingsGoal={handleEditSavingsGoal}
+                    onEditTransaction={handleEditTransaction}
+                    onViewLoan={(loan) =>
+                        handleViewRelatedTransactions({
+                            title: `${loan.name} transactions`,
+                            params: { finance_loan_id: loan.id },
+                        })
+                    }
+                    onViewGoal={(goal) =>
+                        handleViewRelatedTransactions({
+                            title: `${goal.name} transactions`,
+                            params: { finance_savings_goal_id: goal.id },
+                        })
+                    }
+                    onViewBudget={(budget) =>
+                        handleViewRelatedTransactions({
+                            title: `${budget.name} transactions`,
+                            params: { finance_budget_id: budget.id },
+                        })
+                    }
+                    onIncomeSummary={() =>
+                        router.get(route("weviewallet.transactions.index"), {
+                            type: "income",
+                            wallet_user_id: activeWalletId || undefined,
+                        })
+                    }
+                    onUnallocatedSummary={() => setShowUnallocatedModal(true)}
+                    onExpensesSummary={() =>
+                        router.get(route("weviewallet.transactions.index"), {
+                            type: "expense",
+                            wallet_user_id: activeWalletId || undefined,
+                        })
+                    }
+                    onSavingsSummary={() =>
+                        router.get(route("weviewallet.transactions.index"), {
+                            type: "savings",
+                            wallet_user_id: activeWalletId || undefined,
+                        })
+                    }
+                    onNetSummary={() => setShowNetModal(true)}
+                    onLoansSummary={() =>
+                        router.get(route("weviewallet.loans.index"), {
+                            wallet_user_id: activeWalletId || undefined,
+                        })
+                    }
+                    onAvailableCreditSummary={() => setShowCreditModal(true)}
+                    walletUserId={activeWalletId}
+                    isWalletOwner={props.isWalletOwner}
                 />
-                <div className="hidden lg:block">
-                    <FinanceDashboard
-                        summary={summary}
-                        charts={charts}
-                        transactions={transactions}
-                        categories={categories}
-                        budgets={budgets}
-                        savingsGoals={savingsGoals}
-                        loans={loans}
-                        accounts={accounts}
-                        tier={props.tier ?? "free"}
-                        canAccessAdvancedCharts={
-                            props.canAccessAdvancedCharts ?? true
-                        }
-                        onViewAllTransactions={handleViewAll}
-                        isLoadingTransactions={isLoadingTransactions}
-                        onCreateTransaction={handleCreateTransaction}
-                        onCreateBudget={handleCreateBudget}
-                        onCreateSavingsGoal={handleCreateSavingsGoal}
-                        onCreateLoan={handleCreateLoan}
-                        onDeleteBudget={handleDeleteBudget}
-                        onDeleteSavingsGoal={handleDeleteSavingsGoal}
-                        onConvertSavingsGoal={handleConvertSavingsGoal}
-                        onDeleteLoan={handleDeleteLoan}
-                        onDeleteTransaction={handleDeleteTransaction}
-                        onEditLoan={handleEditLoan}
-                        onEditBudget={handleEditBudget}
-                        onEditSavingsGoal={handleEditSavingsGoal}
-                        onEditTransaction={handleEditTransaction}
-                        onViewLoan={(loan) =>
-                            handleViewRelatedTransactions({
-                                title: `${loan.name} transactions`,
-                                params: { finance_loan_id: loan.id },
-                            })
-                        }
-                        onViewGoal={(goal) =>
-                            handleViewRelatedTransactions({
-                                title: `${goal.name} transactions`,
-                                params: { finance_savings_goal_id: goal.id },
-                            })
-                        }
-                        onViewBudget={(budget) =>
-                            handleViewRelatedTransactions({
-                                title: `${budget.name} transactions`,
-                                params: { finance_budget_id: budget.id },
-                            })
-                        }
-                        onIncomeSummary={() =>
-                            router.get(
-                                route("weviewallet.transactions.index"),
-                                {
-                                    type: "income",
-                                    wallet_user_id:
-                                        activeWalletId || undefined,
-                                }
-                            )
-                        }
-                        onUnallocatedSummary={() =>
-                            setShowUnallocatedModal(true)
-                        }
-                        onExpensesSummary={() =>
-                            router.get(
-                                route("weviewallet.transactions.index"),
-                                {
-                                    type: "expense",
-                                    wallet_user_id:
-                                        activeWalletId || undefined,
-                                }
-                            )
-                        }
-                        onSavingsSummary={() =>
-                            router.get(
-                                route("weviewallet.transactions.index"),
-                                {
-                                    type: "savings",
-                                    wallet_user_id:
-                                        activeWalletId || undefined,
-                                }
-                            )
-                        }
-                        onNetSummary={() => setShowNetModal(true)}
-                        onLoansSummary={() =>
-                            router.get(route("weviewallet.loans.index"), {
-                                wallet_user_id: activeWalletId || undefined,
-                            })
-                        }
-                        onAvailableCreditSummary={() =>
-                            setShowCreditModal(true)
-                        }
-                        walletUserId={activeWalletId}
-                        isWalletOwner={props.isWalletOwner}
-                    />
-                </div>
             </div>
-            {isReloading && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-                    <div className="flex items-center gap-3 rounded-xl bg-white px-4 py-3 shadow-soft dark:bg-dark-card">
-                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-wevie-teal border-t-transparent" />
-                        <span className="text-sm font-medium text-light-secondary dark:text-dark-secondary">
-                            Refreshing your view...
-                        </span>
-                    </div>
-                </div>
-            )}
             <Modal
                 show={Boolean(viewEntity)}
                 onClose={() => {
@@ -772,19 +691,15 @@ export default function Dashboard(props) {
                                                 {transaction.description}
                                             </p>
                                             <p className="text-xs text-light-muted dark:text-dark-muted">
-                                                {transaction.category?.name ??
-                                                    "Uncategorized"}
+                                                {transaction.category?.name ?? "Uncategorized"}
                                             </p>
                                         </div>
                                         <div className="text-right">
                                             <p className="font-semibold">
-                                                {new Intl.NumberFormat("en-PH", {
-                                                    style: "currency",
-                                                    currency:
-                                                        transaction.currency ??
-                                                        "PHP",
-                                                    maximumFractionDigits: 2,
-                                                }).format(transaction.amount ?? 0)}
+                                                {formatCurrency(
+                                                    transaction.amount ?? 0,
+                                                    transaction.currency ?? "PHP"
+                                                )}
                                             </p>
                                             <p className="text-xs text-light-muted dark:text-dark-muted">
                                                 {transaction.occurred_at
@@ -801,59 +716,37 @@ export default function Dashboard(props) {
                     )}
                 </div>
             </Modal>
-            <Modal
-                show={showNetModal}
-                onClose={() => setShowNetModal(false)}
-                maxWidth="lg"
-            >
+            <Modal show={showNetModal} onClose={() => setShowNetModal(false)} maxWidth="lg">
                 <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
                     <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                         Net summary
                     </h3>
                 </div>
                 <div className="px-6 py-4 space-y-4 text-sm text-light-secondary dark:text-dark-secondary">
-                    <p>
-                        Net = Income + Savings - Expenses
-                    </p>
+                    <p>Net = Income + Savings - Expenses</p>
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <span>Income</span>
                             <span className="font-semibold text-emerald-600 dark:text-emerald-300">
-                                {new Intl.NumberFormat("en-PH", {
-                                    style: "currency",
-                                    currency: "PHP",
-                                    maximumFractionDigits: 2,
-                                }).format(summary?.income ?? 0)}
+                                {formatCurrency(summary?.income ?? 0)}
                             </span>
                         </div>
                         <div className="flex items-center justify-between">
                             <span>Savings</span>
                             <span className="font-semibold text-violet-600 dark:text-violet-300">
-                                {new Intl.NumberFormat("en-PH", {
-                                    style: "currency",
-                                    currency: "PHP",
-                                    maximumFractionDigits: 2,
-                                }).format(summary?.savings ?? 0)}
+                                {formatCurrency(summary?.savings ?? 0)}
                             </span>
                         </div>
                         <div className="flex items-center justify-between">
                             <span>Expenses</span>
                             <span className="font-semibold text-rose-600 dark:text-rose-300">
-                                {new Intl.NumberFormat("en-PH", {
-                                    style: "currency",
-                                    currency: "PHP",
-                                    maximumFractionDigits: 2,
-                                }).format(summary?.expenses ?? 0)}
+                                {formatCurrency(summary?.expenses ?? 0)}
                             </span>
                         </div>
                         <div className="border-t border-light-border/70 pt-2 flex items-center justify-between dark:border-dark-border/70">
                             <span className="font-semibold">Net</span>
                             <span className="font-semibold text-light-primary dark:text-dark-primary">
-                                {new Intl.NumberFormat("en-PH", {
-                                    style: "currency",
-                                    currency: "PHP",
-                                    maximumFractionDigits: 2,
-                                }).format(summary?.net ?? 0)}
+                                {formatCurrency(summary?.net ?? 0)}
                             </span>
                         </div>
                     </div>
@@ -870,68 +763,42 @@ export default function Dashboard(props) {
                     </h3>
                 </div>
                 <div className="px-6 py-4 space-y-4 text-sm text-light-secondary dark:text-dark-secondary">
-                    <p>
-                        Unassigned = (Income + Loans) - Savings - Expenses
-                    </p>
+                    <p>Unassigned = (Income + Loans) - Savings - Expenses</p>
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <span>Income</span>
                             <span className="font-semibold text-emerald-600 dark:text-emerald-300">
-                                {new Intl.NumberFormat("en-PH", {
-                                    style: "currency",
-                                    currency: "PHP",
-                                    maximumFractionDigits: 2,
-                                }).format(summary?.income ?? 0)}
+                                {formatCurrency(summary?.income ?? 0)}
                             </span>
                         </div>
                         <div className="flex items-center justify-between">
                             <span>Loans</span>
                             <span className="font-semibold text-cyan-600 dark:text-cyan-300">
-                                {new Intl.NumberFormat("en-PH", {
-                                    style: "currency",
-                                    currency: "PHP",
-                                    maximumFractionDigits: 2,
-                                }).format(summary?.borrowed ?? 0)}
+                                {formatCurrency(summary?.borrowed ?? 0)}
                             </span>
                         </div>
                         <div className="flex items-center justify-between">
                             <span>Savings</span>
                             <span className="font-semibold text-violet-600 dark:text-violet-300">
-                                {new Intl.NumberFormat("en-PH", {
-                                    style: "currency",
-                                    currency: "PHP",
-                                    maximumFractionDigits: 2,
-                                }).format(summary?.savings ?? 0)}
+                                {formatCurrency(summary?.savings ?? 0)}
                             </span>
                         </div>
                         <div className="flex items-center justify-between">
                             <span>Expenses</span>
                             <span className="font-semibold text-rose-600 dark:text-rose-300">
-                                {new Intl.NumberFormat("en-PH", {
-                                    style: "currency",
-                                    currency: "PHP",
-                                    maximumFractionDigits: 2,
-                                }).format(summary?.expenses ?? 0)}
+                                {formatCurrency(summary?.expenses ?? 0)}
                             </span>
                         </div>
                         <div className="border-t border-light-border/70 pt-2 flex items-center justify-between dark:border-dark-border/70">
                             <span className="font-semibold">Unallocated</span>
                             <span className="font-semibold text-light-primary dark:text-dark-primary">
-                                {new Intl.NumberFormat("en-PH", {
-                                    style: "currency",
-                                    currency: "PHP",
-                                    maximumFractionDigits: 2,
-                                }).format(summary?.unallocated ?? 0)}
+                                {formatCurrency(summary?.unallocated ?? 0)}
                             </span>
                         </div>
                     </div>
                 </div>
             </Modal>
-            <Modal
-                show={showCreditModal}
-                onClose={() => setShowCreditModal(false)}
-                maxWidth="lg"
-            >
+            <Modal show={showCreditModal} onClose={() => setShowCreditModal(false)} maxWidth="lg">
                 <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
                     <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                         Available credit
@@ -947,8 +814,7 @@ export default function Dashboard(props) {
                             creditCardAccounts.map((account) => {
                                 const charges = creditCardCharges.filter(
                                     (transaction) =>
-                                        transaction.finance_credit_card_account_id ===
-                                        account.id
+                                        transaction.finance_credit_card_account_id === account.id
                                 );
 
                                 return (
@@ -959,36 +825,20 @@ export default function Dashboard(props) {
                                         <div className="flex flex-wrap items-center justify-between gap-3">
                                             <div>
                                                 <p className="font-medium text-light-primary dark:text-dark-primary">
-                                                    {account.label ||
-                                                        account.name}
+                                                    {account.label || account.name}
                                                 </p>
                                                 <p className="text-xs text-light-muted dark:text-dark-muted">
                                                     Limit:{" "}
-                                                    {new Intl.NumberFormat(
-                                                        "en-PH",
-                                                        {
-                                                            style: "currency",
-                                                            currency:
-                                                                account.currency ??
-                                                                "PHP",
-                                                            maximumFractionDigits: 2,
-                                                        }
-                                                    ).format(
-                                                        account.credit_limit ??
-                                                            0
+                                                    {formatCurrency(
+                                                        account.credit_limit ?? 0,
+                                                        account.currency ?? "PHP"
                                                     )}
                                                 </p>
                                             </div>
                                             <p className="font-semibold text-amber-600 dark:text-amber-300">
-                                                {new Intl.NumberFormat("en-PH", {
-                                                    style: "currency",
-                                                    currency:
-                                                        account.currency ??
-                                                        "PHP",
-                                                    maximumFractionDigits: 2,
-                                                }).format(
-                                                    account.available_credit ??
-                                                        0
+                                                {formatCurrency(
+                                                    account.available_credit ?? 0,
+                                                    account.currency ?? "PHP"
                                                 )}
                                             </p>
                                         </div>
@@ -1008,9 +858,7 @@ export default function Dashboard(props) {
                                                     >
                                                         <div>
                                                             <p className="text-sm text-light-secondary dark:text-dark-secondary">
-                                                                {
-                                                                    transaction.description
-                                                                }
+                                                                {transaction.description}
                                                             </p>
                                                             <p className="text-xs text-light-muted dark:text-dark-muted">
                                                                 {new Date(
@@ -1021,19 +869,11 @@ export default function Dashboard(props) {
                                                             </p>
                                                         </div>
                                                         <p className="text-sm font-semibold text-rose-600 dark:text-rose-300">
-                                                            {new Intl.NumberFormat(
-                                                                "en-PH",
-                                                                {
-                                                                    style: "currency",
-                                                                    currency:
-                                                                        transaction.currency ??
-                                                                        account.currency ??
-                                                                        "PHP",
-                                                                    maximumFractionDigits: 2,
-                                                                }
-                                                            ).format(
-                                                                transaction.amount ??
-                                                                    0
+                                                            {formatCurrency(
+                                                                transaction.amount ?? 0,
+                                                                transaction.currency ??
+                                                                    account.currency ??
+                                                                    "PHP"
                                                             )}
                                                         </p>
                                                     </div>
@@ -1048,11 +888,7 @@ export default function Dashboard(props) {
                     <div className="border-t border-light-border/70 pt-3 flex items-center justify-between dark:border-dark-border/70">
                         <span className="font-semibold">Total available</span>
                         <span className="font-semibold text-light-primary dark:text-dark-primary">
-                            {new Intl.NumberFormat("en-PH", {
-                                style: "currency",
-                                currency: "PHP",
-                                maximumFractionDigits: 2,
-                            }).format(summary?.available_credit ?? 0)}
+                            {formatCurrency(summary?.available_credit ?? 0)}
                         </span>
                     </div>
                 </div>
@@ -1071,18 +907,13 @@ export default function Dashboard(props) {
                     <p className="text-sm text-light-secondary dark:text-dark-secondary">
                         Remaining{" "}
                         <span className="font-semibold">
-                            {new Intl.NumberFormat("en-PH", {
-                                style: "currency",
-                                currency: deletingBudget?.currency ?? "PHP",
-                                maximumFractionDigits: 2,
-                            }).format(
+                            {formatCurrency(
                                 Math.max(
                                     0,
                                     Number(deletingBudget?.amount ?? 0) -
-                                        Number(
-                                            deletingBudget?.current_spent ?? 0
-                                        )
-                                )
+                                        Number(deletingBudget?.current_spent ?? 0)
+                                ),
+                                deletingBudget?.currency ?? "PHP"
                             )}
                         </span>
                         . Choose where it should go next.
@@ -1105,12 +936,8 @@ export default function Dashboard(props) {
                             <option value="reallocate_budget">
                                 Reallocate to an existing budget
                             </option>
-                            <option value="create_budget">
-                                Create a new budget
-                            </option>
-                            <option value="add_to_savings_goal">
-                                Add to a savings goal
-                            </option>
+                            <option value="create_budget">Create a new budget</option>
+                            <option value="add_to_savings_goal">Add to a savings goal</option>
                         </select>
                     </div>
                     {deleteForm.action === "reallocate_budget" && (
@@ -1130,15 +957,9 @@ export default function Dashboard(props) {
                             >
                                 <option value="">Select a budget</option>
                                 {budgets
-                                    .filter(
-                                        (budget) =>
-                                            budget.id !== deletingBudget?.id
-                                    )
+                                    .filter((budget) => budget.id !== deletingBudget?.id)
                                     .map((budget) => (
-                                        <option
-                                            key={budget.id}
-                                            value={budget.id}
-                                        >
+                                        <option key={budget.id} value={budget.id}>
                                             {budget.name}
                                         </option>
                                     ))}
@@ -1173,22 +994,15 @@ export default function Dashboard(props) {
                                     onChange={(event) =>
                                         setDeleteForm((prev) => ({
                                             ...prev,
-                                            new_budget_category_id:
-                                                event.target.value,
+                                            new_budget_category_id: event.target.value,
                                         }))
                                     }
                                 >
                                     <option value="">No category</option>
                                     {categories
-                                        .filter(
-                                            (category) =>
-                                                category.type === "expense"
-                                        )
+                                        .filter((category) => category.type === "expense")
                                         .map((category) => (
-                                            <option
-                                                key={category.id}
-                                                value={category.id}
-                                            >
+                                            <option key={category.id} value={category.id}>
                                                 {category.name}
                                             </option>
                                         ))}
@@ -1204,17 +1018,13 @@ export default function Dashboard(props) {
                                     onChange={(event) =>
                                         setDeleteForm((prev) => ({
                                             ...prev,
-                                            new_budget_account_id:
-                                                event.target.value,
+                                            new_budget_account_id: event.target.value,
                                         }))
                                     }
                                 >
                                     <option value="">No account</option>
                                     {accounts.map((account) => (
-                                        <option
-                                            key={account.id}
-                                            value={account.id}
-                                        >
+                                        <option key={account.id} value={account.id}>
                                             {account.label} - {account.name}
                                         </option>
                                     ))}
@@ -1282,24 +1092,20 @@ export default function Dashboard(props) {
                             collaborators.map((collaborator) => (
                                 <div
                                     key={collaborator.id}
-                                className="flex items-center justify-between rounded-xl border border-light-border/70 px-3 py-2 text-sm dark:border-dark-border/70"
+                                    className="flex items-center justify-between rounded-xl border border-light-border/70 px-3 py-2 text-sm dark:border-dark-border/70"
                                 >
                                     <div>
-                                    <p className="font-semibold text-light-primary dark:text-dark-primary">
+                                        <p className="font-semibold text-light-primary dark:text-dark-primary">
                                             {collaborator.name}
                                         </p>
-                                    <p className="text-xs text-light-muted dark:text-dark-muted">
+                                        <p className="text-xs text-light-muted dark:text-dark-muted">
                                             {collaborator.email}
                                         </p>
                                     </div>
                                     <button
                                         type="button"
-                                        onClick={() =>
-                                            handleRemoveCollaborator(
-                                                collaborator.id
-                                            )
-                                        }
-                                    className="inline-flex items-center gap-1 rounded-xl px-2 py-1 text-xs font-semibold text-rose-600 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900/30"
+                                        onClick={() => handleRemoveCollaborator(collaborator.id)}
+                                        className="inline-flex items-center gap-1 rounded-xl px-2 py-1 text-xs font-semibold text-rose-600 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900/30"
                                     >
                                         <X className="h-3 w-3" />
                                         Remove
@@ -1307,8 +1113,8 @@ export default function Dashboard(props) {
                                 </div>
                             ))
                         ) : (
-                        <p className="text-sm text-light-muted dark:text-dark-muted">
-                            No collaborators yet.
+                            <p className="text-sm text-light-muted dark:text-dark-muted">
+                                No collaborators yet.
                             </p>
                         )}
                     </div>
@@ -1317,10 +1123,7 @@ export default function Dashboard(props) {
                         <h3 className="text-sm font-semibold text-light-secondary dark:text-dark-secondary">
                             Add collaborator
                         </h3>
-                        <form
-                            onSubmit={handleAddCollaborator}
-                            className="mt-3 space-y-3"
-                        >
+                        <form onSubmit={handleAddCollaborator} className="mt-3 space-y-3">
                             <div>
                                 <InputLabel
                                     htmlFor="wallet_collaborator_email"
@@ -1335,14 +1138,8 @@ export default function Dashboard(props) {
                                         (() => {
                                             const value = event.target.value;
                                             setCollaboratorQuery(value);
-                                            addCollaboratorForm.setData(
-                                                "email",
-                                                value
-                                            );
-                                            addCollaboratorForm.setData(
-                                                "user_id",
-                                                null
-                                            );
+                                            addCollaboratorForm.setData("email", value);
+                                            addCollaboratorForm.setData("user_id", null);
                                         })()
                                     }
                                     placeholder="Enter collaborator email"
@@ -1357,32 +1154,25 @@ export default function Dashboard(props) {
                                         Searching gently...
                                     </p>
                                 )}
-                                {!isSearchingCollaborators &&
-                                    collaboratorResults.length > 0 && (
-                                        <div className="mt-3 space-y-2 rounded-xl border border-light-border/70 p-2 text-sm dark:border-dark-border/70">
-                                            {collaboratorResults.map(
-                                                (user) => (
-                                                    <button
-                                                        type="button"
-                                                        key={user.id}
-                                                        onClick={() =>
-                                                            handleSelectCollaborator(
-                                                                user
-                                                            )
-                                                        }
-                                                        className="flex w-full items-center justify-between rounded-lg px-2 py-1 text-left hover:bg-light-hover dark:hover:bg-dark-hover"
-                                                    >
-                                                        <span className="font-medium text-light-primary dark:text-dark-primary">
-                                                            {user.name}
-                                                        </span>
-                                                        <span className="text-xs text-light-muted dark:text-dark-muted">
-                                                            {user.email}
-                                                        </span>
-                                                    </button>
-                                                )
-                                            )}
-                                        </div>
-                                    )}
+                                {!isSearchingCollaborators && collaboratorResults.length > 0 && (
+                                    <div className="mt-3 space-y-2 rounded-xl border border-light-border/70 p-2 text-sm dark:border-dark-border/70">
+                                        {collaboratorResults.map((user) => (
+                                            <button
+                                                type="button"
+                                                key={user.id}
+                                                onClick={() => handleSelectCollaborator(user)}
+                                                className="flex w-full items-center justify-between rounded-lg px-2 py-1 text-left hover:bg-light-hover dark:hover:bg-dark-hover"
+                                            >
+                                                <span className="font-medium text-light-primary dark:text-dark-primary">
+                                                    {user.name}
+                                                </span>
+                                                <span className="text-xs text-light-muted dark:text-dark-muted">
+                                                    {user.email}
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                             <div className="flex justify-end">
                                 <PrimaryButton

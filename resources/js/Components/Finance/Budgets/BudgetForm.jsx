@@ -153,11 +153,11 @@ export default function BudgetForm({
         <form onSubmit={handleSubmit} className="card p-4">
             <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                    <label className="text-sm text-light-muted dark:text-dark-muted">
                         Name
                     </label>
                     <input
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                        className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary"
                         value={form.name}
                         onChange={updateField("name")}
                         placeholder="Groceries budget"
@@ -165,12 +165,12 @@ export default function BudgetForm({
                     />
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                    <label className="text-sm text-light-muted dark:text-dark-muted">
                         Amount
                     </label>
                     <input
                         type="number"
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                        className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary"
                         value={form.amount}
                         onChange={updateField("amount")}
                         min="0"
@@ -180,11 +180,11 @@ export default function BudgetForm({
                 </div>
                 {form.is_recurring && (
                     <div>
-                        <label className="text-sm text-slate-500 dark:text-slate-400">
+                        <label className="text-sm text-light-muted dark:text-dark-muted">
                             Period
                         </label>
                         <select
-                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                            className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary"
                             value={form.period}
                             onChange={updateField("period")}
                         >
@@ -199,39 +199,39 @@ export default function BudgetForm({
                     <input
                         type="checkbox"
                         id="budget_is_recurring"
-                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                        className="rounded border-light-border/70 text-wevie-teal shadow-sm focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card"
                         checked={form.is_recurring}
                         onChange={updateField("is_recurring")}
                     />
                     <label
                         htmlFor="budget_is_recurring"
-                        className="text-sm text-slate-500 dark:text-slate-400"
+                        className="text-sm text-light-muted dark:text-dark-muted"
                     >
                         Recurring budget
                     </label>
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                    <label className="text-sm text-light-muted dark:text-dark-muted">
                         Budget type
                     </label>
                     <select
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                        className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary"
                         value={form.budget_type}
                         onChange={updateField("budget_type")}
                     >
                         <option value="spending">Spending budget</option>
                         <option value="saved">Saved budget</option>
                     </select>
-                    <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                    <p className="mt-1 text-xs text-light-muted dark:text-dark-muted">
                         Saved budgets must be reallocated when deleted.
                     </p>
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                    <label className="text-sm text-light-muted dark:text-dark-muted">
                         Category
                     </label>
                     <select
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                        className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary"
                         value={form.finance_category_id}
                         onChange={updateField("finance_category_id")}
                     >
@@ -246,11 +246,11 @@ export default function BudgetForm({
                     </select>
                 </div>
                 <div>
-                    <label className="text-sm text-slate-500 dark:text-slate-400">
+                    <label className="text-sm text-light-muted dark:text-dark-muted">
                         Account (optional)
                     </label>
                     <select
-                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                        className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary"
                         value={form.finance_account_id}
                         onChange={updateField("finance_account_id")}
                     >
@@ -261,31 +261,31 @@ export default function BudgetForm({
                             </option>
                         ))}
                     </select>
-                    <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                    <p className="mt-1 text-xs text-light-muted dark:text-dark-muted">
                         Use this if you want a budget tied to a specific account.
                     </p>
                 </div>
                 {form.is_recurring && (
                     <>
                         <div>
-                            <label className="text-sm text-slate-500 dark:text-slate-400">
+                            <label className="text-sm text-light-muted dark:text-dark-muted">
                                 Start date
                             </label>
                             <input
                                 type="date"
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                                className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary"
                                 value={form.starts_on}
                                 onChange={updateField("starts_on")}
                                 required
                             />
                         </div>
                         <div>
-                            <label className="text-sm text-slate-500 dark:text-slate-400">
+                            <label className="text-sm text-light-muted dark:text-dark-muted">
                                 End date
                             </label>
                             <input
                                 type="date"
-                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card"
+                                className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary"
                                 value={form.ends_on}
                                 onChange={updateField("ends_on")}
                                 disabled={form.is_recurring}
@@ -294,7 +294,7 @@ export default function BudgetForm({
                     </>
                 )}
                 {!form.is_recurring && (
-                    <div className="sm:col-span-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                    <div className="sm:col-span-2 rounded-md border border-light-border/70 bg-light-hover px-3 py-2 text-xs text-light-secondary dark:border-dark-border/70 dark:bg-dark-hover dark:text-dark-secondary">
                         Non-recurring budgets do not have a period or dates.
                     </div>
                 )}
@@ -303,7 +303,7 @@ export default function BudgetForm({
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="rounded-md bg-indigo-600 px-4 py-2 text-sm text-white shadow hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="rounded-xl bg-gradient-to-r from-wevie-teal to-wevie-mint px-4 py-2 text-sm font-medium text-white shadow-soft hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                     {isSubmitting ? "Saving..." : submitLabel}
                 </button>

@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Receipt, Trash2 } from "lucide-react";
+import Badge from "@/Components/Finance/UI/Badge";
+import EmptyState from "@/Components/Finance/UI/EmptyState";
+import ResponsiveTable from "@/Components/Finance/UI/ResponsiveTable";
+import TransactionCard from "@/Components/Finance/Transactions/TransactionCard";
+import { formatCurrency } from "@/Utils/currency";
+import { TRANSACTION_LABEL, TRANSACTION_TONE } from "@/Utils/finance";
 
-const formatAmount = (amount, currency = "PHP") =>
-    new Intl.NumberFormat("en-PH", {
-        style: "currency",
-        currency,
-        maximumFractionDigits: 2,
-    }).format(amount ?? 0);
+const formatDate = (value) => (value ? new Date(value).toLocaleDateString() : "-");
 
-const formatDate = (value) =>
-    value ? new Date(value).toLocaleDateString() : "-";
+const formatFrequency = (frequency) => (frequency ? frequency.replace("-", " ") : "");
 
-const typeStyles = {
+const amountTone = {
     income: "text-emerald-600 dark:text-emerald-300",
     expense: "text-rose-600 dark:text-rose-300",
     savings: "text-violet-600 dark:text-violet-300",
@@ -19,8 +19,18 @@ const typeStyles = {
     transfer: "text-sky-600 dark:text-sky-300",
 };
 
-const formatFrequency = (frequency) =>
-    frequency ? frequency.replace("-", " ") : "";
+const accountLabel = (transaction) => {
+    if (transaction.type === "transfer") {
+        const from = transaction.account?.label ?? transaction.account?.name ?? "—";
+        const to =
+            transaction.transfer_account?.label ??
+            transaction.transfer_account?.name ??
+            transaction.metadata?.external_account_name ??
+            "External";
+        return `${from} → ${to}`;
+    }
+    return transaction.account?.label ?? transaction.account?.name ?? "—";
+};
 
 export default function TransactionsList({
     transactions = [],
@@ -52,6 +62,89 @@ export default function TransactionsList({
         }
     }, [page, totalPages]);
 
+    const columns = [
+        {
+            key: "description",
+            header: "Description",
+            render: (transaction) => (
+                <div>
+                    <div className="font-medium text-light-primary dark:text-dark-primary">
+                        {transaction.description || "Untitled"}
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        <Badge
+                            label={TRANSACTION_LABEL[transaction.type] ?? transaction.type}
+                            tone={TRANSACTION_TONE[transaction.type] ?? "neutral"}
+                        />
+                        {transaction.created_by &&
+                            transaction.created_by.id !== transaction.user_id && (
+                                <span className="text-xs text-light-muted dark:text-dark-muted">
+                                    by {transaction.created_by.name}
+                                </span>
+                            )}
+                    </div>
+                    {transaction.is_recurring && transaction.recurring_frequency && (
+                        <div className="mt-1 text-xs capitalize text-violet-500 dark:text-violet-300">
+                            Steady: {formatFrequency(transaction.recurring_frequency)}
+                        </div>
+                    )}
+                </div>
+            ),
+        },
+        {
+            key: "category",
+            header: "Category",
+            render: (transaction) => transaction.category?.name ?? "Uncategorized",
+        },
+        {
+            key: "account",
+            header: "Account",
+            render: accountLabel,
+        },
+        {
+            key: "date",
+            header: "Date",
+            render: (transaction) => formatDate(transaction.occurred_at),
+        },
+        {
+            key: "amount",
+            header: "Amount",
+            align: "right",
+            render: (transaction) => (
+                <span className={`font-medium ${amountTone[transaction.type] ?? ""}`}>
+                    {formatCurrency(transaction.amount, transaction.currency ?? "PHP")}
+                </span>
+            ),
+        },
+        {
+            key: "actions",
+            header: "Actions",
+            align: "right",
+            render: (transaction) => (
+                <div className="flex items-center justify-end gap-2">
+                    <button
+                        type="button"
+                        onClick={() => onEdit?.(transaction)}
+                        className="rounded-md p-1 text-wevie-teal hover:text-wevie-teal/80 dark:text-wevie-mint dark:hover:text-wevie-mint/80"
+                        title="Edit"
+                        aria-label="Edit"
+                    >
+                        <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => onDelete?.(transaction)}
+                        className="rounded-md p-1 text-rose-600 hover:text-rose-700 dark:text-rose-300 dark:hover:text-rose-200"
+                        title="Remove"
+                        aria-label="Remove"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </button>
+                </div>
+            ),
+        },
+    ];
+
     return (
         <div className="card p-4">
             <div className="mb-4 flex items-center justify-between">
@@ -67,131 +160,32 @@ export default function TransactionsList({
                     {isLoading ? "Loading..." : "See all"}
                 </button>
             </div>
-            <div className="overflow-x-auto">
-                <table className="no-table-border w-full text-left text-sm text-light-secondary dark:text-dark-secondary">
-                    <thead className="text-xs uppercase text-light-muted dark:text-dark-muted">
-                        <tr>
-                            <th className="py-2">Description</th>
-                            <th className="py-2">Category</th>
-                            <th className="py-2">Account</th>
-                            <th className="py-2">Date</th>
-                            <th className="py-2 text-right">Amount</th>
-                            <th className="py-2 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {pagedTransactions.map((transaction) => (
-                            <tr
-                                key={transaction.id}
-                                className="border-t border-light-border/70 dark:border-dark-border/70"
-                            >
-                                <td className="py-3">
-                                    <div className="font-medium text-light-primary dark:text-dark-primary">
-                                        {transaction.description}
-                                    </div>
-                                    <div className="text-xs capitalize text-light-muted dark:text-dark-muted">
-                                        {transaction.type}
-                                    </div>
-                                    {transaction.created_by &&
-                                        transaction.created_by.id !==
-                                            transaction.user_id && (
-                                            <div className="text-xs text-light-muted dark:text-dark-muted">
-                                                Added by{" "}
-                                                {transaction.created_by.name}
-                                            </div>
-                                        )}
-                                    {transaction.is_recurring &&
-                                        transaction.recurring_frequency && (
-                                            <div className="text-xs text-violet-500 dark:text-violet-300">
-                                                Steady:{" "}
-                                                {formatFrequency(
-                                                    transaction.recurring_frequency
-                                                )}
-                                            </div>
-                                        )}
-                                </td>
-                                <td className="py-3">
-                                    {transaction.category?.name ?? "Uncategorized"}
-                                </td>
-                                <td className="py-3">
-                                    {transaction.type === "transfer" ? (
-                                        <span>
-                                            {transaction.account?.label ??
-                                                transaction.account?.name ??
-                                                "—"}
-                                            {" → "}
-                                            {transaction.transfer_account?.label ??
-                                                transaction.transfer_account?.name ??
-                                                transaction.metadata
-                                                    ?.external_account_name ??
-                                                "External"}
-                                        </span>
-                                    ) : (
-                                        transaction.account?.label ??
-                                        transaction.account?.name ??
-                                        "—"
-                                    )}
-                                </td>
-                                <td className="py-3">
-                                    {formatDate(transaction.occurred_at)}
-                                </td>
-                                <td
-                                    className={`py-3 text-right font-medium ${
-                                        typeStyles[transaction.type] ?? ""
-                                    }`}
-                                >
-                                    {formatAmount(
-                                        transaction.amount,
-                                        transaction.currency ?? "PHP"
-                                    )}
-                                </td>
-                                <td className="py-3 text-right">
-                                    <div className="flex items-center justify-end gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                onEdit?.(transaction)
-                                            }
-                                            className="rounded-md p-1 text-wevie-teal hover:text-wevie-teal/80 dark:text-wevie-mint dark:hover:text-wevie-mint/80"
-                                            title="Edit"
-                                            aria-label="Edit"
-                                        >
-                                            <Pencil className="h-4 w-4" />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                onDelete?.(transaction)
-                                            }
-                                            className="rounded-md p-1 text-rose-600 hover:text-rose-700 dark:text-rose-300 dark:hover:text-rose-200"
-                                            title="Remove"
-                                            aria-label="Remove"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                        {pagedTransactions.length === 0 && (
-                            <tr>
-                                <td
-                                    colSpan={6}
-                                    className="py-6 text-center text-sm text-light-muted dark:text-dark-muted"
-                                >
-                                    Nothing recorded yet.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+
+            <ResponsiveTable
+                columns={columns}
+                rows={pagedTransactions}
+                keyField="id"
+                renderCard={(transaction) => (
+                    <TransactionCard
+                        transaction={transaction}
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                    />
+                )}
+                emptyState={
+                    <EmptyState
+                        icon={Receipt}
+                        title="Nothing recorded yet"
+                        description="Add your first income or expense to see it here."
+                    />
+                }
+            />
+
             {transactions.length > perPage && (
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-light-secondary dark:text-dark-secondary">
                     <span>
                         Showing {(page - 1) * perPage + 1}-
-                        {Math.min(page * perPage, transactions.length)} of{" "}
-                        {transactions.length}
+                        {Math.min(page * perPage, transactions.length)} of {transactions.length}
                     </span>
                     <div className="flex items-center gap-2">
                         <button
@@ -207,11 +201,7 @@ export default function TransactionsList({
                         </span>
                         <button
                             type="button"
-                            onClick={() =>
-                                setPage((prev) =>
-                                    Math.min(totalPages, prev + 1)
-                                )
-                            }
+                            onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
                             disabled={page === totalPages}
                             className="rounded-xl border border-light-border/70 px-3 py-1 text-xs font-semibold text-light-secondary hover:border-light-border hover:text-light-primary disabled:cursor-not-allowed disabled:text-light-muted dark:border-dark-border/70 dark:text-dark-secondary dark:hover:text-dark-primary"
                         >

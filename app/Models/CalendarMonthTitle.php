@@ -20,6 +20,7 @@ class CalendarMonthTitle extends Model
     protected $casts = [
         'year' => 'integer',
         'month' => 'integer',
+        'title' => 'encrypted',
     ];
 
     public function user(): BelongsTo

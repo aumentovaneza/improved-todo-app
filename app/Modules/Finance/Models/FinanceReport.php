@@ -23,7 +23,7 @@ class FinanceReport extends Model
         'period_start' => 'date',
         'period_end' => 'date',
         'generated_at' => 'datetime',
-        'payload' => 'array',
+        'payload' => 'encrypted:array',
     ];
 
     public function user(): BelongsTo

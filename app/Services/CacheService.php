@@ -143,13 +143,15 @@ class CacheService
         $cacheKey = "categories:user:{$userId}";
 
         return Cache::remember($cacheKey, self::CATEGORY_CACHE_TTL, function () use ($userId) {
+            // `name` is encrypted at rest, so order by the decrypted value in PHP.
             return Category::where('user_id', $userId)
                 ->with(['tags'])
                 ->withCount(['tasks', 'tasks as completed_tasks_count' => function ($query) {
                     $query->where('status', 'completed');
                 }])
-                ->orderBy('name')
                 ->get()
+                ->sortBy(fn ($category) => mb_strtolower(trim((string) $category->name)))
+                ->values()
                 ->toArray();
         });
     }

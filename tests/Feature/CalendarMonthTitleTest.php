@@ -45,8 +45,10 @@ test('a user can set a title for a month', function () {
         'user_id' => $user->id,
         'year' => 2026,
         'month' => 7,
-        'title' => 'Focus month',
     ]);
+    // title is encrypted at rest; verify the (trimmed) value through the model.
+    expect(CalendarMonthTitle::where(['user_id' => $user->id, 'year' => 2026, 'month' => 7])->first()->title)
+        ->toBe('Focus month');
 });
 
 test('setting a title again updates the existing record', function () {
@@ -68,11 +70,11 @@ test('setting a title again updates the existing record', function () {
         ->assertRedirect();
 
     expect(CalendarMonthTitle::where('user_id', $user->id)->count())->toBe(1);
+    expect(CalendarMonthTitle::where('user_id', $user->id)->first()->title)->toBe('New title');
     $this->assertDatabaseHas('calendar_month_titles', [
         'user_id' => $user->id,
         'year' => 2026,
         'month' => 7,
-        'title' => 'New title',
     ]);
 });
 

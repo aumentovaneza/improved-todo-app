@@ -30,6 +30,7 @@ class FinanceBudget extends Model
     ];
 
     protected $casts = [
+        'name' => 'encrypted',
         'amount' => 'decimal:2',
         'current_spent' => 'decimal:2',
         'starts_on' => 'date',

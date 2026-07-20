@@ -7,6 +7,7 @@ use App\Models\Tag;
 use App\Modules\Finance\Models\FinanceTransaction;
 use App\Modules\Finance\Services\FinanceService;
 use App\Modules\Finance\Services\FinanceWalletService;
+use App\Support\EncryptedSearch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -54,25 +55,17 @@ class FinanceTransactionController extends Controller
         $baseQuery = $this->buildFilteredQuery($walletUserId, $filters);
 
         $sort = $filters['sort'] ?: 'date_desc';
-        $dateOrder = $sort === 'date_asc' ? 'asc' : 'desc';
         $perPageDates = max(1, (int) $request->integer('per_page_dates', 3));
-        $dateQuery = (clone $baseQuery)
-            ->selectRaw('DATE(occurred_at) as date')
-            ->groupBy('date')
-            ->orderBy('date', $dateOrder);
-        $allDateKeys = $dateQuery->pluck('date');
-        $dateKeys = $allDateKeys->take($perPageDates);
-        $hasMore = $allDateKeys->count() > $perPageDates;
 
-        $transactions = collect();
-        if ($dateKeys->isNotEmpty()) {
-            $transactionsQuery = $this->applySort(
-                (clone $baseQuery)->whereIn(DB::raw('DATE(occurred_at)'), $dateKeys),
-                $sort
-            );
-            $transactions = $transactionsQuery->get();
-        }
-        $totalAmount = (clone $baseQuery)->sum('amount');
+        [$transactions, $totalDates, $totalAmount] = $this->paginateTransactionsByDate(
+            $baseQuery,
+            $filters,
+            $sort,
+            1,
+            $perPageDates
+        );
+        $hasMore = $totalDates > $perPageDates;
+
         $tags = Tag::orderBy('name')->get(['id', 'name', 'color']);
         $dashboardData = $this->financeService->getDashboardData($walletUserId);
 
@@ -113,27 +106,16 @@ class FinanceTransactionController extends Controller
         $page = max(1, (int) $request->integer('page', 1));
         $perPageDates = max(1, (int) $request->integer('per_page_dates', 3));
         $sort = $filters['sort'] ?: 'date_desc';
-        $dateOrder = $sort === 'date_asc' ? 'asc' : 'desc';
 
         $baseQuery = $this->buildFilteredQuery($walletUserId, $filters);
-        $dateQuery = (clone $baseQuery)
-            ->selectRaw('DATE(occurred_at) as date')
-            ->groupBy('date')
-            ->orderBy('date', $dateOrder);
-        $totalDates = $dateQuery->get()->count();
-        $dateKeys = $dateQuery
-            ->skip(($page - 1) * $perPageDates)
-            ->take($perPageDates)
-            ->pluck('date');
 
-        $transactions = collect();
-        if ($dateKeys->isNotEmpty()) {
-            $transactionsQuery = $this->applySort(
-                (clone $baseQuery)->whereIn(DB::raw('DATE(occurred_at)'), $dateKeys),
-                $sort
-            );
-            $transactions = $transactionsQuery->get();
-        }
+        [$transactions, $totalDates] = $this->paginateTransactionsByDate(
+            $baseQuery,
+            $filters,
+            $sort,
+            $page,
+            $perPageDates
+        );
 
         return response()->json([
             'transactions' => $transactions,
@@ -156,41 +138,115 @@ class FinanceTransactionController extends Controller
             ])
             ->where('user_id', $walletUserId);
 
-        if (!empty($filters['type'])) {
+        if (! empty($filters['type'])) {
             $query->where('type', $filters['type']);
         }
 
-        if (!empty($filters['start_date'])) {
+        if (! empty($filters['start_date'])) {
             $query->whereDate('occurred_at', '>=', $filters['start_date']);
         }
 
-        if (!empty($filters['end_date'])) {
+        if (! empty($filters['end_date'])) {
             $query->whereDate('occurred_at', '<=', $filters['end_date']);
         }
 
-        if (!empty($filters['tags'])) {
+        if (! empty($filters['tags'])) {
             $tagIds = array_map('intval', $filters['tags']);
             $query->whereHas('tags', function ($tagQuery) use ($tagIds) {
                 $tagQuery->whereIn('tags.id', $tagIds);
             });
         }
 
-        if (!empty($filters['search'])) {
-            $search = $filters['search'];
-            $query->where(function ($searchQuery) use ($search) {
-                $searchQuery->where('description', 'like', "%{$search}%")
-                    ->orWhere('notes', 'like', "%{$search}%")
-                    ->orWhere('payment_method', 'like', "%{$search}%")
-                    ->orWhereHas('category', function ($categoryQuery) use ($search) {
-                        $categoryQuery->where('name', 'like', "%{$search}%");
-                    })
-                    ->orWhereHas('tags', function ($tagQuery) use ($search) {
-                        $tagQuery->where('name', 'like', "%{$search}%");
-                    });
-            });
-        }
+        // Note: `search` matches on description/notes/payment_method (encrypted)
+        // and the related finance category name (encrypted), so it cannot run in
+        // SQL. It is applied in PHP against the decrypted values — see
+        // matchesSearch() / paginateTransactionsByDate().
 
         return $query;
+    }
+
+    /**
+     * Whether a transaction matches the search term against decrypted columns.
+     * Mirrors the previous SQL LIKE across description/notes/payment_method,
+     * the related finance category name, and (plaintext) tag names.
+     */
+    private function matchesSearch(FinanceTransaction $transaction, string $search): bool
+    {
+        if (EncryptedSearch::matches($transaction->description, $search)
+            || EncryptedSearch::matches($transaction->notes, $search)
+            || EncryptedSearch::matches($transaction->payment_method, $search)
+            || ($transaction->category && EncryptedSearch::matches($transaction->category->name, $search))
+        ) {
+            return true;
+        }
+
+        foreach ($transaction->tags as $tag) {
+            if (EncryptedSearch::matches($tag->name, $search)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Paginate transactions by distinct occurred_at date.
+     *
+     * Without a search term the distinct-date grouping and page slice run in
+     * SQL (unchanged behaviour). With a search term the base-filtered set is
+     * fetched, matched in PHP against the decrypted columns, then grouped and
+     * paged by date in PHP so the result set/ordering stays identical.
+     *
+     * @return array{0: \Illuminate\Support\Collection, 1: int, 2: float}
+     */
+    private function paginateTransactionsByDate($baseQuery, array $filters, string $sort, int $page, int $perPageDates): array
+    {
+        $dateOrder = $sort === 'date_asc' ? 'asc' : 'desc';
+        $search = trim((string) ($filters['search'] ?? ''));
+
+        if ($search === '') {
+            $allDates = (clone $baseQuery)
+                ->selectRaw('DATE(occurred_at) as date')
+                ->groupBy('date')
+                ->orderBy('date', $dateOrder)
+                ->pluck('date');
+            $totalDates = $allDates->count();
+            $dateKeys = $allDates->slice(($page - 1) * $perPageDates, $perPageDates)->values();
+
+            $transactions = collect();
+            if ($dateKeys->isNotEmpty()) {
+                $transactions = $this->applySort(
+                    (clone $baseQuery)->whereIn(DB::raw('DATE(occurred_at)'), $dateKeys->all()),
+                    $sort
+                )->get();
+            }
+
+            $totalAmount = (float) (clone $baseQuery)->sum('amount');
+
+            return [$transactions, $totalDates, $totalAmount];
+        }
+
+        $matched = $this->applySort((clone $baseQuery), $sort)
+            ->get()
+            ->filter(fn (FinanceTransaction $transaction) => $this->matchesSearch($transaction, $search))
+            ->values();
+
+        $dateKeys = $matched
+            ->map(fn (FinanceTransaction $transaction) => optional($transaction->occurred_at)->format('Y-m-d'))
+            ->unique()
+            ->sort(fn ($a, $b) => $dateOrder === 'asc' ? strcmp($a, $b) : strcmp($b, $a))
+            ->values();
+        $totalDates = $dateKeys->count();
+        $pageKeys = $dateKeys->slice(($page - 1) * $perPageDates, $perPageDates)->values();
+
+        $transactions = $matched
+            ->filter(fn (FinanceTransaction $transaction) => $pageKeys->contains(
+                optional($transaction->occurred_at)->format('Y-m-d')
+            ))
+            ->values();
+        $totalAmount = (float) $matched->sum('amount');
+
+        return [$transactions, $totalDates, $totalAmount];
     }
 
     private function applySort($query, string $sort)
@@ -220,17 +276,17 @@ class FinanceTransactionController extends Controller
             ->where('user_id', $walletUserId);
 
         $hasFilter = false;
-        if (!empty($validated['finance_loan_id'])) {
+        if (! empty($validated['finance_loan_id'])) {
             $query->where('finance_loan_id', $validated['finance_loan_id']);
             $hasFilter = true;
         }
 
-        if (!empty($validated['finance_savings_goal_id'])) {
+        if (! empty($validated['finance_savings_goal_id'])) {
             $query->where('finance_savings_goal_id', $validated['finance_savings_goal_id']);
             $hasFilter = true;
         }
 
-        if (!empty($validated['finance_budget_id'])) {
+        if (! empty($validated['finance_budget_id'])) {
             $query->where('finance_budget_id', $validated['finance_budget_id']);
             $hasFilter = true;
         }
@@ -300,7 +356,7 @@ class FinanceTransactionController extends Controller
             'tags.*.is_new' => ['nullable', 'boolean'],
         ]);
 
-        if (!empty($validated['client_request_id'])) {
+        if (! empty($validated['client_request_id'])) {
             $existing = FinanceTransaction::query()
                 ->where('user_id', $walletUserId ?: Auth::id())
                 ->where('client_request_id', $validated['client_request_id'])
@@ -439,10 +495,10 @@ class FinanceTransactionController extends Controller
                     : 'external');
             $sourceId = $validated['finance_account_id'] ?? $transaction->finance_account_id;
             $targetId = $validated['finance_transfer_account_id'] ?? $transaction->finance_transfer_account_id;
-            if (!$sourceId) {
+            if (! $sourceId) {
                 abort(422, 'Transfers require a source account.');
             }
-            if ($transferDestination !== 'external' && (!$targetId || $sourceId === $targetId)) {
+            if ($transferDestination !== 'external' && (! $targetId || $sourceId === $targetId)) {
                 abort(422, 'Transfers require two different accounts.');
             }
             if ($transferDestination === 'external' && empty($validated['external_account_name'])) {
@@ -464,8 +520,8 @@ class FinanceTransactionController extends Controller
     private function normalizeRecurringData(array $data): array
     {
         if (
-            !array_key_exists('is_recurring', $data) &&
-            !array_key_exists('recurring_frequency', $data)
+            ! array_key_exists('is_recurring', $data) &&
+            ! array_key_exists('recurring_frequency', $data)
         ) {
             return $data;
         }

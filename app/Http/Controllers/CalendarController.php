@@ -137,11 +137,12 @@ class CalendarController extends Controller
             ->orderByDateTime()
             ->get();
 
-        // Get categories
+        // Get categories (name is encrypted at rest, so sort in PHP)
         $categories = Category::where('is_active', true)
             ->where('user_id', Auth::id())
-            ->orderBy('name')
-            ->get();
+            ->get()
+            ->sortBy(fn ($category) => mb_strtolower(trim((string) $category->name)))
+            ->values();
 
         // Optional user-authored title/theme for the month the current date
         // falls in (e.g. "Sprint 4" or "Wedding season"). Null when unset.

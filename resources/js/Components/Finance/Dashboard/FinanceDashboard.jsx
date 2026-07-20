@@ -1,4 +1,3 @@
-import Dropdown from "@/Components/Dropdown";
 import SummaryCards from "@/Components/Finance/SummaryCards";
 import TransactionsList from "@/Components/Finance/Transactions/TransactionsList";
 import TransactionForm from "@/Components/Finance/Transactions/TransactionForm";
@@ -12,17 +11,20 @@ import LoansList from "@/Components/Finance/Loans/LoansList";
 import LoanForm from "@/Components/Finance/Loans/LoanForm";
 import Modal from "@/Components/Modal";
 import OnboardingTour from "@/Components/OnboardingTour";
+import Tabs from "@/Components/Finance/UI/Tabs";
 import { addTransactionFormSteps } from "@/tours";
-import { Link } from "@inertiajs/react";
+import { formatWholeCurrency as formatCurrency } from "@/Utils/currency";
+import { computeNetWorth } from "@/Utils/finance";
+import { Link, router } from "@inertiajs/react";
 import { Eye, Pencil, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-const formatCurrency = (value, currency = "PHP") =>
-    new Intl.NumberFormat("en-PH", {
-        style: "currency",
-        currency,
-        maximumFractionDigits: 0,
-    }).format(value ?? 0);
+const RANGE_TABS = [
+    { value: "this_month", label: "This month" },
+    { value: "last_month", label: "Last month" },
+    { value: "last_3_months", label: "Last 3 months" },
+    { value: "year_to_date", label: "Year to date" },
+];
 
 export default function FinanceDashboard({
     summary,
@@ -36,7 +38,6 @@ export default function FinanceDashboard({
     tier,
     canAccessAdvancedCharts,
     onViewAllTransactions,
-    isLoadingTransactions,
     onCreateTransaction,
     onCreateBudget,
     onCreateSavingsGoal,
@@ -67,18 +68,26 @@ export default function FinanceDashboard({
 
     const sortByUpdated = (items = []) =>
         [...items].sort(
-            (a, b) =>
-                new Date(b.updated_at ?? 0).getTime() -
-                new Date(a.updated_at ?? 0).getTime()
+            (a, b) => new Date(b.updated_at ?? 0).getTime() - new Date(a.updated_at ?? 0).getTime()
         );
 
-    const visibleBudgets = sortByUpdated(budgets).slice(0, 2);
-    const visibleSavings = sortByUpdated(
-        savingsGoals.filter((goal) => goal.is_active)
-    ).slice(0, 2);
-    const visibleLoans = sortByUpdated(
-        loans.filter((loan) => loan.is_active)
-    ).slice(0, 2);
+    const visibleBudgets = sortByUpdated(budgets).slice(0, 4);
+    const visibleSavings = sortByUpdated(savingsGoals.filter((goal) => goal.is_active)).slice(0, 4);
+    const visibleLoans = sortByUpdated(loans.filter((loan) => loan.is_active)).slice(0, 4);
+
+    const netWorth = useMemo(() => computeNetWorth(accounts, loans), [accounts, loans]);
+
+    const handleRangeChange = (range) => {
+        router.reload({
+            only: ["summary", "charts"],
+            data: {
+                range,
+                wallet_user_id: walletUserId || undefined,
+            },
+            preserveScroll: true,
+            preserveState: true,
+        });
+    };
 
     const handleSubmitAndClose = async (handler, payload) => {
         const succeeded = await Promise.resolve(handler?.(payload));
@@ -93,7 +102,7 @@ export default function FinanceDashboard({
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <h2 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
-                            WevieWallet
+                            Quick actions
                         </h2>
                         <p className="text-sm text-light-muted dark:text-dark-muted">
                             Add updates gently, without breaking your flow.
@@ -144,9 +153,24 @@ export default function FinanceDashboard({
                 </div>
             </div>
 
+            <div
+                className="flex flex-wrap items-center justify-between gap-3"
+                data-tour="wallet-range"
+            >
+                <h2 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
+                    Overview
+                </h2>
+                <Tabs
+                    tabs={RANGE_TABS}
+                    active={summary?.range ?? "this_month"}
+                    onChange={handleRangeChange}
+                />
+            </div>
+
             <div data-tour="wallet-summary">
                 <SummaryCards
                     summary={summary}
+                    netWorth={netWorth}
                     onIncomeClick={onIncomeSummary}
                     onUnallocatedClick={onUnallocatedSummary}
                     onAvailableCreditClick={onAvailableCreditSummary}
@@ -192,12 +216,7 @@ export default function FinanceDashboard({
                             const total = Number(budget.amount ?? 0);
                             const remaining = Math.max(0, total - spent);
                             const progress =
-                                total > 0
-                                    ? Math.min(
-                                          100,
-                                          Math.round((spent / total) * 100)
-                                      )
-                                    : 0;
+                                total > 0 ? Math.min(100, Math.round((spent / total) * 100)) : 0;
 
                             return (
                                 <div
@@ -210,8 +229,7 @@ export default function FinanceDashboard({
                                                 {budget.name}
                                             </p>
                                             <p className="text-xs text-light-muted dark:text-dark-muted">
-                                                {budget.category?.name ??
-                                                    "All categories"}
+                                                {budget.category?.name ?? "All categories"}
                                             </p>
                                             {budget.budget_type === "saved" && (
                                                 <p className="text-xs text-light-muted dark:text-dark-muted">
@@ -242,11 +260,7 @@ export default function FinanceDashboard({
                                                 {onViewBudget && (
                                                     <button
                                                         type="button"
-                                                        onClick={() =>
-                                                            onViewBudget?.(
-                                                                budget
-                                                            )
-                                                        }
+                                                        onClick={() => onViewBudget?.(budget)}
                                                         className="rounded-md p-1 text-light-secondary hover:text-light-primary dark:text-dark-secondary dark:hover:text-dark-primary"
                                                         title="View"
                                                         aria-label="View"
@@ -256,9 +270,7 @@ export default function FinanceDashboard({
                                                 )}
                                                 <button
                                                     type="button"
-                                                    onClick={() =>
-                                                        onDeleteBudget?.(budget)
-                                                    }
+                                                    onClick={() => onDeleteBudget?.(budget)}
                                                     className="rounded-md p-1 text-rose-600 hover:text-rose-700 dark:text-rose-300 dark:hover:text-rose-200"
                                                     title="Remove"
                                                     aria-label="Remove"
@@ -269,19 +281,13 @@ export default function FinanceDashboard({
                                         </div>
                                         <div className="text-right text-sm">
                                             <p className="font-semibold text-light-primary dark:text-dark-primary">
-                                                {formatCurrency(
-                                                    budget.amount,
-                                                    budget.currency
-                                                )}
+                                                {formatCurrency(budget.amount, budget.currency)}
                                             </p>
                                             <p className="text-xs text-light-muted dark:text-dark-muted">
                                                 {progress}% used
                                             </p>
                                             <p className="text-xs text-light-muted dark:text-dark-muted">
-                                                {formatCurrency(
-                                                    remaining,
-                                                    budget.currency
-                                                )}{" "}
+                                                {formatCurrency(remaining, budget.currency)}{" "}
                                                 remaining
                                             </p>
                                         </div>
@@ -294,17 +300,9 @@ export default function FinanceDashboard({
                                             />
                                         </div>
                                         <div className="mt-1 flex items-center justify-between text-xs text-light-muted dark:text-dark-muted">
+                                            <span>{formatCurrency(spent, budget.currency)}</span>
                                             <span>
-                                                {formatCurrency(
-                                                    spent,
-                                                    budget.currency
-                                                )}
-                                            </span>
-                                            <span>
-                                                {formatCurrency(
-                                                    budget.amount,
-                                                    budget.currency
-                                                )}
+                                                {formatCurrency(budget.amount, budget.currency)}
                                             </span>
                                         </div>
                                     </div>
@@ -352,7 +350,6 @@ export default function FinanceDashboard({
                     <TransactionsList
                         transactions={transactions}
                         onViewAll={onViewAllTransactions}
-                        isLoading={isLoadingTransactions}
                         onDelete={onDeleteTransaction}
                         onEdit={(transaction) =>
                             setActiveModal({
@@ -372,9 +369,7 @@ export default function FinanceDashboard({
             >
                 <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
                     <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
-                        {activeModal?.mode === "edit"
-                            ? "Edit transaction"
-                            : "Add transaction"}
+                        {activeModal?.mode === "edit" ? "Edit transaction" : "Add transaction"}
                     </h3>
                 </div>
                 <div className="px-6 py-4">
@@ -386,9 +381,7 @@ export default function FinanceDashboard({
                         accounts={accounts}
                         initialValues={activeModal?.data}
                         submitLabel={
-                            activeModal?.mode === "edit"
-                                ? "Save changes"
-                                : "Save transaction"
+                            activeModal?.mode === "edit" ? "Save changes" : "Save transaction"
                         }
                         onSubmit={(payload) =>
                             handleSubmitAndClose(
@@ -400,15 +393,14 @@ export default function FinanceDashboard({
                         }
                     />
                 </div>
-                {activeModal?.type === "transaction" &&
-                    activeModal?.mode !== "edit" && (
-                        <OnboardingTour
-                            tourKey="add_transaction_form"
-                            steps={addTransactionFormSteps}
-                            requireCompleted={["onboarding"]}
-                            disableOverlay
-                        />
-                    )}
+                {activeModal?.type === "transaction" && activeModal?.mode !== "edit" && (
+                    <OnboardingTour
+                        tourKey="add_transaction_form"
+                        steps={addTransactionFormSteps}
+                        requireCompleted={["onboarding"]}
+                        disableOverlay
+                    />
+                )}
             </Modal>
 
             <Modal
@@ -418,9 +410,7 @@ export default function FinanceDashboard({
             >
                 <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
                     <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
-                        {activeModal?.mode === "edit"
-                            ? "Edit budget"
-                            : "Add budget"}
+                        {activeModal?.mode === "edit" ? "Edit budget" : "Add budget"}
                     </h3>
                 </div>
                 <div className="px-6 py-4">
@@ -428,16 +418,10 @@ export default function FinanceDashboard({
                         categories={categories}
                         accounts={accounts}
                         initialValues={activeModal?.data}
-                        submitLabel={
-                            activeModal?.mode === "edit"
-                                ? "Save changes"
-                                : "Save budget"
-                        }
+                        submitLabel={activeModal?.mode === "edit" ? "Save changes" : "Save budget"}
                         onSubmit={(payload) =>
                             handleSubmitAndClose(
-                                activeModal?.mode === "edit"
-                                    ? onEditBudget
-                                    : onCreateBudget,
+                                activeModal?.mode === "edit" ? onEditBudget : onCreateBudget,
                                 payload
                             )
                         }
@@ -452,20 +436,14 @@ export default function FinanceDashboard({
             >
                 <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
                     <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
-                        {activeModal?.mode === "edit"
-                            ? "Edit savings goal"
-                            : "Add savings goal"}
+                        {activeModal?.mode === "edit" ? "Edit savings goal" : "Add savings goal"}
                     </h3>
                 </div>
                 <div className="px-6 py-4">
                     <SavingsGoalForm
                         initialValues={activeModal?.data}
                         accounts={accounts}
-                        submitLabel={
-                            activeModal?.mode === "edit"
-                                ? "Save changes"
-                                : "Save goal"
-                        }
+                        submitLabel={activeModal?.mode === "edit" ? "Save changes" : "Save goal"}
                         onSubmit={(payload) =>
                             handleSubmitAndClose(
                                 activeModal?.mode === "edit"
@@ -485,31 +463,22 @@ export default function FinanceDashboard({
             >
                 <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
                     <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
-                        {activeModal?.mode === "edit"
-                            ? "Edit loan"
-                            : "Add loan"}
+                        {activeModal?.mode === "edit" ? "Edit loan" : "Add loan"}
                     </h3>
                 </div>
                 <div className="px-6 py-4">
                     <LoanForm
                         initialValues={activeModal?.data}
-                        submitLabel={
-                            activeModal?.mode === "edit"
-                                ? "Save changes"
-                                : "Save loan"
-                        }
+                        submitLabel={activeModal?.mode === "edit" ? "Save changes" : "Save loan"}
                         onSubmit={(payload) =>
                             handleSubmitAndClose(
-                                activeModal?.mode === "edit"
-                                    ? onEditLoan
-                                    : onCreateLoan,
+                                activeModal?.mode === "edit" ? onEditLoan : onCreateLoan,
                                 payload
                             )
                         }
                     />
                 </div>
             </Modal>
-
         </div>
     );
 }

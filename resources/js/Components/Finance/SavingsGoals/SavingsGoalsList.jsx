@@ -1,15 +1,8 @@
 import { Link } from "@inertiajs/react";
 import { Eye, Pencil, Repeat2, Trash2 } from "lucide-react";
+import { formatWholeCurrency as formatCurrency } from "@/Utils/currency";
 
-const formatCurrency = (value, currency = "PHP") =>
-    new Intl.NumberFormat("en-PH", {
-        style: "currency",
-        currency,
-        maximumFractionDigits: 0,
-    }).format(value ?? 0);
-
-const formatDate = (value) =>
-    value ? new Date(value).toLocaleDateString() : "-";
+const formatDate = (value) => (value ? new Date(value).toLocaleDateString() : "-");
 
 export default function SavingsGoalsList({
     goals = [],
@@ -40,11 +33,7 @@ export default function SavingsGoalsList({
                         goal.target_amount > 0
                             ? Math.min(
                                   100,
-                                  Math.round(
-                                      (goal.current_amount /
-                                          goal.target_amount) *
-                                          100
-                                  )
+                                  Math.round((goal.current_amount / goal.target_amount) * 100)
                               )
                             : 0;
 
@@ -73,10 +62,7 @@ export default function SavingsGoalsList({
                                     )}
                                 </div>
                                 <p className="font-semibold">
-                                    {formatCurrency(
-                                        goal.current_amount,
-                                        goal.currency
-                                    )}
+                                    {formatCurrency(goal.current_amount, goal.currency)}
                                 </p>
                             </div>
                             <div className="mt-2">
@@ -88,12 +74,7 @@ export default function SavingsGoalsList({
                                 </div>
                                 <div className="mt-1 flex items-center justify-between text-xs text-light-muted dark:text-dark-muted">
                                     <span>{progress}% saved</span>
-                                    <span>
-                                        {formatCurrency(
-                                            goal.target_amount,
-                                            goal.currency
-                                        )}
-                                    </span>
+                                    <span>{formatCurrency(goal.target_amount, goal.currency)}</span>
                                 </div>
                                 <div className="mt-2 flex justify-end gap-2">
                                     {onEdit && (

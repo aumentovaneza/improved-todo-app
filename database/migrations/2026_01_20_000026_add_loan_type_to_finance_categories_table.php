@@ -26,9 +26,10 @@ return new class extends Migration
             }
             DB::statement("ALTER TABLE finance_categories ADD CONSTRAINT finance_categories_type_check CHECK (type IN ({$list}))");
             DB::statement("ALTER TABLE finance_categories ALTER COLUMN type SET DEFAULT 'expense'");
-        } else {
+        } elseif ($driver === 'mysql') {
             DB::statement("ALTER TABLE finance_categories MODIFY COLUMN type ENUM({$list}) NOT NULL DEFAULT 'expense'");
         }
+        // sqlite is dynamically typed and does not enforce enums; no-op.
     }
 
     private function pgCheckConstraints(string $table, string $column): array

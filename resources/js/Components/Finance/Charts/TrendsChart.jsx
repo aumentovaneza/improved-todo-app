@@ -1,17 +1,16 @@
-import { Card, LineChart, Title } from "@tremor/react";
+import { LineChart } from "@tremor/react";
+import ChartWrapper from "./ChartWrapper";
 import { getTremorColorsFromHex } from "./chartColors";
+import useIsDark from "@/Hooks/useIsDark";
+import { formatWholeCurrency } from "@/Utils/currency";
 
-const formatCurrency = (value, currency = "PHP") =>
-    new Intl.NumberFormat("en-PH", {
-        style: "currency",
-        currency,
-        maximumFractionDigits: 0,
-    }).format(value ?? 0);
-
-export default function TrendsChart({ data = [], currency = "PHP" }) {
-    const isDark =
-        typeof document !== "undefined" &&
-        document.documentElement.classList.contains("dark");
+export default function TrendsChart({
+    data = [],
+    currency = "PHP",
+    title = "14-day trend",
+    actions,
+}) {
+    const isDark = useIsDark();
     const displayData = data.map((row) => ({
         ...row,
         Income: row.income ?? 0,
@@ -23,21 +22,20 @@ export default function TrendsChart({ data = [], currency = "PHP" }) {
     );
 
     return (
-        <Card>
-            <Title>14-day trend</Title>
+        <ChartWrapper title={title} actions={actions}>
             <LineChart
                 className="mt-4 h-64"
                 data={displayData}
                 index="period"
                 categories={["Income", "Expenses", "Savings"]}
                 colors={chartColors}
-                valueFormatter={(value) => formatCurrency(value, currency)}
+                valueFormatter={(value) => formatWholeCurrency(value, currency)}
                 showLegend
-                showTooltip={false}
+                showTooltip
                 xAxisLabel="Date"
                 yAxisLabel={`Amount (${currency})`}
                 yAxisWidth={80}
             />
-        </Card>
+        </ChartWrapper>
     );
 }

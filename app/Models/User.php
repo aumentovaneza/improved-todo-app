@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Modules\Finance\Models\FinanceAccount;
 use App\Modules\Finance\Models\FinanceBudget;
 use App\Modules\Finance\Models\FinanceCategory;
 use App\Modules\Finance\Models\FinanceSavingsGoal;
@@ -76,6 +77,11 @@ class User extends Authenticatable
     public function categories(): HasMany
     {
         return $this->hasMany(Category::class);
+    }
+
+    public function financeAccounts(): HasMany
+    {
+        return $this->hasMany(FinanceAccount::class);
     }
 
     public function financeTransactions(): HasMany

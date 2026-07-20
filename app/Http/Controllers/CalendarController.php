@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateMonthTitleRequest;
+use App\Models\CalendarMonthTitle;
 use App\Models\Category;
 use App\Models\Task;
 use App\Modules\Finance\Models\FinanceTransaction;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -22,10 +25,28 @@ class CalendarController extends Controller
         $currentDate = $request->get('date', now()->format('Y-m-d'));
         $date = Carbon::parse($currentDate);
 
-        // Get tasks for the current month (convert user timezone range to UTC for database queries)
+        // Determine the range window to load (month | week | day). Weeks are
+        // Sunday-first to match the calendar grid's Sun..Sat headers.
+        $range = in_array($request->get('range'), ['month', 'week', 'day'], true)
+            ? $request->get('range')
+            : 'month';
+
+        // Convert the user timezone range to UTC for database queries.
         $userDate = $user->toUserTimezone($date);
-        $startOfMonth = $userDate->copy()->startOfMonth()->utc();
-        $endOfMonth = $userDate->copy()->endOfMonth()->utc();
+        [$rangeStart, $rangeEnd] = match ($range) {
+            'week' => [
+                $userDate->copy()->startOfWeek(Carbon::SUNDAY)->utc(),
+                $userDate->copy()->endOfWeek(Carbon::SATURDAY)->utc(),
+            ],
+            'day' => [
+                $userDate->copy()->startOfDay()->utc(),
+                $userDate->copy()->endOfDay()->utc(),
+            ],
+            default => [
+                $userDate->copy()->startOfMonth()->utc(),
+                $userDate->copy()->endOfMonth()->utc(),
+            ],
+        };
 
         // Get all tasks (both regular and recurring)
         $allTasks = $user->tasks()
@@ -41,7 +62,7 @@ class CalendarController extends Controller
         // Generate task occurrences for the month
         $taskOccurrences = collect();
         foreach ($allTasks as $task) {
-            $occurrences = $task->getOccurrencesInRange($startOfMonth, $endOfMonth);
+            $occurrences = $task->getOccurrencesInRange($rangeStart, $rangeEnd);
             $taskOccurrences = $taskOccurrences->merge($occurrences);
         }
 
@@ -61,7 +82,7 @@ class CalendarController extends Controller
 
         $transactionOccurrences = collect();
         foreach ($transactions as $transaction) {
-            $occurrences = $transaction->getOccurrencesInRange($startOfMonth, $endOfMonth);
+            $occurrences = $transaction->getOccurrencesInRange($rangeStart, $rangeEnd);
             $transactionOccurrences = $transactionOccurrences->merge($occurrences);
         }
 
@@ -80,6 +101,28 @@ class CalendarController extends Controller
             $upcomingTaskOccurrences = $upcomingTaskOccurrences->merge($occurrences);
         }
         $upcomingTasks = $upcomingTaskOccurrences->where('status', 'pending');
+
+        // Get recently accomplished tasks (completed in the last 24 hours),
+        // ordered by most recently completed.
+        $recentlyAccomplishedTasks = $user->tasks()
+            ->with('category')
+            ->where('status', 'completed')
+            ->whereNotNull('completed_at')
+            ->where('completed_at', '>=', now()->subDay())
+            ->orderByDesc('completed_at')
+            ->get();
+
+        // Ensure a minimum of 5 are shown by backfilling with the most recent
+        // completions when the last 24 hours contain fewer than 5.
+        if ($recentlyAccomplishedTasks->count() < 5) {
+            $recentlyAccomplishedTasks = $user->tasks()
+                ->with('category')
+                ->where('status', 'completed')
+                ->whereNotNull('completed_at')
+                ->orderByDesc('completed_at')
+                ->limit(5)
+                ->get();
+        }
 
         // Get overdue tasks (only regular tasks can be overdue)
         $overdueTasks = Task::with(['category', 'subtasks', 'tags'])
@@ -101,14 +144,76 @@ class CalendarController extends Controller
             ->sortBy(fn ($category) => mb_strtolower(trim((string) $category->name)))
             ->values();
 
+        // Optional user-authored title/theme for the month the current date
+        // falls in (e.g. "Sprint 4" or "Wedding season"). Null when unset.
+        $monthTitle = CalendarMonthTitle::where('user_id', $user->id)
+            ->where('year', (int) $date->format('Y'))
+            ->where('month', (int) $date->format('n'))
+            ->value('title');
+
+        // Human-readable label for the active range (in the user's timezone).
+        $rangeLabel = match ($range) {
+            'week' => $this->weekRangeLabel(
+                $userDate->copy()->startOfWeek(Carbon::SUNDAY),
+                $userDate->copy()->endOfWeek(Carbon::SATURDAY)
+            ),
+            'day' => $userDate->format('l, M j, Y'),
+            default => $userDate->format('F Y'),
+        };
+
         return Inertia::render('Calendar/Index', [
             'tasks' => $tasks,
             'transactions' => $transactionsByDate,
             'upcomingTasks' => $upcomingTasks,
+            'recentlyAccomplishedTasks' => $recentlyAccomplishedTasks,
             'overdueTasks' => $overdueTasks,
             'currentDate' => $date->format('Y-m-d'),
             'monthName' => $date->format('F Y'),
+            'monthTitle' => $monthTitle,
+            'range' => $range,
+            'rangeLabel' => $rangeLabel,
             'categories' => $categories,
         ]);
+    }
+
+    /**
+     * Create, update, or clear the current user's custom title for a month.
+     * An empty title removes the record so the month falls back to no title.
+     */
+    public function updateMonthTitle(UpdateMonthTitleRequest $request): RedirectResponse
+    {
+        $data = $request->validated();
+        $title = trim($data['title'] ?? '');
+
+        $attributes = [
+            'user_id' => Auth::id(),
+            'year' => $data['year'],
+            'month' => $data['month'],
+        ];
+
+        if ($title === '') {
+            CalendarMonthTitle::where($attributes)->delete();
+        } else {
+            CalendarMonthTitle::updateOrCreate($attributes, ['title' => $title]);
+        }
+
+        return back();
+    }
+
+    /**
+     * Format a week span, collapsing the month/year when they are shared.
+     * e.g. "Jul 20 – 26, 2026" or "Jul 28 – Aug 3, 2026".
+     */
+    private function weekRangeLabel(Carbon $start, Carbon $end): string
+    {
+        if ($start->year !== $end->year) {
+            return $start->format('M j, Y').' – '.$end->format('M j, Y');
+        }
+
+        if ($start->month !== $end->month) {
+            return $start->format('M j').' – '.$end->format('M j, Y');
+        }
+
+        return $start->format('M j').' – '.$end->format('j, Y');
     }
 }

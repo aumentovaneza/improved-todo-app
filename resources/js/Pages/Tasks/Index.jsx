@@ -342,7 +342,7 @@ function SortableTask({
     );
 }
 
-export default function Index({ categorizedTasks, categories, filters }) {
+export default function Index({ categorizedTasks, categories, tags = [], filters }) {
     const [allTasks, setAllTasks] = useState([]);
     const [search, setSearch] = useState(filters.search || "");
     const [statusFilter, setStatusFilter] = useState(filters.status || "");
@@ -352,6 +352,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
     const [categoryFilter, setCategoryFilter] = useState(
         filters.category_id || ""
     );
+    const [tagFilter, setTagFilter] = useState(filters.tag_id || "");
     const [dueDateFilter, setDueDateFilter] = useState(
         filters.due_date_filter || ""
     );
@@ -554,6 +555,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
                 status: statusFilter,
                 priority: priorityFilter,
                 category_id: categoryFilter,
+                tag_id: tagFilter,
                 due_date_filter: dueDateFilter,
             },
             {
@@ -567,6 +569,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
         let newStatusFilter = statusFilter;
         let newPriorityFilter = priorityFilter;
         let newCategoryFilter = categoryFilter;
+        let newTagFilter = tagFilter;
         let newDueDateFilter = dueDateFilter;
 
         switch (type) {
@@ -579,6 +582,9 @@ export default function Index({ categorizedTasks, categories, filters }) {
             case "category":
                 newCategoryFilter = value;
                 break;
+            case "tag":
+                newTagFilter = value;
+                break;
             case "due_date":
                 newDueDateFilter = value;
                 break;
@@ -587,6 +593,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
         setStatusFilter(newStatusFilter);
         setPriorityFilter(newPriorityFilter);
         setCategoryFilter(newCategoryFilter);
+        setTagFilter(newTagFilter);
         setDueDateFilter(newDueDateFilter);
 
         router.get(
@@ -596,6 +603,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
                 status: newStatusFilter,
                 priority: newPriorityFilter,
                 category_id: newCategoryFilter,
+                tag_id: newTagFilter,
                 due_date_filter: newDueDateFilter,
             },
             {
@@ -769,16 +777,16 @@ export default function Index({ categorizedTasks, categories, filters }) {
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
                                 className={`inline-flex items-center justify-center px-4 py-2.5 border rounded-xl text-sm font-medium transition-colors ${
-                                    showFilters || statusFilter || priorityFilter || categoryFilter || dueDateFilter
+                                    showFilters || statusFilter || priorityFilter || categoryFilter || tagFilter || dueDateFilter
                                         ? "bg-wevie-teal/10 border-wevie-teal/30 text-wevie-text-primary dark:bg-wevie-teal/10 dark:border-wevie-teal/30 dark:text-wevie-dark-text-primary"
                                         : "bg-white dark:bg-dark-card border-light-border/70 dark:border-dark-border/70 text-light-secondary dark:text-dark-secondary hover:bg-light-hover dark:hover:bg-dark-hover"
                                 }`}
                             >
                                 <Filter className="mr-2 h-4 w-4" />
                                 Filters
-                                {(statusFilter || priorityFilter || categoryFilter || dueDateFilter) && (
+                                {(statusFilter || priorityFilter || categoryFilter || tagFilter || dueDateFilter) && (
                                     <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-wevie-teal/20 text-wevie-text-primary dark:bg-wevie-teal/20 dark:text-wevie-dark-text-primary">
-                                        {[statusFilter, priorityFilter, categoryFilter, dueDateFilter].filter(Boolean).length}
+                                        {[statusFilter, priorityFilter, categoryFilter, tagFilter, dueDateFilter].filter(Boolean).length}
                                     </span>
                                 )}
                             </button>
@@ -851,6 +859,27 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                     </select>
                                 </div>
 
+                                {/* Tag Filter */}
+                                <div>
+                                    <label className="block text-sm font-medium text-light-secondary dark:text-dark-secondary mb-2">
+                                        Tag
+                                    </label>
+                                    <select
+                                        value={tagFilter}
+                                        onChange={(e) =>
+                                            handleFilter("tag", e.target.value)
+                                        }
+                                        className="block w-full border border-light-border/70 dark:border-dark-border/70 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
+                                    >
+                                        <option value="">All tags</option>
+                                        {tags.map((tag) => (
+                                            <option key={tag.id} value={tag.id}>
+                                                {tag.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
                                 {/* Due Date Filter */}
                                 <div>
                                     <label className="block text-sm font-medium text-light-secondary dark:text-dark-secondary mb-2">
@@ -907,6 +936,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                 statusFilter ||
                                 priorityFilter ||
                                 categoryFilter ||
+                                tagFilter ||
                                 dueDateFilter
                                     ? "Try a softer filter or a shorter search."
                                     : "Start with one small task when you’re ready."}
@@ -915,6 +945,7 @@ export default function Index({ categorizedTasks, categories, filters }) {
                                 !statusFilter &&
                                 !priorityFilter &&
                                 !categoryFilter &&
+                                !tagFilter &&
                                 !dueDateFilter && (
                                     <button
                                         onClick={() => setShowTaskModal(true)}

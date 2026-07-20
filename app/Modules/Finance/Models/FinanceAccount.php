@@ -28,6 +28,7 @@ class FinanceAccount extends Model
         'used_credit',
         'notes',
         'is_active',
+        'is_default',
     ];
 
     protected $casts = [
@@ -41,6 +42,7 @@ class FinanceAccount extends Model
         'account_number' => 'encrypted',
         'notes' => 'encrypted',
         'is_active' => 'boolean',
+        'is_default' => 'boolean',
     ];
 
     public function user(): BelongsTo

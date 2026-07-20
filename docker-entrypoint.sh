@@ -80,12 +80,14 @@ setup_app() {
     # Install dependencies if needed
     if [ ! -d "vendor" ] || [ ! -f "vendor/autoload.php" ]; then
         echo "Installing Composer dependencies (this may take a while for large packages)..."
-        # Increase composer timeout to 600 seconds (10 minutes)
+        # Increase composer timeout to 600 seconds (10 minutes).
+        # Note: the timeout is a Composer *config* value, not an `install` flag —
+        # it must be set via this env var, NOT `--timeout` (which install rejects).
         export COMPOSER_PROCESS_TIMEOUT=600
         if [ "$APP_ENV" = "production" ]; then
-            composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader --no-scripts --timeout=600 || true
+            composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader --no-scripts || true
         else
-            composer install --no-interaction --prefer-dist --no-scripts --timeout=600 || true
+            composer install --no-interaction --prefer-dist --no-scripts || true
         fi
         composer dump-autoload --optimize || true
     fi

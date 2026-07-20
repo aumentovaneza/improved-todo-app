@@ -275,6 +275,13 @@ class TaskRepository implements TaskRepositoryInterface
             $query->where('category_id', $filters['category_id']);
         }
 
+        // Filter by tag
+        if (!empty($filters['tag_id'])) {
+            $query->whereHas('tags', function ($q) use ($filters) {
+                $q->where('tags.id', $filters['tag_id']);
+            });
+        }
+
         // Filter by overdue tasks
         if (! empty($filters['overdue'])) {
             $query->overdue();

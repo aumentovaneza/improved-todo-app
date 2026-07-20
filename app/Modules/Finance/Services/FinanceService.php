@@ -34,7 +34,7 @@ class FinanceService
         private FinanceWalletService $walletService
     ) {}
 
-    public function getDashboardData(int $userId): array
+    public function getDashboardData(int $userId, ?string $range = null): array
     {
         $transactions = $this->transactionRepository->getForUser($userId, 20);
         $categories = $this->categoryRepository->getForUser($userId);
@@ -42,7 +42,7 @@ class FinanceService
         $loans = $this->loanRepository->getForUser($userId)->loadCount('transactions');
         $accounts = $this->accountRepository->getForUser($userId);
         // Keep remaining amounts as stored to avoid overriding manual values.
-        $reportData = $this->reportService->buildDashboardData($userId);
+        $reportData = $this->reportService->buildDashboardData($userId, $range);
         $totalLoans = $loans->sum(function ($loan) {
             $remaining = (float) $loan->remaining_amount;
             $total = (float) $loan->total_amount;

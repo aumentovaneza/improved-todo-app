@@ -15,6 +15,7 @@ import {
     Grid3X3,
     ChevronDown,
     ChevronUp,
+    Pencil,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import DayTasksModal from "@/Components/DayTasksModal";
@@ -23,24 +24,155 @@ import TaskEditModal from "@/Components/TaskEditModal";
 import TaskModal from "@/Components/TaskModal";
 import { toast } from "react-toastify";
 
+const VIEW_MODE_KEY = "calendar_view_mode"; // 'calendar' | 'list'
+const LIST_RANGE_KEY = "calendar_list_range"; // 'month' | 'week' | 'day'
+
+const readStoredPreference = (key, allowed, fallback) => {
+    if (typeof window === "undefined") return fallback;
+    const stored = window.localStorage.getItem(key);
+    return allowed.includes(stored) ? stored : fallback;
+};
+
+// Subtle, optional per-month title/theme shown beneath the calendar heading.
+// When empty it renders a quiet "Add a title" affordance so it stays out of the
+// way for people who don't use it; click to edit inline, clear to remove.
+function MonthTitle({ currentDate, monthTitle }) {
+    const [isEditing, setIsEditing] = useState(false);
+    const [value, setValue] = useState(monthTitle ?? "");
+    const [saving, setSaving] = useState(false);
+
+    // Keep the local draft in sync when navigating between months.
+    useEffect(() => {
+        if (!isEditing) setValue(monthTitle ?? "");
+    }, [monthTitle, isEditing]);
+
+    const save = () => {
+        const trimmed = value.trim();
+        // Nothing changed — just leave edit mode without a round-trip.
+        if (trimmed === (monthTitle ?? "")) {
+            setIsEditing(false);
+            setValue(monthTitle ?? "");
+            return;
+        }
+
+        const [year, month] = currentDate.split("-").map(Number);
+        setSaving(true);
+        router.post(
+            route("calendar.month-title.update"),
+            { year, month, title: trimmed },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onFinish: () => {
+                    setSaving(false);
+                    setIsEditing(false);
+                },
+            }
+        );
+    };
+
+    const cancel = () => {
+        setValue(monthTitle ?? "");
+        setIsEditing(false);
+    };
+
+    if (isEditing) {
+        return (
+            <input
+                type="text"
+                autoFocus
+                value={value}
+                maxLength={60}
+                disabled={saving}
+                onChange={(e) => setValue(e.target.value)}
+                onBlur={save}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        save();
+                    } else if (e.key === "Escape") {
+                        e.preventDefault();
+                        cancel();
+                    }
+                }}
+                placeholder="Name this month…"
+                aria-label="Month title"
+                className="mt-0.5 w-full max-w-xs bg-transparent border-b border-gray-300 dark:border-gray-600 px-0 py-0.5 text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-wevie-teal"
+            />
+        );
+    }
+
+    if (monthTitle) {
+        return (
+            <button
+                type="button"
+                onClick={() => setIsEditing(true)}
+                title="Edit month title"
+                className="group mt-0.5 flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+            >
+                <span>{monthTitle}</span>
+                <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+        );
+    }
+
+    return (
+        <button
+            type="button"
+            onClick={() => setIsEditing(true)}
+            className="mt-0.5 inline-flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+        >
+            <Pencil className="w-3 h-3" />
+            <span>Add a title</span>
+        </button>
+    );
+}
+
 export default function Index({
     tasks,
     transactions,
     upcomingTasks,
+    recentlyAccomplishedTasks = [],
     overdueTasks,
     currentDate,
     monthName,
+    monthTitle,
+    range,
+    rangeLabel,
     categories,
 }) {
     const [selectedDate, setSelectedDate] = useState(null);
     const [isMobile, setIsMobile] = useState(false);
-    const [mobileViewType, setMobileViewType] = useState("list"); // 'list' or 'calendar'
+    const [viewMode, setViewMode] = useState(() => {
+        // First-time default: list on phones (denser, easier to scan), grid on
+        // larger screens. A saved preference always wins.
+        const fallback =
+            typeof window !== "undefined" && window.innerWidth < 768
+                ? "list"
+                : "calendar";
+        return readStoredPreference(
+            VIEW_MODE_KEY,
+            ["calendar", "list"],
+            fallback
+        );
+    });
+    const [listRange, setListRange] = useState(() =>
+        readStoredPreference(
+            LIST_RANGE_KEY,
+            ["month", "week", "day"],
+            "month"
+        )
+    );
     const [showDayTasksModal, setShowDayTasksModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
     const [expandedDates, setExpandedDates] = useState(new Set());
+
+    // The data window the server should load for the current view. The month
+    // grid always needs a full month; the list honors the Month/Week/Day pick.
+    const effectiveRange = viewMode === "calendar" ? "month" : listRange;
 
     useEffect(() => {
         const checkMobile = () => {
@@ -51,6 +183,28 @@ export default function Index({
         window.addEventListener("resize", checkMobile);
 
         return () => window.removeEventListener("resize", checkMobile);
+    }, []);
+
+    // Persist the user's view + range choices so the page reopens as they left it.
+    useEffect(() => {
+        window.localStorage.setItem(VIEW_MODE_KEY, viewMode);
+    }, [viewMode]);
+
+    useEffect(() => {
+        window.localStorage.setItem(LIST_RANGE_KEY, listRange);
+    }, [listRange]);
+
+    // On mount, if the server's loaded window doesn't match the persisted
+    // preference, reload once with the correct range.
+    useEffect(() => {
+        if (range !== effectiveRange) {
+            router.get(
+                route("calendar.index"),
+                { date: currentDate, range: effectiveRange },
+                { preserveState: true, preserveScroll: true }
+            );
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Generate calendar days
@@ -105,22 +259,55 @@ export default function Index({
 
     const calendarDays = generateCalendarDays();
 
-    const navigateMonth = (direction) => {
-        const date = new Date(currentDate);
-        date.setMonth(date.getMonth() + direction);
-        const dateStr =
-            date.getFullYear() +
-            "-" +
-            String(date.getMonth() + 1).padStart(2, "0") +
-            "-" +
-            String(date.getDate()).padStart(2, "0");
+    const toDateStr = (date) =>
+        date.getFullYear() +
+        "-" +
+        String(date.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(date.getDate()).padStart(2, "0");
+
+    const loadCalendar = (dateStr, nextRange = effectiveRange) => {
         router.get(
             route("calendar.index"),
-            {
-                date: dateStr,
-            },
+            { date: dateStr, range: nextRange },
             { preserveState: true }
         );
+    };
+
+    // Step the visible window by the active unit (month grid steps by month;
+    // the list steps by its selected Month/Week/Day range).
+    const navigate = (direction) => {
+        // Parse "YYYY-MM-DD" as a local date to avoid the UTC-midnight day shift.
+        const [year, month, day] = currentDate.split("-").map(Number);
+        const date = new Date(year, month - 1, day);
+        if (effectiveRange === "week") {
+            date.setDate(date.getDate() + direction * 7);
+        } else if (effectiveRange === "day") {
+            date.setDate(date.getDate() + direction);
+        } else {
+            date.setMonth(date.getMonth() + direction);
+        }
+        loadCalendar(toDateStr(date));
+    };
+
+    // Switch between the month grid and the agenda list. Leaving the list
+    // forces the server back to a full month window for the grid.
+    const changeViewMode = (nextView) => {
+        if (nextView === viewMode) return;
+        setViewMode(nextView);
+        const nextRange = nextView === "calendar" ? "month" : listRange;
+        if (nextRange !== range) {
+            loadCalendar(currentDate, nextRange);
+        }
+    };
+
+    // Change the list's Month/Week/Day range and reload that window.
+    const changeListRange = (nextRange) => {
+        if (nextRange === listRange) return;
+        setListRange(nextRange);
+        if (nextRange !== range) {
+            loadCalendar(currentDate, nextRange);
+        }
     };
 
     const getTaskStatusColor = (status) => {
@@ -163,6 +350,15 @@ export default function Index({
             day: "numeric",
         });
     };
+
+    const formatCompletedAt = (dateString) =>
+        new Date(dateString).toLocaleString("en-US", {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+        });
 
     const handleDayClick = (day) => {
         setSelectedDate(day.dateStr);
@@ -220,51 +416,70 @@ export default function Index({
         return tasks[selectedDate] || [];
     };
 
-    // Generate mobile-friendly task list grouped by date
-    const generateMobileTaskList = () => {
-        const date = new Date(currentDate);
-        const year = date.getFullYear();
-        const month = date.getMonth();
+    // Enumerate every day in the active range so the list can show empty days
+    // too. Derived from currentDate + effectiveRange to match the server window
+    // (weeks are Sunday-first, matching the grid headers and the controller).
+    const rangeDateStrings = () => {
+        const [year, month, day] = currentDate.split("-").map(Number);
+        const base = new Date(year, month - 1, day);
 
-        // Get all days in the current month
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const tasksByDate = [];
-
-        for (let day = 1; day <= daysInMonth; day++) {
-            const dateStr = `${year}-${String(month + 1).padStart(
-                2,
-                "0"
-            )}-${String(day).padStart(2, "0")}`;
-            const dayTasks = tasks[dateStr] || [];
-            const dayTransactions = transactions?.[dateStr] || [];
-
-            if (dayTasks.length > 0 || dayTransactions.length > 0) {
-                const dateObj = new Date(year, month, day);
-                const today = new Date();
-                const isToday = dateStr === today.toISOString().split("T")[0];
-
-                tasksByDate.push({
-                    dateStr,
-                    date: dateObj,
-                    day,
-                    isToday,
-                    tasks: dayTasks,
-                    transactions: dayTransactions,
-                    dayName: dateObj.toLocaleDateString("en-US", {
-                        weekday: "long",
-                    }),
-                    formattedDate: dateObj.toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                    }),
-                });
-            }
+        if (effectiveRange === "day") {
+            return [toDateStr(base)];
         }
 
-        return tasksByDate;
+        let start;
+        let count;
+        if (effectiveRange === "week") {
+            start = new Date(base);
+            start.setDate(start.getDate() - start.getDay()); // back to Sunday
+            count = 7;
+        } else {
+            start = new Date(year, month - 1, 1);
+            count = new Date(year, month, 0).getDate(); // days in month
+        }
+
+        const days = [];
+        const cursor = new Date(start);
+        for (let i = 0; i < count; i++) {
+            days.push(toDateStr(cursor));
+            cursor.setDate(cursor.getDate() + 1);
+        }
+        return days;
     };
 
-    const mobileTaskList = generateMobileTaskList();
+    // Build the agenda list grouped per day. Every day in the range is included
+    // (even with no tasks/transactions) so users can still see and act on it.
+    const buildDateGroups = () => {
+        const today = new Date();
+        const todayStr = toDateStr(today);
+
+        return rangeDateStrings().map((dateStr) => {
+            const dayTasks = tasks?.[dateStr] || [];
+            const dayTransactions = transactions?.[dateStr] || [];
+
+            const [year, month, day] = dateStr.split("-").map(Number);
+            const dateObj = new Date(year, month - 1, day);
+
+            return {
+                dateStr,
+                date: dateObj,
+                day,
+                isToday: dateStr === todayStr,
+                isEmpty: dayTasks.length === 0 && dayTransactions.length === 0,
+                tasks: dayTasks,
+                transactions: dayTransactions,
+                dayName: dateObj.toLocaleDateString("en-US", {
+                    weekday: "long",
+                }),
+                formattedDate: dateObj.toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                }),
+            };
+        });
+    };
+
+    const dateGroups = buildDateGroups();
 
     const toggleDateExpansion = (dateStr) => {
         const newExpanded = new Set(expandedDates);
@@ -276,16 +491,23 @@ export default function Index({
         setExpandedDates(newExpanded);
     };
 
-    const renderMobileListView = () => {
-        if (mobileTaskList.length === 0) {
+    const renderListView = () => {
+        if (dateGroups.length === 0) {
+            const rangeNoun =
+                effectiveRange === "week"
+                    ? "week"
+                    : effectiveRange === "day"
+                    ? "day"
+                    : "month";
             return (
                 <div className="card p-6 text-center">
                     <CalendarIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                        No items this month
+                        No items this {rangeNoun}
                     </h3>
                     <p className="text-gray-500 dark:text-gray-400 mb-4">
-                        You don't have any tasks or transactions for {monthName}.
+                        You don't have any tasks or transactions for{" "}
+                        {rangeLabel ?? monthName}.
                     </p>
                     <Link
                         href={route("tasks.index")}
@@ -300,7 +522,7 @@ export default function Index({
 
         return (
             <div className="space-y-4">
-                {mobileTaskList.map((dateGroup) => {
+                {dateGroups.map((dateGroup) => {
                     const isExpanded = expandedDates.has(dateGroup.dateStr);
                     const visibleTasks = isExpanded
                         ? dateGroup.tasks
@@ -395,6 +617,11 @@ export default function Index({
 
                             {/* Tasks List */}
                             <div className="p-4 space-y-3">
+                                {dateGroup.isEmpty && (
+                                    <p className="text-sm text-gray-400 dark:text-gray-500 italic">
+                                        No items for this day.
+                                    </p>
+                                )}
                                 {visibleTasks.map((task) => (
                                     <div
                                         key={task.id}
@@ -687,19 +914,26 @@ export default function Index({
                             className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 gap-4"
                             data-tour="calendar-header"
                         >
-                            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                {monthName}
-                            </h2>
-                            <div className="flex items-center justify-between sm:justify-end space-x-2">
-                                {/* Mobile View Toggle */}
-                                {isMobile && (
-                                    <div className="flex items-center bg-gray-100 dark:bg-dark-card rounded-lg p-1 mr-2">
+                            <div className="min-w-0">
+                                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                    {rangeLabel ?? monthName}
+                                </h2>
+                                <MonthTitle
+                                    currentDate={currentDate}
+                                    monthTitle={monthTitle}
+                                />
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                                {/* View + range controls (wrap together on mobile) */}
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {/* View Toggle: Calendar grid vs. List */}
+                                    <div className="flex items-center bg-gray-100 dark:bg-dark-card rounded-lg p-1">
                                         <button
-                                            onClick={() =>
-                                                setMobileViewType("list")
-                                            }
+                                            onClick={() => changeViewMode("list")}
+                                            title="List view"
+                                            aria-pressed={viewMode === "list"}
                                             className={`p-2 rounded-md transition-colors ${
-                                                mobileViewType === "list"
+                                                viewMode === "list"
                                                     ? "bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm"
                                                     : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
                                             }`}
@@ -708,10 +942,12 @@ export default function Index({
                                         </button>
                                         <button
                                             onClick={() =>
-                                                setMobileViewType("calendar")
+                                                changeViewMode("calendar")
                                             }
+                                            title="Calendar view"
+                                            aria-pressed={viewMode === "calendar"}
                                             className={`p-2 rounded-md transition-colors ${
-                                                mobileViewType === "calendar"
+                                                viewMode === "calendar"
                                                     ? "bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm"
                                                     : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
                                             }`}
@@ -719,35 +955,68 @@ export default function Index({
                                             <Grid3X3 className="w-4 h-4" />
                                         </button>
                                     </div>
-                                )}
 
-                                <button
-                                    onClick={() => navigateMonth(-1)}
-                                    className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors"
-                                >
-                                    <ChevronLeft className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={() => navigateMonth(1)}
-                                    className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors"
-                                >
-                                    <ChevronRight className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={() =>
-                                        router.get(route("calendar.index"))
-                                    }
-                                    className="ml-2 inline-flex items-center px-3 py-2 bg-gradient-to-r from-wevie-teal to-wevie-mint border border-transparent rounded-xl font-medium text-sm text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wevie-teal/40 transition-colors"
-                                >
-                                    Today
-                                </button>
+                                    {/* List range: Month / Week / Day */}
+                                    {viewMode === "list" && (
+                                        <div className="flex items-center bg-gray-100 dark:bg-dark-card rounded-lg p-1">
+                                            {["month", "week", "day"].map(
+                                                (option) => (
+                                                    <button
+                                                        key={option}
+                                                        onClick={() =>
+                                                            changeListRange(
+                                                                option
+                                                            )
+                                                        }
+                                                        aria-pressed={
+                                                            listRange === option
+                                                        }
+                                                        className={`px-2.5 sm:px-3 py-1.5 rounded-md text-sm font-medium capitalize transition-colors ${
+                                                            listRange === option
+                                                                ? "bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm"
+                                                                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                                                        }`}
+                                                    >
+                                                        {option}
+                                                    </button>
+                                                )
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Navigation (stays right-aligned, wraps as a unit) */}
+                                <div className="flex items-center gap-1 ml-auto sm:ml-0">
+                                    <button
+                                        onClick={() => navigate(-1)}
+                                        aria-label="Previous"
+                                        className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={() => navigate(1)}
+                                        aria-label="Next"
+                                        className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors"
+                                    >
+                                        <ChevronRight className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={() =>
+                                            loadCalendar(toDateStr(new Date()))
+                                        }
+                                        className="ml-1 inline-flex items-center px-3 py-2 bg-gradient-to-r from-wevie-teal to-wevie-mint border border-transparent rounded-xl font-medium text-sm text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wevie-teal/40 transition-colors"
+                                    >
+                                        Today
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
                         {/* Calendar Content */}
                         <div className="p-3 sm:p-6">
-                            {isMobile && mobileViewType === "list" ? (
-                                renderMobileListView()
+                            {viewMode === "list" ? (
+                                renderListView()
                             ) : (
                                 <>
                                     {/* Day Headers */}
@@ -1064,7 +1333,7 @@ export default function Index({
                 {/* Sidebar - Hidden on mobile when in list view */}
                 <div
                     className={`w-full lg:w-80 space-y-6 order-1 lg:order-2 ${
-                        isMobile && mobileViewType === "list" ? "hidden" : ""
+                        isMobile && viewMode === "list" ? "hidden" : ""
                     }`}
                 >
                     {/* Quick Actions */}
@@ -1181,6 +1450,57 @@ export default function Index({
                             ) : (
                                 <p className="text-gray-500 dark:text-gray-400 text-sm">
                                     No upcoming tasks in the next 7 days.
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Recently Accomplished Tasks */}
+                    <div className="card p-4 sm:p-6">
+                        <div className="flex items-center mb-4">
+                            <CheckCircle className="w-4 sm:w-5 h-4 sm:h-5 text-primary mr-2" />
+                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                Recently Accomplished (
+                                {recentlyAccomplishedTasks.length})
+                            </h3>
+                        </div>
+                        <div className="space-y-3 max-h-64 overflow-y-auto">
+                            {recentlyAccomplishedTasks.length > 0 ? (
+                                recentlyAccomplishedTasks.map((task) => (
+                                    <div
+                                        key={task.id}
+                                        className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800"
+                                    >
+                                        <div className="flex items-center space-x-2 mb-1">
+                                            <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm line-through decoration-green-500/60">
+                                                {task.title}
+                                            </h4>
+                                            {task.is_recurring && (
+                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
+                                                    Recurring
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-green-700 dark:text-green-400 mt-1">
+                                            Completed:{" "}
+                                            {formatCompletedAt(task.completed_at)}
+                                        </p>
+                                        {task.category && (
+                                            <span
+                                                className="inline-block text-xs px-2 py-1 rounded-full text-white mt-2"
+                                                style={{
+                                                    backgroundColor:
+                                                        task.category.color,
+                                                }}
+                                            >
+                                                {task.category.name}
+                                            </span>
+                                        )}
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                                    No tasks accomplished recently.
                                 </p>
                             )}
                         </div>

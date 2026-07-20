@@ -23,6 +23,15 @@ import TaskEditModal from "@/Components/TaskEditModal";
 import TaskModal from "@/Components/TaskModal";
 import { toast } from "react-toastify";
 
+const VIEW_MODE_KEY = "calendar_view_mode"; // 'calendar' | 'list'
+const LIST_RANGE_KEY = "calendar_list_range"; // 'month' | 'week' | 'day'
+
+const readStoredPreference = (key, allowed, fallback) => {
+    if (typeof window === "undefined") return fallback;
+    const stored = window.localStorage.getItem(key);
+    return allowed.includes(stored) ? stored : fallback;
+};
+
 export default function Index({
     tasks,
     transactions,
@@ -30,17 +39,42 @@ export default function Index({
     overdueTasks,
     currentDate,
     monthName,
+    range,
+    rangeLabel,
     categories,
 }) {
     const [selectedDate, setSelectedDate] = useState(null);
     const [isMobile, setIsMobile] = useState(false);
-    const [mobileViewType, setMobileViewType] = useState("list"); // 'list' or 'calendar'
+    const [viewMode, setViewMode] = useState(() => {
+        // First-time default: list on phones (denser, easier to scan), grid on
+        // larger screens. A saved preference always wins.
+        const fallback =
+            typeof window !== "undefined" && window.innerWidth < 768
+                ? "list"
+                : "calendar";
+        return readStoredPreference(
+            VIEW_MODE_KEY,
+            ["calendar", "list"],
+            fallback
+        );
+    });
+    const [listRange, setListRange] = useState(() =>
+        readStoredPreference(
+            LIST_RANGE_KEY,
+            ["month", "week", "day"],
+            "month"
+        )
+    );
     const [showDayTasksModal, setShowDayTasksModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
     const [expandedDates, setExpandedDates] = useState(new Set());
+
+    // The data window the server should load for the current view. The month
+    // grid always needs a full month; the list honors the Month/Week/Day pick.
+    const effectiveRange = viewMode === "calendar" ? "month" : listRange;
 
     useEffect(() => {
         const checkMobile = () => {
@@ -51,6 +85,28 @@ export default function Index({
         window.addEventListener("resize", checkMobile);
 
         return () => window.removeEventListener("resize", checkMobile);
+    }, []);
+
+    // Persist the user's view + range choices so the page reopens as they left it.
+    useEffect(() => {
+        window.localStorage.setItem(VIEW_MODE_KEY, viewMode);
+    }, [viewMode]);
+
+    useEffect(() => {
+        window.localStorage.setItem(LIST_RANGE_KEY, listRange);
+    }, [listRange]);
+
+    // On mount, if the server's loaded window doesn't match the persisted
+    // preference, reload once with the correct range.
+    useEffect(() => {
+        if (range !== effectiveRange) {
+            router.get(
+                route("calendar.index"),
+                { date: currentDate, range: effectiveRange },
+                { preserveState: true, preserveScroll: true }
+            );
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Generate calendar days
@@ -105,22 +161,55 @@ export default function Index({
 
     const calendarDays = generateCalendarDays();
 
-    const navigateMonth = (direction) => {
-        const date = new Date(currentDate);
-        date.setMonth(date.getMonth() + direction);
-        const dateStr =
-            date.getFullYear() +
-            "-" +
-            String(date.getMonth() + 1).padStart(2, "0") +
-            "-" +
-            String(date.getDate()).padStart(2, "0");
+    const toDateStr = (date) =>
+        date.getFullYear() +
+        "-" +
+        String(date.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(date.getDate()).padStart(2, "0");
+
+    const loadCalendar = (dateStr, nextRange = effectiveRange) => {
         router.get(
             route("calendar.index"),
-            {
-                date: dateStr,
-            },
+            { date: dateStr, range: nextRange },
             { preserveState: true }
         );
+    };
+
+    // Step the visible window by the active unit (month grid steps by month;
+    // the list steps by its selected Month/Week/Day range).
+    const navigate = (direction) => {
+        // Parse "YYYY-MM-DD" as a local date to avoid the UTC-midnight day shift.
+        const [year, month, day] = currentDate.split("-").map(Number);
+        const date = new Date(year, month - 1, day);
+        if (effectiveRange === "week") {
+            date.setDate(date.getDate() + direction * 7);
+        } else if (effectiveRange === "day") {
+            date.setDate(date.getDate() + direction);
+        } else {
+            date.setMonth(date.getMonth() + direction);
+        }
+        loadCalendar(toDateStr(date));
+    };
+
+    // Switch between the month grid and the agenda list. Leaving the list
+    // forces the server back to a full month window for the grid.
+    const changeViewMode = (nextView) => {
+        if (nextView === viewMode) return;
+        setViewMode(nextView);
+        const nextRange = nextView === "calendar" ? "month" : listRange;
+        if (nextRange !== range) {
+            loadCalendar(currentDate, nextRange);
+        }
+    };
+
+    // Change the list's Month/Week/Day range and reload that window.
+    const changeListRange = (nextRange) => {
+        if (nextRange === listRange) return;
+        setListRange(nextRange);
+        if (nextRange !== range) {
+            loadCalendar(currentDate, nextRange);
+        }
     };
 
     const getTaskStatusColor = (status) => {
@@ -220,34 +309,36 @@ export default function Index({
         return tasks[selectedDate] || [];
     };
 
-    // Generate mobile-friendly task list grouped by date
-    const generateMobileTaskList = () => {
-        const date = new Date(currentDate);
-        const year = date.getFullYear();
-        const month = date.getMonth();
+    // Build the agenda list grouped per day from the server-returned data.
+    // Works for any range (month/week/day) since it derives days from the
+    // returned keys rather than assuming a single month.
+    const buildDateGroups = () => {
+        const dateKeys = Array.from(
+            new Set([
+                ...Object.keys(tasks || {}),
+                ...Object.keys(transactions || {}),
+            ])
+        ).sort();
 
-        // Get all days in the current month
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const tasksByDate = [];
+        const today = new Date();
+        const todayStr = toDateStr(today);
 
-        for (let day = 1; day <= daysInMonth; day++) {
-            const dateStr = `${year}-${String(month + 1).padStart(
-                2,
-                "0"
-            )}-${String(day).padStart(2, "0")}`;
-            const dayTasks = tasks[dateStr] || [];
-            const dayTransactions = transactions?.[dateStr] || [];
+        return dateKeys
+            .map((dateStr) => {
+                const dayTasks = tasks?.[dateStr] || [];
+                const dayTransactions = transactions?.[dateStr] || [];
+                if (dayTasks.length === 0 && dayTransactions.length === 0) {
+                    return null;
+                }
 
-            if (dayTasks.length > 0 || dayTransactions.length > 0) {
-                const dateObj = new Date(year, month, day);
-                const today = new Date();
-                const isToday = dateStr === today.toISOString().split("T")[0];
+                const [year, month, day] = dateStr.split("-").map(Number);
+                const dateObj = new Date(year, month - 1, day);
 
-                tasksByDate.push({
+                return {
                     dateStr,
                     date: dateObj,
                     day,
-                    isToday,
+                    isToday: dateStr === todayStr,
                     tasks: dayTasks,
                     transactions: dayTransactions,
                     dayName: dateObj.toLocaleDateString("en-US", {
@@ -257,14 +348,12 @@ export default function Index({
                         month: "short",
                         day: "numeric",
                     }),
-                });
-            }
-        }
-
-        return tasksByDate;
+                };
+            })
+            .filter(Boolean);
     };
 
-    const mobileTaskList = generateMobileTaskList();
+    const dateGroups = buildDateGroups();
 
     const toggleDateExpansion = (dateStr) => {
         const newExpanded = new Set(expandedDates);
@@ -276,16 +365,23 @@ export default function Index({
         setExpandedDates(newExpanded);
     };
 
-    const renderMobileListView = () => {
-        if (mobileTaskList.length === 0) {
+    const renderListView = () => {
+        if (dateGroups.length === 0) {
+            const rangeNoun =
+                effectiveRange === "week"
+                    ? "week"
+                    : effectiveRange === "day"
+                    ? "day"
+                    : "month";
             return (
                 <div className="card p-6 text-center">
                     <CalendarIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                        No items this month
+                        No items this {rangeNoun}
                     </h3>
                     <p className="text-gray-500 dark:text-gray-400 mb-4">
-                        You don't have any tasks or transactions for {monthName}.
+                        You don't have any tasks or transactions for{" "}
+                        {rangeLabel ?? monthName}.
                     </p>
                     <Link
                         href={route("tasks.index")}
@@ -300,7 +396,7 @@ export default function Index({
 
         return (
             <div className="space-y-4">
-                {mobileTaskList.map((dateGroup) => {
+                {dateGroups.map((dateGroup) => {
                     const isExpanded = expandedDates.has(dateGroup.dateStr);
                     const visibleTasks = isExpanded
                         ? dateGroup.tasks
@@ -688,18 +784,19 @@ export default function Index({
                             data-tour="calendar-header"
                         >
                             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                {monthName}
+                                {rangeLabel ?? monthName}
                             </h2>
-                            <div className="flex items-center justify-between sm:justify-end space-x-2">
-                                {/* Mobile View Toggle */}
-                                {isMobile && (
-                                    <div className="flex items-center bg-gray-100 dark:bg-dark-card rounded-lg p-1 mr-2">
+                            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                                {/* View + range controls (wrap together on mobile) */}
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {/* View Toggle: Calendar grid vs. List */}
+                                    <div className="flex items-center bg-gray-100 dark:bg-dark-card rounded-lg p-1">
                                         <button
-                                            onClick={() =>
-                                                setMobileViewType("list")
-                                            }
+                                            onClick={() => changeViewMode("list")}
+                                            title="List view"
+                                            aria-pressed={viewMode === "list"}
                                             className={`p-2 rounded-md transition-colors ${
-                                                mobileViewType === "list"
+                                                viewMode === "list"
                                                     ? "bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm"
                                                     : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
                                             }`}
@@ -708,10 +805,12 @@ export default function Index({
                                         </button>
                                         <button
                                             onClick={() =>
-                                                setMobileViewType("calendar")
+                                                changeViewMode("calendar")
                                             }
+                                            title="Calendar view"
+                                            aria-pressed={viewMode === "calendar"}
                                             className={`p-2 rounded-md transition-colors ${
-                                                mobileViewType === "calendar"
+                                                viewMode === "calendar"
                                                     ? "bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm"
                                                     : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
                                             }`}
@@ -719,35 +818,68 @@ export default function Index({
                                             <Grid3X3 className="w-4 h-4" />
                                         </button>
                                     </div>
-                                )}
 
-                                <button
-                                    onClick={() => navigateMonth(-1)}
-                                    className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors"
-                                >
-                                    <ChevronLeft className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={() => navigateMonth(1)}
-                                    className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors"
-                                >
-                                    <ChevronRight className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={() =>
-                                        router.get(route("calendar.index"))
-                                    }
-                                    className="ml-2 inline-flex items-center px-3 py-2 bg-gradient-to-r from-wevie-teal to-wevie-mint border border-transparent rounded-xl font-medium text-sm text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wevie-teal/40 transition-colors"
-                                >
-                                    Today
-                                </button>
+                                    {/* List range: Month / Week / Day */}
+                                    {viewMode === "list" && (
+                                        <div className="flex items-center bg-gray-100 dark:bg-dark-card rounded-lg p-1">
+                                            {["month", "week", "day"].map(
+                                                (option) => (
+                                                    <button
+                                                        key={option}
+                                                        onClick={() =>
+                                                            changeListRange(
+                                                                option
+                                                            )
+                                                        }
+                                                        aria-pressed={
+                                                            listRange === option
+                                                        }
+                                                        className={`px-2.5 sm:px-3 py-1.5 rounded-md text-sm font-medium capitalize transition-colors ${
+                                                            listRange === option
+                                                                ? "bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm"
+                                                                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                                                        }`}
+                                                    >
+                                                        {option}
+                                                    </button>
+                                                )
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Navigation (stays right-aligned, wraps as a unit) */}
+                                <div className="flex items-center gap-1 ml-auto sm:ml-0">
+                                    <button
+                                        onClick={() => navigate(-1)}
+                                        aria-label="Previous"
+                                        className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={() => navigate(1)}
+                                        aria-label="Next"
+                                        className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors"
+                                    >
+                                        <ChevronRight className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={() =>
+                                            loadCalendar(toDateStr(new Date()))
+                                        }
+                                        className="ml-1 inline-flex items-center px-3 py-2 bg-gradient-to-r from-wevie-teal to-wevie-mint border border-transparent rounded-xl font-medium text-sm text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wevie-teal/40 transition-colors"
+                                    >
+                                        Today
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
                         {/* Calendar Content */}
                         <div className="p-3 sm:p-6">
-                            {isMobile && mobileViewType === "list" ? (
-                                renderMobileListView()
+                            {viewMode === "list" ? (
+                                renderListView()
                             ) : (
                                 <>
                                     {/* Day Headers */}
@@ -1064,7 +1196,7 @@ export default function Index({
                 {/* Sidebar - Hidden on mobile when in list view */}
                 <div
                     className={`w-full lg:w-80 space-y-6 order-1 lg:order-2 ${
-                        isMobile && mobileViewType === "list" ? "hidden" : ""
+                        isMobile && viewMode === "list" ? "hidden" : ""
                     }`}
                 >
                     {/* Quick Actions */}

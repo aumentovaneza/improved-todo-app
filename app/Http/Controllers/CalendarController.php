@@ -22,10 +22,28 @@ class CalendarController extends Controller
         $currentDate = $request->get('date', now()->format('Y-m-d'));
         $date = Carbon::parse($currentDate);
 
-        // Get tasks for the current month (convert user timezone range to UTC for database queries)
+        // Determine the range window to load (month | week | day). Weeks are
+        // Sunday-first to match the calendar grid's Sun..Sat headers.
+        $range = in_array($request->get('range'), ['month', 'week', 'day'], true)
+            ? $request->get('range')
+            : 'month';
+
+        // Convert the user timezone range to UTC for database queries.
         $userDate = $user->toUserTimezone($date);
-        $startOfMonth = $userDate->copy()->startOfMonth()->utc();
-        $endOfMonth = $userDate->copy()->endOfMonth()->utc();
+        [$rangeStart, $rangeEnd] = match ($range) {
+            'week' => [
+                $userDate->copy()->startOfWeek(Carbon::SUNDAY)->utc(),
+                $userDate->copy()->endOfWeek(Carbon::SATURDAY)->utc(),
+            ],
+            'day' => [
+                $userDate->copy()->startOfDay()->utc(),
+                $userDate->copy()->endOfDay()->utc(),
+            ],
+            default => [
+                $userDate->copy()->startOfMonth()->utc(),
+                $userDate->copy()->endOfMonth()->utc(),
+            ],
+        };
 
         // Get all tasks (both regular and recurring)
         $allTasks = $user->tasks()
@@ -41,7 +59,7 @@ class CalendarController extends Controller
         // Generate task occurrences for the month
         $taskOccurrences = collect();
         foreach ($allTasks as $task) {
-            $occurrences = $task->getOccurrencesInRange($startOfMonth, $endOfMonth);
+            $occurrences = $task->getOccurrencesInRange($rangeStart, $rangeEnd);
             $taskOccurrences = $taskOccurrences->merge($occurrences);
         }
 
@@ -60,7 +78,7 @@ class CalendarController extends Controller
 
         $transactionOccurrences = collect();
         foreach ($transactions as $transaction) {
-            $occurrences = $transaction->getOccurrencesInRange($startOfMonth, $endOfMonth);
+            $occurrences = $transaction->getOccurrencesInRange($rangeStart, $rangeEnd);
             $transactionOccurrences = $transactionOccurrences->merge($occurrences);
         }
 
@@ -98,6 +116,16 @@ class CalendarController extends Controller
             ->orderBy('name')
             ->get();
 
+        // Human-readable label for the active range (in the user's timezone).
+        $rangeLabel = match ($range) {
+            'week' => $this->weekRangeLabel(
+                $userDate->copy()->startOfWeek(Carbon::SUNDAY),
+                $userDate->copy()->endOfWeek(Carbon::SATURDAY)
+            ),
+            'day' => $userDate->format('l, M j, Y'),
+            default => $userDate->format('F Y'),
+        };
+
         return Inertia::render('Calendar/Index', [
             'tasks' => $tasks,
             'transactions' => $transactionsByDate,
@@ -105,7 +133,26 @@ class CalendarController extends Controller
             'overdueTasks' => $overdueTasks,
             'currentDate' => $date->format('Y-m-d'),
             'monthName' => $date->format('F Y'),
+            'range' => $range,
+            'rangeLabel' => $rangeLabel,
             'categories' => $categories,
         ]);
+    }
+
+    /**
+     * Format a week span, collapsing the month/year when they are shared.
+     * e.g. "Jul 20 – 26, 2026" or "Jul 28 – Aug 3, 2026".
+     */
+    private function weekRangeLabel(Carbon $start, Carbon $end): string
+    {
+        if ($start->year !== $end->year) {
+            return $start->format('M j, Y') . ' – ' . $end->format('M j, Y');
+        }
+
+        if ($start->month !== $end->month) {
+            return $start->format('M j') . ' – ' . $end->format('M j, Y');
+        }
+
+        return $start->format('M j') . ' – ' . $end->format('j, Y');
     }
 }

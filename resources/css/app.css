@@ -71,7 +71,7 @@
     
     /* Button variants with Wevie colors */
     .btn-primary {
-        @apply bg-gradient-to-r from-wevie-teal to-wevie-mint text-white px-4 py-2 rounded-xl font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-wevie-teal/40 focus:ring-offset-2 dark:from-wevie-teal dark:to-wevie-mint;
+        @apply inline-flex items-center justify-center bg-gradient-to-r from-wevie-teal to-wevie-mint text-white px-4 py-2 rounded-xl font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-wevie-teal/40 focus:ring-offset-2 dark:from-wevie-teal dark:to-wevie-mint;
     }
     
     .btn-secondary {

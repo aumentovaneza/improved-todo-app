@@ -1,23 +1,24 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\TaskController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\TagController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\SubtaskController;
-use App\Http\Controllers\ReminderController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\AnalyticsController;
-use App\Http\Controllers\GoogleCalendarController;
-use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\BoardController;
+use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GoogleCalendarController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReminderController;
+use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\SwimlaneController;
-use App\Modules\Finance\Controllers\FinanceBudgetController;
+use App\Http\Controllers\TagController;
+use App\Http\Controllers\TaskController;
+use App\Http\Controllers\WorkspaceController;
 use App\Modules\Finance\Controllers\FinanceAccountController;
+use App\Modules\Finance\Controllers\FinanceBudgetController;
 use App\Modules\Finance\Controllers\FinanceCategoryController;
 use App\Modules\Finance\Controllers\FinanceDashboardController;
+use App\Modules\Finance\Controllers\FinanceExportController;
 use App\Modules\Finance\Controllers\FinanceLoanController;
 use App\Modules\Finance\Controllers\FinanceReportController;
 use App\Modules\Finance\Controllers\FinanceSavingsGoalController;
@@ -98,6 +99,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('weviewallet.savings-goals.index');
     Route::get('weviewallet/loans', [FinanceLoanController::class, 'indexPage'])
         ->name('weviewallet.loans.index');
+    Route::get('weviewallet/export/excel', [FinanceExportController::class, 'exportExcel'])
+        ->name('weviewallet.export.excel');
     Route::prefix('weviewallet/api')->name('weviewallet.api.')->group(function () {
         Route::get('collaborators/search', [FinanceWalletCollaboratorController::class, 'search'])
             ->name('collaborators.search');
@@ -209,4 +212,4 @@ Route::middleware('auth')->group(function () {
     Route::get('/google/callback', [GoogleCalendarController::class, 'callback'])->name('google.callback');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

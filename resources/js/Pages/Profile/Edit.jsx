@@ -2,6 +2,7 @@ import TodoLayout from "@/Layouts/TodoLayout";
 import { Head, Link, useForm, usePage } from "@inertiajs/react";
 import { Calendar, Edit3, LogOut, Mail, Shield, User } from "lucide-react";
 import DeleteUserForm from "./Partials/DeleteUserForm";
+import ExportDataForm from "./Partials/ExportDataForm";
 import UpdatePasswordForm from "./Partials/UpdatePasswordForm";
 import UpdateProfileInformationForm from "./Partials/UpdateProfileInformationForm";
 import DangerButton from "@/Components/DangerButton";
@@ -178,6 +179,10 @@ export default function Edit({ mustVerifyEmail, status }) {
 
                 <div className="card p-4 sm:p-8">
                     <UpdatePasswordForm className="max-w-xl" />
+                </div>
+
+                <div className="card p-4 sm:p-8">
+                    <ExportDataForm className="max-w-xl" />
                 </div>
 
                 <div className="card p-4 sm:p-8">

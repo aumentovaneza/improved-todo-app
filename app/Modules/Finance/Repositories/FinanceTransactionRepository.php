@@ -26,6 +26,30 @@ class FinanceTransactionRepository
             ->get();
     }
 
+    /**
+     * Every transaction for a user, optionally bounded by an occurred_at range.
+     * Unlike getForUser() this is not limit-capped — it is intended for exports
+     * that must return the complete history.
+     */
+    public function getForUserInRange(int $userId, ?Carbon $startDate, ?Carbon $endDate): Collection
+    {
+        return FinanceTransaction::with([
+            'category',
+            'account',
+            'transferAccount',
+            'creditCardAccount',
+            'loan',
+            'savingsGoal',
+            'tags',
+        ])
+            ->where('user_id', $userId)
+            ->when($startDate, fn ($query) => $query->where('occurred_at', '>=', $startDate->copy()->startOfDay()))
+            ->when($endDate, fn ($query) => $query->where('occurred_at', '<=', $endDate->copy()->endOfDay()))
+            ->orderBy('occurred_at', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+    }
+
     public function create(array $data): FinanceTransaction
     {
         return FinanceTransaction::create($data);
@@ -94,7 +118,7 @@ class FinanceTransactionRepository
             ->groupBy('period')
             ->orderBy('period')
             ->get()
-            ->map(fn($row) => (object) [
+            ->map(fn ($row) => (object) [
                 'period' => $row->period,
                 'type' => 'expense',
                 'total' => $row->total,
@@ -129,7 +153,7 @@ class FinanceTransactionRepository
             ->groupBy('period')
             ->orderBy('period')
             ->get()
-            ->map(fn($row) => (object) [
+            ->map(fn ($row) => (object) [
                 'period' => $row->period,
                 'type' => 'expense',
                 'total' => $row->total,

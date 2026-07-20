@@ -9,17 +9,22 @@ use App\Modules\Journal\Repositories\Contracts\JournalEntryRepositoryInterface;
 use App\Modules\Journal\Repositories\Contracts\JournalTagRepositoryInterface;
 use App\Modules\Journal\Requests\StoreJournalEntryRequest;
 use App\Modules\Journal\Requests\UpdateJournalEntryRequest;
+use App\Modules\Journal\Services\JournalExportService;
 use App\Modules\Journal\Services\JournalService;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
+use PhpOffice\PhpWord\Writer\Word2007;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class JournalEntryController extends Controller
 {
     public function __construct(
         private JournalService $journalService,
+        private JournalExportService $exportService,
         private JournalEntryRepositoryInterface $entryRepository,
         private JournalTagRepositoryInterface $tagRepository,
     ) {}
@@ -38,6 +43,28 @@ class JournalEntryController extends Controller
             'tags' => $this->serializeTags($userId),
             'moods' => JournalMood::options(),
             'filters' => $filters,
+        ]);
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $validated = $request->validate([
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+        ]);
+
+        $startDate = ! empty($validated['start_date']) ? Carbon::parse($validated['start_date']) : null;
+        $endDate = ! empty($validated['end_date']) ? Carbon::parse($validated['end_date']) : null;
+
+        $entries = $this->entryRepository->getForUserInRange(Auth::id(), $startDate, $endDate);
+
+        $phpWord = $this->exportService->buildDocx($entries);
+        $filename = 'journals-'.now()->format('Y-m-d').'.docx';
+
+        return response()->streamDownload(function () use ($phpWord) {
+            (new Word2007($phpWord))->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         ]);
     }
 

@@ -1,6 +1,6 @@
 import TodoLayout from "@/Layouts/TodoLayout";
 import { Head, Link, router, usePage } from "@inertiajs/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
     DndContext,
     closestCenter,
@@ -342,7 +342,7 @@ function SortableTask({
     );
 }
 
-export default function Index({ categorizedTasks, categories, tags = [], filters }) {
+export default function Index({ tasks = [], categories, tags = [], filters }) {
     const [allTasks, setAllTasks] = useState([]);
     const [search, setSearch] = useState(filters.search || "");
     const [statusFilter, setStatusFilter] = useState(filters.status || "");
@@ -357,6 +357,13 @@ export default function Index({ categorizedTasks, categories, tags = [], filters
         filters.due_date_filter || ""
     );
     const [showFilters, setShowFilters] = useState(false);
+    const [groupBy, setGroupBy] = useState(() => {
+        if (typeof window !== "undefined") {
+            return localStorage.getItem("tasks.groupBy") || "none";
+        }
+        return "none";
+    });
+    const [collapsedGroups, setCollapsedGroups] = useState(() => new Set());
     const [showTaskModal, setShowTaskModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
@@ -365,23 +372,29 @@ export default function Index({ categorizedTasks, categories, tags = [], filters
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [isTaskSubmitting, setIsTaskSubmitting] = useState(false);
 
-    // Flatten all tasks from categorized structure
+    // Load the full task set from props (already ordered and eager-loaded server-side)
     useEffect(() => {
-        const flattenedTasks = [];
-        if (categorizedTasks) {
-            categorizedTasks.forEach((group) => {
-                if (group.tasks && group.tasks.data) {
-                    group.tasks.data.forEach((task) => {
-                        flattenedTasks.push({
-                            ...task,
-                            category: group.category,
-                        });
-                    });
-                }
-            });
+        setAllTasks(tasks || []);
+    }, [tasks]);
+
+    // Persist the grouping choice so it survives filter-triggered reloads
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            localStorage.setItem("tasks.groupBy", groupBy);
         }
-        setAllTasks(flattenedTasks);
-    }, [categorizedTasks]);
+    }, [groupBy]);
+
+    const toggleGroupCollapse = (key) => {
+        setCollapsedGroups((prev) => {
+            const next = new Set(prev);
+            if (next.has(key)) {
+                next.delete(key);
+            } else {
+                next.add(key);
+            }
+            return next;
+        });
+    };
 
     // Handle quick add task for specific category
     const handleQuickAddTask = (categoryId, event) => {
@@ -720,6 +733,212 @@ export default function Index({ categorizedTasks, categories, tags = [], filters
         );
     };
 
+    // Bucket a task's due date into a coarse time window for date grouping
+    const getDueBucket = (task) => {
+        if (!task.due_date) return "none";
+        const due = new Date(task.due_date);
+        if (Number.isNaN(due.getTime())) return "none";
+
+        const now = new Date();
+        const startOfToday = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate()
+        );
+        const startOfTomorrow = new Date(startOfToday);
+        startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+        const startOfDayAfter = new Date(startOfToday);
+        startOfDayAfter.setDate(startOfDayAfter.getDate() + 2);
+        const startOfNextWeek = new Date(startOfToday);
+        startOfNextWeek.setDate(startOfNextWeek.getDate() + 7);
+
+        if (due < startOfToday) return "overdue";
+        if (due < startOfTomorrow) return "today";
+        if (due < startOfDayAfter) return "tomorrow";
+        if (due < startOfNextWeek) return "this_week";
+        return "later";
+    };
+
+    const priorityGroupOrder = ["urgent", "high", "medium", "low"];
+    const priorityGroupLabels = {
+        urgent: "Focus",
+        high: "High",
+        medium: "Medium",
+        low: "Low",
+    };
+    const priorityGroupColors = {
+        urgent: "#F59E0B",
+        high: "#F97316",
+        medium: "#0EA5E9",
+        low: "#10B981",
+    };
+
+    // Build the visible sections from the flat task list based on groupBy.
+    // Each section is { key, label, color, tasks }; label === null renders no header.
+    const taskGroups = useMemo(() => {
+        if (groupBy === "none") {
+            return [{ key: "all", label: null, color: null, tasks: allTasks }];
+        }
+
+        if (groupBy === "category") {
+            const map = new Map();
+            allTasks.forEach((task) => {
+                const category = task.category;
+                const key = category?.id ?? "uncategorized";
+                if (!map.has(key)) {
+                    map.set(key, {
+                        key: `category-${key}`,
+                        label: category?.name || "Uncategorized",
+                        color: category?.color || "#6B7280",
+                        tasks: [],
+                    });
+                }
+                map.get(key).tasks.push(task);
+            });
+            return Array.from(map.values()).sort((a, b) =>
+                a.label.localeCompare(b.label)
+            );
+        }
+
+        if (groupBy === "tag") {
+            const map = new Map();
+            const untagged = {
+                key: "tag-none",
+                label: "No tags",
+                color: "#6B7280",
+                tasks: [],
+            };
+            allTasks.forEach((task) => {
+                const taskTags = task.tags || [];
+                if (taskTags.length === 0) {
+                    untagged.tasks.push(task);
+                    return;
+                }
+                // A task with multiple tags appears under each of its tags
+                taskTags.forEach((tag) => {
+                    if (!map.has(tag.id)) {
+                        map.set(tag.id, {
+                            key: `tag-${tag.id}`,
+                            label: tag.name,
+                            color: tag.color || "#6B7280",
+                            tasks: [],
+                        });
+                    }
+                    map.get(tag.id).tasks.push(task);
+                });
+            });
+            const groups = Array.from(map.values()).sort((a, b) =>
+                a.label.localeCompare(b.label)
+            );
+            if (untagged.tasks.length) groups.push(untagged);
+            return groups;
+        }
+
+        if (groupBy === "priority") {
+            const map = new Map();
+            allTasks.forEach((task) => {
+                const key = task.priority || "none";
+                if (!map.has(key)) {
+                    map.set(key, {
+                        key: `priority-${key}`,
+                        label: priorityGroupLabels[key] || "No priority",
+                        color: priorityGroupColors[key] || "#6B7280",
+                        tasks: [],
+                    });
+                }
+                map.get(key).tasks.push(task);
+            });
+            const ordered = priorityGroupOrder
+                .filter((p) => map.has(p))
+                .map((p) => map.get(p));
+            if (map.has("none")) ordered.push(map.get("none"));
+            return ordered;
+        }
+
+        if (groupBy === "due_date") {
+            const buckets = {
+                overdue: {
+                    key: "due-overdue",
+                    label: "Overdue",
+                    color: "#EF4444",
+                    tasks: [],
+                },
+                today: {
+                    key: "due-today",
+                    label: "Today",
+                    color: "#F59E0B",
+                    tasks: [],
+                },
+                tomorrow: {
+                    key: "due-tomorrow",
+                    label: "Tomorrow",
+                    color: "#0EA5E9",
+                    tasks: [],
+                },
+                this_week: {
+                    key: "due-this-week",
+                    label: "This week",
+                    color: "#8B5CF6",
+                    tasks: [],
+                },
+                later: {
+                    key: "due-later",
+                    label: "Later",
+                    color: "#6B7280",
+                    tasks: [],
+                },
+                none: {
+                    key: "due-none",
+                    label: "No due date",
+                    color: "#6B7280",
+                    tasks: [],
+                },
+            };
+            allTasks.forEach((task) => {
+                buckets[getDueBucket(task)].tasks.push(task);
+            });
+            return Object.values(buckets).filter((b) => b.tasks.length);
+        }
+
+        return [{ key: "all", label: null, color: null, tasks: allTasks }];
+    }, [allTasks, groupBy]);
+
+    // Render a drag-reorderable list of tasks. Each group gets its own
+    // DndContext so reordering stays within a group.
+    const renderTaskList = (tasks) => (
+        <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+        >
+            <SortableContext
+                items={tasks.map((task) => task.id.toString())}
+                strategy={verticalListSortingStrategy}
+            >
+                <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                    {tasks.map((task, index) => (
+                        <SortableTask
+                            key={task.id}
+                            task={task}
+                            globalIndex={index}
+                            getPriorityColor={getPriorityColor}
+                            getStatusIcon={getStatusIcon}
+                            getStatusColor={getStatusColor}
+                            isOverdue={isOverdue}
+                            toggleTaskStatus={toggleTaskStatus}
+                            handleTaskStatusChange={handleTaskStatusChange}
+                            setSelectedTask={setSelectedTask}
+                            setShowViewModal={setShowViewModal}
+                            setShowEditModal={setShowEditModal}
+                            setShowSubtaskModal={setShowSubtaskModal}
+                            handleDeleteTask={handleDeleteTask}
+                        />
+                    ))}
+                </div>
+            </SortableContext>
+        </DndContext>
+    );
+
     return (
         <TodoLayout
             header={
@@ -914,8 +1133,30 @@ export default function Index({ categorizedTasks, categories, tags = [], filters
                                     All Tasks ({allTasks.length})
                                 </h3>
                             </div>
-                            <div className="flex items-center space-x-2">
-                                <span className="text-xs text-light-muted dark:text-dark-muted">
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
+                                    <label
+                                        htmlFor="group-by"
+                                        className="text-xs font-medium text-light-secondary dark:text-dark-secondary whitespace-nowrap"
+                                    >
+                                        Group by
+                                    </label>
+                                    <select
+                                        id="group-by"
+                                        value={groupBy}
+                                        onChange={(e) =>
+                                            setGroupBy(e.target.value)
+                                        }
+                                        className="border border-light-border/70 dark:border-dark-border/70 rounded-lg px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
+                                    >
+                                        <option value="none">None</option>
+                                        <option value="category">Category</option>
+                                        <option value="tag">Tag</option>
+                                        <option value="due_date">Due date</option>
+                                        <option value="priority">Priority</option>
+                                    </select>
+                                </div>
+                                <span className="hidden lg:inline text-xs text-light-muted dark:text-dark-muted">
                                     Drag to reorder • Tap a task to see details
                                 </span>
                             </div>
@@ -957,38 +1198,50 @@ export default function Index({ categorizedTasks, categories, tags = [], filters
                                     </button>
                                 )}
                         </div>
+                    ) : groupBy === "none" ? (
+                        renderTaskList(allTasks)
                     ) : (
-                        <DndContext
-                            sensors={sensors}
-                            collisionDetection={closestCenter}
-                            onDragEnd={handleDragEnd}
-                        >
-                            <SortableContext
-                                items={allTasks.map((task) => task.id.toString())}
-                                strategy={verticalListSortingStrategy}
-                            >
-                                <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                                    {allTasks.map((task, index) => (
-                                        <SortableTask
-                                            key={task.id}
-                                            task={task}
-                                            globalIndex={index}
-                                            getPriorityColor={getPriorityColor}
-                                            getStatusIcon={getStatusIcon}
-                                            getStatusColor={getStatusColor}
-                                            isOverdue={isOverdue}
-                                            toggleTaskStatus={toggleTaskStatus}
-                                            handleTaskStatusChange={handleTaskStatusChange}
-                                            setSelectedTask={setSelectedTask}
-                                            setShowViewModal={setShowViewModal}
-                                            setShowEditModal={setShowEditModal}
-                                            setShowSubtaskModal={setShowSubtaskModal}
-                                            handleDeleteTask={handleDeleteTask}
-                                        />
-                                    ))}
-                                </div>
-                            </SortableContext>
-                        </DndContext>
+                        <div className="divide-y divide-light-border/70 dark:divide-dark-border/70">
+                            {taskGroups.map((group) => {
+                                const isCollapsed = collapsedGroups.has(
+                                    group.key
+                                );
+                                return (
+                                    <div key={group.key}>
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                toggleGroupCollapse(group.key)
+                                            }
+                                            className="w-full flex items-center gap-2 px-4 py-2.5 bg-light-hover dark:bg-dark-hover hover:bg-light-border/40 dark:hover:bg-dark-border/40 transition-colors text-left"
+                                        >
+                                            {isCollapsed ? (
+                                                <ChevronRight className="h-4 w-4 text-light-muted dark:text-dark-muted flex-shrink-0" />
+                                            ) : (
+                                                <ChevronDown className="h-4 w-4 text-light-muted dark:text-dark-muted flex-shrink-0" />
+                                            )}
+                                            {group.color && (
+                                                <span
+                                                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                                    style={{
+                                                        backgroundColor:
+                                                            group.color,
+                                                    }}
+                                                />
+                                            )}
+                                            <span className="text-sm font-medium text-light-primary dark:text-dark-primary truncate">
+                                                {group.label}
+                                            </span>
+                                            <span className="text-xs text-light-muted dark:text-dark-muted">
+                                                ({group.tasks.length})
+                                            </span>
+                                        </button>
+                                        {!isCollapsed &&
+                                            renderTaskList(group.tasks)}
+                                    </div>
+                                );
+                            })}
+                        </div>
                     )}
                 </div>
             </div>

@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Category;
 use App\Models\Tag;
 use App\Models\Task;
 use App\Models\User;
@@ -19,47 +18,16 @@ class TaskService
     ) {}
 
     /**
-     * Get categorized tasks for index page
+     * Get the full set of tasks for the index page as a single ordered collection.
+     *
+     * The index groups and sorts by category, tag, due date, and priority on the
+     * client, so it needs the complete working set (non-completed by default) rather
+     * than a per-category page. Each task eager-loads its category, subtasks, and
+     * tags plus subtask counts, so no client-side re-hydration is required.
      */
-    public function getCategorizedTasksForUser(int $userId, array $filters = []): array
+    public function getTasksForIndex(int $userId, array $filters = []): Collection
     {
-        $user = User::findOrFail($userId);
-        $categories = Category::where('is_active', true)
-            ->where('user_id', $userId)
-            ->get();
-
-        $categorizedTasks = [];
-
-        // Handle tasks with categories
-        foreach ($categories as $category) {
-            $tasks = $this->taskRepository->getPaginatedTasksByCategory(
-                $userId,
-                $category->id,
-                $filters
-            );
-
-            $categorizedTasks[] = [
-                'category' => $category,
-                'tasks' => $tasks,
-            ];
-        }
-
-        // Handle uncategorized tasks
-        $uncategorizedTasks = $this->taskRepository->getUncategorizedTasks($userId, $filters);
-
-        if ($uncategorizedTasks->total() > 0) {
-            $categorizedTasks[] = [
-                'category' => (object) [
-                    'id' => null,
-                    'name' => 'Uncategorized',
-                    'color' => '#6B7280',
-                    'is_active' => true,
-                ],
-                'tasks' => $uncategorizedTasks,
-            ];
-        }
-
-        return $categorizedTasks;
+        return $this->taskRepository->getTasksForUser($userId, $filters);
     }
 
     /**

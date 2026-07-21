@@ -2,13 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
-use App\Models\Tag;
 use App\Models\Task;
 use App\Services\CategoryService;
 use App\Services\TagService;
 use App\Services\TaskService;
-use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,69 +25,15 @@ class TaskController extends Controller
      */
     public function index(Request $request): Response
     {
-
         $filters = $request->only(['search', 'status', 'priority', 'category_id', 'tag_id', 'due_date_filter']);
 
-        $baseQuery = Task::with(['category', 'subtasks', 'tags'])
-            ->where('status', '!=', 'completed')
-            ->where('board_id', null)
-            ->where('swimlane_id', null)
-            ->withCount([
-                'subtasks',
-                'subtasks as completed_subtasks_count' => function ($query) {
-                    $query->where('is_completed', true);
-                },
-            ])
-            ->where('user_id', Auth::id());
-
-        // Apply filters to base query
-        $this->applyFilters($baseQuery, $request);
-
-        // Get all active categories for the user
-        $categories = Category::where('is_active', true)
-            ->where('user_id', Auth::id())
-            ->get();
-
-        // Get all active tags
-        $tags = Tag::active()->get();
-
-        // Get categorized tasks with pagination
-        $categorizedTasks = [];
-
-        // Handle tasks with categories - include all categories, even empty ones
-        foreach ($categories as $category) {
-            $categoryQuery = clone $baseQuery;
-            $categoryQuery->where('category_id', $category->id);
-
-            // Order by status (in_progress first, then pending, then cancelled, then completed)
-            // then by priority (urgent to low) then by position
-            $paginatedTasks = $categoryQuery
-                ->orderByRaw("CASE 
-                    WHEN status = 'in_progress' THEN 1 
-                    WHEN status = 'pending' THEN 2 
-                    WHEN status = 'cancelled' THEN 3 
-                    WHEN status = 'completed' THEN 4 
-                    ELSE 5 
-                END")
-                ->orderByRaw("CASE 
-                    WHEN priority = 'urgent' THEN 1 
-                    WHEN priority = 'high' THEN 2 
-                    WHEN priority = 'medium' THEN 3 
-                    WHEN priority = 'low' THEN 4 
-                    ELSE 5 
-                END")
-                ->orderBy('position')
-                ->paginate(5, ['*'], "category_{$category->id}_page");
-
-            $categorizedTasks[$category->id] = $paginatedTasks;
-        }
-
-        // Add default filter to exclude completed tasks if not explicitly requested
+        // Exclude completed tasks by default unless a status filter is explicitly set
         if (empty($filters['status'])) {
             $filters['status'] = 'not_completed';
         }
 
-        $categorizedTasks = $this->taskService->getCategorizedTasksForUser(Auth::id(), $filters);
+        // Return the full working set; the page groups/sorts client-side
+        $tasks = $this->taskService->getTasksForIndex(Auth::id(), $filters);
 
         // Get all active categories for the user
         $categories = $this->categoryService->getActiveCategoriesForUser(Auth::id());
@@ -99,12 +42,14 @@ class TaskController extends Controller
         $tags = $this->tagService->getAllTags();
 
         return Inertia::render('Tasks/Index', [
-            'categorizedTasks' => $categorizedTasks,
+            'tasks' => $tasks,
             'categories' => $categories,
             'tags' => $tags,
             'filters' => $request->only(['search', 'status', 'priority', 'category_id', 'tag_id', 'due_date_filter']),
         ]);
     }
+
+
 
     /**
      * Store a newly created resource in storage.
@@ -114,7 +59,7 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'category_id' => 'nullable|exists:categories,id,user_id,'.Auth::id(),
+            'category_id' => 'nullable|exists:categories,id,user_id,' . Auth::id(),
             'priority' => 'required|in:low,medium,high,urgent',
             'due_date' => 'nullable|date',
             'start_time' => 'nullable|date_format:H:i',
@@ -135,14 +80,14 @@ class TaskController extends Controller
         ]);
 
         // Clear recurring fields for non-recurring tasks
-        if (! isset($validated['is_recurring']) || ! $validated['is_recurring']) {
+        if (!isset($validated['is_recurring']) || !$validated['is_recurring']) {
             $validated['recurring_until'] = null;
             $validated['recurrence_type'] = null;
             $validated['recurrence_config'] = null;
         }
 
         // Set is_all_day to true if no times are provided
-        if (! isset($validated['is_all_day'])) {
+        if (!isset($validated['is_all_day'])) {
             $validated['is_all_day'] = empty($validated['start_time']) && empty($validated['end_time']);
         }
 
@@ -154,7 +99,6 @@ class TaskController extends Controller
 
         try {
             $task = $this->taskService->createTask($validated, Auth::id());
-
             return redirect()->back()->with('message', 'Task created successfully');
         } catch (\InvalidArgumentException $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()])->withInput();
@@ -171,7 +115,7 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'category_id' => 'nullable|exists:categories,id,user_id,'.Auth::id(),
+            'category_id' => 'nullable|exists:categories,id,user_id,' . Auth::id(),
             'priority' => 'required|in:low,medium,high,urgent',
             'status' => 'required|in:pending,in_progress,completed,cancelled',
             'due_date' => 'nullable|date',
@@ -193,14 +137,14 @@ class TaskController extends Controller
         ]);
 
         // Clear recurring fields for non-recurring tasks
-        if (! isset($validated['is_recurring']) || ! $validated['is_recurring']) {
+        if (!isset($validated['is_recurring']) || !$validated['is_recurring']) {
             $validated['recurring_until'] = null;
             $validated['recurrence_type'] = null;
             $validated['recurrence_config'] = null;
         }
 
         // Set is_all_day to true if no times are provided
-        if (! isset($validated['is_all_day'])) {
+        if (!isset($validated['is_all_day'])) {
             $validated['is_all_day'] = empty($validated['start_time']) && empty($validated['end_time']);
         }
 
@@ -212,7 +156,6 @@ class TaskController extends Controller
 
         try {
             $updatedTask = $this->taskService->updateTask($task, $validated, Auth::id());
-
             return redirect()->back()->with('message', 'Task updated successfully');
         } catch (\InvalidArgumentException $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()])->withInput();
@@ -228,7 +171,6 @@ class TaskController extends Controller
     {
         try {
             $this->taskService->deleteTask($task, Auth::id());
-
             return back()->with('status', 'Task deleted successfully');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Failed to delete task. Please try again.']);
@@ -249,7 +191,6 @@ class TaskController extends Controller
                     'message' => 'Tasks reordered successfully',
                 ]);
             }
-
             return back()->with('message', 'Tasks reordered successfully');
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
@@ -258,7 +199,6 @@ class TaskController extends Controller
                     422
                 );
             }
-
             return back()->withErrors(['error' => 'Failed to reorder tasks. Please try again.']);
         }
     }
@@ -268,7 +208,7 @@ class TaskController extends Controller
         // If a specific status is provided, use it; otherwise toggle between completed/pending
         if ($request->has('status')) {
             $validated = $request->validate([
-                'status' => 'required|in:pending,in_progress,completed,cancelled',
+                'status' => 'required|in:pending,in_progress,completed,cancelled'
             ]);
             $newStatus = $validated['status'];
         } else {
@@ -277,49 +217,9 @@ class TaskController extends Controller
 
         try {
             $this->taskService->toggleTaskStatus($task, $newStatus, Auth::id());
-
             return back()->with('status', 'Task status updated successfully');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Failed to update task status. Please try again.']);
-        }
-    }
-
-    private function applyFilters($query, Request $request)
-    {
-        // Note: `title`/`description` are encrypted at rest and cannot be
-        // matched in SQL. The task search is resolved in PHP inside
-        // TaskRepository (see TaskRepository::paginateWithSearch), which is the
-        // path the rendered list actually uses via TaskService.
-
-        if ($request->filled('status') && $request->status !== 'not_completed') {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('priority')) {
-            $query->where('priority', $request->priority);
-        }
-
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
-        }
-
-        if ($request->filled('due_date_filter')) {
-            $today = Carbon::today();
-            switch ($request->due_date_filter) {
-                case 'overdue':
-                    $query->where('due_date', '<', $today)
-                        ->where('status', '!=', 'completed');
-                    break;
-                case 'today':
-                    $query->whereDate('due_date', $today);
-                    break;
-                case 'tomorrow':
-                    $query->whereDate('due_date', $today->copy()->addDay());
-                    break;
-                case 'this_week':
-                    $query->whereBetween('due_date', [$today, $today->copy()->endOfWeek()]);
-                    break;
-            }
         }
     }
 }

@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
-use App\Models\Category;
-use App\Models\Tag;
 use App\Services\TaskService;
 use App\Services\CategoryService;
 use App\Services\TagService;
@@ -12,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
-use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 
 class TaskController extends Controller
@@ -28,69 +25,15 @@ class TaskController extends Controller
      */
     public function index(Request $request): Response
     {
-
         $filters = $request->only(['search', 'status', 'priority', 'category_id', 'tag_id', 'due_date_filter']);
 
-        $baseQuery = Task::with(['category', 'subtasks', 'tags'])
-            ->where('status', '!=', 'completed')
-            ->where('board_id', null)
-            ->where('swimlane_id', null)
-            ->withCount([
-                'subtasks',
-                'subtasks as completed_subtasks_count' => function ($query) {
-                    $query->where('is_completed', true);
-                }
-            ])
-            ->where('user_id', Auth::id());
-
-        // Apply filters to base query
-        $this->applyFilters($baseQuery, $request);
-
-        // Get all active categories for the user
-        $categories = Category::where('is_active', true)
-            ->where('user_id', Auth::id())
-            ->get();
-
-        // Get all active tags
-        $tags = Tag::active()->get();
-
-        // Get categorized tasks with pagination
-        $categorizedTasks = [];
-
-        // Handle tasks with categories - include all categories, even empty ones
-        foreach ($categories as $category) {
-            $categoryQuery = clone $baseQuery;
-            $categoryQuery->where('category_id', $category->id);
-
-            // Order by status (in_progress first, then pending, then cancelled, then completed) 
-            // then by priority (urgent to low) then by position
-            $paginatedTasks = $categoryQuery
-                ->orderByRaw("CASE 
-                    WHEN status = 'in_progress' THEN 1 
-                    WHEN status = 'pending' THEN 2 
-                    WHEN status = 'cancelled' THEN 3 
-                    WHEN status = 'completed' THEN 4 
-                    ELSE 5 
-                END")
-                ->orderByRaw("CASE 
-                    WHEN priority = 'urgent' THEN 1 
-                    WHEN priority = 'high' THEN 2 
-                    WHEN priority = 'medium' THEN 3 
-                    WHEN priority = 'low' THEN 4 
-                    ELSE 5 
-                END")
-                ->orderBy('position')
-                ->paginate(5, ['*'], "category_{$category->id}_page");
-
-            $categorizedTasks[$category->id] = $paginatedTasks;
-        }
-
-        // Add default filter to exclude completed tasks if not explicitly requested
+        // Exclude completed tasks by default unless a status filter is explicitly set
         if (empty($filters['status'])) {
             $filters['status'] = 'not_completed';
         }
 
-        $categorizedTasks = $this->taskService->getCategorizedTasksForUser(Auth::id(), $filters);
+        // Return the full working set; the page groups/sorts client-side
+        $tasks = $this->taskService->getTasksForIndex(Auth::id(), $filters);
 
         // Get all active categories for the user
         $categories = $this->categoryService->getActiveCategoriesForUser(Auth::id());
@@ -99,7 +42,7 @@ class TaskController extends Controller
         $tags = $this->tagService->getAllTags();
 
         return Inertia::render('Tasks/Index', [
-            'categorizedTasks' => $categorizedTasks,
+            'tasks' => $tasks,
             'categories' => $categories,
             'tags' => $tags,
             'filters' => $request->only(['search', 'status', 'priority', 'category_id', 'tag_id', 'due_date_filter']),
@@ -277,47 +220,6 @@ class TaskController extends Controller
             return back()->with('status', 'Task status updated successfully');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Failed to update task status. Please try again.']);
-        }
-    }
-
-    private function applyFilters($query, Request $request)
-    {
-        if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('title', 'like', '%' . $request->search . '%')
-                    ->orWhere('description', 'like', '%' . $request->search . '%');
-            });
-        }
-
-        if ($request->filled('status') && $request->status !== 'not_completed') {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('priority')) {
-            $query->where('priority', $request->priority);
-        }
-
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
-        }
-
-        if ($request->filled('due_date_filter')) {
-            $today = Carbon::today();
-            switch ($request->due_date_filter) {
-                case 'overdue':
-                    $query->where('due_date', '<', $today)
-                        ->where('status', '!=', 'completed');
-                    break;
-                case 'today':
-                    $query->whereDate('due_date', $today);
-                    break;
-                case 'tomorrow':
-                    $query->whereDate('due_date', $today->copy()->addDay());
-                    break;
-                case 'this_week':
-                    $query->whereBetween('due_date', [$today, $today->copy()->endOfWeek()]);
-                    break;
-            }
         }
     }
 }

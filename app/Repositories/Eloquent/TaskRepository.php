@@ -4,12 +4,12 @@ namespace App\Repositories\Eloquent;
 
 use App\Models\Task;
 use App\Models\User;
-use App\Models\Tag;
 use App\Repositories\Contracts\TaskRepositoryInterface;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Pagination\LengthAwarePaginator;
+use App\Support\EncryptedSearch;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class TaskRepository implements TaskRepositoryInterface
 {
@@ -24,14 +24,26 @@ class TaskRepository implements TaskRepositoryInterface
                 'subtasks',
                 'subtasks as completed_subtasks_count' => function ($query) {
                     $query->where('is_completed', true);
-                }
+                },
             ]);
 
         $this->applyFilters($query, $filters);
         $this->applyDefaultOrdering($query);
 
+        // When searching, the limit must be applied AFTER the PHP-level
+        // (decrypted) filtering, otherwise we would cap the wrong rows.
+        if (! empty($filters['search'])) {
+            $results = $this->applySearchFilter($query->get(), $filters);
+
+            if (! empty($filters['limit'])) {
+                $results = $results->take($filters['limit']);
+            }
+
+            return new Collection($results->values()->all());
+        }
+
         // Apply limit if specified
-        if (!empty($filters['limit'])) {
+        if (! empty($filters['limit'])) {
             $query->limit($filters['limit']);
         }
 
@@ -49,7 +61,7 @@ class TaskRepository implements TaskRepositoryInterface
                 'subtasks',
                 'subtasks as completed_subtasks_count' => function ($query) {
                     $query->where('is_completed', true);
-                }
+                },
             ]);
 
         if ($categoryId) {
@@ -59,7 +71,7 @@ class TaskRepository implements TaskRepositoryInterface
         $this->applyFilters($query, $filters);
         $this->applyDefaultOrdering($query);
 
-        return $query->paginate($perPage, ['*'], "category_{$categoryId}_page");
+        return $this->paginateWithSearch($query, $filters, $perPage, "category_{$categoryId}_page");
     }
 
     /**
@@ -74,13 +86,13 @@ class TaskRepository implements TaskRepositoryInterface
                 'subtasks',
                 'subtasks as completed_subtasks_count' => function ($query) {
                     $query->where('is_completed', true);
-                }
+                },
             ]);
 
         $this->applyFilters($query, $filters);
         $this->applyDefaultOrdering($query);
 
-        return $query->paginate($perPage, ['*'], 'uncategorized_page');
+        return $this->paginateWithSearch($query, $filters, $perPage, 'uncategorized_page');
     }
 
     /**
@@ -97,6 +109,7 @@ class TaskRepository implements TaskRepositoryInterface
     public function update(Task $task, array $data): Task
     {
         $task->update($data);
+
         return $task->fresh();
     }
 
@@ -167,6 +180,7 @@ class TaskRepository implements TaskRepositoryInterface
         foreach ($taskIds as $index => $taskId) {
             Task::where('id', $taskId)->update(['position' => $index + 1]);
         }
+
         return true;
     }
 
@@ -184,6 +198,7 @@ class TaskRepository implements TaskRepositoryInterface
         }
 
         $task->update($updateData);
+
         return $task->fresh();
     }
 
@@ -234,20 +249,15 @@ class TaskRepository implements TaskRepositoryInterface
 
     /**
      * Apply filters to query
+     *
+     * Note: `search` is intentionally NOT applied here. The `title`/`description`
+     * columns are encrypted at rest, so the term must be matched in PHP against
+     * the decrypted values (see applySearchFilter / paginateWithSearch).
      */
     private function applyFilters(Builder $query, array $filters): void
     {
-        // Search functionality
-        if (!empty($filters['search'])) {
-            $search = $filters['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
-
         // Filter by status
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             if ($filters['status'] === 'not_completed') {
                 $query->where('status', '!=', 'completed');
             } else {
@@ -256,12 +266,12 @@ class TaskRepository implements TaskRepositoryInterface
         }
 
         // Filter by priority
-        if (!empty($filters['priority'])) {
+        if (! empty($filters['priority'])) {
             $query->where('priority', $filters['priority']);
         }
 
         // Filter by category
-        if (!empty($filters['category_id'])) {
+        if (! empty($filters['category_id'])) {
             $query->where('category_id', $filters['category_id']);
         }
 
@@ -273,26 +283,26 @@ class TaskRepository implements TaskRepositoryInterface
         }
 
         // Filter by overdue tasks
-        if (!empty($filters['overdue'])) {
+        if (! empty($filters['overdue'])) {
             $query->overdue();
         }
 
         // Filter by specific due date
-        if (!empty($filters['due_date'])) {
+        if (! empty($filters['due_date'])) {
             $query->whereDate('due_date', $filters['due_date']);
         }
 
         // Filter by due date range
-        if (!empty($filters['due_date_from'])) {
+        if (! empty($filters['due_date_from'])) {
             $query->whereDate('due_date', '>=', $filters['due_date_from']);
         }
 
-        if (!empty($filters['due_date_to'])) {
+        if (! empty($filters['due_date_to'])) {
             $query->whereDate('due_date', '<=', $filters['due_date_to']);
         }
 
         // Filter by due date
-        if (!empty($filters['due_date_filter'])) {
+        if (! empty($filters['due_date_filter'])) {
             $filter = $filters['due_date_filter'];
             switch ($filter) {
                 case 'today':
@@ -309,6 +319,42 @@ class TaskRepository implements TaskRepositoryInterface
                     break;
             }
         }
+    }
+
+    /**
+     * Paginate a task query, applying the (encrypted) search term in PHP.
+     *
+     * When no search term is present the query is paginated in SQL as before.
+     * When searching, the SQL-filtered rows are fetched, filtered against the
+     * decrypted title/description in PHP, then paginated into an equivalent
+     * LengthAwarePaginator (same page name + prop shape).
+     */
+    private function paginateWithSearch(Builder $query, array $filters, int $perPage, string $pageName): LengthAwarePaginator
+    {
+        if (empty($filters['search'])) {
+            return $query->paginate($perPage, ['*'], $pageName);
+        }
+
+        $filtered = $this->applySearchFilter($query->get(), $filters);
+
+        return EncryptedSearch::paginate($filtered, $perPage, $pageName);
+    }
+
+    /**
+     * Filter a task collection by the search term against decrypted columns.
+     */
+    private function applySearchFilter(Collection $tasks, array $filters): Collection
+    {
+        $search = trim((string) ($filters['search'] ?? ''));
+
+        if ($search === '') {
+            return $tasks;
+        }
+
+        return $tasks->filter(function (Task $task) use ($search) {
+            return EncryptedSearch::matches($task->title, $search)
+                || EncryptedSearch::matches($task->description, $search);
+        })->values();
     }
 
     /**

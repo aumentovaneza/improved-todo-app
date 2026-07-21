@@ -4,7 +4,10 @@ namespace App\Modules\Journal\Repositories\Eloquent;
 
 use App\Modules\Journal\Models\JournalEntry;
 use App\Modules\Journal\Repositories\Contracts\JournalEntryRepositoryInterface;
+use App\Support\EncryptedSearch;
+use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 
 class JournalEntryRepository implements JournalEntryRepositoryInterface
 {
@@ -14,10 +17,7 @@ class JournalEntryRepository implements JournalEntryRepositoryInterface
             ->where('user_id', $userId)
             ->with('tags');
 
-        if (! empty($filters['search'])) {
-            $query->where('title', 'like', '%'.$filters['search'].'%');
-        }
-
+        // mood / tag / date filters stay in SQL (all plaintext columns).
         if (! empty($filters['mood'])) {
             $query->where('mood', $filters['mood']);
         }
@@ -32,11 +32,21 @@ class JournalEntryRepository implements JournalEntryRepositoryInterface
             $query->whereDate('entry_date', $filters['date']);
         }
 
-        return $query
-            ->orderByDesc('entry_date')
-            ->orderByDesc('id')
-            ->paginate($perPage)
-            ->withQueryString();
+        $query->orderByDesc('entry_date')->orderByDesc('id');
+
+        // title is encrypted, so the search term is matched in PHP against the
+        // decrypted value, then paginated preserving the prop shape.
+        if (! empty($filters['search'])) {
+            $search = (string) $filters['search'];
+
+            $matched = $query->get()->filter(
+                fn (JournalEntry $entry) => EncryptedSearch::matches($entry->title, $search)
+            )->values();
+
+            return EncryptedSearch::paginate($matched, $perPage);
+        }
+
+        return $query->paginate($perPage)->withQueryString();
     }
 
     public function findForUser(int $id, int $userId): ?JournalEntry
@@ -45,6 +55,18 @@ class JournalEntryRepository implements JournalEntryRepositoryInterface
             ->where('user_id', $userId)
             ->with('tags')
             ->find($id);
+    }
+
+    public function getForUserInRange(int $userId, ?Carbon $startDate, ?Carbon $endDate): Collection
+    {
+        return JournalEntry::query()
+            ->where('user_id', $userId)
+            ->with('tags')
+            ->when($startDate, fn ($query) => $query->whereDate('entry_date', '>=', $startDate->toDateString()))
+            ->when($endDate, fn ($query) => $query->whereDate('entry_date', '<=', $endDate->toDateString()))
+            ->orderBy('entry_date')
+            ->orderBy('id')
+            ->get();
     }
 
     public function create(array $data): JournalEntry

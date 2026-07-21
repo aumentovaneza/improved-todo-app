@@ -18,6 +18,7 @@ use App\Modules\Finance\Controllers\FinanceAccountController;
 use App\Modules\Finance\Controllers\FinanceBudgetController;
 use App\Modules\Finance\Controllers\FinanceCategoryController;
 use App\Modules\Finance\Controllers\FinanceDashboardController;
+use App\Modules\Finance\Controllers\FinanceExportController;
 use App\Modules\Finance\Controllers\FinanceLoanController;
 use App\Modules\Finance\Controllers\FinanceReportController;
 use App\Modules\Finance\Controllers\FinanceSavingsGoalController;
@@ -98,6 +99,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('weviewallet.savings-goals.index');
     Route::get('weviewallet/loans', [FinanceLoanController::class, 'indexPage'])
         ->name('weviewallet.loans.index');
+    Route::get('weviewallet/export/excel', [FinanceExportController::class, 'exportExcel'])
+        ->name('weviewallet.export.excel');
     Route::prefix('weviewallet/api')->name('weviewallet.api.')->group(function () {
         Route::get('collaborators/search', [FinanceWalletCollaboratorController::class, 'search'])
             ->name('collaborators.search');

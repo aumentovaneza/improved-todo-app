@@ -20,6 +20,7 @@ class Swimlane extends Model
     ];
 
     protected $casts = [
+        'name' => 'encrypted',
         'is_active' => 'boolean',
     ];
 

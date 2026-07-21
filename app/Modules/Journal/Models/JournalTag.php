@@ -17,6 +17,10 @@ class JournalTag extends Model
         'color',
     ];
 
+    protected $casts = [
+        'name' => 'encrypted',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

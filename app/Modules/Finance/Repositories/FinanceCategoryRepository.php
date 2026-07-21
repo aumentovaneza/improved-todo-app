@@ -9,9 +9,11 @@ class FinanceCategoryRepository
 {
     public function getForUser(int $userId): Collection
     {
+        // `name` is encrypted at rest, so order by the decrypted value in PHP.
         return FinanceCategory::where('user_id', $userId)
-            ->orderBy('name')
-            ->get();
+            ->get()
+            ->sortBy(fn (FinanceCategory $category) => mb_strtolower(trim((string) $category->name)))
+            ->values();
     }
 
     public function findForUser(int $userId, int $categoryId): FinanceCategory

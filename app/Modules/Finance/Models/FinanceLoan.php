@@ -3,7 +3,6 @@
 namespace App\Modules\Finance\Models;
 
 use App\Models\User;
-use App\Modules\Finance\Models\FinanceTransaction;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -27,6 +26,8 @@ class FinanceLoan extends Model
     ];
 
     protected $casts = [
+        'name' => 'encrypted',
+        'notes' => 'encrypted',
         'total_amount' => 'decimal:2',
         'remaining_amount' => 'decimal:2',
         'target_date' => 'date',

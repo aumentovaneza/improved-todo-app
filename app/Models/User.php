@@ -56,7 +56,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'tutorial_progress' => 'array',
+            'tutorial_progress' => 'encrypted:array',
             'last_active_at' => 'datetime',
         ];
     }

@@ -3,14 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
-use App\Services\TaskService;
 use App\Services\CategoryService;
 use App\Services\TagService;
+use App\Services\TaskService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Http\RedirectResponse;
 
 class TaskController extends Controller
 {

@@ -89,7 +89,17 @@ it('rejects a size not allowed for that specific widget', function () {
 it('exposes every registry key with the default layout', function () {
     $keys = DashboardWidgets::keys();
 
-    expect($keys)->toContain('task_stats', 'savings_goals')
-        ->and($keys)->not->toContain('pomodoro', 'weather')
+    expect($keys)->toContain('task_stats', 'savings_goals', 'pomodoro')
+        ->and($keys)->not->toContain('weather')
         ->and(DashboardWidgets::defaultLayout())->toHaveCount(count($keys));
+});
+
+it('hides non-selectable widgets from the customize options', function () {
+    $optionKeys = collect(DashboardWidgets::availableWidgets())->pluck('key');
+
+    // pomodoro still exists as a widget/registry key, but is not offered as a
+    // customize option.
+    expect($optionKeys)->not->toContain('pomodoro')
+        ->and(DashboardWidgets::keys())->toContain('pomodoro')
+        ->and($optionKeys)->toContain('task_stats', 'savings_goals');
 });

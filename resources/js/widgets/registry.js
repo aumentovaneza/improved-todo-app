@@ -8,6 +8,7 @@ import BudgetWidget from "@/Components/widgets/BudgetWidget";
 import SavingsGoalsWidget from "@/Components/widgets/SavingsGoalsWidget";
 import CalendarWidget from "@/Components/widgets/CalendarWidget";
 import ProductivityWidget from "@/Components/widgets/ProductivityWidget";
+import PomodoroWidget from "@/Components/widgets/PomodoroWidget";
 
 /**
  * Client-side registry mapping a widget `key` (from the backend layout) to its
@@ -29,6 +30,7 @@ export const WIDGET_REGISTRY = {
     savings_goals: { Component: SavingsGoalsWidget, title: "Savings goals" },
     calendar: { Component: CalendarWidget, title: "Next 7 days" },
     productivity: { Component: ProductivityWidget, title: "Productivity" },
+    pomodoro: { Component: PomodoroWidget, title: "Pomodoro" },
 };
 
 /**

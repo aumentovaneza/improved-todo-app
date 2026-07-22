@@ -7,6 +7,15 @@ import Joyride, { ACTIONS, EVENTS, STATUS } from "react-joyride";
 
 const MOBILE_BREAKPOINT_PX = 1024;
 
+// Tours finished or skipped during this page session, keyed by `tourKey`.
+// The completion is persisted with a fire-and-forget axios POST that never
+// refreshes the Inertia `tutorial_progress` prop (by design — so the
+// NavigationLoader doesn't flash on every step). That leaves the prop stale
+// for the life of the page, so a modal-mounted tour (add transaction / add
+// task) would otherwise re-run every time the modal is reopened. Remembering
+// resolved keys here keeps a remount from re-triggering the same tour.
+const resolvedThisSession = new Set();
+
 function useIsMobile() {
     const [isMobile, setIsMobile] = useState(() =>
         typeof window === "undefined"
@@ -44,7 +53,7 @@ export default function OnboardingTour({
     const user = page.props?.auth?.user;
     const allProgress = user?.tutorial_progress ?? {};
     const progress = allProgress[tourKey] ?? null;
-    const isCompleted = !!progress?.completed;
+    const isCompleted = !!progress?.completed || resolvedThisSession.has(tourKey);
     const isSkipped = !!progress?.skipped;
     const isMobile = useIsMobile();
     const resolvedSteps = useMemo(
@@ -110,6 +119,7 @@ export default function OnboardingTour({
         // can race and the step write may overwrite `completed: true`.
         if (status === STATUS.FINISHED) {
             setRun(false);
+            resolvedThisSession.add(tourKey);
             persist({ completed: true, step: resolvedSteps.length });
             // Celebrate finishing a welcome walkthrough.
             if (celebrateOnFinish || tourKey === "onboarding") celebrate();
@@ -117,6 +127,7 @@ export default function OnboardingTour({
         }
         if (status === STATUS.SKIPPED || action === ACTIONS.CLOSE) {
             setRun(false);
+            resolvedThisSession.add(tourKey);
             persist({ skipped: true });
             return;
         }

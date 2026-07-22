@@ -179,7 +179,13 @@ class UserRepository implements UserRepositoryInterface
      */
     public function updatePreferences(User $user, array $preferences): User
     {
-        $allowedPreferences = ['timezone', 'news_category'];
+        $allowedPreferences = [
+            'timezone',
+            'news_category',
+            'dashboard_widgets',
+            'daily_summary_enabled',
+            'daily_summary_time',
+        ];
         $filteredPreferences = array_intersect_key($preferences, array_flip($allowedPreferences));
 
         $user->update($filteredPreferences);

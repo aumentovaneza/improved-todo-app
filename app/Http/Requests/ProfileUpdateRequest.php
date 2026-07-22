@@ -26,6 +26,8 @@ class ProfileUpdateRequest extends FormRequest
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
             'timezone' => ['required', 'string', 'timezone'],
+            'daily_summary_enabled' => ['sometimes', 'boolean'],
+            'daily_summary_time' => ['sometimes', 'date_format:H:i'],
         ];
     }
 }

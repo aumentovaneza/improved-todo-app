@@ -12,3 +12,9 @@ Artisan::command('inspire', function () {
 Schedule::command('tasks:reset-recurring')
     ->daily()
     ->description('Reset completed recurring tasks for the next occurrence');
+
+// Dispatch AI daily summaries every hour; the command decides which users are
+// due based on their per-user local time preference.
+Schedule::command('app:generate-daily-summaries')
+    ->hourly()
+    ->description('Generate AI daily summaries');

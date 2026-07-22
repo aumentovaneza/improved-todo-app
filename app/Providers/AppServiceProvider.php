@@ -33,6 +33,20 @@ class AppServiceProvider extends ServiceProvider
             \App\Repositories\Eloquent\TagRepository::class
         );
 
+        $this->app->bind(
+            \App\Repositories\Contracts\DailySummaryRepositoryInterface::class,
+            \App\Repositories\Eloquent\DailySummaryRepository::class
+        );
+
+        // AI text-generation manager + default driver bound to the contract.
+        $this->app->singleton(\App\Services\Ai\AiManager::class, function ($app) {
+            return new \App\Services\Ai\AiManager($app);
+        });
+
+        $this->app->bind(\App\Services\Ai\Contracts\TextGenerator::class, function ($app) {
+            return $app->make(\App\Services\Ai\AiManager::class)->driver();
+        });
+
         // Register Services (no interfaces needed for services)
         $this->app->singleton(\App\Services\ReminderService::class);
         $this->app->singleton(\App\Services\SubtaskService::class);

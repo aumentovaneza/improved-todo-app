@@ -53,7 +53,8 @@ it('falls back to a deterministic template when the provider fails', function ()
     expect($insight->provider)->toBe('fallback')
         ->and($insight->model)->toBe('template')
         ->and($insight->content)->toContain('spent')
-        ->and($insight->content)->toContain('savings');
+        ->and($insight->content)->toContain('savings')
+        ->and($insight->content)->toContain('₱');
 
     $this->assertDatabaseCount('finance_insights', 1);
 });
@@ -79,10 +80,10 @@ it('honors the open-beta flag and falls back to the premium tier when off', func
 
     $service = $this->app->make(FinanceInsightService::class);
 
-    config()->set('ai.finance_insights_open_beta', true);
+    config()->set('ai.open_beta.finance_insights', true);
     expect($service->userCanUseInsights($freeUser))->toBeTrue();
 
-    config()->set('ai.finance_insights_open_beta', false);
+    config()->set('ai.open_beta.finance_insights', false);
     expect($service->userCanUseInsights($freeUser))->toBeFalse()
         ->and($service->userCanUseInsights($premiumUser))->toBeTrue();
 });

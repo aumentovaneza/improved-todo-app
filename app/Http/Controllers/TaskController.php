@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use App\Services\Ai\AiEntitlementService;
 use App\Services\CategoryService;
 use App\Services\TagService;
 use App\Services\TaskService;
@@ -17,7 +18,8 @@ class TaskController extends Controller
     public function __construct(
         private TaskService $taskService,
         private CategoryService $categoryService,
-        private TagService $tagService
+        private TagService $tagService,
+        private AiEntitlementService $entitlement
     ) {}
 
     /**
@@ -46,10 +48,9 @@ class TaskController extends Controller
             'categories' => $categories,
             'tags' => $tags,
             'filters' => $request->only(['search', 'status', 'priority', 'category_id', 'tag_id', 'due_date_filter']),
+            'canUseTaskCapture' => $this->entitlement->canUse(Auth::user(), 'task_capture'),
         ]);
     }
-
-
 
     /**
      * Store a newly created resource in storage.
@@ -59,7 +60,7 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'category_id' => 'nullable|exists:categories,id,user_id,' . Auth::id(),
+            'category_id' => 'nullable|exists:categories,id,user_id,'.Auth::id(),
             'priority' => 'required|in:low,medium,high,urgent',
             'due_date' => 'nullable|date',
             'start_time' => 'nullable|date_format:H:i',
@@ -80,14 +81,14 @@ class TaskController extends Controller
         ]);
 
         // Clear recurring fields for non-recurring tasks
-        if (!isset($validated['is_recurring']) || !$validated['is_recurring']) {
+        if (! isset($validated['is_recurring']) || ! $validated['is_recurring']) {
             $validated['recurring_until'] = null;
             $validated['recurrence_type'] = null;
             $validated['recurrence_config'] = null;
         }
 
         // Set is_all_day to true if no times are provided
-        if (!isset($validated['is_all_day'])) {
+        if (! isset($validated['is_all_day'])) {
             $validated['is_all_day'] = empty($validated['start_time']) && empty($validated['end_time']);
         }
 
@@ -99,6 +100,7 @@ class TaskController extends Controller
 
         try {
             $task = $this->taskService->createTask($validated, Auth::id());
+
             return redirect()->back()->with('message', 'Task created successfully');
         } catch (\InvalidArgumentException $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()])->withInput();
@@ -115,7 +117,7 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'category_id' => 'nullable|exists:categories,id,user_id,' . Auth::id(),
+            'category_id' => 'nullable|exists:categories,id,user_id,'.Auth::id(),
             'priority' => 'required|in:low,medium,high,urgent',
             'status' => 'required|in:pending,in_progress,completed,cancelled',
             'due_date' => 'nullable|date',
@@ -137,14 +139,14 @@ class TaskController extends Controller
         ]);
 
         // Clear recurring fields for non-recurring tasks
-        if (!isset($validated['is_recurring']) || !$validated['is_recurring']) {
+        if (! isset($validated['is_recurring']) || ! $validated['is_recurring']) {
             $validated['recurring_until'] = null;
             $validated['recurrence_type'] = null;
             $validated['recurrence_config'] = null;
         }
 
         // Set is_all_day to true if no times are provided
-        if (!isset($validated['is_all_day'])) {
+        if (! isset($validated['is_all_day'])) {
             $validated['is_all_day'] = empty($validated['start_time']) && empty($validated['end_time']);
         }
 
@@ -156,6 +158,7 @@ class TaskController extends Controller
 
         try {
             $updatedTask = $this->taskService->updateTask($task, $validated, Auth::id());
+
             return redirect()->back()->with('message', 'Task updated successfully');
         } catch (\InvalidArgumentException $e) {
             return redirect()->back()->withErrors(['error' => $e->getMessage()])->withInput();
@@ -171,6 +174,7 @@ class TaskController extends Controller
     {
         try {
             $this->taskService->deleteTask($task, Auth::id());
+
             return back()->with('status', 'Task deleted successfully');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Failed to delete task. Please try again.']);
@@ -191,6 +195,7 @@ class TaskController extends Controller
                     'message' => 'Tasks reordered successfully',
                 ]);
             }
+
             return back()->with('message', 'Tasks reordered successfully');
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
@@ -199,6 +204,7 @@ class TaskController extends Controller
                     422
                 );
             }
+
             return back()->withErrors(['error' => 'Failed to reorder tasks. Please try again.']);
         }
     }
@@ -208,7 +214,7 @@ class TaskController extends Controller
         // If a specific status is provided, use it; otherwise toggle between completed/pending
         if ($request->has('status')) {
             $validated = $request->validate([
-                'status' => 'required|in:pending,in_progress,completed,cancelled'
+                'status' => 'required|in:pending,in_progress,completed,cancelled',
             ]);
             $newStatus = $validated['status'];
         } else {
@@ -217,6 +223,7 @@ class TaskController extends Controller
 
         try {
             $this->taskService->toggleTaskStatus($task, $newStatus, Auth::id());
+
             return back()->with('status', 'Task status updated successfully');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Failed to update task status. Please try again.']);

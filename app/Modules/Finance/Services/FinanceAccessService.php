@@ -8,11 +8,7 @@ class FinanceAccessService
 {
     public function getTier(User $user): string
     {
-        if ($user->role === 'admin') {
-            return 'premium';
-        }
-
-        return 'free';
+        return $user->isPremium() ? 'premium' : 'free';
     }
 
     public function canAccessAdvancedCharts(User $user): bool

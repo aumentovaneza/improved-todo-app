@@ -18,6 +18,20 @@ function fakeGenerator(callable $handler): TextGenerator
     };
 }
 
+it('honors the open-beta flag and falls back to the premium tier when off', function () {
+    $freeUser = User::factory()->create(['role' => 'member']);
+    $premiumUser = User::factory()->create(['role' => 'admin']);
+
+    $service = $this->app->make(DailySummaryService::class);
+
+    config()->set('ai.open_beta.daily_summary', true);
+    expect($service->userCanUseSummary($freeUser))->toBeTrue();
+
+    config()->set('ai.open_beta.daily_summary', false);
+    expect($service->userCanUseSummary($freeUser))->toBeFalse()
+        ->and($service->userCanUseSummary($premiumUser))->toBeTrue();
+});
+
 it('generates and upserts a summary using the text generator', function () {
     $user = User::factory()->create();
 

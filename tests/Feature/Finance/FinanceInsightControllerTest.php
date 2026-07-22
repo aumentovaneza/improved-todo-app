@@ -42,7 +42,7 @@ it('generates and caches an insight for an entitled user', function () {
 });
 
 it('blocks an unentitled user when the open beta is off', function () {
-    config()->set('ai.finance_insights_open_beta', false);
+    config()->set('ai.open_beta.finance_insights', false);
 
     $user = User::factory()->create(['role' => 'member']);
     bindFakeInsightGenerator($this->app, fn () => 'Should never run.');

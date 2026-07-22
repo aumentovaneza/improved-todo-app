@@ -17,30 +17,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Daily Summary Open Beta
+    | AI Feature Open Beta Overrides
     |--------------------------------------------------------------------------
     |
-    | The AI daily summary is a "pro" feature, but during the open beta every
-    | user is entitled to it. Flip this to false (and implement the real tier
-    | check in DailySummaryService::userCanUseSummary) once a paid plan exists.
+    | Every AI feature is pro-gated by default: AiEntitlementService::canUse()
+    | allows only premium users unless the feature is listed here with a truthy
+    | value, which opens it to everyone during a public beta. A feature that is
+    | absent from this map (e.g. a brand-new AI feature) is premium-only — the
+    | pro-gated default. Flip a flag to false to end that feature's open beta.
     |
     */
 
-    'daily_summary_open_beta' => env('AI_DAILY_SUMMARY_OPEN_BETA', true),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Finance Insights Open Beta
-    |--------------------------------------------------------------------------
-    |
-    | The AI finance spending insights are a "pro" feature, but during the open
-    | beta every user is entitled to them. Flip this to false to fall back to
-    | the real tier check in FinanceAccessService::canUseInsights once a paid
-    | plan exists.
-    |
-    */
-
-    'finance_insights_open_beta' => env('AI_FINANCE_INSIGHTS_OPEN_BETA', true),
+    'open_beta' => [
+        'daily_summary' => env('AI_DAILY_SUMMARY_OPEN_BETA', true),
+        'finance_insights' => env('AI_FINANCE_INSIGHTS_OPEN_BETA', true),
+        'task_capture' => env('AI_TASK_CAPTURE_OPEN_BETA', false),
+    ],
 
     /*
     |--------------------------------------------------------------------------

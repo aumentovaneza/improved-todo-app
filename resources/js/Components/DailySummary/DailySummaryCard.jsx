@@ -146,46 +146,27 @@ export default function DailySummaryCard({ summary = null, enabled = true, canUs
         );
     }
 
-    // 4. Has summary.
+    // 4. Has summary. Only one summary per day, so there is no refresh control —
+    // the next one arrives on tomorrow's schedule.
     const updated = relativeTime(summary.generated_at);
-    const provenance = [summary.provider, summary.model].filter(Boolean).join(" · ");
 
     return (
         <section className={shellClass} aria-label="Daily AI summary">
-            <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center gap-2">
-                    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-wevie-teal to-wevie-mint text-white">
-                        <Sparkles className="h-5 w-5" aria-hidden="true" />
-                    </span>
-                    <h2 className="text-base font-semibold text-adaptive-primary sm:text-lg">
-                        Your daily summary
-                    </h2>
-                </div>
-                <button
-                    type="button"
-                    onClick={generate}
-                    disabled={loading}
-                    aria-label="Refresh daily summary"
-                    className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-xl border border-light-border/70 bg-light-card/70 px-3 py-1.5 text-sm font-medium text-adaptive-secondary transition-colors hover:bg-light-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-wevie-teal/40 disabled:cursor-not-allowed disabled:opacity-70 dark:border-dark-border/70 dark:bg-dark-card/70 dark:hover:bg-dark-hover"
-                >
-                    <RefreshCw
-                        className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
-                        aria-hidden="true"
-                    />
-                    <span className="hidden sm:inline">{loading ? "Refreshing…" : "Refresh"}</span>
-                </button>
+            <div className="flex items-center gap-2">
+                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-wevie-teal to-wevie-mint text-white">
+                    <Sparkles className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <h2 className="text-base font-semibold text-adaptive-primary sm:text-lg">
+                    Your daily summary
+                </h2>
             </div>
 
             <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-adaptive-secondary">
                 {summary.content}
             </p>
 
-            {(updated || provenance) && (
-                <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-adaptive-muted">
-                    {updated && <span>Updated {updated}</span>}
-                    {updated && provenance && <span aria-hidden="true">·</span>}
-                    {provenance && <span className="uppercase tracking-wide">{provenance}</span>}
-                </div>
+            {updated && (
+                <div className="mt-4 text-xs text-adaptive-muted">Updated {updated}</div>
             )}
         </section>
     );

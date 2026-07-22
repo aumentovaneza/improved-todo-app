@@ -21,19 +21,23 @@ class DashboardWidgets
     {
         $full = ['sm', 'md', 'lg'];
         $compact = ['sm', 'md'];
+        $compactWide = ['md', 'lg'];
 
+        // `selectable` defaults to true when omitted; widgets marked false still
+        // exist and render (and remain valid in a saved layout), but are hidden
+        // from the customize options list.
         return [
-            ['key' => 'task_stats', 'title' => 'Task Stats', 'defaultSize' => 'lg', 'allowedSizes' => $full, 'defaultEnabled' => true],
+            ['key' => 'task_stats', 'title' => 'Task Stats', 'defaultSize' => 'lg', 'allowedSizes' => $compactWide, 'defaultEnabled' => true],
             ['key' => 'today_tasks', 'title' => 'Today', 'defaultSize' => 'md', 'allowedSizes' => $full, 'defaultEnabled' => true],
             ['key' => 'overdue_tasks', 'title' => 'Overdue', 'defaultSize' => 'md', 'allowedSizes' => $full, 'defaultEnabled' => true],
             ['key' => 'upcoming_tasks', 'title' => 'Upcoming', 'defaultSize' => 'md', 'allowedSizes' => $full, 'defaultEnabled' => true],
             ['key' => 'in_progress', 'title' => 'In Progress', 'defaultSize' => 'md', 'allowedSizes' => $full, 'defaultEnabled' => true],
             ['key' => 'upcoming_payments', 'title' => 'Upcoming Payments', 'defaultSize' => 'md', 'allowedSizes' => $full, 'defaultEnabled' => true],
             ['key' => 'budgets', 'title' => 'Budgets', 'defaultSize' => 'md', 'allowedSizes' => $full, 'defaultEnabled' => true],
+            ['key' => 'savings_goals', 'title' => 'Savings Goals', 'defaultSize' => 'md', 'allowedSizes' => $full, 'defaultEnabled' => true],
             ['key' => 'calendar', 'title' => 'Calendar', 'defaultSize' => 'md', 'allowedSizes' => $full, 'defaultEnabled' => true],
             ['key' => 'productivity', 'title' => 'Productivity', 'defaultSize' => 'lg', 'allowedSizes' => $full, 'defaultEnabled' => true],
-            ['key' => 'pomodoro', 'title' => 'Pomodoro', 'defaultSize' => 'sm', 'allowedSizes' => $compact, 'defaultEnabled' => false],
-            ['key' => 'weather', 'title' => 'Weather', 'defaultSize' => 'sm', 'allowedSizes' => $compact, 'defaultEnabled' => false],
+            ['key' => 'pomodoro', 'title' => 'Pomodoro', 'defaultSize' => 'sm', 'allowedSizes' => $compact, 'defaultEnabled' => false, 'selectable' => false],
         ];
     }
 
@@ -88,18 +92,20 @@ class DashboardWidgets
     }
 
     /**
-     * The registry metadata exposed to the frontend as `availableWidgets`.
+     * The registry metadata exposed to the frontend as `availableWidgets` — the
+     * options shown in the customize modal. Non-selectable widgets (e.g.
+     * pomodoro) are excluded here while still existing in the registry.
      *
      * @return array<int, array{key: string, title: string, defaultSize: string, allowedSizes: array<int, string>}>
      */
     public static function availableWidgets(): array
     {
-        return array_map(fn (array $widget): array => [
+        return array_values(array_map(fn (array $widget): array => [
             'key' => $widget['key'],
             'title' => $widget['title'],
             'defaultSize' => $widget['defaultSize'],
             'allowedSizes' => $widget['allowedSizes'],
-        ], self::all());
+        ], array_filter(self::all(), fn (array $widget): bool => ($widget['selectable'] ?? true))));
     }
 
     /**

@@ -38,6 +38,12 @@ class DashboardLayoutController extends Controller
             return back()->with('error', 'The daily summary is not available on your plan.');
         }
 
+        // One summary per day: if today's has already been generated, don't
+        // regenerate it. The user gets a fresh one on tomorrow's schedule.
+        if ($this->dailySummaryService->getCachedForToday($user)) {
+            return back()->with('info', 'Your summary for today has already been generated.');
+        }
+
         $this->dailySummaryService->generateForUser($user);
 
         return back();

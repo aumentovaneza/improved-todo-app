@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\User;
 use App\Modules\Finance\Models\FinanceTransaction;
 use App\Modules\Finance\Services\FinanceService;
+use Carbon\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * Composes existing services into the per-widget payloads consumed by the
@@ -37,7 +39,9 @@ class DashboardService
         }
 
         if (isset($enabled['today_tasks'])) {
-            $data['today_tasks'] = $this->taskService->getTodayTasksForUser($userId, 5)->values()->all();
+            // Recurrence-aware so a recurring task (e.g. a weekly class) shows on
+            // the day it actually occurs, matching the calendar/schedule view.
+            $data['today_tasks'] = $this->todayTasks($user, 5)->all();
         }
 
         if (isset($enabled['overdue_tasks'])) {
@@ -45,7 +49,7 @@ class DashboardService
         }
 
         if (isset($enabled['upcoming_tasks'])) {
-            $data['upcoming_tasks'] = $this->taskService->getUpcomingTasksForUser($userId, 5)->values()->all();
+            $data['upcoming_tasks'] = $this->upcomingTasks($user, 5)->all();
         }
 
         if (isset($enabled['in_progress'])) {
@@ -56,12 +60,21 @@ class DashboardService
             $data['upcoming_payments'] = $this->getUpcomingPayments($user)->values()->all();
         }
 
-        if (isset($enabled['budgets'])) {
+        // Budgets and savings goals both come from the finance dashboard payload;
+        // fetch it once when either widget is enabled.
+        if (isset($enabled['budgets']) || isset($enabled['savings_goals'])) {
             $finance = $this->financeService->getDashboardData($userId);
-            $data['budgets'] = [
-                'summary' => $finance['summary'],
-                'budgets' => $finance['budgets'],
-            ];
+
+            if (isset($enabled['budgets'])) {
+                $data['budgets'] = [
+                    'summary' => $finance['summary'],
+                    'budgets' => $finance['budgets'],
+                ];
+            }
+
+            if (isset($enabled['savings_goals'])) {
+                $data['savings_goals'] = $finance['savings_goals'];
+            }
         }
 
         if (isset($enabled['calendar'])) {
@@ -80,6 +93,72 @@ class DashboardService
         // pomodoro and weather are client-only widgets: no server payload.
 
         return $data;
+    }
+
+    /**
+     * Tasks occurring on the user's current local day (recurrence-aware).
+     *
+     * @return \Illuminate\Support\Collection<int, \App\Models\Task>
+     */
+    public function todayTasks(User $user, ?int $limit = null): Collection
+    {
+        $today = $user->todayInUserTimezone();
+
+        return $this->tasksForDayRange($user, $today->copy(), $today->copy(), $limit);
+    }
+
+    /**
+     * Tasks occurring in the next 7 days (tomorrow through +7), recurrence-aware.
+     *
+     * @return \Illuminate\Support\Collection<int, \App\Models\Task>
+     */
+    public function upcomingTasks(User $user, ?int $limit = null): Collection
+    {
+        $today = $user->todayInUserTimezone();
+
+        return $this->tasksForDayRange(
+            $user,
+            $today->copy()->addDay(),
+            $today->copy()->addDays(7),
+            $limit,
+        );
+    }
+
+    /**
+     * Recurrence-aware tasks whose occurrence lands within the given user-local
+     * day range (inclusive). Mirrors the calendar/schedule expansion via
+     * Task::getOccurrencesInRange, so a recurring task shows on the day it
+     * actually occurs rather than only on its stored base due_date. Completed
+     * one-off tasks are excluded; recurring tasks are kept.
+     *
+     * @return \Illuminate\Support\Collection<int, \App\Models\Task>
+     */
+    public function tasksForDayRange(User $user, Carbon $fromDay, Carbon $toDay, ?int $limit = null): Collection
+    {
+        $rangeStart = $fromDay->copy()->startOfDay()->utc();
+        $rangeEnd = $toDay->copy()->endOfDay()->utc();
+        $fromStr = $fromDay->format('Y-m-d');
+        $toStr = $toDay->format('Y-m-d');
+
+        $tasks = $user->tasks()->with('category')->get()
+            ->flatMap(fn ($task) => $task->getOccurrencesInRange($rangeStart->copy(), $rangeEnd->copy()))
+            ->filter(function ($task) use ($user, $fromStr, $toStr) {
+                if (! $task->due_date) {
+                    return false;
+                }
+
+                if (! $task->is_recurring && $task->status === 'completed') {
+                    return false;
+                }
+
+                $day = $user->toUserTimezone($task->due_date)->format('Y-m-d');
+
+                return $day >= $fromStr && $day <= $toStr;
+            })
+            ->sortBy(fn ($task) => $task->due_date)
+            ->values();
+
+        return $limit ? $tasks->take($limit)->values() : $tasks;
     }
 
     /**
@@ -162,9 +241,9 @@ class DashboardService
     {
         $userId = $user->id;
 
-        $today = $this->taskService->getTodayTasksForUser($userId);
+        $today = $this->todayTasks($user);
         $overdue = $this->taskService->getOverdueTasksForUser($userId);
-        $upcoming = $this->taskService->getUpcomingTasksForUser($userId);
+        $upcoming = $this->upcomingTasks($user);
         $payments = $this->getUpcomingPayments($user);
         $finance = $this->financeService->getDashboardData($userId);
         $calendar = $this->getCalendarItems($user);

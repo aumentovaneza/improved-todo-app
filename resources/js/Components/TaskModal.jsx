@@ -125,7 +125,7 @@ export default function TaskModal({
     };
 
     return (
-        <Modal show={show} onClose={handleClose} maxWidth="2xl">
+        <Modal show={show} onClose={handleClose} maxWidth="2xl" alignTop>
             <div className="max-h-[70vh] overflow-y-auto">
                 <form onSubmit={handleSubmit} className="p-6">
                     <h2 className="text-lg font-medium text-light-primary dark:text-dark-primary mb-2">

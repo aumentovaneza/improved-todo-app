@@ -60,12 +60,21 @@ class DashboardService
             $data['upcoming_payments'] = $this->getUpcomingPayments($user)->values()->all();
         }
 
-        if (isset($enabled['budgets'])) {
+        // Budgets and savings goals both come from the finance dashboard payload;
+        // fetch it once when either widget is enabled.
+        if (isset($enabled['budgets']) || isset($enabled['savings_goals'])) {
             $finance = $this->financeService->getDashboardData($userId);
-            $data['budgets'] = [
-                'summary' => $finance['summary'],
-                'budgets' => $finance['budgets'],
-            ];
+
+            if (isset($enabled['budgets'])) {
+                $data['budgets'] = [
+                    'summary' => $finance['summary'],
+                    'budgets' => $finance['budgets'],
+                ];
+            }
+
+            if (isset($enabled['savings_goals'])) {
+                $data['savings_goals'] = $finance['savings_goals'];
+            }
         }
 
         if (isset($enabled['calendar'])) {

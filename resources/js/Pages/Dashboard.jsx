@@ -86,7 +86,7 @@ export default function Dashboard({
                     <button
                         type="button"
                         onClick={() => setShowCustomize(true)}
-                        className="btn-secondary"
+                        className="btn-secondary inline-flex items-center"
                         data-tour="customize-dashboard"
                     >
                         <SlidersHorizontal className="mr-2 h-4 w-4" />

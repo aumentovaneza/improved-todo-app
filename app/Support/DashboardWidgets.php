@@ -20,20 +20,19 @@ class DashboardWidgets
     public static function all(): array
     {
         $full = ['sm', 'md', 'lg'];
-        $compact = ['sm', 'md'];
+        $compactWide = ['md', 'lg'];
 
         return [
-            ['key' => 'task_stats', 'title' => 'Task Stats', 'defaultSize' => 'lg', 'allowedSizes' => $full, 'defaultEnabled' => true],
+            ['key' => 'task_stats', 'title' => 'Task Stats', 'defaultSize' => 'lg', 'allowedSizes' => $compactWide, 'defaultEnabled' => true],
             ['key' => 'today_tasks', 'title' => 'Today', 'defaultSize' => 'md', 'allowedSizes' => $full, 'defaultEnabled' => true],
             ['key' => 'overdue_tasks', 'title' => 'Overdue', 'defaultSize' => 'md', 'allowedSizes' => $full, 'defaultEnabled' => true],
             ['key' => 'upcoming_tasks', 'title' => 'Upcoming', 'defaultSize' => 'md', 'allowedSizes' => $full, 'defaultEnabled' => true],
             ['key' => 'in_progress', 'title' => 'In Progress', 'defaultSize' => 'md', 'allowedSizes' => $full, 'defaultEnabled' => true],
             ['key' => 'upcoming_payments', 'title' => 'Upcoming Payments', 'defaultSize' => 'md', 'allowedSizes' => $full, 'defaultEnabled' => true],
             ['key' => 'budgets', 'title' => 'Budgets', 'defaultSize' => 'md', 'allowedSizes' => $full, 'defaultEnabled' => true],
+            ['key' => 'savings_goals', 'title' => 'Savings Goals', 'defaultSize' => 'md', 'allowedSizes' => $full, 'defaultEnabled' => true],
             ['key' => 'calendar', 'title' => 'Calendar', 'defaultSize' => 'md', 'allowedSizes' => $full, 'defaultEnabled' => true],
             ['key' => 'productivity', 'title' => 'Productivity', 'defaultSize' => 'lg', 'allowedSizes' => $full, 'defaultEnabled' => true],
-            ['key' => 'pomodoro', 'title' => 'Pomodoro', 'defaultSize' => 'sm', 'allowedSizes' => $compact, 'defaultEnabled' => false],
-            ['key' => 'weather', 'title' => 'Weather', 'defaultSize' => 'sm', 'allowedSizes' => $compact, 'defaultEnabled' => false],
         ];
     }
 

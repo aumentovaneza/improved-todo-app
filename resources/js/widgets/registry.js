@@ -5,16 +5,15 @@ import UpcomingTasksWidget from "@/Components/widgets/UpcomingTasksWidget";
 import InProgressWidget from "@/Components/widgets/InProgressWidget";
 import UpcomingPaymentsWidget from "@/Components/widgets/UpcomingPaymentsWidget";
 import BudgetWidget from "@/Components/widgets/BudgetWidget";
+import SavingsGoalsWidget from "@/Components/widgets/SavingsGoalsWidget";
 import CalendarWidget from "@/Components/widgets/CalendarWidget";
 import ProductivityWidget from "@/Components/widgets/ProductivityWidget";
-import PomodoroWidget from "@/Components/widgets/PomodoroWidget";
-import WeatherWidget from "@/Components/widgets/WeatherWidget";
 
 /**
  * Client-side registry mapping a widget `key` (from the backend layout) to its
  * React component and display title. `selfContained` marks widgets that render
- * their own `.card` shell (Weather) instead of a shared WidgetFrame — the grid
- * uses this to overlay the drag handle rather than pass it through.
+ * their own `.card` shell instead of a shared WidgetFrame — the grid uses this
+ * to overlay the drag handle rather than pass it through.
  */
 export const WIDGET_REGISTRY = {
     task_stats: { Component: TaskStatsWidget, title: "Task overview" },
@@ -27,10 +26,9 @@ export const WIDGET_REGISTRY = {
         title: "Upcoming payments",
     },
     budgets: { Component: BudgetWidget, title: "Budgets" },
+    savings_goals: { Component: SavingsGoalsWidget, title: "Savings goals" },
     calendar: { Component: CalendarWidget, title: "Next 7 days" },
     productivity: { Component: ProductivityWidget, title: "Productivity" },
-    pomodoro: { Component: PomodoroWidget, title: "Pomodoro" },
-    weather: { Component: WeatherWidget, title: "Weather", selfContained: true },
 };
 
 /**

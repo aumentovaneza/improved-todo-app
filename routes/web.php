@@ -6,6 +6,7 @@ use App\Http\Controllers\BoardController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DashboardLayoutController;
 use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReminderController;
@@ -46,6 +47,14 @@ Route::get('/offline', function () {
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+// Dashboard widget layout + AI daily summary
+Route::middleware('auth')->group(function () {
+    Route::post('dashboard/layout', [DashboardLayoutController::class, 'update'])
+        ->name('dashboard.layout.update');
+    Route::post('dashboard/summary/refresh', [DashboardLayoutController::class, 'refreshSummary'])
+        ->name('dashboard.summary.refresh');
+});
 
 // Main todo app routes
 Route::middleware(['auth', 'verified'])->group(function () {

@@ -13,6 +13,12 @@ export default {
         {
             pattern: /(bg|text|stroke|fill)-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(100|200|300|400|500|600|700|800|900)/,
         },
+        // Dashboard widget column spans — mapped from widget size in
+        // resources/js/widgets/registry.js. Safelisted so the JIT keeps them.
+        'sm:col-span-2',
+        'lg:col-span-1',
+        'lg:col-span-2',
+        'lg:col-span-4',
     ],
 
     darkMode: 'class',

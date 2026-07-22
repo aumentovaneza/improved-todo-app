@@ -24,6 +24,16 @@ export const onboardingSteps = [
         mobilePlacement: "top",
     },
     {
+        target: '[data-tour="customize-dashboard"]',
+        mobileTarget: "body",
+        mobilePlacement: "center",
+        emoji: "🧩",
+        title: "Make the dashboard yours",
+        content:
+            "Tap Customize to switch widgets on or off, resize them, and drag them into the order that suits you. Your layout saves automatically.",
+        placement: "bottom",
+    },
+    {
         target: '[data-tour="nav-tasks"]',
         mobileTarget: '[data-tour="mobile-nav-tasks"]',
         emoji: "✅",
@@ -216,8 +226,7 @@ export const tasksSteps = [
     {
         target: '[data-tour="tasks-filters"]',
         title: "Find what you need",
-        content:
-            "Search by keyword, or filter by status, priority, category, or tag.",
+        content: "Search by keyword, or filter by status, priority, category, or tag.",
         placement: "bottom",
     },
     {
@@ -330,8 +339,7 @@ export const walletSavingsGoalsSteps = [
     {
         target: '[data-tour="goals-filters"]',
         title: "Filter & sort",
-        content:
-            "Filter by status or account to see only the goals you care about right now.",
+        content: "Filter by status or account to see only the goals you care about right now.",
         placement: "bottom",
     },
     {
@@ -362,8 +370,7 @@ export const walletLoansSteps = [
     {
         target: '[data-tour="loans-filters"]',
         title: "Filter the list",
-        content:
-            "Filter by loan type, status, or counterparty to find a specific loan quickly.",
+        content: "Filter by loan type, status, or counterparty to find a specific loan quickly.",
         placement: "bottom",
     },
     {
@@ -387,24 +394,21 @@ export const addTaskFormSteps = [
     {
         target: '[data-tour="task-title"]',
         title: "Title",
-        content:
-            "A short summary, e.g. \"Pay electricity bill\" or \"Send draft to manager\".",
+        content: 'A short summary, e.g. "Pay electricity bill" or "Send draft to manager".',
         placement: "bottom",
         mobilePlacement: "top",
     },
     {
         target: '[data-tour="task-category"]',
         title: "Category",
-        content:
-            "Drop the task into a bucket so you can filter and color-code later. Optional.",
+        content: "Drop the task into a bucket so you can filter and color-code later. Optional.",
         placement: "bottom",
         mobilePlacement: "top",
     },
     {
         target: '[data-tour="task-priority"]',
         title: "Priority",
-        content:
-            'Use Focus for "do this today" tasks. Lower priorities surface less aggressively.',
+        content: 'Use Focus for "do this today" tasks. Lower priorities surface less aggressively.',
         placement: "bottom",
         mobilePlacement: "top",
     },
@@ -471,8 +475,7 @@ export const addTransactionFormSteps = [
     {
         target: '[data-tour="txn-amount"]',
         title: "Amount",
-        content:
-            "Always positive — Wevie figures out the sign based on the type you picked above.",
+        content: "Always positive — Wevie figures out the sign based on the type you picked above.",
         placement: "bottom",
         mobilePlacement: "top",
     },

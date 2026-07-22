@@ -32,6 +32,9 @@ class User extends Authenticatable
         'role',
         'timezone',
         'news_category',
+        'dashboard_widgets',
+        'daily_summary_enabled',
+        'daily_summary_time',
         'tutorial_progress',
         'last_active_at',
     ];
@@ -57,6 +60,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'tutorial_progress' => 'encrypted:array',
+            'dashboard_widgets' => 'array',
+            'daily_summary_enabled' => 'boolean',
             'last_active_at' => 'datetime',
         ];
     }

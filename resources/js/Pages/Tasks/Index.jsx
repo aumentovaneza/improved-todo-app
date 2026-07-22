@@ -1277,6 +1277,16 @@ export default function Index({ tasks = [], categories, tags = [], filters }) {
                 show={showSubtaskModal}
                 onClose={() => setShowSubtaskModal(false)}
                 task={selectedTask}
+                onSaved={() => {
+                    if (!selectedTask) return;
+                    // Bump the subtask count in place so the card reflects the
+                    // new subtask without reloading the page.
+                    handleTaskUpdate({
+                        ...selectedTask,
+                        subtasks_count:
+                            (selectedTask.subtasks_count || 0) + 1,
+                    });
+                }}
             />
 
             <Toast />

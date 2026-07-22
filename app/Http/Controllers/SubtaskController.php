@@ -13,6 +13,28 @@ class SubtaskController extends Controller
     public function __construct(
         private SubtaskService $subtaskService
     ) {}
+
+    /**
+     * Redirect back to the originating page, never to a subtask endpoint.
+     *
+     * The subtask routes are POST/PUT/DELETE only — there is no GET /subtasks —
+     * so a plain back() that resolves to the request's own URL leaves Inertia
+     * following a 302 into a dead endpoint (the subtask saves, but the UI
+     * appears to fail). Guard against self-redirects and any subtasks path,
+     * falling back to the tasks index.
+     */
+    private function redirectBack(): RedirectResponse
+    {
+        $previous = url()->previous();
+        $path = ltrim(parse_url($previous, PHP_URL_PATH) ?? '', '/');
+
+        if ($previous === url()->current() || str_starts_with($path, 'subtasks')) {
+            return redirect()->route('tasks.index');
+        }
+
+        return redirect()->to($previous);
+    }
+
     public function store(Request $request): RedirectResponse
     {
         try {
@@ -25,7 +47,7 @@ class SubtaskController extends Controller
 
             // Flash the created subtask so the client can reconcile its
             // temporary (client-generated) id with the real database id.
-            return back()
+            return $this->redirectBack()
                 ->with('message', 'Subtask created successfully')
                 ->with('subtask', $subtask->only([
                     'id',
@@ -35,8 +57,12 @@ class SubtaskController extends Controller
                     'position',
                     'task_id',
                 ]));
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to create subtask: ' . $e->getMessage()]);
+            report($e);
+
+            return $this->redirectBack()->withErrors(['error' => 'Failed to create subtask: ' . $e->getMessage()]);
         }
     }
 
@@ -50,9 +76,13 @@ class SubtaskController extends Controller
 
             $updatedSubtask = $this->subtaskService->updateSubtask($subtask, $validated, Auth::id());
 
-            return back()->with('message', 'Subtask updated successfully');
+            return $this->redirectBack()->with('message', 'Subtask updated successfully');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to update subtask: ' . $e->getMessage()]);
+            report($e);
+
+            return $this->redirectBack()->withErrors(['error' => 'Failed to update subtask: ' . $e->getMessage()]);
         }
     }
 
@@ -60,9 +90,11 @@ class SubtaskController extends Controller
     {
         try {
             $this->subtaskService->deleteSubtask($subtask, Auth::id());
-            return back()->with('message', 'Subtask deleted successfully');
+            return $this->redirectBack()->with('message', 'Subtask deleted successfully');
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to delete subtask: ' . $e->getMessage()]);
+            report($e);
+
+            return $this->redirectBack()->withErrors(['error' => 'Failed to delete subtask: ' . $e->getMessage()]);
         }
     }
 
@@ -71,9 +103,11 @@ class SubtaskController extends Controller
         try {
             $updatedSubtask = $this->subtaskService->toggleSubtaskCompletion($subtask, Auth::id());
             $message = $updatedSubtask->is_completed ? 'Subtask completed!' : 'Subtask marked as pending';
-            return back()->with('message', $message);
+            return $this->redirectBack()->with('message', $message);
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to toggle subtask: ' . $e->getMessage()]);
+            report($e);
+
+            return $this->redirectBack()->withErrors(['error' => 'Failed to toggle subtask: ' . $e->getMessage()]);
         }
     }
 
@@ -86,9 +120,13 @@ class SubtaskController extends Controller
             ]);
 
             $this->subtaskService->reorderSubtasks($validated['subtaskIds'], Auth::id());
-            return back()->with('message', 'Subtasks reordered successfully');
+            return $this->redirectBack()->with('message', 'Subtasks reordered successfully');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to reorder subtasks: ' . $e->getMessage()]);
+            report($e);
+
+            return $this->redirectBack()->withErrors(['error' => 'Failed to reorder subtasks: ' . $e->getMessage()]);
         }
     }
 }

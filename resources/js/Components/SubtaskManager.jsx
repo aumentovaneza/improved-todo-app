@@ -237,23 +237,29 @@ export default function SubtaskManager({
                               )
                             : list;
 
-                    setSubtasks((prev) => reconcile(prev));
+                    // The optimistic add set `[...subtasks, tempSubtask]`, so
+                    // that reconciled list is the true new state. Use it for
+                    // both local state and the parent callback — the bare
+                    // `subtasks` closure is stale (missing the new row).
+                    const nextSubtasks = reconcile([...subtasks, tempSubtask]);
+                    setSubtasks(nextSubtasks);
 
                     // Update parent component's task data if callback provided
                     if (onTaskUpdate) {
                         onTaskUpdate({
                             ...task,
-                            subtasks: reconcile(subtasks),
+                            subtasks: nextSubtasks,
                         });
                     }
                     toast.success("Subtask saved.");
                 },
-                onError: () => {
+                onError: (errors) => {
                     setSubtasks((prev) =>
                         prev.filter((s) => s.id !== tempSubtask.id)
                     );
                     toast.error(
-                        "We couldn’t save that just now. Try again when you’re ready."
+                        errors?.error ||
+                            "We couldn’t save that just now. Try again when you’re ready."
                     );
                 },
             }

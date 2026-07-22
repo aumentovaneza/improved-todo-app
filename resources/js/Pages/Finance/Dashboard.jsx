@@ -1,4 +1,5 @@
 import FinanceDashboard from "@/Components/Finance/Dashboard/FinanceDashboard";
+import FinanceInsightCard from "@/Components/Finance/FinanceInsightCard";
 import Dropdown from "@/Components/Dropdown";
 import InputError from "@/Components/InputError";
 import InputLabel from "@/Components/InputLabel";
@@ -622,6 +623,13 @@ export default function Dashboard(props) {
         >
             <Head title="WevieWallet" />
             <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+                {props.isWalletOwner && (
+                    <FinanceInsightCard
+                        insight={props.financeInsight ?? null}
+                        canUse={props.canUseFinanceInsights ?? true}
+                        range={props.insightRange ?? null}
+                    />
+                )}
                 <FinanceDashboard
                     summary={summary}
                     charts={charts}

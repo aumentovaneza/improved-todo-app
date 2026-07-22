@@ -19,4 +19,9 @@ class FinanceAccessService
     {
         return $this->getTier($user) === 'premium';
     }
+
+    public function canUseInsights(User $user): bool
+    {
+        return $this->getTier($user) === 'premium';
+    }
 }

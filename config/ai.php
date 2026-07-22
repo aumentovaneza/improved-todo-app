@@ -30,6 +30,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Finance Insights Open Beta
+    |--------------------------------------------------------------------------
+    |
+    | The AI finance spending insights are a "pro" feature, but during the open
+    | beta every user is entitled to them. Flip this to false to fall back to
+    | the real tier check in FinanceAccessService::canUseInsights once a paid
+    | plan exists.
+    |
+    */
+
+    'finance_insights_open_beta' => env('AI_FINANCE_INSIGHTS_OPEN_BETA', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Providers
     |--------------------------------------------------------------------------
     |

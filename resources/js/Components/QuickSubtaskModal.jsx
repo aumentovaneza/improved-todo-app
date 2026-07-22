@@ -41,7 +41,8 @@ export default function QuickSubtaskModal({ show, onClose, task }) {
                 onError: (errors) => {
                     setErrors(errors);
                     toast.error(
-                        "We couldn’t save that just now. Try again when you’re ready."
+                        errors?.error ||
+                            "We couldn’t save that just now. Try again when you’re ready."
                     );
                 },
                 onFinish: () => {
@@ -100,6 +101,8 @@ export default function QuickSubtaskModal({ show, onClose, task }) {
                         />
                         <InputError message={errors.title} className="mt-2" />
                     </div>
+
+                    <InputError message={errors.error} className="mt-2" />
 
                     <div className="flex items-center justify-end space-x-3 pt-4">
                         <SecondaryButton

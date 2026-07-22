@@ -51,8 +51,13 @@ class DailySummaryService
         $provider = (string) config('ai.default', 'anthropic');
         $model = (string) config("ai.providers.{$provider}.model", $provider);
 
-        $system = 'You are a concise daily planner assistant. Write a friendly 2-4 sentence summary of the user\'s day.';
-        $prompt = $this->buildPrompt($user, $context);
+        $system = 'You are a thoughtful personal productivity assistant writing a user\'s daily briefing. '
+            .'Write a warm, in-depth summary of about 3 short paragraphs (roughly 6-10 sentences). '
+            .'Reference the user\'s actual tasks, deadlines, payments, and calendar events by name when they are provided. '
+            .'Clearly flag anything overdue and suggest what to prioritise first, note upcoming commitments and payments so nothing slips, '
+            .'and close with a short, genuine note of encouragement. '
+            .'Address the user directly by their first name. Write in plain prose only — no markdown, no headings, no bullet lists.';
+        $prompt = $this->buildPrompt($user, $date, $context);
 
         try {
             $content = trim($this->textGenerator->generate($system, $prompt));
@@ -89,36 +94,126 @@ class DailySummaryService
     }
 
     /**
-     * Build the user prompt from the gathered day context.
+     * Build the user prompt from the gathered day context. Includes concrete
+     * task/payment/calendar detail (not just counts) so the model can write a
+     * specific, in-depth briefing.
      *
      * @param  array<string, mixed>  $context
      */
-    private function buildPrompt(User $user, array $context): string
+    private function buildPrompt(User $user, Carbon $date, array $context): string
     {
-        $counts = $this->counts($context);
+        $firstName = trim(explode(' ', trim((string) $user->name))[0] ?? (string) $user->name);
 
         $lines = [];
-        $lines[] = "User: {$user->name}";
-        $lines[] = "Tasks due today: {$counts['today']}";
-        $lines[] = "Overdue tasks: {$counts['overdue']}";
-        $lines[] = "Upcoming tasks (next 7 days): {$counts['upcoming']}";
-        $lines[] = "Upcoming payments (next 30 days): {$counts['payments']}";
-        $lines[] = "Calendar items (next 7 days): {$counts['calendar']}";
+        $lines[] = "User's first name: {$firstName}";
+        $lines[] = 'Local date: '.$date->format('l, F j, Y');
+        $lines[] = '';
 
-        $todayTitles = collect($context['today_tasks'] ?? [])
-            ->take(5)
-            ->map(fn ($task) => '- '.(string) ($task->title ?? 'Untitled'))
-            ->all();
-
-        if (! empty($todayTitles)) {
-            $lines[] = "Today's task titles:";
-            $lines = array_merge($lines, $todayTitles);
-        }
+        $lines = array_merge($lines, $this->taskSection('OVERDUE TASKS', $context['overdue_tasks'] ?? []));
+        $lines = array_merge($lines, $this->taskSection('DUE TODAY', $context['today_tasks'] ?? []));
+        $lines = array_merge($lines, $this->taskSection('UPCOMING TASKS (next 7 days)', $context['upcoming_tasks'] ?? []));
+        $lines = array_merge($lines, $this->paymentSection($context['payments'] ?? []));
+        $lines = array_merge($lines, $this->calendarSection($context['calendar'] ?? []));
 
         $lines[] = '';
-        $lines[] = 'Summarize the day for the user in 2-4 encouraging sentences.';
+        $lines[] = 'Write the daily briefing now.';
 
         return implode("\n", $lines);
+    }
+
+    /**
+     * Render a titled list of tasks (title, due date, priority) for the prompt.
+     *
+     * @param  iterable<mixed>  $tasks
+     * @return array<int, string>
+     */
+    private function taskSection(string $heading, iterable $tasks): array
+    {
+        $rows = collect($tasks)->take(8)->map(function ($task) {
+            $title = (string) ($task->title ?? 'Untitled task');
+            $due = $this->formatDate($task->due_date ?? null);
+            $priority = $task->priority ?? null;
+
+            $meta = array_filter([
+                $due ? "due {$due}" : null,
+                $priority ? "{$priority} priority" : null,
+            ]);
+
+            return '- '.$title.($meta ? ' ('.implode(', ', $meta).')' : '');
+        })->all();
+
+        if (empty($rows)) {
+            return ["{$heading}: none", ''];
+        }
+
+        return array_merge(["{$heading}:"], $rows, ['']);
+    }
+
+    /**
+     * Render upcoming payments (name, amount, date) for the prompt.
+     *
+     * @param  iterable<mixed>  $payments
+     * @return array<int, string>
+     */
+    private function paymentSection(iterable $payments): array
+    {
+        $rows = collect($payments)->take(8)->map(function ($payment) {
+            $name = (string) ($payment->description ?? $payment->category->name ?? $payment->loan->name ?? 'Payment');
+            $currency = $payment->currency ?? '';
+            $amount = $payment->amount !== null ? trim($currency.' '.number_format((float) $payment->amount, 2)) : null;
+            $when = $this->formatDate($payment->occurred_at ?? null);
+
+            $meta = array_filter([$amount, $when ? "on {$when}" : null]);
+
+            return '- '.$name.($meta ? ' ('.implode(', ', $meta).')' : '');
+        })->all();
+
+        if (empty($rows)) {
+            return ['UPCOMING PAYMENTS (next 30 days): none', ''];
+        }
+
+        return array_merge(['UPCOMING PAYMENTS (next 30 days):'], $rows, ['']);
+    }
+
+    /**
+     * Render calendar items ({date, title, type}) for the prompt.
+     *
+     * @param  iterable<mixed>  $items
+     * @return array<int, string>
+     */
+    private function calendarSection(iterable $items): array
+    {
+        $rows = collect($items)->take(10)->map(function ($item) {
+            $title = (string) ($item['title'] ?? 'Event');
+            $type = $item['type'] ?? null;
+            $when = $this->formatDate($item['date'] ?? null);
+
+            $meta = array_filter([$type, $when ? "on {$when}" : null]);
+
+            return '- '.$title.($meta ? ' ('.implode(', ', $meta).')' : '');
+        })->all();
+
+        if (empty($rows)) {
+            return ['CALENDAR (next 7 days): none', ''];
+        }
+
+        return array_merge(['CALENDAR (next 7 days):'], $rows, ['']);
+    }
+
+    /**
+     * Format a date-ish value (Carbon or parseable string) as "Mon, Jun 3".
+     */
+    private function formatDate(mixed $value): ?string
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value)->format('D, M j');
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     /**

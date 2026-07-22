@@ -112,6 +112,7 @@ export default function TodoLayout({ header, children }) {
     const [showQuickAddTransaction, setShowQuickAddTransaction] = useState(false);
     const [showSyncQueue, setShowSyncQueue] = useState(false);
     const [wevieWalletSubmenuOpen, setWevieWalletSubmenuOpen] = useState(false);
+    const [tasksSubmenuOpen, setTasksSubmenuOpen] = useState(true);
     const {
         isOnline,
         pendingCount,
@@ -154,13 +155,16 @@ export default function TodoLayout({ header, children }) {
             icon: CheckSquare,
             current: route().current("tasks.*"),
             tourKey: "nav-tasks",
-        },
-        {
-            name: "Categories",
-            href: route("categories.index"),
-            icon: FolderOpen,
-            current: route().current("categories.*"),
-            tourKey: "nav-categories",
+            hasSubLinks: true,
+            subLinks: [
+                {
+                    name: "Categories",
+                    href: route("categories.index"),
+                    icon: FolderOpen,
+                    current: route().current("categories.*"),
+                    tourKey: "nav-categories",
+                },
+            ],
         },
         {
             name: "Workspaces",
@@ -268,6 +272,86 @@ export default function TodoLayout({ header, children }) {
                                     <div className="space-y-1">
                                         {navigation.map((item) => {
                                             const Icon = item.icon;
+                                            if (item.hasSubLinks) {
+                                                return (
+                                                    <div
+                                                        key={item.name}
+                                                        data-tour={item.tourKey}
+                                                    >
+                                                        <div className="flex items-center justify-between">
+                                                            <Link
+                                                                href={item.href}
+                                                                onClick={() =>
+                                                                    setSidebarOpen(false)
+                                                                }
+                                                                className={`group flex items-center flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 ${
+                                                                    item.current
+                                                                        ? "bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-[#2ED7A1]"
+                                                                        : "text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary"
+                                                                }`}
+                                                            >
+                                                                <Icon
+                                                                    className={`mr-3 h-5 w-5 ${
+                                                                        item.current
+                                                                            ? "text-primary-400 dark:text-[#2ED7A1]"
+                                                                            : "text-light-muted group-hover:text-light-secondary dark:text-dark-muted dark:group-hover:text-dark-secondary"
+                                                                    }`}
+                                                                />
+                                                                {item.name}
+                                                            </Link>
+                                                            <button
+                                                                onClick={() =>
+                                                                    setTasksSubmenuOpen(
+                                                                        !tasksSubmenuOpen
+                                                                    )
+                                                                }
+                                                                className={`p-2 rounded-md transition-colors duration-150 ${
+                                                                    item.current
+                                                                        ? "text-primary-400 dark:text-[#2ED7A1] hover:bg-primary-200/50 dark:hover:bg-primary-900/30"
+                                                                        : "text-light-muted hover:text-light-secondary dark:text-dark-muted dark:hover:text-dark-secondary hover:bg-light-hover/50 dark:hover:bg-dark-hover/50"
+                                                                }`}
+                                                                title={`Toggle ${item.name} menu`}
+                                                            >
+                                                                {tasksSubmenuOpen ? (
+                                                                    <ChevronDown className="h-4 w-4" />
+                                                                ) : (
+                                                                    <ChevronRight className="h-4 w-4" />
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                        {tasksSubmenuOpen && (
+                                                            <div className="ml-8 mt-1 space-y-1">
+                                                                {item.subLinks.map(
+                                                                    (sub) => {
+                                                                        const SubIcon =
+                                                                            sub.icon;
+                                                                        return (
+                                                                            <Link
+                                                                                key={sub.name}
+                                                                                href={sub.href}
+                                                                                data-tour={sub.tourKey}
+                                                                                onClick={() =>
+                                                                                    setSidebarOpen(
+                                                                                        false
+                                                                                    )
+                                                                                }
+                                                                                className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150 ${
+                                                                                    sub.current
+                                                                                        ? "bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-[#2ED7A1]"
+                                                                                        : "text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary"
+                                                                                }`}
+                                                                            >
+                                                                                <SubIcon className="h-4 w-4 mr-2" />
+                                                                                {sub.name}
+                                                                            </Link>
+                                                                        );
+                                                                    }
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            }
                                             if (item.hasSubmenu) {
                                                 return (
                                                     <div key={item.name}>
@@ -525,6 +609,72 @@ export default function TodoLayout({ header, children }) {
                         <div className="space-y-1">
                             {navigation.map((item) => {
                                 const Icon = item.icon;
+                                if (item.hasSubLinks) {
+                                    return (
+                                        <div key={item.name} data-tour={item.tourKey}>
+                                            <div className="flex items-center justify-between">
+                                                <Link
+                                                    href={item.href}
+                                                    className={`group flex items-center flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 ${
+                                                        item.current
+                                                            ? "bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-primary-300"
+                                                            : "text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary"
+                                                    }`}
+                                                >
+                                                    <Icon
+                                                        className={`mr-3 h-5 w-5 ${
+                                                            item.current
+                                                                ? "text-primary-500"
+                                                                : "text-light-muted group-hover:text-light-secondary dark:text-dark-muted dark:group-hover:text-dark-secondary"
+                                                        }`}
+                                                    />
+                                                    {item.name}
+                                                </Link>
+                                                <button
+                                                    onClick={() =>
+                                                        setTasksSubmenuOpen(
+                                                            !tasksSubmenuOpen
+                                                        )
+                                                    }
+                                                    className={`p-2 rounded-md transition-colors duration-150 ${
+                                                        item.current
+                                                            ? "text-primary-500 hover:bg-primary-200/50 dark:hover:bg-primary-900/30"
+                                                            : "text-light-muted hover:text-light-secondary dark:text-dark-muted dark:hover:text-dark-secondary hover:bg-light-hover/50 dark:hover:bg-dark-hover/50"
+                                                    }`}
+                                                    title={`Toggle ${item.name} menu`}
+                                                >
+                                                    {tasksSubmenuOpen ? (
+                                                        <ChevronDown className="h-4 w-4" />
+                                                    ) : (
+                                                        <ChevronRight className="h-4 w-4" />
+                                                    )}
+                                                </button>
+                                            </div>
+                                            {tasksSubmenuOpen && (
+                                                <div className="ml-8 mt-1 space-y-1">
+                                                    {item.subLinks.map((sub) => {
+                                                        const SubIcon = sub.icon;
+                                                        return (
+                                                            <Link
+                                                                key={sub.name}
+                                                                href={sub.href}
+                                                                data-tour={sub.tourKey}
+                                                                className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150 ${
+                                                                    sub.current
+                                                                        ? "bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-primary-300"
+                                                                        : "text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary"
+                                                                }`}
+                                                            >
+                                                                <SubIcon className="h-4 w-4 mr-2" />
+                                                                {sub.name}
+                                                            </Link>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                }
                                 if (item.hasSubmenu) {
                                     return (
                                         <div key={item.name} data-tour={item.tourKey}>

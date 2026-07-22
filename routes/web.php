@@ -20,6 +20,7 @@ use App\Modules\Finance\Controllers\FinanceBudgetController;
 use App\Modules\Finance\Controllers\FinanceCategoryController;
 use App\Modules\Finance\Controllers\FinanceDashboardController;
 use App\Modules\Finance\Controllers\FinanceExportController;
+use App\Modules\Finance\Controllers\FinanceInsightController;
 use App\Modules\Finance\Controllers\FinanceLoanController;
 use App\Modules\Finance\Controllers\FinanceReportController;
 use App\Modules\Finance\Controllers\FinanceSavingsGoalController;
@@ -94,6 +95,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Finance
     Route::get('weviewallet', [FinanceDashboardController::class, 'index'])->name('weviewallet.dashboard');
+    Route::post('weviewallet/insights', [FinanceInsightController::class, 'store'])
+        ->name('finance.insights.store');
     Route::post('weviewallet/collaborators', [FinanceWalletCollaboratorController::class, 'store'])
         ->name('weviewallet.collaborators.store');
     Route::delete('weviewallet/collaborators/{user}', [FinanceWalletCollaboratorController::class, 'destroy'])

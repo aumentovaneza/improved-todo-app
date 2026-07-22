@@ -5,6 +5,7 @@ namespace App\Modules\Finance\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Finance\Services\FinanceAccessService;
+use App\Modules\Finance\Services\FinanceInsightService;
 use App\Modules\Finance\Services\FinanceService;
 use App\Modules\Finance\Services\FinanceWalletService;
 use Illuminate\Http\Request;
@@ -17,7 +18,8 @@ class FinanceDashboardController extends Controller
     public function __construct(
         private FinanceService $financeService,
         private FinanceAccessService $accessService,
-        private FinanceWalletService $walletService
+        private FinanceWalletService $walletService,
+        private FinanceInsightService $insightService
     ) {}
 
     public function index(Request $request): Response
@@ -32,10 +34,18 @@ class FinanceDashboardController extends Controller
             ->select(['id', 'name', 'email'])
             ->find($walletUserId);
 
+        $range = $request->string('range')->toString() ?: null;
+
         $data = $this->financeService->getDashboardData(
             $walletUserId,
-            $request->string('range')->toString() ?: null
+            $range
         );
+
+        // Spending insights are personal to the signed-in user's own wallet.
+        $isWalletOwner = $walletUserId === $user->id;
+        $financeInsight = $isWalletOwner
+            ? $this->insightService->getCachedForCurrentPeriod($user, $range)
+            : null;
 
         return Inertia::render('Finance/Dashboard', [
             'transactions' => $data['transactions'],
@@ -51,10 +61,12 @@ class FinanceDashboardController extends Controller
             'walletUserId' => $walletUserId,
             'collaborators' => $user->walletCollaborators()
                 ->get(['users.id', 'users.name', 'users.email', 'finance_wallet_collaborators.role']),
-            'isWalletOwner' => $walletUserId === $user->id,
+            'isWalletOwner' => $isWalletOwner,
             'tier' => $this->accessService->getTier($user),
             'canAccessAdvancedCharts' => $this->accessService->canAccessAdvancedCharts($user),
+            'financeInsight' => $financeInsight,
+            'canUseFinanceInsights' => $isWalletOwner && $this->insightService->userCanUseInsights($user),
+            'insightRange' => $data['summary']['range'] ?? 'this_month',
         ]);
     }
-
 }

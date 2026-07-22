@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Subtask;
 use App\Services\SubtaskService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -35,7 +36,17 @@ class SubtaskController extends Controller
         return redirect()->to($previous);
     }
 
-    public function store(Request $request): RedirectResponse
+    /**
+     * Whether the request is a plain background XHR (not an Inertia visit)
+     * expecting a JSON response. Checks the raw X-Inertia header so this holds
+     * regardless of whether the Request::inertia() macro is registered.
+     */
+    private function wantsJson(Request $request): bool
+    {
+        return ! $request->hasHeader('X-Inertia') && $request->expectsJson();
+    }
+
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         try {
             $validated = $request->validate([
@@ -45,22 +56,39 @@ class SubtaskController extends Controller
 
             $subtask = $this->subtaskService->createSubtask($validated, Auth::id());
 
-            // Flash the created subtask so the client can reconcile its
+            $payload = $subtask->only([
+                'id',
+                'title',
+                'is_completed',
+                'completed_at',
+                'position',
+                'task_id',
+            ]);
+
+            // Background (non-Inertia) XHR clients get the created row as JSON
+            // so they can save in place without an Inertia visit / page reload.
+            if ($this->wantsJson($request)) {
+                return response()->json([
+                    'subtask' => $payload,
+                    'message' => 'Subtask created successfully',
+                ]);
+            }
+
+            // Flash the created subtask so Inertia clients can reconcile their
             // temporary (client-generated) id with the real database id.
             return $this->redirectBack()
                 ->with('message', 'Subtask created successfully')
-                ->with('subtask', $subtask->only([
-                    'id',
-                    'title',
-                    'is_completed',
-                    'completed_at',
-                    'position',
-                    'task_id',
-                ]));
+                ->with('subtask', $payload);
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
             report($e);
+
+            if ($this->wantsJson($request)) {
+                return response()->json([
+                    'error' => 'Failed to create subtask: ' . $e->getMessage(),
+                ], 500);
+            }
 
             return $this->redirectBack()->withErrors(['error' => 'Failed to create subtask: ' . $e->getMessage()]);
         }

@@ -212,58 +212,56 @@ export default function SubtaskManager({
         setNewSubtaskTitle("");
         setIsAddingSubtask(false);
 
-        router.post(
-            route("subtasks.store"),
-            {
-                task_id: task.id,
-                title: titleToAdd,
-            },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                only: ["flash"], // Only pull back the flashed subtask
-                onSuccess: (page) => {
-                    // Reconcile the temporary client id with the real
-                    // database id returned from the server, otherwise later
-                    // edit/toggle/delete requests would target a non-existent
-                    // subtask.
-                    const created = page?.props?.flash?.subtask;
-                    const reconcile = (list) =>
-                        created?.id
-                            ? list.map((s) =>
-                                  s.id === tempSubtask.id
-                                      ? { ...s, ...created }
-                                      : s
-                              )
-                            : list;
-
-                    // The optimistic add set `[...subtasks, tempSubtask]`, so
-                    // that reconciled list is the true new state. Use it for
-                    // both local state and the parent callback — the bare
-                    // `subtasks` closure is stale (missing the new row).
-                    const nextSubtasks = reconcile([...subtasks, tempSubtask]);
-                    setSubtasks(nextSubtasks);
-
-                    // Update parent component's task data if callback provided
-                    if (onTaskUpdate) {
-                        onTaskUpdate({
-                            ...task,
-                            subtasks: nextSubtasks,
-                        });
-                    }
-                    toast.success("Subtask saved.");
+        // Save in the background via a plain XHR (no Inertia visit) so the page
+        // never reloads and the optimistic row stays put instantly.
+        window.axios
+            .post(
+                route("subtasks.store"),
+                {
+                    task_id: task.id,
+                    title: titleToAdd,
                 },
-                onError: (errors) => {
-                    setSubtasks((prev) =>
-                        prev.filter((s) => s.id !== tempSubtask.id)
-                    );
-                    toast.error(
-                        errors?.error ||
-                            "We couldn’t save that just now. Try again when you’re ready."
-                    );
-                },
-            }
-        );
+                { headers: { Accept: "application/json" } }
+            )
+            .then((response) => {
+                // Reconcile the temporary client id with the real database id
+                // returned from the server, otherwise later edit/toggle/delete
+                // requests would target a non-existent subtask.
+                const created = response?.data?.subtask;
+                const reconcile = (list) =>
+                    created?.id
+                        ? list.map((s) =>
+                              s.id === tempSubtask.id
+                                  ? { ...s, ...created }
+                                  : s
+                          )
+                        : list;
+
+                // The optimistic add set `[...subtasks, tempSubtask]`, so that
+                // reconciled list is the true new state. Use it for both local
+                // state and the parent callback — the bare `subtasks` closure
+                // is stale (missing the new row).
+                const nextSubtasks = reconcile([...subtasks, tempSubtask]);
+                setSubtasks(nextSubtasks);
+
+                // Update parent component's task data if callback provided
+                if (onTaskUpdate) {
+                    onTaskUpdate({
+                        ...task,
+                        subtasks: nextSubtasks,
+                    });
+                }
+                toast.success("Subtask saved.");
+            })
+            .catch((error) => {
+                setSubtasks((prev) =>
+                    prev.filter((s) => s.id !== tempSubtask.id)
+                );
+                toast.error(
+                    error?.response?.data?.error ||
+                        "We couldn’t save that just now. Try again when you’re ready."
+                );
+            });
     };
 
     const handleToggleSubtask = (subtask) => {

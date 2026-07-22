@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { router } from "@inertiajs/react";
 import { X, Plus } from "lucide-react";
 import Modal from "@/Components/Modal";
 import PrimaryButton from "@/Components/PrimaryButton";
@@ -9,7 +8,7 @@ import InputLabel from "@/Components/InputLabel";
 import InputError from "@/Components/InputError";
 import { toast } from "react-toastify";
 
-export default function QuickSubtaskModal({ show, onClose, task }) {
+export default function QuickSubtaskModal({ show, onClose, task, onSaved }) {
     const [subtaskTitle, setSubtaskTitle] = useState("");
     const [processing, setProcessing] = useState(false);
     const [errors, setErrors] = useState({});
@@ -25,31 +24,45 @@ export default function QuickSubtaskModal({ show, onClose, task }) {
         setProcessing(true);
         setErrors({});
 
-        router.post(
-            route("subtasks.store"),
-            {
-                task_id: task?.id,
-                title: subtaskTitle.trim(),
-            },
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    toast.success("Subtask saved.");
-                    setSubtaskTitle("");
-                    onClose();
+        // Save in the background via a plain XHR (no Inertia visit) so the
+        // Tasks page never reloads.
+        window.axios
+            .post(
+                route("subtasks.store"),
+                {
+                    task_id: task?.id,
+                    title: subtaskTitle.trim(),
                 },
-                onError: (errors) => {
-                    setErrors(errors);
-                    toast.error(
-                        errors?.error ||
-                            "We couldn’t save that just now. Try again when you’re ready."
-                    );
-                },
-                onFinish: () => {
-                    setProcessing(false);
-                },
-            }
-        );
+                { headers: { Accept: "application/json" } }
+            )
+            .then((response) => {
+                toast.success("Subtask saved.");
+                setSubtaskTitle("");
+                if (onSaved) {
+                    onSaved(response?.data?.subtask);
+                }
+                onClose();
+            })
+            .catch((error) => {
+                const responseErrors = error?.response?.data?.errors || {};
+                const flattened = Object.fromEntries(
+                    Object.entries(responseErrors).map(([key, value]) => [
+                        key,
+                        Array.isArray(value) ? value[0] : value,
+                    ])
+                );
+                setErrors({
+                    ...flattened,
+                    error: error?.response?.data?.error,
+                });
+                toast.error(
+                    error?.response?.data?.error ||
+                        "We couldn’t save that just now. Try again when you’re ready."
+                );
+            })
+            .finally(() => {
+                setProcessing(false);
+            });
     };
 
     const handleClose = () => {

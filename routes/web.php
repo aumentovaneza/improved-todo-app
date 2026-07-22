@@ -13,6 +13,7 @@ use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\SwimlaneController;
 use App\Http\Controllers\TagController;
+use App\Http\Controllers\TaskCaptureController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\WorkspaceController;
 use App\Modules\Finance\Controllers\FinanceAccountController;
@@ -61,6 +62,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     // Tasks
     Route::resource('tasks', TaskController::class)->except(['create', 'show', 'edit']);
+    Route::post('tasks/capture', [TaskCaptureController::class, 'store'])->name('tasks.capture');
     Route::post('tasks/{task}/toggle-status', [TaskController::class, 'toggleStatus'])->name('tasks.toggle-status');
     Route::post('tasks/reorder', [TaskController::class, 'reorder'])->name('tasks.reorder');
 

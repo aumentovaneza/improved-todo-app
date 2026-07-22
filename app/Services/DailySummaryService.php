@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\DailySummary;
 use App\Models\User;
 use App\Repositories\Contracts\DailySummaryRepositoryInterface;
+use App\Services\Ai\AiEntitlementService;
 use App\Services\Ai\Contracts\TextGenerator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -16,26 +17,19 @@ class DailySummaryService
         private DashboardService $dashboardService,
         private DailySummaryRepositoryInterface $repository,
         private TextGenerator $textGenerator,
+        private AiEntitlementService $entitlement,
     ) {}
 
     /**
      * Whether the user is entitled to the AI daily summary (a "pro" feature).
      *
-     * Centralized so gating the feature to a paid plan later is a one-line
-     * change. Today it returns true for everyone via the open-beta flag.
+     * Thin wrapper over the shared entitlement seam so gating stays consistent
+     * across every AI feature. The feature keeps its open-beta override
+     * (config('ai.open_beta.daily_summary')) until a paid tier takes over.
      */
     public function userCanUseSummary(User $user): bool
     {
-        // Open beta: treat everyone as entitled while we test publicly.
-        if (config('ai.daily_summary_open_beta', true)) {
-            return true;
-        }
-
-        // TODO: gate to pro plan. When a real paid tier/subscription exists,
-        // replace this with the entitlement check (mirroring the tier pattern
-        // in App\Modules\Finance\Services\FinanceAccessService::getTier()), e.g.
-        // return $user->hasProPlan();
-        return false;
+        return $this->entitlement->canUse($user, 'daily_summary');
     }
 
     /**

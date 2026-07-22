@@ -159,6 +159,16 @@ class User extends Authenticatable
         return $this->role === 'member';
     }
 
+    /**
+     * The canonical "premium" predicate — the single source of truth for paid
+     * entitlement (used by AiEntitlementService and FinanceAccessService). Today
+     * premium maps to admins; future subscription/plan logic lands here.
+     */
+    public function isPremium(): bool
+    {
+        return $this->isAdmin();
+    }
+
     public function getTimezone(): string
     {
         return $this->timezone ?? 'UTC';

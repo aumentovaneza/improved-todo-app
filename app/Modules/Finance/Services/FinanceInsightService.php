@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Modules\Finance\Models\FinanceInsight;
 use App\Modules\Finance\Repositories\FinanceInsightRepository;
 use App\Modules\Finance\Repositories\FinanceSavingsGoalRepository;
+use App\Services\Ai\AiEntitlementService;
 use App\Services\Ai\Contracts\TextGenerator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -19,23 +20,19 @@ class FinanceInsightService
         private FinanceInsightRepository $repository,
         private FinanceAccessService $accessService,
         private TextGenerator $textGenerator,
+        private AiEntitlementService $entitlement,
     ) {}
 
     /**
      * Whether the user is entitled to AI spending insights (a "pro" feature).
      *
-     * Centralized so gating the feature to a paid plan later is a one-line
-     * change. During the open beta everyone is entitled; once the beta ends the
-     * real tier check in FinanceAccessService takes over.
+     * Thin wrapper over the shared entitlement seam so gating stays consistent
+     * across every AI feature. The feature keeps its open-beta override
+     * (config('ai.open_beta.finance_insights')) until a paid tier takes over.
      */
     public function userCanUseInsights(User $user): bool
     {
-        // Open beta: treat everyone as entitled while we test publicly.
-        if (config('ai.finance_insights_open_beta', true)) {
-            return true;
-        }
-
-        return $this->accessService->canUseInsights($user);
+        return $this->entitlement->canUse($user, 'finance_insights');
     }
 
     /**
@@ -57,6 +54,7 @@ class FinanceInsightService
             .'Highlight where the money went, flag categories or budgets that look overspent, note progress toward savings goals, '
             .'and give one or two concrete, actionable suggestions for the rest of the period. '
             .'Address the user directly by their first name and close with a short, genuine note of encouragement. '
+            .'All monetary amounts are in Philippine Pesos (PHP) — always write them with the ₱ symbol (e.g. ₱1,200.00) and never use "$" or any other currency symbol. '
             .'Write in plain prose only — no markdown, no headings, no bullet lists.';
         $prompt = $this->buildPrompt($user, $context);
 
@@ -294,6 +292,6 @@ class FinanceInsightService
 
     private function money(mixed $value): string
     {
-        return number_format((float) $value, 2);
+        return '₱'.number_format((float) $value, 2);
     }
 }

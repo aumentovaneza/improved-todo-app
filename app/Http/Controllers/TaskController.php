@@ -53,6 +53,33 @@ class TaskController extends Controller
     }
 
     /**
+     * Redirect back to the originating page, never into a GET-less task endpoint.
+     *
+     * Task mutations run on POST/PUT/DELETE routes whose paths have no GET
+     * counterpart — /tasks/{task} (show is excluded from the resource),
+     * /tasks/{task}/toggle-status, and /tasks/reorder. When back() resolves to
+     * the request's own URL (e.g. saving an edited task), Inertia follows the
+     * 302 into one of these dead endpoints and the save appears to fail with a
+     * 404. Fall back to the tasks index in that case; the bare /tasks index is a
+     * real GET route, so a previous URL that points there keeps its filters.
+     */
+    private function redirectBack(): RedirectResponse
+    {
+        $previous = url()->previous();
+        $path = ltrim(parse_url($previous, PHP_URL_PATH) ?? '', '/');
+
+        $isDeadEndpoint = $previous === url()->current()
+            || $path === 'tasks/reorder'
+            || preg_match('#^tasks/\d+(/|$)#', $path) === 1;
+
+        if ($isDeadEndpoint) {
+            return redirect()->route('tasks.index');
+        }
+
+        return redirect()->to($previous);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request): RedirectResponse
@@ -101,11 +128,11 @@ class TaskController extends Controller
         try {
             $task = $this->taskService->createTask($validated, Auth::id());
 
-            return redirect()->back()->with('message', 'Task created successfully');
+            return $this->redirectBack()->with('message', 'Task created successfully');
         } catch (\InvalidArgumentException $e) {
-            return redirect()->back()->withErrors(['error' => $e->getMessage()])->withInput();
+            return $this->redirectBack()->withErrors(['error' => $e->getMessage()])->withInput();
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Failed to create task. Please try again.'])->withInput();
+            return $this->redirectBack()->withErrors(['error' => 'Failed to create task. Please try again.'])->withInput();
         }
     }
 
@@ -159,11 +186,11 @@ class TaskController extends Controller
         try {
             $updatedTask = $this->taskService->updateTask($task, $validated, Auth::id());
 
-            return redirect()->back()->with('message', 'Task updated successfully');
+            return $this->redirectBack()->with('message', 'Task updated successfully');
         } catch (\InvalidArgumentException $e) {
-            return redirect()->back()->withErrors(['error' => $e->getMessage()])->withInput();
+            return $this->redirectBack()->withErrors(['error' => $e->getMessage()])->withInput();
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Failed to update task. Please try again.'])->withInput();
+            return $this->redirectBack()->withErrors(['error' => 'Failed to update task. Please try again.'])->withInput();
         }
     }
 
@@ -175,9 +202,9 @@ class TaskController extends Controller
         try {
             $this->taskService->deleteTask($task, Auth::id());
 
-            return back()->with('status', 'Task deleted successfully');
+            return $this->redirectBack()->with('status', 'Task deleted successfully');
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to delete task. Please try again.']);
+            return $this->redirectBack()->withErrors(['error' => 'Failed to delete task. Please try again.']);
         }
     }
 
@@ -196,7 +223,7 @@ class TaskController extends Controller
                 ]);
             }
 
-            return back()->with('message', 'Tasks reordered successfully');
+            return $this->redirectBack()->with('message', 'Tasks reordered successfully');
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
                 return response()->json(
@@ -205,7 +232,7 @@ class TaskController extends Controller
                 );
             }
 
-            return back()->withErrors(['error' => 'Failed to reorder tasks. Please try again.']);
+            return $this->redirectBack()->withErrors(['error' => 'Failed to reorder tasks. Please try again.']);
         }
     }
 
@@ -224,9 +251,9 @@ class TaskController extends Controller
         try {
             $this->taskService->toggleTaskStatus($task, $newStatus, Auth::id());
 
-            return back()->with('status', 'Task status updated successfully');
+            return $this->redirectBack()->with('status', 'Task status updated successfully');
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to update task status. Please try again.']);
+            return $this->redirectBack()->withErrors(['error' => 'Failed to update task status. Please try again.']);
         }
     }
 }

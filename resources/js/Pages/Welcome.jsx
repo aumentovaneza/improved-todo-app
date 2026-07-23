@@ -4,19 +4,15 @@ import { useState } from "react";
 import {
     CheckSquare,
     Calendar,
-    Target,
     Users,
     BarChart3,
     Zap,
-    Shield,
     Smartphone,
     ArrowRight,
     CheckCircle,
     Clock,
-    FolderOpen,
     Brain,
     Timer,
-    TrendingUp,
     Award,
     Camera,
     Lightbulb,
@@ -36,16 +32,18 @@ import {
     Lock,
     EyeOff,
     User,
+    Wallet,
+    Kanban,
+    BookOpen,
+    Repeat,
+    Tag,
+    Sparkles,
+    LayoutDashboard,
+    WifiOff,
 } from "lucide-react";
 
 // Login Modal Component
-function LoginModal({
-    isOpen,
-    onClose,
-    status,
-    canResetPassword,
-    openRegisterModal,
-}) {
+function LoginModal({ isOpen, onClose, status, canResetPassword, openRegisterModal }) {
     const [showPassword, setShowPassword] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
         email: "",
@@ -123,9 +121,7 @@ function LoginModal({
                                     type="email"
                                     name="email"
                                     value={data.email}
-                                    onChange={(e) =>
-                                        setData("email", e.target.value)
-                                    }
+                                    onChange={(e) => setData("email", e.target.value)}
                                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1] transition-colors"
                                     placeholder="Enter your email"
                                     autoComplete="username"
@@ -156,9 +152,7 @@ function LoginModal({
                                     type={showPassword ? "text" : "password"}
                                     name="password"
                                     value={data.password}
-                                    onChange={(e) =>
-                                        setData("password", e.target.value)
-                                    }
+                                    onChange={(e) => setData("password", e.target.value)}
                                     className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1] transition-colors"
                                     placeholder="Enter your password"
                                     autoComplete="current-password"
@@ -166,9 +160,7 @@ function LoginModal({
                                 />
                                 <button
                                     type="button"
-                                    onClick={() =>
-                                        setShowPassword(!showPassword)
-                                    }
+                                    onClick={() => setShowPassword(!showPassword)}
                                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                                 >
                                     {showPassword ? (
@@ -193,9 +185,7 @@ function LoginModal({
                                     name="remember"
                                     type="checkbox"
                                     checked={data.remember}
-                                    onChange={(e) =>
-                                        setData("remember", e.target.checked)
-                                    }
+                                    onChange={(e) => setData("remember", e.target.checked)}
                                     className="h-4 w-4 text-primary-400 focus:ring-primary-400 border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700"
                                 />
                                 <label
@@ -327,9 +317,7 @@ function RegisterModal({ isOpen, onClose, openLoginModal }) {
                                     type="text"
                                     name="name"
                                     value={data.name}
-                                    onChange={(e) =>
-                                        setData("name", e.target.value)
-                                    }
+                                    onChange={(e) => setData("name", e.target.value)}
                                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1] transition-colors"
                                     placeholder="Enter your full name"
                                     autoComplete="name"
@@ -360,9 +348,7 @@ function RegisterModal({ isOpen, onClose, openLoginModal }) {
                                     type="email"
                                     name="email"
                                     value={data.email}
-                                    onChange={(e) =>
-                                        setData("email", e.target.value)
-                                    }
+                                    onChange={(e) => setData("email", e.target.value)}
                                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1] transition-colors"
                                     placeholder="Enter your email"
                                     autoComplete="username"
@@ -393,9 +379,7 @@ function RegisterModal({ isOpen, onClose, openLoginModal }) {
                                     type={showPassword ? "text" : "password"}
                                     name="password"
                                     value={data.password}
-                                    onChange={(e) =>
-                                        setData("password", e.target.value)
-                                    }
+                                    onChange={(e) => setData("password", e.target.value)}
                                     className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1] transition-colors"
                                     placeholder="Create a password"
                                     autoComplete="new-password"
@@ -403,9 +387,7 @@ function RegisterModal({ isOpen, onClose, openLoginModal }) {
                                 />
                                 <button
                                     type="button"
-                                    onClick={() =>
-                                        setShowPassword(!showPassword)
-                                    }
+                                    onClick={() => setShowPassword(!showPassword)}
                                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                                 >
                                     {showPassword ? (
@@ -436,18 +418,11 @@ function RegisterModal({ isOpen, onClose, openLoginModal }) {
                                 </div>
                                 <input
                                     id="password_confirmation"
-                                    type={
-                                        showConfirmPassword
-                                            ? "text"
-                                            : "password"
-                                    }
+                                    type={showConfirmPassword ? "text" : "password"}
                                     name="password_confirmation"
                                     value={data.password_confirmation}
                                     onChange={(e) =>
-                                        setData(
-                                            "password_confirmation",
-                                            e.target.value
-                                        )
+                                        setData("password_confirmation", e.target.value)
                                     }
                                     className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1] transition-colors"
                                     placeholder="Confirm your password"
@@ -456,11 +431,7 @@ function RegisterModal({ isOpen, onClose, openLoginModal }) {
                                 />
                                 <button
                                     type="button"
-                                    onClick={() =>
-                                        setShowConfirmPassword(
-                                            !showConfirmPassword
-                                        )
-                                    }
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                                 >
                                     {showConfirmPassword ? (
@@ -494,9 +465,7 @@ function RegisterModal({ isOpen, onClose, openLoginModal }) {
                                     type="text"
                                     name="invite_code"
                                     value={data.invite_code}
-                                    onChange={(e) =>
-                                        setData("invite_code", e.target.value)
-                                    }
+                                    onChange={(e) => setData("invite_code", e.target.value)}
                                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-400 focus:border-primary-400 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-[#2ED7A1] dark:focus:border-[#2ED7A1] transition-colors"
                                     placeholder="Enter your invite code"
                                     required
@@ -508,8 +477,7 @@ function RegisterModal({ isOpen, onClose, openLoginModal }) {
                                 </p>
                             )}
                             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                You need a valid invite code to register during
-                                the testing phase.
+                                You need a valid invite code to register during the testing phase.
                             </p>
                         </div>
 
@@ -562,7 +530,7 @@ export default function Welcome({ auth, status, canResetPassword }) {
 
     return (
         <>
-            <Head title="Welcome to Wevie - A Smart, ADHD-Friendly To-Do App" />
+            <Head title="Welcome to Wevie - Tasks, Boards, Finance & More in One App" />
             <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
                 {/* Navigation */}
                 <nav className="relative px-4 sm:px-6 py-4">
@@ -577,9 +545,7 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                     href={route("dashboard")}
                                     className="inline-flex items-center px-3 sm:px-6 py-2 sm:py-3 bg-primary-400 text-white font-semibold rounded-lg hover:bg-primary-500 transition-colors duration-200 text-sm sm:text-base dark:bg-[#2ED7A1] dark:hover:bg-primary-400"
                                 >
-                                    <span className="hidden sm:inline">
-                                        Go to {" "}
-                                    </span>
+                                    <span className="hidden sm:inline">Go to </span>
                                     Dashboard
                                     <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
                                 </Link>
@@ -608,16 +574,16 @@ export default function Welcome({ auth, status, canResetPassword }) {
                 <section className="px-4 sm:px-6 py-12 sm:py-20">
                     <div className="mx-auto max-w-7xl text-center">
                         <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
-                            Organize Your Life with
+                            Your Whole Life,
                             <span className="text-primary-400 block dark:text-[#2ED7A1]">
-                                Smart Task Management
+                                Organized in One Place
                             </span>
                         </h1>
                         <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 sm:mb-12 max-w-3xl mx-auto px-4">
-                            Stay productive and never miss a deadline. Wevie
-                            helps you manage tasks, collaborate with teams, and
-                            track your progress with powerful features designed
-                            for modern productivity.
+                            Wevie brings tasks, Kanban boards, calendar, focus timers, personal
+                            finance, and journaling together in one app — with AI assistance to help
+                            you plan your day and manage your money. Productivity and peace of mind,
+                            all in one place.
                         </p>
 
                         {!auth.user && (
@@ -645,16 +611,16 @@ export default function Welcome({ auth, status, canResetPassword }) {
                     <div className="mx-auto max-w-7xl">
                         <div className="text-center mb-12 sm:mb-16">
                             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                                Everything You Need to Stay Organized
+                                Everything You Need, All in One App
                             </h2>
                             <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto px-4">
-                                Powerful features designed to help you manage
-                                tasks efficiently and boost your productivity.
+                                From daily to-dos to your monthly budget — Wevie replaces a handful
+                                of separate apps with one connected workspace.
                             </p>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                            {/* Feature 1 */}
+                            {/* Tasks */}
                             <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 sm:p-8 hover:shadow-lg transition-shadow duration-200">
                                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
                                     <CheckSquare className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400 dark:text-[#2ED7A1]" />
@@ -663,84 +629,171 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                     Smart Task Management
                                 </h3>
                                 <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                                    Create, organize, and prioritize tasks with
-                                    subtasks, due dates, and custom categories.
-                                    Drag and drop to reorder your priorities.
+                                    Tasks with subtasks, priorities, statuses, and start/end times.
+                                    Drag to reorder, tick off in a click — and your notes stay
+                                    encrypted at rest.
                                 </p>
                             </div>
 
-                            {/* Feature 2 */}
+                            {/* Recurring & Reminders */}
+                            <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 sm:p-8 hover:shadow-lg transition-shadow duration-200">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-100 dark:bg-indigo-900 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
+                                    <Repeat className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600 dark:text-indigo-400" />
+                                </div>
+                                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
+                                    Recurring Tasks & Reminders
+                                </h3>
+                                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+                                    Set daily, weekly, monthly, or yearly recurrence and schedule
+                                    reminders so nothing slips — from rent day to the weekly
+                                    stand-up.
+                                </p>
+                            </div>
+
+                            {/* Categories & Tags */}
                             <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 sm:p-8 hover:shadow-lg transition-shadow duration-200">
                                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
-                                    <FolderOpen className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 dark:text-green-400" />
+                                    <Tag className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 dark:text-green-400" />
                                 </div>
                                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
-                                    Custom Categories
+                                    Categories & Tags
                                 </h3>
                                 <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                                    Organize tasks with color-coded categories.
-                                    Create custom workflows that match your
-                                    personal or business needs.
+                                    Organize work your way with color-coded categories and reusable
+                                    tags, then filter to focus on exactly what matters right now.
                                 </p>
                             </div>
 
-                            {/* Feature 3 */}
+                            {/* Boards */}
                             <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 sm:p-8 hover:shadow-lg transition-shadow duration-200">
                                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
-                                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600 dark:text-purple-400" />
+                                    <Kanban className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600 dark:text-purple-400" />
                                 </div>
                                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
-                                    Due Date Tracking
+                                    Kanban Boards & Workspaces
                                 </h3>
                                 <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                                    Never miss a deadline with smart due date
-                                    tracking, overdue alerts, and calendar
-                                    integration for better planning.
+                                    Plan visually with boards, columns, and swimlanes. Drag tasks
+                                    across stages and invite collaborators to shared team boards.
                                 </p>
                             </div>
 
-                            {/* Feature 4 */}
+                            {/* Calendar */}
+                            <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 sm:p-8 hover:shadow-lg transition-shadow duration-200">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-sky-100 dark:bg-sky-900 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
+                                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-sky-600 dark:text-sky-400" />
+                                </div>
+                                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
+                                    Calendar + Google Sync
+                                </h3>
+                                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+                                    See tasks and finances together in month, week, or day views,
+                                    and connect Google Calendar to bring your events into one place.
+                                </p>
+                            </div>
+
+                            {/* WevieWallet — flagship */}
+                            <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 sm:p-8 hover:shadow-lg transition-shadow duration-200">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-100 dark:bg-emerald-900 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
+                                    <Wallet className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600 dark:text-emerald-400" />
+                                </div>
+                                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
+                                    WevieWallet — Personal Finance
+                                </h3>
+                                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+                                    Track accounts, income and expenses, budgets, savings goals, and
+                                    loans. Share wallets, generate reports, and export to Excel.
+                                </p>
+                            </div>
+
+                            {/* Journal */}
+                            <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 sm:p-8 hover:shadow-lg transition-shadow duration-200">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-rose-100 dark:bg-rose-900 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
+                                    <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-rose-600 dark:text-rose-400" />
+                                </div>
+                                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
+                                    Journal & Mood Tracking
+                                </h3>
+                                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+                                    Keep dated journal entries, tag them, and log how you feel from
+                                    17 moods — then export your reflections whenever you like.
+                                </p>
+                            </div>
+
+                            {/* Analytics */}
                             <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 sm:p-8 hover:shadow-lg transition-shadow duration-200">
                                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
                                     <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600 dark:text-orange-400" />
                                 </div>
                                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
-                                    Progress Analytics
+                                    Productivity Analytics
                                 </h3>
                                 <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                                    Track your productivity with detailed
-                                    analytics, completion rates, and insights to
-                                    optimize your workflow.
+                                    Understand how you work with completion trends, category and
+                                    status breakdowns, and your most productive day of the week.
                                 </p>
                             </div>
 
-                            {/* Feature 5 */}
+                            {/* Pomodoro & Focus */}
                             <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 sm:p-8 hover:shadow-lg transition-shadow duration-200">
                                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 dark:bg-red-900 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
-                                    <Users className="h-5 w-5 sm:h-6 sm:w-6 text-red-600 dark:text-red-400" />
+                                    <Timer className="h-5 w-5 sm:h-6 sm:w-6 text-red-600 dark:text-red-400" />
                                 </div>
                                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
-                                    Team Collaboration
+                                    Pomodoro & Focus Mode
                                 </h3>
                                 <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                                    Share tasks and collaborate with team
-                                    members. Assign tasks, track progress, and
-                                    stay synchronized with your team.
+                                    Start a focus timer from anywhere in the app, or drop into a
+                                    distraction-free Focus Mode to get deep work done.
                                 </p>
                             </div>
 
-                            {/* Feature 6 */}
+                            {/* Dashboard */}
                             <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 sm:p-8 hover:shadow-lg transition-shadow duration-200">
                                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-teal-100 dark:bg-teal-900 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
-                                    <Zap className="h-5 w-5 sm:h-6 sm:w-6 text-teal-600 dark:text-teal-400" />
+                                    <LayoutDashboard className="h-5 w-5 sm:h-6 sm:w-6 text-teal-600 dark:text-teal-400" />
                                 </div>
                                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
-                                    Lightning Fast
+                                    Customizable Dashboard
                                 </h3>
                                 <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                                    Built for speed with instant updates,
-                                    real-time synchronization, and a responsive
-                                    interface that works on all devices.
+                                    Build your own home screen from drag-and-drop, resizable widgets
+                                    — tasks, budgets, calendar, Pomodoro and more — saved to your
+                                    layout.
+                                </p>
+                            </div>
+
+                            {/* PWA / Offline */}
+                            <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 sm:p-8 hover:shadow-lg transition-shadow duration-200">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
+                                    <WifiOff className="h-5 w-5 sm:h-6 sm:w-6 text-slate-600 dark:text-slate-300" />
+                                </div>
+                                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
+                                    Works Offline (PWA)
+                                </h3>
+                                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+                                    Install Wevie like a native app and keep going even without a
+                                    connection — it's a progressive web app with offline support.
+                                </p>
+                            </div>
+
+                            {/* AI Assistant (Pro) */}
+                            <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-xl p-6 sm:p-8 hover:shadow-lg transition-shadow duration-200 border border-purple-200 dark:border-purple-800">
+                                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                                        <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                                    </div>
+                                    <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-2.5 py-1 rounded-full text-xs font-semibold">
+                                        PRO
+                                    </span>
+                                </div>
+                                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
+                                    AI Assistant
+                                </h3>
+                                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+                                    Get an AI daily briefing, spending-insights coaching for your
+                                    finances, and type tasks in plain English to have them filled in
+                                    for you.
                                 </p>
                             </div>
                         </div>
@@ -756,69 +809,21 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                 Coming Soon
                             </div>
                             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                                Revolutionary Productivity Features
+                                What We're Building Next
                             </h2>
                             <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto px-4">
-                                We're building the future of task management
-                                with AI-powered insights, ADHD-focused features,
-                                and gamification to transform how you work.
+                                We're just getting started. Here's what's on the way — ADHD-focused
+                                tools, gamification, and a native mobile app to make Wevie even
+                                better.
                             </p>
                         </div>
 
-                        {/* AI & Productivity Enhancements */}
+                        {/* Next Up */}
                         <div className="mb-16">
                             <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-8 text-center">
-                                🔥 AI-Powered Productivity Enhancements
+                                🚀 On the Roadmap
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                                {/* AI Productivity Coach */}
-                                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 sm:p-8 hover:shadow-xl transition-all duration-200 border border-purple-200 dark:border-purple-800 hover:border-purple-400 dark:hover:border-purple-600">
-                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
-                                        <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                                    </div>
-                                    <h4 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
-                                        AI Productivity Coach
-                                    </h4>
-                                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                                        GPT-powered suggestions, smart
-                                        summaries, and personalized nudges to
-                                        optimize your workflow and boost
-                                        productivity.
-                                    </p>
-                                </div>
-
-                                {/* Pomodoro Integration */}
-                                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 sm:p-8 hover:shadow-xl transition-all duration-200 border border-red-200 dark:border-red-800 hover:border-red-400 dark:hover:border-red-600">
-                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
-                                        <Timer className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                                    </div>
-                                    <h4 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
-                                        Pomodoro Integration
-                                    </h4>
-                                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                                        Built-in timer per task with session
-                                        logging, break reminders, and
-                                        productivity tracking for focused work
-                                        sessions.
-                                    </p>
-                                </div>
-
-                                {/* Advanced Analytics */}
-                                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 sm:p-8 hover:shadow-xl transition-all duration-200 border border-primary-200 dark:border-primary-800 hover:border-primary-400 dark:hover:border-primary-600">
-                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
-                                        <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                                    </div>
-                                    <h4 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
-                                        Advanced Analytics
-                                    </h4>
-                                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                                        Weekly stats, productivity graphs, trend
-                                        analysis, and insights to understand
-                                        your work patterns and optimize
-                                        performance.
-                                    </p>
-                                </div>
-
                                 {/* Gamification */}
                                 <div className="bg-white dark:bg-gray-800 rounded-xl p-6 sm:p-8 hover:shadow-xl transition-all duration-200 border border-yellow-200 dark:border-yellow-800 hover:border-yellow-400 dark:hover:border-yellow-600">
                                     <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
@@ -828,9 +833,8 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                         Gamification System
                                     </h4>
                                     <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                                        Earn XP, unlock badges, build progress
-                                        streaks, and compete with friends to
-                                        make productivity fun and engaging.
+                                        Earn XP, unlock badges, build progress streaks, and take on
+                                        challenges to make productivity fun and engaging.
                                     </p>
                                 </div>
 
@@ -843,26 +847,23 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                         Snapshot-to-Task (OCR)
                                     </h4>
                                     <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                                        Extract tasks from photos or handwritten
-                                        notes using advanced OCR technology.
-                                        Turn any list into actionable tasks
-                                        instantly.
+                                        Snap a photo of a handwritten list or a whiteboard and turn
+                                        it into actionable tasks — building on today's plain-text AI
+                                        capture.
                                     </p>
                                 </div>
 
-                                {/* Smart Daily Planner */}
-                                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 sm:p-8 hover:shadow-xl transition-all duration-200 border border-indigo-200 dark:border-indigo-800 hover:border-indigo-400 dark:hover:border-indigo-600">
-                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
-                                        <Lightbulb className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                                {/* Native Mobile App */}
+                                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 sm:p-8 hover:shadow-xl transition-all duration-200 border border-primary-200 dark:border-primary-800 hover:border-primary-400 dark:hover:border-primary-600">
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mb-4 sm:mb-6">
+                                        <Smartphone className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                                     </div>
                                     <h4 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
-                                        Smart Daily Planner
+                                        Native Mobile App
                                     </h4>
                                     <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                                        AI-recommended daily schedule based on
-                                        priorities, deadlines, and your
-                                        productivity patterns for optimal time
-                                        management.
+                                        Wevie already installs as an offline PWA today — dedicated
+                                        iOS and Android apps with push notifications are next.
                                     </p>
                                 </div>
                             </div>
@@ -883,9 +884,8 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                         Gentle Reminders
                                     </h4>
                                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                                        Non-intrusive, customizable task nudges
-                                        that respect your workflow and mental
-                                        state.
+                                        Non-intrusive, customizable task nudges that respect your
+                                        workflow and mental state.
                                     </p>
                                 </div>
 
@@ -898,9 +898,8 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                         One Focus Mode
                                     </h4>
                                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                                        Full-screen single-task view to
-                                        eliminate distractions and maintain
-                                        focus.
+                                        Full-screen single-task view to eliminate distractions and
+                                        maintain focus.
                                     </p>
                                 </div>
 
@@ -913,8 +912,8 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                         Microtask Breakdown
                                     </h4>
                                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                                        Split large tasks into smaller,
-                                        actionable steps for easier completion.
+                                        Split large tasks into smaller, actionable steps for easier
+                                        completion.
                                     </p>
                                 </div>
 
@@ -927,8 +926,8 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                         Visual Time Estimator
                                     </h4>
                                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                                        Time remaining and countdown clocks with
-                                        visual progress indicators.
+                                        Time remaining and countdown clocks with visual progress
+                                        indicators.
                                     </p>
                                 </div>
 
@@ -941,8 +940,7 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                         Low-Effort Wins
                                     </h4>
                                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                                        Easy tasks view to boost motivation when
-                                        energy is low.
+                                        Easy tasks view to boost motivation when energy is low.
                                     </p>
                                 </div>
 
@@ -955,8 +953,8 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                         Positive Reinforcement
                                     </h4>
                                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                                        Motivational messages and visual
-                                        feedback to celebrate progress.
+                                        Motivational messages and visual feedback to celebrate
+                                        progress.
                                     </p>
                                 </div>
 
@@ -969,8 +967,8 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                         Energy-Based Batching
                                     </h4>
                                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                                        Group tasks by mental load or energy
-                                        needed for optimal scheduling.
+                                        Group tasks by mental load or energy needed for optimal
+                                        scheduling.
                                     </p>
                                 </div>
 
@@ -983,8 +981,8 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                         "Restart My Day" Button
                                     </h4>
                                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                                        Reset the current day with grace and
-                                        start fresh without judgment.
+                                        Reset the current day with grace and start fresh without
+                                        judgment.
                                     </p>
                                 </div>
                             </div>
@@ -997,12 +995,11 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                 Fully Customizable Experience
                             </div>
                             <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                                Toggle Features On/Off
+                                Make It Yours
                             </h3>
                             <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                                Every feature is modular. Enable only what you
-                                need - whether it's Pomodoro timers, analytics,
-                                gamification, or ADHD-focused tools. Your
+                                Build a dashboard from drag-and-drop widgets, switch between light
+                                and dark mode, and set your timezone and preferences. Your
                                 productivity, your way.
                             </p>
                         </div>
@@ -1018,12 +1015,12 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                 Development Roadmap
                             </div>
                             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                                Our Journey to Productivity Excellence
+                                How Far We've Come — and Where We're Headed
                             </h2>
                             <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto px-4">
-                                Track our progress as we build the most
-                                comprehensive and user-friendly task management
-                                platform ever created.
+                                Wevie has grown from a simple to-do list into a full productivity
+                                and finance suite. Here's what we've shipped so far and what's
+                                coming next.
                             </p>
                         </div>
 
@@ -1045,7 +1042,7 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                                     ✅ COMPLETED
                                                 </span>
                                                 <span className="text-sm text-green-600 dark:text-green-400 font-medium">
-                                                    Phase 1 - Q4 2024
+                                                    Shipped · 2024–2025
                                                 </span>
                                             </div>
                                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
@@ -1054,76 +1051,150 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                             <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                                                 <li className="flex items-center">
                                                     <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
-                                                    Task Management System
+                                                    Tasks, subtasks & priorities
                                                 </li>
                                                 <li className="flex items-center">
                                                     <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
-                                                    Category Organization
+                                                    Categories, tags & reminders
                                                 </li>
                                                 <li className="flex items-center">
                                                     <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
-                                                    Due Date Tracking
+                                                    Recurring tasks & due dates
                                                 </li>
                                                 <li className="flex items-center">
                                                     <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
-                                                    Dark Mode & Responsive
-                                                    Design
+                                                    Analytics dashboard & calendar
                                                 </li>
                                                 <li className="flex items-center">
                                                     <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
-                                                    Basic Analytics Dashboard
+                                                    Dark mode & responsive design
                                                 </li>
                                             </ul>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Phase 2 - In Progress */}
+                                {/* Phase 2 - Shipped */}
+                                <div className="relative flex items-center sm:flex-row-reverse">
+                                    <div className="absolute left-0 sm:left-1/2 transform sm:-translate-x-1/2 w-8 h-8 bg-green-500 rounded-full border-4 border-white dark:border-gray-800 flex items-center justify-center">
+                                        <CheckCircle className="h-4 w-4 text-white" />
+                                    </div>
+                                    <div className="ml-12 sm:ml-0 sm:w-1/2 sm:pl-8">
+                                        <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
+                                            <div className="flex items-center mb-3">
+                                                <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium mr-3">
+                                                    ✅ COMPLETED
+                                                </span>
+                                                <span className="text-sm text-green-600 dark:text-green-400 font-medium">
+                                                    Shipped · 2025
+                                                </span>
+                                            </div>
+                                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                                                Boards, Focus & Finance
+                                            </h3>
+                                            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                                                <li className="flex items-center">
+                                                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                                                    Kanban boards & workspaces
+                                                </li>
+                                                <li className="flex items-center">
+                                                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                                                    Pomodoro & Focus Mode
+                                                </li>
+                                                <li className="flex items-center">
+                                                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                                                    WevieWallet finance module
+                                                </li>
+                                                <li className="flex items-center">
+                                                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                                                    Journal & Google Calendar sync
+                                                </li>
+                                                <li className="flex items-center">
+                                                    <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                                                    Widget dashboard & offline PWA
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Phase 3 - Shipped */}
+                                <div className="relative flex items-center">
+                                    <div className="absolute left-0 sm:left-1/2 transform sm:-translate-x-1/2 w-8 h-8 bg-green-500 rounded-full border-4 border-white dark:border-gray-800 flex items-center justify-center">
+                                        <CheckCircle className="h-4 w-4 text-white" />
+                                    </div>
+                                    <div className="ml-12 sm:ml-0 sm:w-1/2 sm:pr-8">
+                                        <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
+                                            <div className="flex items-center mb-3">
+                                                <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium mr-3">
+                                                    ✅ COMPLETED
+                                                </span>
+                                                <span className="text-sm text-green-600 dark:text-green-400 font-medium">
+                                                    Shipped · 2026
+                                                </span>
+                                            </div>
+                                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                                                AI Assistant (Pro)
+                                            </h3>
+                                            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                                                <li className="flex items-center">
+                                                    <Sparkles className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                                                    AI daily summary & briefing
+                                                </li>
+                                                <li className="flex items-center">
+                                                    <Sparkles className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                                                    AI spending-insights coach
+                                                </li>
+                                                <li className="flex items-center">
+                                                    <Sparkles className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                                                    Natural-language task capture
+                                                </li>
+                                                <li className="flex items-center">
+                                                    <Sparkles className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                                                    Provider-agnostic & Pro-gated
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Phase 4 - Now / Next */}
                                 <div className="relative flex items-center sm:flex-row-reverse">
                                     <div className="absolute left-0 sm:left-1/2 transform sm:-translate-x-1/2 w-8 h-8 bg-blue-500 rounded-full border-4 border-white dark:border-gray-800 flex items-center justify-center">
                                         <Clock className="h-4 w-4 text-white" />
                                     </div>
                                     <div className="ml-12 sm:ml-0 sm:w-1/2 sm:pl-8">
-                                        <div className="bg-primary-50 dark:bg-primary-900/20 rounded-xl p-6 border border-primary-200 dark:border-primary-800">
+                                        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
                                             <div className="flex items-center mb-3">
-                                                <span className="bg-primary-400 text-white px-3 py-1 rounded-full text-sm font-medium mr-3 dark:bg-[#2ED7A1]">
+                                                <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-medium mr-3">
                                                     🚧 IN PROGRESS
                                                 </span>
-                                                <span className="text-sm text-primary-400 dark:text-[#2ED7A1] font-medium">
-                                                    Phase 2 - Q1 2025
+                                                <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                                                    Now → Next
                                                 </span>
                                             </div>
                                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-                                                AI & Productivity Boost
+                                                Smarter Planning
                                             </h3>
                                             <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                                                 <li className="flex items-center">
-                                                    <Timer className="h-4 w-4 text-primary-400 mr-2 flex-shrink-0 dark:text-[#2ED7A1]" />
-                                                    AI Productivity Coach
+                                                    <Lightbulb className="h-4 w-4 text-blue-500 mr-2 flex-shrink-0" />
+                                                    Smart daily planner
                                                 </li>
                                                 <li className="flex items-center">
-                                                    <Timer className="h-4 w-4 text-primary-400 mr-2 flex-shrink-0 dark:text-[#2ED7A1]" />
-                                                    Pomodoro Timer Integration
+                                                    <Camera className="h-4 w-4 text-blue-500 mr-2 flex-shrink-0" />
+                                                    Snapshot-to-task (OCR)
                                                 </li>
                                                 <li className="flex items-center">
-                                                    <Timer className="h-4 w-4 text-primary-400 mr-2 flex-shrink-0 dark:text-[#2ED7A1]" />
-                                                    Advanced Analytics &
-                                                    Insights
-                                                </li>
-                                                <li className="flex items-center">
-                                                    <Timer className="h-4 w-4 text-primary-400 mr-2 flex-shrink-0 dark:text-[#2ED7A1]" />
-                                                    Smart Daily Planner
-                                                </li>
-                                                <li className="flex items-center">
-                                                    <Timer className="h-4 w-4 text-primary-400 mr-2 flex-shrink-0 dark:text-[#2ED7A1]" />
-                                                    Snapshot-to-Task (OCR)
+                                                    <Sparkles className="h-4 w-4 text-blue-500 mr-2 flex-shrink-0" />
+                                                    Deeper AI assistance
                                                 </li>
                                             </ul>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Phase 3 - Planned */}
+                                {/* Phase 5 - Planned */}
                                 <div className="relative flex items-center">
                                     <div className="absolute left-0 sm:left-1/2 transform sm:-translate-x-1/2 w-8 h-8 bg-purple-500 rounded-full border-4 border-white dark:border-gray-800 flex items-center justify-center">
                                         <Brain className="h-4 w-4 text-white" />
@@ -1135,39 +1206,39 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                                     📋 PLANNED
                                                 </span>
                                                 <span className="text-sm text-purple-600 dark:text-purple-400 font-medium">
-                                                    Phase 3 - Q2 2025
+                                                    Later
                                                 </span>
                                             </div>
                                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-                                                ADHD-Focused Features
+                                                ADHD-Focused Suite
                                             </h3>
                                             <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                                                 <li className="flex items-center">
                                                     <Heart className="h-4 w-4 text-purple-500 mr-2 flex-shrink-0" />
-                                                    Gentle Reminder System
+                                                    Gentle reminder system
                                                 </li>
                                                 <li className="flex items-center">
                                                     <Focus className="h-4 w-4 text-purple-500 mr-2 flex-shrink-0" />
-                                                    One Focus Mode
+                                                    One-focus mode
                                                 </li>
                                                 <li className="flex items-center">
                                                     <Layers className="h-4 w-4 text-purple-500 mr-2 flex-shrink-0" />
-                                                    Microtask Breakdown
+                                                    Microtask breakdown
                                                 </li>
                                                 <li className="flex items-center">
                                                     <Battery className="h-4 w-4 text-purple-500 mr-2 flex-shrink-0" />
-                                                    Energy-Based Task Batching
+                                                    Energy-based batching
                                                 </li>
                                                 <li className="flex items-center">
                                                     <RotateCcw className="h-4 w-4 text-purple-500 mr-2 flex-shrink-0" />
-                                                    "Restart My Day" Feature
+                                                    "Restart my day" button
                                                 </li>
                                             </ul>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Phase 4 - Future */}
+                                {/* Phase 6 - Future */}
                                 <div className="relative flex items-center sm:flex-row-reverse">
                                     <div className="absolute left-0 sm:left-1/2 transform sm:-translate-x-1/2 w-8 h-8 bg-pink-500 rounded-full border-4 border-white dark:border-gray-800 flex items-center justify-center">
                                         <Award className="h-4 w-4 text-white" />
@@ -1179,33 +1250,24 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                                     🎯 FUTURE
                                                 </span>
                                                 <span className="text-sm text-pink-600 dark:text-pink-400 font-medium">
-                                                    Phase 4 - Q3 2025
+                                                    Later
                                                 </span>
                                             </div>
                                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-                                                Gamification & Social
+                                                Gamification & Mobile
                                             </h3>
                                             <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                                                 <li className="flex items-center">
                                                     <Award className="h-4 w-4 text-pink-500 mr-2 flex-shrink-0" />
-                                                    XP & Badge System
+                                                    XP & badge system
                                                 </li>
                                                 <li className="flex items-center">
                                                     <Star className="h-4 w-4 text-pink-500 mr-2 flex-shrink-0" />
-                                                    Progress Streaks &
-                                                    Challenges
-                                                </li>
-                                                <li className="flex items-center">
-                                                    <Users className="h-4 w-4 text-pink-500 mr-2 flex-shrink-0" />
-                                                    Team Collaboration 2.0
+                                                    Progress streaks & challenges
                                                 </li>
                                                 <li className="flex items-center">
                                                     <Smartphone className="h-4 w-4 text-pink-500 mr-2 flex-shrink-0" />
-                                                    Mobile App Launch
-                                                </li>
-                                                <li className="flex items-center">
-                                                    <Settings className="h-4 w-4 text-pink-500 mr-2 flex-shrink-0" />
-                                                    Full Feature Modularity
+                                                    Native iOS & Android apps
                                                 </li>
                                             </ul>
                                         </div>
@@ -1217,13 +1279,10 @@ export default function Welcome({ auth, status, canResetPassword }) {
                         {/* Call to Action */}
                         <div className="mt-16 text-center">
                             <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white">
-                                <h3 className="text-2xl font-bold mb-4">
-                                    Be Part of the Journey
-                                </h3>
+                                <h3 className="text-2xl font-bold mb-4">Be Part of the Journey</h3>
                                 <p className="text-lg mb-6 text-white/90">
-                                    Join our early adopters and help shape the
-                                    future of productivity. Your feedback drives
-                                    our development priorities.
+                                    Join our early adopters and help shape the future of
+                                    productivity. Your feedback drives our development priorities.
                                 </p>
                                 {!auth.user && (
                                     <button
@@ -1244,36 +1303,26 @@ export default function Welcome({ auth, status, canResetPassword }) {
                     <div className="mx-auto max-w-7xl">
                         <div className="text-center mb-16">
                             <h2 className="text-4xl font-bold text-white mb-4">
-                                Trusted by Productive People
+                                One App, Built to Do It All
                             </h2>
                             <p className="text-xl text-white/90 max-w-2xl mx-auto">
-                                Join thousands of users who have transformed
-                                their productivity with Wevie.
+                                Everything you need to plan your days and manage your money — no
+                                more juggling half a dozen apps.
                             </p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
                             <div>
-                                <div className="text-4xl font-bold text-white mb-2">
-                                    10,000+
-                                </div>
-                                <div className="text-white/90">
-                                    Tasks Completed Daily
-                                </div>
+                                <div className="text-4xl font-bold text-white mb-2">7+</div>
+                                <div className="text-white/90">Integrated Modules</div>
                             </div>
                             <div>
-                                <div className="text-4xl font-bold text-white mb-2">
-                                    99.9%
-                                </div>
-                                <div className="text-white/90">
-                                    Uptime Reliability
-                                </div>
+                                <div className="text-4xl font-bold text-white mb-2">3</div>
+                                <div className="text-white/90">AI-Powered Assistants</div>
                             </div>
                             <div>
-                                <div className="text-4xl font-bold text-white mb-2">
-                                    5,000+
-                                </div>
-                                <div className="text-white/90">Happy Users</div>
+                                <div className="text-4xl font-bold text-white mb-2">100%</div>
+                                <div className="text-white/90">Offline-Ready PWA</div>
                             </div>
                         </div>
                     </div>
@@ -1287,8 +1336,8 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                 Ready to Get Organized?
                             </h2>
                             <p className="text-xl text-gray-600 dark:text-gray-300 mb-12">
-                                Start managing your tasks more efficiently
-                                today. No credit card required.
+                                Start managing your tasks more efficiently today. No credit card
+                                required.
                             </p>
 
                             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -1319,12 +1368,8 @@ export default function Welcome({ auth, status, canResetPassword }) {
                             </div>
 
                             <div className="text-gray-400 text-center md:text-right">
-                                <p>
-                                    &copy; 2024 Wevie. All rights reserved.
-                                </p>
-                                <p className="text-sm mt-1">
-                                    Built with Laravel & React
-                                </p>
+                                <p>&copy; 2026 Wevie. All rights reserved.</p>
+                                <p className="text-sm mt-1">Built with Laravel & React</p>
                             </div>
                         </div>
                     </div>

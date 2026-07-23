@@ -462,7 +462,7 @@ export default function TaskEditModal({
                                             </div>
                                             <div>
                                             <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
-                                                End time
+                                                End time (optional)
                                                 </label>
                                                 <input
                                                     type="time"
@@ -474,7 +474,6 @@ export default function TaskEditModal({
                                                             e.target.value
                                                         )
                                                     }
-                                                    required={!data.is_all_day}
                                                 />
                                                 {errors.end_time && (
                                                     <div className="text-red-500 text-xs mt-1">

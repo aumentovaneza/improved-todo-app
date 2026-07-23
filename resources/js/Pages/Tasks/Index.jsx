@@ -1147,7 +1147,7 @@ export default function Index({ tasks = [], categories, tags = [], filters }) {
                                         onChange={(e) =>
                                             setGroupBy(e.target.value)
                                         }
-                                        className="border border-light-border/70 dark:border-dark-border/70 rounded-lg px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
+                                        className="border border-light-border/70 dark:border-dark-border/70 rounded-lg pl-2.5 pr-8 py-1.5 text-xs focus:ring-2 focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
                                     >
                                         <option value="none">None</option>
                                         <option value="category">Category</option>

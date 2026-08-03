@@ -30,6 +30,7 @@ export default function SummaryCards({
             icon: Coins,
             iconClassName: "bg-wevie-teal/10 text-wevie-teal",
             accent: "text-light-primary dark:text-dark-primary",
+            info: "Net worth = your cash, bank and e-wallet balances, minus credit-card debt and outstanding loan balances.",
         },
         {
             label: "Income",
@@ -101,6 +102,7 @@ export default function SummaryCards({
                     icon={card.icon}
                     iconClassName={card.iconClassName}
                     accent={card.accent}
+                    info={card.info}
                     onClick={card.onClick}
                 />
             ))}

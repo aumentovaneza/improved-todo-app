@@ -107,13 +107,42 @@ export default function Dashboard(props) {
         () => accounts.filter((account) => account.type === "credit-card"),
         [accounts]
     );
+    const isCurrentMonth = useCallback((transaction) => {
+        const raw = transaction.occurred_at ?? transaction.created_at;
+        if (!raw) return false;
+        const date = new Date(raw);
+        if (Number.isNaN(date.getTime())) return false;
+        const now = new Date();
+        return (
+            date.getFullYear() === now.getFullYear() &&
+            date.getMonth() === now.getMonth()
+        );
+    }, []);
+    const creditCardIds = useMemo(
+        () => new Set(creditCardAccounts.map((account) => account.id)),
+        [creditCardAccounts]
+    );
+    // Real charges: expenses whose *source* account is a credit card, this month.
     const creditCardCharges = useMemo(
         () =>
             transactions.filter(
                 (transaction) =>
-                    transaction.finance_credit_card_account_id && transaction.type === "expense"
+                    transaction.type === "expense" &&
+                    creditCardIds.has(transaction.finance_account_id) &&
+                    isCurrentMonth(transaction)
             ),
-        [transactions]
+        [transactions, creditCardIds, isCurrentMonth]
+    );
+    // Paydowns: expenses from another account that restore a card's credit, this month.
+    const creditCardPayments = useMemo(
+        () =>
+            transactions.filter(
+                (transaction) =>
+                    transaction.type === "expense" &&
+                    creditCardIds.has(transaction.finance_credit_card_account_id) &&
+                    isCurrentMonth(transaction)
+            ),
+        [transactions, creditCardIds, isCurrentMonth]
     );
     const activeWallet = props.activeWallet ?? null;
 
@@ -861,6 +890,10 @@ export default function Dashboard(props) {
                             creditCardAccounts.map((account) => {
                                 const charges = creditCardCharges.filter(
                                     (transaction) =>
+                                        transaction.finance_account_id === account.id
+                                );
+                                const payments = creditCardPayments.filter(
+                                    (transaction) =>
                                         transaction.finance_credit_card_account_id === account.id
                                 );
 
@@ -891,11 +924,11 @@ export default function Dashboard(props) {
                                         </div>
                                         <div className="mt-3 space-y-2 text-xs text-light-muted dark:text-dark-muted">
                                             <p className="font-semibold uppercase text-light-muted dark:text-dark-muted">
-                                                Charges
+                                                Charges this month
                                             </p>
                                             {charges.length === 0 ? (
                                                 <p className="text-light-muted dark:text-dark-muted">
-                                                    No charges yet.
+                                                    No charges this month.
                                                 </p>
                                             ) : (
                                                 charges.map((transaction) => (
@@ -916,6 +949,44 @@ export default function Dashboard(props) {
                                                             </p>
                                                         </div>
                                                         <p className="text-sm font-semibold text-rose-600 dark:text-rose-300">
+                                                            {formatCurrency(
+                                                                transaction.amount ?? 0,
+                                                                transaction.currency ??
+                                                                    account.currency ??
+                                                                    "PHP"
+                                                            )}
+                                                        </p>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                        <div className="mt-3 space-y-2 text-xs text-light-muted dark:text-dark-muted">
+                                            <p className="font-semibold uppercase text-light-muted dark:text-dark-muted">
+                                                Payments this month
+                                            </p>
+                                            {payments.length === 0 ? (
+                                                <p className="text-light-muted dark:text-dark-muted">
+                                                    No payments this month.
+                                                </p>
+                                            ) : (
+                                                payments.map((transaction) => (
+                                                    <div
+                                                        key={transaction.id}
+                                                        className="flex flex-wrap items-center justify-between gap-2 border-t border-light-border/70 pt-2 dark:border-dark-border/70"
+                                                    >
+                                                        <div>
+                                                            <p className="text-sm text-light-secondary dark:text-dark-secondary">
+                                                                {transaction.description}
+                                                            </p>
+                                                            <p className="text-xs text-light-muted dark:text-dark-muted">
+                                                                {new Date(
+                                                                    transaction.occurred_at ??
+                                                                        transaction.created_at ??
+                                                                        Date.now()
+                                                                ).toLocaleDateString()}
+                                                            </p>
+                                                        </div>
+                                                        <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-300">
                                                             {formatCurrency(
                                                                 transaction.amount ?? 0,
                                                                 transaction.currency ??

@@ -23,6 +23,7 @@ class Task extends Model
         'priority',
         'status',
         'due_date',
+        'end_date',
         'start_time',
         'end_time',
         'is_all_day',
@@ -39,6 +40,7 @@ class Task extends Model
         'title' => 'encrypted',
         'description' => 'encrypted',
         'due_date' => 'datetime',
+        'end_date' => 'datetime',
         'is_all_day' => 'boolean',
         'completed_at' => 'datetime',
         'is_recurring' => 'boolean',
@@ -142,12 +144,16 @@ class Task extends Model
             return null;
         }
 
+        // A task may span multiple days: fall back to due_date when no
+        // explicit end_date is set so single-day tasks keep their behavior.
+        $baseDate = $this->end_date ?? $this->due_date;
+
         if ($this->is_all_day || ! $this->end_time) {
-            return $this->due_date->endOfDay();
+            return $baseDate->endOfDay();
         }
 
-        // Combine due_date and end_time
-        return $this->due_date->setTimeFromTimeString($this->end_time);
+        // Combine the end date and end_time
+        return $baseDate->setTimeFromTimeString($this->end_time);
     }
 
     public function getFormattedTimeRangeAttribute()
@@ -200,12 +206,17 @@ class Task extends Model
         $occurrences = collect();
 
         if (! $this->is_recurring) {
-            // Non-recurring task - check if due_date falls within range
-            if (
-                $this->due_date &&
-                $this->due_date->between($startDate, $endDate)
-            ) {
-                $occurrences->push($this);
+            // Non-recurring task - include it when its [due_date..end_date]
+            // span overlaps the requested window. This catches multi-day tasks
+            // whose due_date falls before the window start but whose end_date
+            // reaches into it. Single-day tasks (no end_date) reduce to the
+            // original "due_date within range" check.
+            if ($this->due_date) {
+                $taskEnd = $this->end_date ?? $this->due_date;
+
+                if ($this->due_date->lte($endDate) && $taskEnd->gte($startDate)) {
+                    $occurrences->push($this);
+                }
             }
         } else {
             // Recurring task - generate occurrences

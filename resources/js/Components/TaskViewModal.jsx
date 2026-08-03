@@ -115,9 +115,21 @@ export default function TaskViewModal({ show, onClose, task, onTaskUpdate }) {
                                             )
                                                 ? "Planned for "
                                                 : ""}
-                                            {new Date(
-                                                task.due_date
-                                            ).toLocaleDateString()}
+                                            {task.end_date &&
+                                            new Date(
+                                                task.end_date
+                                            ).toDateString() !==
+                                                new Date(
+                                                    task.due_date
+                                                ).toDateString()
+                                                ? `${new Date(
+                                                      task.due_date
+                                                  ).toLocaleDateString()} → ${new Date(
+                                                      task.end_date
+                                                  ).toLocaleDateString()}`
+                                                : new Date(
+                                                      task.due_date
+                                                  ).toLocaleDateString()}
                                         </span>
                                     </div>
                                     <div className="flex items-center space-x-1 ml-5">

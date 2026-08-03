@@ -42,14 +42,15 @@ import {
     Flag,
     CheckSquare,
     Square,
-    Play,
     Pause,
-    XCircle,
     FolderOpen,
 } from "lucide-react";
 import TaskModal from "@/Components/TaskModal";
 import TaskViewModal from "@/Components/TaskViewModal";
 import TaskEditModal from "@/Components/TaskEditModal";
+import TaskStatusSelect, {
+    TASK_STATUS_OPTIONS,
+} from "@/Components/TaskStatusSelect";
 import QuickSubtaskModal from "@/Components/QuickSubtaskModal";
 import Toast from "@/Components/Toast";
 import OnboardingTour from "@/Components/OnboardingTour";
@@ -61,10 +62,9 @@ function SortableTask({
     globalIndex,
     getPriorityColor,
     getStatusIcon,
-    getStatusColor,
     isOverdue,
     toggleTaskStatus,
-    handleTaskStatusChange,
+    onStatusChange,
     setSelectedTask,
     setShowViewModal,
     setShowEditModal,
@@ -181,19 +181,10 @@ function SortableTask({
 
                     {/* Status */}
                     <div className="flex items-center space-x-2">
-                        <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
-                            {task.status === "in_progress" && <Play className="h-3 w-3 mr-1" />}
-                            {task.status === "pending" && <Clock className="h-3 w-3 mr-1" />}
-                            {task.status === "completed" && <CheckCircle className="h-3 w-3 mr-1" />}
-                            {task.status === "cancelled" && <XCircle className="h-3 w-3 mr-1" />}
-                            {task.status === "pending"
-                                ? "Ready"
-                                : task.status === "in_progress"
-                                  ? "In flow"
-                                  : task.status === "cancelled"
-                                    ? "Paused"
-                                    : "Completed"}
-                        </div>
+                        <TaskStatusSelect
+                            task={task}
+                            onChange={onStatusChange}
+                        />
                     </div>
 
                     {/* Priority */}
@@ -641,19 +632,6 @@ export default function Index({ tasks = [], categories, tags = [], filters }) {
         }
     };
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case "completed":
-                return "text-emerald-700 bg-emerald-100/70 dark:text-emerald-200 dark:bg-emerald-900/20";
-            case "in_progress":
-                return "text-sky-700 bg-sky-100/70 dark:text-sky-200 dark:bg-sky-900/20";
-            case "cancelled":
-                return "text-slate-600 bg-slate-100/70 dark:text-slate-300 dark:bg-slate-800/40";
-            default:
-                return "text-amber-700 bg-amber-100/70 dark:text-amber-200 dark:bg-amber-900/20";
-        }
-    };
-
     const getStatusIcon = (status) => {
         switch (status) {
             case "completed":
@@ -900,6 +878,27 @@ export default function Index({ tasks = [], categories, tags = [], filters }) {
             return Object.values(buckets).filter((b) => b.tasks.length);
         }
 
+        if (groupBy === "status") {
+            const buckets = new Map(
+                TASK_STATUS_OPTIONS.map((option) => [
+                    option.value,
+                    {
+                        key: `status-${option.value}`,
+                        label: option.label,
+                        color: option.color,
+                        tasks: [],
+                    },
+                ])
+            );
+            allTasks.forEach((task) => {
+                const key = buckets.has(task.status) ? task.status : "pending";
+                buckets.get(key).tasks.push(task);
+            });
+            return TASK_STATUS_OPTIONS.map((option) =>
+                buckets.get(option.value)
+            ).filter((bucket) => bucket.tasks.length);
+        }
+
         return [{ key: "all", label: null, color: null, tasks: allTasks }];
     }, [allTasks, groupBy]);
 
@@ -923,10 +922,9 @@ export default function Index({ tasks = [], categories, tags = [], filters }) {
                             globalIndex={index}
                             getPriorityColor={getPriorityColor}
                             getStatusIcon={getStatusIcon}
-                            getStatusColor={getStatusColor}
                             isOverdue={isOverdue}
                             toggleTaskStatus={toggleTaskStatus}
-                            handleTaskStatusChange={handleTaskStatusChange}
+                            onStatusChange={handleTaskStatusChange}
                             setSelectedTask={setSelectedTask}
                             setShowViewModal={setShowViewModal}
                             setShowEditModal={setShowEditModal}
@@ -1154,6 +1152,7 @@ export default function Index({ tasks = [], categories, tags = [], filters }) {
                                         <option value="tag">Tag</option>
                                         <option value="due_date">Due date</option>
                                         <option value="priority">Priority</option>
+                                        <option value="status">Status</option>
                                     </select>
                                 </div>
                                 <span className="hidden lg:inline text-xs text-light-muted dark:text-dark-muted">

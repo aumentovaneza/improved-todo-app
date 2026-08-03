@@ -66,14 +66,35 @@ class CalendarController extends Controller
             $taskOccurrences = $taskOccurrences->merge($occurrences);
         }
 
-        // Group tasks by date (in user's timezone)
-        $tasks = $taskOccurrences->groupBy(function ($task) use ($user) {
-            // Convert the task's due_date to user timezone for grouping
-            $taskDueDate = $task->due_date; // This is already a Carbon instance from the cast
-            $userDate = $user->toUserTimezone($taskDueDate);
+        // Group tasks by date (in user's timezone). A task that spans multiple
+        // days — an end_date later than its due_date — fans out into every day
+        // bucket from its start date through its end date, inclusive. Tasks with
+        // no end_date (or end_date == due_date) land in a single bucket exactly
+        // as before. Insertion order is preserved so per-bucket ordering is
+        // unchanged. Recurring instances always occupy a single day (their
+        // absolute end_date does not relate to a generated occurrence date).
+        $fannedOut = collect();
+        foreach ($taskOccurrences as $task) {
+            $startDay = $user->toUserTimezone($task->due_date)->startOfDay();
 
-            return $userDate->format('Y-m-d');
-        });
+            $endSource = (empty($task->is_recurring_instance) && $task->end_date)
+                ? $task->end_date
+                : $task->due_date;
+            $endDay = $user->toUserTimezone($endSource)->startOfDay();
+
+            // Guard against a malformed end date earlier than the start date.
+            if ($endDay->lt($startDay)) {
+                $endDay = $startDay->copy();
+            }
+
+            for ($day = $startDay->copy(); $day->lte($endDay); $day->addDay()) {
+                $fannedOut->push(['key' => $day->format('Y-m-d'), 'task' => $task]);
+            }
+        }
+
+        $tasks = $fannedOut
+            ->groupBy('key')
+            ->map(fn ($items) => $items->pluck('task')->values());
 
         // Get finance transactions (including recurring) for the month
         $transactions = FinanceTransaction::with('category')

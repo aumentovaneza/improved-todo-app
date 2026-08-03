@@ -51,8 +51,10 @@ class TaskService
                 }
             }
 
-            // Validate time logic
-            if (! empty($data['start_time']) && ! empty($data['end_time'])) {
+            // Validate time logic. Time ordering only matters when the task
+            // starts and ends on the same day; across multiple days the end
+            // time can legitimately be earlier than the start time.
+            if (! empty($data['start_time']) && ! empty($data['end_time']) && $this->isSingleDay($data)) {
                 $startTime = Carbon::createFromFormat('H:i', $data['start_time']);
                 $endTime = Carbon::createFromFormat('H:i', $data['end_time']);
 
@@ -105,8 +107,10 @@ class TaskService
                 }
             }
 
-            // Validate time logic
-            if (! empty($data['start_time']) && ! empty($data['end_time'])) {
+            // Validate time logic. Time ordering only matters when the task
+            // starts and ends on the same day; across multiple days the end
+            // time can legitimately be earlier than the start time.
+            if (! empty($data['start_time']) && ! empty($data['end_time']) && $this->isSingleDay($data)) {
                 $startTime = Carbon::createFromFormat('H:i', $data['start_time']);
                 $endTime = Carbon::createFromFormat('H:i', $data['end_time']);
 
@@ -305,6 +309,22 @@ class TaskService
         }
 
         return $resetCount;
+    }
+
+    /**
+     * Determine whether a task's start and end fall on the same calendar day.
+     *
+     * A task is single-day when it has no end_date, or when the end_date
+     * matches the due_date. Multi-day tasks span distinct dates, so their
+     * start/end times do not need to be ordered.
+     */
+    private function isSingleDay(array $data): bool
+    {
+        if (empty($data['end_date']) || empty($data['due_date'])) {
+            return true;
+        }
+
+        return Carbon::parse($data['due_date'])->isSameDay(Carbon::parse($data['end_date']));
     }
 
     /**

@@ -123,7 +123,10 @@ class SubtaskService
             $wasCompleted = $subtask->is_completed;
             $newStatus = ! $wasCompleted;
 
-            $subtask->update(['is_completed' => $newStatus]);
+            $subtask->update([
+                'is_completed' => $newStatus,
+                'completed_at' => $newStatus ? now() : null,
+            ]);
 
             // Update parent task completion status
             $this->updateParentTaskCompletion($subtask->task);

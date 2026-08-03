@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
+        />
+        <title>Wevie</title>
+        <style>
+            :root {
+                color-scheme: light dark;
+            }
+            html,
+            body {
+                height: 100%;
+                margin: 0;
+            }
+            body {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-family:
+                    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+                    sans-serif;
+                background: #ffffff;
+                color: #0f172a;
+            }
+            @media (prefers-color-scheme: dark) {
+                body {
+                    background: #0f172a;
+                    color: #f8fafc;
+                }
+            }
+            .splash {
+                text-align: center;
+            }
+            .dot {
+                display: inline-block;
+                width: 14px;
+                height: 14px;
+                margin: 0 4px;
+                border-radius: 9999px;
+                background: #4acf91;
+                animation: pulse 1.2s ease-in-out infinite;
+            }
+            .dot:nth-child(2) {
+                background: #5fdde0;
+                animation-delay: 0.2s;
+            }
+            .dot:nth-child(3) {
+                animation-delay: 0.4s;
+            }
+            @keyframes pulse {
+                0%,
+                100% {
+                    opacity: 0.35;
+                    transform: scale(0.8);
+                }
+                50% {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+            }
+            .label {
+                margin-top: 16px;
+                font-size: 15px;
+                opacity: 0.7;
+            }
+        </style>
+    </head>
+    <body>
+        <!--
+            Placeholder web root for the Capacitor iOS shell.
+            At runtime the WebView loads `server.url` from capacitor.config.json
+            (the live Wevie origin), so this file is only shown briefly on launch
+            / if the server is unreachable. Do not build the real app here.
+        -->
+        <div class="splash">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <div class="label">Loading Wevie…</div>
+        </div>
+    </body>
+</html>

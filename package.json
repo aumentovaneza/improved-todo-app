@@ -8,9 +8,12 @@
         "lint": "eslint resources/js",
         "lint:fix": "eslint resources/js --fix",
         "format": "prettier --write \"resources/js/**/*.{js,jsx}\"",
-        "format:check": "prettier --check \"resources/js/**/*.{js,jsx}\""
+        "format:check": "prettier --check \"resources/js/**/*.{js,jsx}\"",
+        "cap:sync": "cap sync ios",
+        "cap:open": "cap open ios"
     },
     "devDependencies": {
+        "@capacitor/cli": "^8.5.0",
         "@eslint/js": "^9.0.0",
         "@headlessui/react": "^2.0.0",
         "@inertiajs/react": "^2.0.0",
@@ -36,6 +39,8 @@
         "vite-plugin-pwa": "^0.21.0"
     },
     "dependencies": {
+        "@capacitor/core": "^8.5.0",
+        "@capacitor/ios": "^8.5.0",
         "@dnd-kit/core": "^6.3.1",
         "@dnd-kit/sortable": "^10.0.0",
         "@dnd-kit/utilities": "^3.2.2",

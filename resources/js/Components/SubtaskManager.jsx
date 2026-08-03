@@ -212,6 +212,20 @@ export default function SubtaskManager({
         })
     );
 
+    // Display order: incomplete subtasks first (in their existing position order),
+    // then completed ones grouped at the bottom under a "Done" section. Completed
+    // subtasks are sorted so the most recently finished sits at the very bottom.
+    const activeSubtasks = subtasks.filter((s) => !s.is_completed);
+    const doneSubtasks = subtasks
+        .filter((s) => s.is_completed)
+        .sort((a, b) => {
+            if (!a.completed_at && !b.completed_at) return 0;
+            if (!a.completed_at) return 1; // nulls last
+            if (!b.completed_at) return -1;
+            return a.completed_at.localeCompare(b.completed_at);
+        });
+    const orderedSubtasks = [...activeSubtasks, ...doneSubtasks];
+
     const handleAddSubtask = () => {
         if (!newSubtaskTitle.trim()) return;
 
@@ -485,12 +499,14 @@ export default function SubtaskManager({
         }
 
         // Store the original order before making changes
-        const originalSubtasks = Array.from(subtasks);
+        const originalSubtasks = Array.from(subtasksRef.current);
 
-        const oldIndex = subtasks.findIndex(
+        // Reorder against the displayed (grouped) order so drops line up with
+        // what the user actually sees.
+        const oldIndex = orderedSubtasks.findIndex(
             (item) => item.id.toString() === active.id
         );
-        const newIndex = subtasks.findIndex(
+        const newIndex = orderedSubtasks.findIndex(
             (item) => item.id.toString() === over.id
         );
 
@@ -498,7 +514,16 @@ export default function SubtaskManager({
             return;
         }
 
-        const newSubtasks = arrayMove(subtasks, oldIndex, newIndex);
+        // Don't allow dragging across the active/Done boundary — a completed
+        // subtask always belongs in the Done section and would just snap back.
+        if (
+            orderedSubtasks[oldIndex].is_completed !==
+            orderedSubtasks[newIndex].is_completed
+        ) {
+            return;
+        }
+
+        const newSubtasks = arrayMove(orderedSubtasks, oldIndex, newIndex);
 
         // Optimistically update the UI (and the ref source of truth).
         applySubtasks(() => newSubtasks);
@@ -609,29 +634,46 @@ export default function SubtaskManager({
                     onDragEnd={handleDragEnd}
                 >
                     <SortableContext
-                        items={subtasks.map((s) => s.id.toString())}
+                        items={orderedSubtasks.map((s) => s.id.toString())}
                         strategy={verticalListSortingStrategy}
                     >
                         <div className="space-y-2">
-                            {subtasks.map((subtask, index) => (
-                                <SortableSubtask
-                                    key={subtask.id}
-                                    subtask={subtask}
-                                    index={index}
-                                    canEdit={canEdit}
-                                    editingSubtask={editingSubtask}
-                                    editTitle={editTitle}
-                                    onToggle={handleToggleSubtask}
-                                    onStartEdit={startEdit}
-                                    onEditTitleChange={setEditTitle}
-                                    onSaveEdit={handleEditSubtask}
-                                    onCancelEdit={cancelEdit}
-                                    onDelete={handleDeleteSubtask}
-                                    isLoading={loadingSubtasks.has(subtask.id)}
-                                    isDeleting={deletingSubtasks.has(
-                                        subtask.id
-                                    )}
-                                />
+                            {orderedSubtasks.map((subtask, index) => (
+                                <div key={subtask.id}>
+                                    {/* Divider before the first completed row */}
+                                    {subtask.is_completed &&
+                                        index ===
+                                            activeSubtasks.length && (
+                                            <div
+                                                className={`text-xs font-medium text-gray-500 dark:text-gray-400 pt-2 pb-1 ${
+                                                    activeSubtasks.length > 0
+                                                        ? "mt-2 border-t border-gray-200 dark:border-gray-600"
+                                                        : ""
+                                                }`}
+                                            >
+                                                Done ({doneSubtasks.length})
+                                            </div>
+                                        )}
+                                    <SortableSubtask
+                                        subtask={subtask}
+                                        index={index}
+                                        canEdit={canEdit}
+                                        editingSubtask={editingSubtask}
+                                        editTitle={editTitle}
+                                        onToggle={handleToggleSubtask}
+                                        onStartEdit={startEdit}
+                                        onEditTitleChange={setEditTitle}
+                                        onSaveEdit={handleEditSubtask}
+                                        onCancelEdit={cancelEdit}
+                                        onDelete={handleDeleteSubtask}
+                                        isLoading={loadingSubtasks.has(
+                                            subtask.id
+                                        )}
+                                        isDeleting={deletingSubtasks.has(
+                                            subtask.id
+                                        )}
+                                    />
+                                </div>
                             ))}
                         </div>
                     </SortableContext>

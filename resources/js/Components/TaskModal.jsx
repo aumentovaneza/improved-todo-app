@@ -27,6 +27,7 @@ export default function TaskModal({ show, onClose, onSubmitting, defaultCategory
         category_id: defaultCategoryId || "",
         priority: "medium",
         due_date: "",
+        end_date: "",
         start_time: "",
         end_time: "",
         is_all_day: true,
@@ -50,6 +51,7 @@ export default function TaskModal({ show, onClose, onSubmitting, defaultCategory
                 category_id: defaultCategoryId || "",
                 priority: "medium",
                 due_date: "",
+                end_date: "",
                 start_time: "",
                 end_time: "",
                 is_all_day: true,
@@ -418,22 +420,41 @@ export default function TaskModal({ show, onClose, onSubmitting, defaultCategory
                                 </div>
                             </>
                         ) : (
-                            <div>
-                                <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
-                                    Planned date
-                                </label>
-                                <input
-                                    type="date"
-                                    className="w-full input-primary"
-                                    value={data.due_date}
-                                    onChange={(e) => setData("due_date", e.target.value)}
-                                />
-                                {errors.due_date && (
-                                    <div className="text-red-500 text-xs mt-1">
-                                        {errors.due_date}
-                                    </div>
-                                )}
-                            </div>
+                            <>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
+                                        Start date
+                                    </label>
+                                    <input
+                                        type="date"
+                                        className="w-full input-primary"
+                                        value={data.due_date}
+                                        onChange={(e) => setData("due_date", e.target.value)}
+                                    />
+                                    {errors.due_date && (
+                                        <div className="text-red-500 text-xs mt-1">
+                                            {errors.due_date}
+                                        </div>
+                                    )}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1 text-light-secondary dark:text-dark-secondary">
+                                        End date (optional)
+                                    </label>
+                                    <input
+                                        type="date"
+                                        className="w-full input-primary"
+                                        value={data.end_date}
+                                        min={data.due_date}
+                                        onChange={(e) => setData("end_date", e.target.value)}
+                                    />
+                                    {errors.end_date && (
+                                        <div className="text-red-500 text-xs mt-1">
+                                            {errors.end_date}
+                                        </div>
+                                    )}
+                                </div>
+                            </>
                         )}
 
                         {/* Time Section */}

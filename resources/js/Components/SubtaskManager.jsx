@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { router } from "@inertiajs/react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import {
     Plus,
@@ -176,10 +175,28 @@ export default function SubtaskManager({
 }) {
     const [subtasks, setSubtasks] = useState(initialSubtasks);
 
+    // A synchronous mirror of the subtask list. Because several subtask
+    // requests (toggle/edit/delete/reorder) now run as independent background
+    // XHRs, their async callbacks can't rely on the `subtasks` closure (stale)
+    // or on a React state-updater running synchronously. This ref is the single
+    // source of truth each callback reads and writes through `applySubtasks`.
+    const subtasksRef = useRef(initialSubtasks);
+
     // Sync local state with prop changes
     useEffect(() => {
+        subtasksRef.current = initialSubtasks;
         setSubtasks(initialSubtasks);
     }, [initialSubtasks]);
+
+    // Apply a transform to the current list, updating both the ref (synchronously)
+    // and React state, and return the concrete next list so callers can hand an
+    // accurate value to `onTaskUpdate` without awaiting a re-render.
+    const applySubtasks = (updater) => {
+        const next = updater(subtasksRef.current);
+        subtasksRef.current = next;
+        setSubtasks(next);
+        return next;
+    };
 
     const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
     const [isAddingSubtask, setIsAddingSubtask] = useState(false);
@@ -207,7 +224,7 @@ export default function SubtaskManager({
             task_id: task.id,
         };
 
-        setSubtasks([...subtasks, tempSubtask]);
+        applySubtasks((prev) => [...prev, tempSubtask]);
         const titleToAdd = newSubtaskTitle;
         setNewSubtaskTitle("");
         setIsAddingSubtask(false);
@@ -228,21 +245,18 @@ export default function SubtaskManager({
                 // returned from the server, otherwise later edit/toggle/delete
                 // requests would target a non-existent subtask.
                 const created = response?.data?.subtask;
-                const reconcile = (list) =>
+
+                // Reconcile the temporary row with the server row against the
+                // freshest list (other rows may have changed meanwhile).
+                const nextSubtasks = applySubtasks((prev) =>
                     created?.id
-                        ? list.map((s) =>
+                        ? prev.map((s) =>
                               s.id === tempSubtask.id
                                   ? { ...s, ...created }
                                   : s
                           )
-                        : list;
-
-                // The optimistic add set `[...subtasks, tempSubtask]`, so that
-                // reconciled list is the true new state. Use it for both local
-                // state and the parent callback — the bare `subtasks` closure
-                // is stale (missing the new row).
-                const nextSubtasks = reconcile([...subtasks, tempSubtask]);
-                setSubtasks(nextSubtasks);
+                        : prev
+                );
 
                 // Update parent component's task data if callback provided
                 if (onTaskUpdate) {
@@ -254,7 +268,7 @@ export default function SubtaskManager({
                 toast.success("Subtask saved.");
             })
             .catch((error) => {
-                setSubtasks((prev) =>
+                applySubtasks((prev) =>
                     prev.filter((s) => s.id !== tempSubtask.id)
                 );
                 toast.error(
@@ -275,8 +289,10 @@ export default function SubtaskManager({
         // Add subtask to loading state
         setLoadingSubtasks((prev) => new Set(prev).add(subtask.id));
 
-        setSubtasks(
-            subtasks.map((s) =>
+        // Optimistic flip against the freshest list so concurrent toggles of
+        // different subtasks build on each other rather than clobbering.
+        applySubtasks((prev) =>
+            prev.map((s) =>
                 s.id === subtask.id
                     ? {
                           ...s,
@@ -289,107 +305,127 @@ export default function SubtaskManager({
             )
         );
 
-        router.post(
-            route("subtasks.toggle", subtask.id),
-            {},
-            {
-                preserveScroll: true,
-                preserveState: true,
-                only: [], // Don't reload any data
-                onSuccess: () => {
-                    // Remove subtask from loading state
-                    setLoadingSubtasks((prev) => {
-                        const newSet = new Set(prev);
-                        newSet.delete(subtask.id);
-                        return newSet;
-                    });
+        const clearLoading = () =>
+            setLoadingSubtasks((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete(subtask.id);
+                return newSet;
+            });
 
-                    // Update parent component's task data if callback provided
-                    if (onTaskUpdate) {
-                        onTaskUpdate({
-                            ...task,
-                            subtasks: subtasks,
-                        });
-                    }
-                    toast.success(
-                        newStatus
-                            ? "Subtask set to done."
-                            : "Subtask is back on your list."
-                    );
-                },
-                onError: () => {
-                    // Remove subtask from loading state
-                    setLoadingSubtasks((prev) => {
-                        const newSet = new Set(prev);
-                        newSet.delete(subtask.id);
-                        return newSet;
-                    });
+        // Save via a plain background XHR (no Inertia visit). Inertia runs one
+        // visit at a time and cancels any in-flight one when a new visit
+        // starts, so router.post here would drop earlier toggles when several
+        // subtasks are ticked in quick succession. A bare XHR runs
+        // independently and every toggle persists.
+        window.axios
+            .post(
+                route("subtasks.toggle", subtask.id),
+                {},
+                { headers: { Accept: "application/json" } }
+            )
+            .then((response) => {
+                clearLoading();
 
-                    setSubtasks(
-                        subtasks.map((s) =>
-                            s.id === subtask.id
-                                ? {
-                                      ...s,
-                                      is_completed: !newStatus,
-                                      completed_at: !newStatus
-                                          ? new Date().toISOString()
-                                          : null,
-                                  }
-                                : s
-                        )
-                    );
-                    toast.error(
-                        "We couldn’t update that just now. Try again when you’re ready."
-                    );
-                },
-            }
-        );
+                // Reconcile from server truth (authoritative is_completed /
+                // completed_at) against the freshest list.
+                const updated = response?.data?.subtask;
+                const nextSubtasks = applySubtasks((prev) =>
+                    updated?.id
+                        ? prev.map((s) =>
+                              s.id === subtask.id ? { ...s, ...updated } : s
+                          )
+                        : prev
+                );
+
+                // Update parent component's task data if callback provided
+                if (onTaskUpdate) {
+                    onTaskUpdate({
+                        ...task,
+                        subtasks: nextSubtasks,
+                    });
+                }
+                toast.success(
+                    newStatus
+                        ? "Subtask set to done."
+                        : "Subtask is back on your list."
+                );
+            })
+            .catch(() => {
+                clearLoading();
+
+                // Revert the optimistic flip against the freshest list.
+                applySubtasks((prev) =>
+                    prev.map((s) =>
+                        s.id === subtask.id
+                            ? {
+                                  ...s,
+                                  is_completed: !newStatus,
+                                  completed_at: !newStatus
+                                      ? new Date().toISOString()
+                                      : null,
+                              }
+                            : s
+                    )
+                );
+                toast.error(
+                    "We couldn’t update that just now. Try again when you’re ready."
+                );
+            });
     };
 
     const handleEditSubtask = (subtask) => {
         if (!editTitle.trim()) return;
 
         const oldTitle = subtask.title;
-        setSubtasks(
-            subtasks.map((s) =>
-                s.id === subtask.id ? { ...s, title: editTitle } : s
+        const newTitle = editTitle;
+        applySubtasks((prev) =>
+            prev.map((s) =>
+                s.id === subtask.id ? { ...s, title: newTitle } : s
             )
         );
         setEditingSubtask(null);
         setEditTitle("");
 
-        router.put(
-            route("subtasks.update", subtask.id),
-            {
-                title: editTitle,
-                is_completed: subtask.is_completed,
-            },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                only: [], // Don't reload any data
-                onSuccess: () => {
-                    // Update parent component's task data if callback provided
-                    if (onTaskUpdate) {
-                        onTaskUpdate({
-                            ...task,
-                            subtasks: subtasks,
-                        });
-                    }
-                    toast.success("Subtask updated.");
+        // Background XHR (no Inertia visit) so it never cancels an in-flight
+        // toggle/edit of another subtask. See handleToggleSubtask.
+        window.axios
+            .put(
+                route("subtasks.update", subtask.id),
+                {
+                    title: newTitle,
+                    is_completed: subtask.is_completed,
                 },
-                onError: () => {
-                    setSubtasks(
-                        subtasks.map((s) =>
-                            s.id === subtask.id ? { ...s, title: oldTitle } : s
-                        )
-                    );
-                    toast.error(
-                        "We couldn’t update that just now. Try again when you’re ready."
-                    );
-                },
-            }
-        );
+                { headers: { Accept: "application/json" } }
+            )
+            .then((response) => {
+                const updated = response?.data?.subtask;
+                const nextSubtasks = applySubtasks((prev) =>
+                    updated?.id
+                        ? prev.map((s) =>
+                              s.id === subtask.id ? { ...s, ...updated } : s
+                          )
+                        : prev
+                );
+
+                // Update parent component's task data if callback provided
+                if (onTaskUpdate) {
+                    onTaskUpdate({
+                        ...task,
+                        subtasks: nextSubtasks,
+                    });
+                }
+                toast.success("Subtask updated.");
+            })
+            .catch(() => {
+                applySubtasks((prev) =>
+                    prev.map((s) =>
+                        s.id === subtask.id ? { ...s, title: oldTitle } : s
+                    )
+                );
+                toast.error(
+                    "We couldn’t update that just now. Try again when you’re ready."
+                );
+            });
     };
 
     const handleDeleteSubtask = (subtask) => {
@@ -403,40 +439,42 @@ export default function SubtaskManager({
         // Add subtask to deleting state
         setDeletingSubtasks((prev) => new Set(prev).add(subtask.id));
 
-        // Don't update UI optimistically for delete - wait for server confirmation
-        router.delete(route("subtasks.destroy", subtask.id), {
-            preserveScroll: true,
-            preserveState: true,
-            only: [], // Don't reload any data
-            onSuccess: () => {
-                // Remove subtask from deleting state
-                setDeletingSubtasks((prev) => {
-                    const newSet = new Set(prev);
-                    newSet.delete(subtask.id);
-                    return newSet;
-                });
+        const clearDeleting = () =>
+            setDeletingSubtasks((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete(subtask.id);
+                return newSet;
+            });
+
+        // Background XHR (no Inertia visit) so it never cancels an in-flight
+        // toggle/edit/delete of another subtask. See handleToggleSubtask.
+        // Don't update UI optimistically for delete - wait for server confirmation.
+        window.axios
+            .delete(route("subtasks.destroy", subtask.id), {
+                headers: { Accept: "application/json" },
+            })
+            .then(() => {
+                clearDeleting();
+
+                const nextSubtasks = applySubtasks((prev) =>
+                    prev.filter((s) => s.id !== subtask.id)
+                );
 
                 // Update parent component's task data if callback provided
                 if (onTaskUpdate) {
                     onTaskUpdate({
                         ...task,
-                        subtasks: subtasks.filter((s) => s.id !== subtask.id),
+                        subtasks: nextSubtasks,
                     });
                 }
                 toast.success("Subtask removed.");
-            },
-            onError: () => {
-                // Remove subtask from deleting state
-                setDeletingSubtasks((prev) => {
-                    const newSet = new Set(prev);
-                    newSet.delete(subtask.id);
-                    return newSet;
-                });
+            })
+            .catch(() => {
+                clearDeleting();
                 toast.error(
                     "We couldn’t remove that just now. Please try again."
                 );
-            },
-        });
+            });
     };
 
     const handleDragEnd = (event) => {
@@ -462,38 +500,37 @@ export default function SubtaskManager({
 
         const newSubtasks = arrayMove(subtasks, oldIndex, newIndex);
 
-        // Optimistically update the UI
-        setSubtasks(newSubtasks);
+        // Optimistically update the UI (and the ref source of truth).
+        applySubtasks(() => newSubtasks);
 
-        router.post(
-            route("subtasks.reorder"),
-            {
-                task_id: task.id,
-                subtaskIds: newSubtasks.map((item) => item.id),
-            },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                only: [], // Don't reload any data
-                onSuccess: () => {
-                    // Update parent component's task data if callback provided
-                    if (onTaskUpdate) {
-                        onTaskUpdate({
-                            ...task,
-                            subtasks: newSubtasks,
-                        });
-                    }
-                    toast.success("Subtasks reordered.");
+        // Background XHR (no Inertia visit) so it never cancels an in-flight
+        // toggle/edit/delete of another subtask. See handleToggleSubtask.
+        window.axios
+            .post(
+                route("subtasks.reorder"),
+                {
+                    task_id: task.id,
+                    subtaskIds: newSubtasks.map((item) => item.id),
                 },
-                onError: () => {
-                    // Revert to the original order on error
-                    setSubtasks(originalSubtasks);
-                    toast.error(
-                        "We couldn’t reorder that just now. Please try again."
-                    );
-                },
-            }
-        );
+                { headers: { Accept: "application/json" } }
+            )
+            .then(() => {
+                // Update parent component's task data if callback provided
+                if (onTaskUpdate) {
+                    onTaskUpdate({
+                        ...task,
+                        subtasks: newSubtasks,
+                    });
+                }
+                toast.success("Subtasks reordered.");
+            })
+            .catch(() => {
+                // Revert to the original order on error
+                applySubtasks(() => originalSubtasks);
+                toast.error(
+                    "We couldn’t reorder that just now. Please try again."
+                );
+            });
     };
 
     const startEdit = (subtask) => {

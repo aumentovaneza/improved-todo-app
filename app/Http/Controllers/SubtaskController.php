@@ -94,7 +94,7 @@ class SubtaskController extends Controller
         }
     }
 
-    public function update(Request $request, Subtask $subtask): RedirectResponse
+    public function update(Request $request, Subtask $subtask): RedirectResponse|JsonResponse
     {
         try {
             $validated = $request->validate([
@@ -104,42 +104,107 @@ class SubtaskController extends Controller
 
             $updatedSubtask = $this->subtaskService->updateSubtask($subtask, $validated, Auth::id());
 
+            $payload = $updatedSubtask->only([
+                'id',
+                'title',
+                'is_completed',
+                'completed_at',
+                'position',
+                'task_id',
+            ]);
+
+            // Background (non-Inertia) XHR clients get the updated row as JSON so
+            // they can reconcile in place without an Inertia visit / page reload.
+            if ($this->wantsJson($request)) {
+                return response()->json([
+                    'subtask' => $payload,
+                    'message' => 'Subtask updated successfully',
+                ]);
+            }
+
             return $this->redirectBack()->with('message', 'Subtask updated successfully');
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
             report($e);
 
+            if ($this->wantsJson($request)) {
+                return response()->json([
+                    'error' => 'Failed to update subtask: ' . $e->getMessage(),
+                ], 500);
+            }
+
             return $this->redirectBack()->withErrors(['error' => 'Failed to update subtask: ' . $e->getMessage()]);
         }
     }
 
-    public function destroy(Subtask $subtask): RedirectResponse
+    public function destroy(Request $request, Subtask $subtask): RedirectResponse|JsonResponse
     {
         try {
             $this->subtaskService->deleteSubtask($subtask, Auth::id());
+
+            if ($this->wantsJson($request)) {
+                return response()->json([
+                    'deleted' => true,
+                    'message' => 'Subtask deleted successfully',
+                ]);
+            }
+
             return $this->redirectBack()->with('message', 'Subtask deleted successfully');
         } catch (\Exception $e) {
             report($e);
+
+            if ($this->wantsJson($request)) {
+                return response()->json([
+                    'error' => 'Failed to delete subtask: ' . $e->getMessage(),
+                ], 500);
+            }
 
             return $this->redirectBack()->withErrors(['error' => 'Failed to delete subtask: ' . $e->getMessage()]);
         }
     }
 
-    public function toggle(Subtask $subtask): RedirectResponse
+    public function toggle(Request $request, Subtask $subtask): RedirectResponse|JsonResponse
     {
         try {
             $updatedSubtask = $this->subtaskService->toggleSubtaskCompletion($subtask, Auth::id());
             $message = $updatedSubtask->is_completed ? 'Subtask completed!' : 'Subtask marked as pending';
+
+            $payload = $updatedSubtask->only([
+                'id',
+                'title',
+                'is_completed',
+                'completed_at',
+                'position',
+                'task_id',
+            ]);
+
+            // Background (non-Inertia) XHR clients get the toggled row as JSON so
+            // rapid, concurrent toggles reconcile from server truth without an
+            // Inertia visit (which would cancel any other in-flight toggle).
+            if ($this->wantsJson($request)) {
+                return response()->json([
+                    'subtask' => $payload,
+                    'task_status' => $updatedSubtask->task?->status,
+                    'message' => $message,
+                ]);
+            }
+
             return $this->redirectBack()->with('message', $message);
         } catch (\Exception $e) {
             report($e);
+
+            if ($this->wantsJson($request)) {
+                return response()->json([
+                    'error' => 'Failed to toggle subtask: ' . $e->getMessage(),
+                ], 500);
+            }
 
             return $this->redirectBack()->withErrors(['error' => 'Failed to toggle subtask: ' . $e->getMessage()]);
         }
     }
 
-    public function reorder(Request $request): RedirectResponse
+    public function reorder(Request $request): RedirectResponse|JsonResponse
     {
         try {
             $validated = $request->validate([
@@ -148,11 +213,24 @@ class SubtaskController extends Controller
             ]);
 
             $this->subtaskService->reorderSubtasks($validated['subtaskIds'], Auth::id());
+
+            if ($this->wantsJson($request)) {
+                return response()->json([
+                    'message' => 'Subtasks reordered successfully',
+                ]);
+            }
+
             return $this->redirectBack()->with('message', 'Subtasks reordered successfully');
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
             report($e);
+
+            if ($this->wantsJson($request)) {
+                return response()->json([
+                    'error' => 'Failed to reorder subtasks: ' . $e->getMessage(),
+                ], 500);
+            }
 
             return $this->redirectBack()->withErrors(['error' => 'Failed to reorder subtasks: ' . $e->getMessage()]);
         }

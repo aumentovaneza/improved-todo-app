@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import TagInput from "@/Components/TagInput";
+import { groupAccountsByType } from "@/Utils/finance";
 
 const buildInitialState = (initialValues) => ({
     id: initialValues?.id,
@@ -47,6 +48,8 @@ export default function TransactionForm({
     const transferTargets = accounts.filter(
         (account) => String(account.id) !== String(form.finance_account_id)
     );
+    const accountGroups = groupAccountsByType(accounts);
+    const transferTargetGroups = groupAccountsByType(transferTargets);
 
     useEffect(() => {
         setForm(buildInitialState(initialValues));
@@ -321,10 +324,14 @@ export default function TransactionForm({
                                 ? "Select account"
                                 : "No account linked"}
                         </option>
-                        {accounts.map((account) => (
-                            <option key={account.id} value={account.id}>
-                                {account.label} - {account.name}
-                            </option>
+                        {accountGroups.map((group) => (
+                            <optgroup key={group.type} label={group.label}>
+                                {group.accounts.map((account) => (
+                                    <option key={account.id} value={account.id}>
+                                        {account.label} - {account.name}
+                                    </option>
+                                ))}
+                            </optgroup>
                         ))}
                     </select>
                 </div>
@@ -370,10 +377,14 @@ export default function TransactionForm({
                             required
                         >
                             <option value="">Select account</option>
-                            {transferTargets.map((account) => (
-                                <option key={account.id} value={account.id}>
-                                    {account.label} - {account.name}
-                                </option>
+                            {transferTargetGroups.map((group) => (
+                                <optgroup key={group.type} label={group.label}>
+                                    {group.accounts.map((account) => (
+                                        <option key={account.id} value={account.id}>
+                                            {account.label} - {account.name}
+                                        </option>
+                                    ))}
+                                </optgroup>
                             ))}
                         </select>
                     </div>

@@ -18,7 +18,7 @@ const FLIP_THRESHOLD = 44;
  * It renders above the trigger, centered, and flips below when there is not
  * enough room at the top of the viewport.
  */
-export default function Tooltip({ label, children, className = "" }) {
+export default function Tooltip({ label, children, className = "", multiline = false }) {
     const triggerRef = useRef(null);
     const timerRef = useRef(null);
     const [coords, setCoords] = useState(null);
@@ -89,7 +89,11 @@ export default function Tooltip({ label, children, className = "" }) {
                 createPortal(
                     <span
                         role="tooltip"
-                        className="journal-tooltip pointer-events-none fixed z-50 whitespace-nowrap rounded-md bg-neutral-800 px-2 py-1 text-xs font-medium text-white shadow-soft dark:bg-neutral-700 dark:text-dark-primary"
+                        className={`journal-tooltip pointer-events-none fixed z-50 rounded-md bg-neutral-800 px-2 py-1 text-xs font-medium text-white shadow-soft dark:bg-neutral-700 dark:text-dark-primary ${
+                            multiline
+                                ? "max-w-xs whitespace-normal"
+                                : "whitespace-nowrap"
+                        }`}
                         style={{
                             top: coords.top,
                             left: coords.left,

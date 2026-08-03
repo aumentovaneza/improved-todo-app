@@ -1,4 +1,5 @@
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Info } from "lucide-react";
+import Tooltip from "@/Components/Journal/Tooltip";
 
 /**
  * KPI tile used across WevieWallet. Interactive tiles (onClick provided) get a
@@ -12,6 +13,7 @@ export default function StatCard({
     iconClassName = "bg-wevie-teal/10 text-wevie-teal",
     accent = "text-light-primary dark:text-dark-primary",
     hint,
+    info,
     onClick,
     loading = false,
 }) {
@@ -45,6 +47,18 @@ export default function StatCard({
                     )}
                 </div>
                 <div className="flex flex-shrink-0 items-center gap-1">
+                    {info && (
+                        <Tooltip label={info} multiline>
+                            <button
+                                type="button"
+                                aria-label={info}
+                                onClick={(event) => event.stopPropagation()}
+                                className="inline-flex rounded-full text-light-muted outline-none focus-visible:ring-2 focus-visible:ring-wevie-teal/40 dark:text-dark-muted"
+                            >
+                                <Info className="h-4 w-4" aria-hidden="true" />
+                            </button>
+                        </Tooltip>
+                    )}
                     {Icon && (
                         <div className={`rounded-full p-2 ${iconClassName}`} aria-hidden="true">
                             <Icon className="h-5 w-5" />

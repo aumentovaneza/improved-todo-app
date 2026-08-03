@@ -6,6 +6,7 @@ use App\Models\Task;
 use App\Services\Ai\AiEntitlementService;
 use App\Services\CategoryService;
 use App\Services\TagService;
+use App\Services\TaskListService;
 use App\Services\TaskService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,6 +20,7 @@ class TaskController extends Controller
         private TaskService $taskService,
         private CategoryService $categoryService,
         private TagService $tagService,
+        private TaskListService $taskListService,
         private AiEntitlementService $entitlement
     ) {}
 
@@ -43,10 +45,14 @@ class TaskController extends Controller
         // Get all active tags
         $tags = $this->tagService->getAllTags();
 
+        // Get the user's task lists (for attaching tasks to lists)
+        $lists = $this->taskListService->getTaskListsForUser(Auth::id());
+
         return Inertia::render('Tasks/Index', [
             'tasks' => $tasks,
             'categories' => $categories,
             'tags' => $tags,
+            'lists' => $lists,
             'filters' => $request->only(['search', 'status', 'priority', 'category_id', 'tag_id', 'due_date_filter']),
             'canUseTaskCapture' => $this->entitlement->canUse(Auth::user(), 'task_capture'),
         ]);
@@ -106,6 +112,8 @@ class TaskController extends Controller
             'tags.*.name' => 'nullable|string|max:255',
             'tags.*.color' => 'nullable|string|regex:/^#[0-9A-F]{6}$/i',
             'tags.*.is_new' => 'nullable|boolean',
+            'lists' => 'nullable|array',
+            'lists.*' => 'integer|exists:task_lists,id,user_id,'.Auth::id(),
         ]);
 
         // Clear recurring fields for non-recurring tasks
@@ -165,6 +173,8 @@ class TaskController extends Controller
             'tags.*.name' => 'nullable|string|max:255',
             'tags.*.color' => 'nullable|string|regex:/^#[0-9A-F]{6}$/i',
             'tags.*.is_new' => 'nullable|boolean',
+            'lists' => 'nullable|array',
+            'lists.*' => 'integer|exists:task_lists,id,user_id,'.Auth::id(),
         ]);
 
         // Clear recurring fields for non-recurring tasks

@@ -16,7 +16,7 @@ class TaskRepository implements TaskRepositoryInterface
     /**
      * Get all tasks for a user with optional filters
      */
-    public function getTasksForUser(int $userId, array $filters = [], array $relations = ['category', 'subtasks', 'tags']): Collection
+    public function getTasksForUser(int $userId, array $filters = [], array $relations = ['category', 'subtasks', 'tags', 'lists']): Collection
     {
         $query = Task::with($relations)
             ->where('user_id', $userId)
@@ -55,7 +55,7 @@ class TaskRepository implements TaskRepositoryInterface
      */
     public function getPaginatedTasksByCategory(int $userId, ?int $categoryId, array $filters = [], int $perPage = 5): LengthAwarePaginator
     {
-        $query = Task::with(['category', 'subtasks', 'tags'])
+        $query = Task::with(['category', 'subtasks', 'tags', 'lists'])
             ->where('user_id', $userId)
             ->withCount([
                 'subtasks',
@@ -79,7 +79,7 @@ class TaskRepository implements TaskRepositoryInterface
      */
     public function getUncategorizedTasks(int $userId, array $filters = [], int $perPage = 5): LengthAwarePaginator
     {
-        $query = Task::with(['category', 'subtasks', 'tags'])
+        $query = Task::with(['category', 'subtasks', 'tags', 'lists'])
             ->where('user_id', $userId)
             ->whereNull('category_id')
             ->withCount([
@@ -248,6 +248,14 @@ class TaskRepository implements TaskRepositoryInterface
     }
 
     /**
+     * Sync attached lists for task
+     */
+    public function syncLists(Task $task, array $listIds): void
+    {
+        $task->lists()->sync($listIds);
+    }
+
+    /**
      * Apply filters to query
      *
      * Note: `search` is intentionally NOT applied here. The `title`/`description`
@@ -276,7 +284,7 @@ class TaskRepository implements TaskRepositoryInterface
         }
 
         // Filter by tag
-        if (!empty($filters['tag_id'])) {
+        if (! empty($filters['tag_id'])) {
             $query->whereHas('tags', function ($q) use ($filters) {
                 $q->where('tags.id', $filters['tag_id']);
             });

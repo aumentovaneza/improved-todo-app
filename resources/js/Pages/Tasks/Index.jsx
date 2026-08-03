@@ -43,6 +43,7 @@ import {
     Square,
     Pause,
     FolderOpen,
+    List,
 } from "lucide-react";
 import TaskModal from "@/Components/TaskModal";
 import TaskViewModal from "@/Components/TaskViewModal";
@@ -287,6 +288,30 @@ function SortableTask({
                         </div>
                     )}
 
+                    {/* Lists */}
+                    {task.lists && task.lists.length > 0 && (
+                        <div className="hidden sm:flex items-center space-x-1">
+                            <List className="h-4 w-4 text-light-muted dark:text-dark-muted" />
+                            <div className="flex space-x-1">
+                                {task.lists.slice(0, 2).map((list) => (
+                                    <span
+                                        key={list.id}
+                                        className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium text-white"
+                                        style={{ backgroundColor: list.color }}
+                                        title={list.name}
+                                    >
+                                        {list.name}
+                                    </span>
+                                ))}
+                                {task.lists.length > 2 && (
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                        +{task.lists.length - 2}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Actions */}
                     <div className="opacity-100 transition-opacity focus-within:opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
                         <TaskActionsMenu
@@ -315,6 +340,21 @@ function SortableTask({
                                         setShowEditModal(true);
                                     },
                                 },
+                                ...(task.lists && task.lists.length > 0
+                                    ? [
+                                          {
+                                              label: "Open list",
+                                              icon: List,
+                                              onClick: () =>
+                                                  router.visit(
+                                                      route(
+                                                          "lists.show",
+                                                          task.lists[0].id
+                                                      )
+                                                  ),
+                                          },
+                                      ]
+                                    : []),
                                 {
                                     label: "Delete",
                                     icon: Trash2,
@@ -330,7 +370,7 @@ function SortableTask({
     );
 }
 
-export default function Index({ tasks = [], categories, tags = [], filters }) {
+export default function Index({ tasks = [], categories, tags = [], lists = [], filters }) {
     const [allTasks, setAllTasks] = useState([]);
     const [search, setSearch] = useState(filters.search || "");
     const [statusFilter, setStatusFilter] = useState(filters.status || "");
@@ -1251,6 +1291,7 @@ export default function Index({ tasks = [], categories, tags = [], filters }) {
                 }}
                 onSubmitting={setIsTaskSubmitting}
                 categories={categories}
+                lists={lists}
                 defaultCategoryId={selectedCategory}
             />
 
@@ -1266,6 +1307,7 @@ export default function Index({ tasks = [], categories, tags = [], filters }) {
                 onClose={() => setShowEditModal(false)}
                 task={selectedTask}
                 categories={categories}
+                lists={lists}
                 onTaskUpdate={handleTaskUpdate}
             />
 

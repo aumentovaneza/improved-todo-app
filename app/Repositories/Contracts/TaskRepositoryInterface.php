@@ -4,16 +4,16 @@ namespace App\Repositories\Contracts;
 
 use App\Models\Task;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Carbon\Carbon;
 
 interface TaskRepositoryInterface
 {
     /**
      * Get all tasks for a user with optional filters
      */
-    public function getTasksForUser(int $userId, array $filters = [], array $relations = ['category', 'subtasks', 'tags']): Collection;
+    public function getTasksForUser(int $userId, array $filters = [], array $relations = ['category', 'subtasks', 'tags', 'lists']): Collection;
 
     /**
      * Get paginated tasks for a user by category
@@ -89,4 +89,9 @@ interface TaskRepositoryInterface
      * Sync tags for task
      */
     public function syncTags(Task $task, array $tagIds): void;
+
+    /**
+     * Sync attached lists for task
+     */
+    public function syncLists(Task $task, array $listIds): void;
 }

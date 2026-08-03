@@ -2,12 +2,13 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\Category;
+use App\Models\ListItem;
 use App\Models\Task;
+use App\Models\TaskList;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class TodoSeeder extends Seeder
 {
@@ -25,16 +26,19 @@ class TodoSeeder extends Seeder
         if ($demoUser) {
             $this->createCategoriesForUser($demoUser);
             $this->createTasksForUser($demoUser);
+            $this->createTaskListsForUser($demoUser);
         }
 
         if ($testUser) {
             $this->createCategoriesForUser($testUser);
             $this->createTasksForUser($testUser, true); // fewer tasks
+            $this->createTaskListsForUser($testUser);
         }
 
         if ($adminUser) {
             $this->createCategoriesForUser($adminUser);
             $this->createAdminTasks($adminUser);
+            $this->createTaskListsForUser($adminUser);
         }
     }
 
@@ -146,7 +150,7 @@ class TodoSeeder extends Seeder
             ],
         ];
 
-        if (!$minimal) {
+        if (! $minimal) {
             // Add more tasks for full demo
             $tasks = array_merge($tasks, [
                 [
@@ -196,6 +200,59 @@ class TodoSeeder extends Seeder
             $taskData['user_id'] = $user->id;
             $taskData['position'] = Task::where('user_id', $user->id)->max('position') + 1;
             Task::create($taskData);
+        }
+    }
+
+    private function createTaskListsForUser(User $user)
+    {
+        $lists = [
+            [
+                'name' => 'Grocery List',
+                'color' => '#10B981',
+                'description' => 'Weekly groceries to pick up',
+                'items' => ['Milk', 'Eggs', 'Bread', 'Coffee', 'Bananas'],
+            ],
+            [
+                'name' => 'Packing List',
+                'color' => '#3B82F6',
+                'description' => 'Essentials for the next trip',
+                'items' => ['Passport', 'Charger', 'Toothbrush', 'Headphones'],
+            ],
+            [
+                'name' => 'Weekend Errands',
+                'color' => '#F59E0B',
+                'description' => 'Things to get done this weekend',
+                'items' => ['Car wash', 'Post office', 'Return library books'],
+            ],
+        ];
+
+        foreach ($lists as $index => $listData) {
+            $list = TaskList::create([
+                'user_id' => $user->id,
+                'is_sample' => true,
+                'name' => $listData['name'],
+                'color' => $listData['color'],
+                'description' => $listData['description'],
+                'position' => $index + 1,
+            ]);
+
+            foreach ($listData['items'] as $itemIndex => $content) {
+                ListItem::create([
+                    'task_list_id' => $list->id,
+                    'content' => $content,
+                    'is_completed' => false,
+                    'position' => $itemIndex + 1,
+                ]);
+            }
+        }
+
+        // Attach the first list to one of the user's existing sample tasks so the
+        // task <-> list relationship shows something real out of the box.
+        $firstList = TaskList::where('user_id', $user->id)->orderBy('position')->first();
+        $firstTask = Task::where('user_id', $user->id)->orderBy('position')->first();
+
+        if ($firstList && $firstTask) {
+            $firstList->tasks()->attach($firstTask->id);
         }
     }
 

@@ -73,6 +73,12 @@ class Task extends Model
         return $this->belongsToMany(Tag::class);
     }
 
+    public function lists(): BelongsToMany
+    {
+        return $this->belongsToMany(TaskList::class, 'list_task', 'task_id', 'task_list_id')
+            ->withTimestamps();
+    }
+
     public function board(): BelongsTo
     {
         return $this->belongsTo(Board::class);

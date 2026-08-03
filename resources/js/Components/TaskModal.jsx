@@ -8,6 +8,7 @@ import SecondaryButton from "./SecondaryButton";
 import PrimaryButton from "./PrimaryButton";
 import TagInput from "./TagInput";
 import CategoryTagSelector from "./CategoryTagSelector";
+import TaskListSelector from "./TaskListSelector";
 import RecurrenceConfigFields from "./RecurrenceConfigFields";
 import { addTaskFormSteps } from "@/tours";
 
@@ -15,7 +16,7 @@ export default function TaskModal({ show, onClose, onSubmitting, defaultCategory
     // `canUseTaskCapture` is only provided on pages that offer AI capture (the
     // Tasks page). `undefined` → feature not available here (render nothing);
     // `true`/`false` → entitled / locked-upsell states.
-    const { categories, canUseTaskCapture } = usePage().props;
+    const { categories, lists = [], canUseTaskCapture } = usePage().props;
     const captureAvailable = canUseTaskCapture !== undefined;
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [captureInput, setCaptureInput] = useState("");
@@ -36,9 +37,10 @@ export default function TaskModal({ show, onClose, onSubmitting, defaultCategory
         recurrence_config: {},
         recurring_until: "",
         tags: [],
+        lists: [],
     };
 
-    const { data, setData, post, processing, errors, reset, clearErrors } =
+    const { data, setData, post, transform, processing, errors, reset, clearErrors } =
         useForm(initialFormData);
 
     // Force complete form reset when modal opens
@@ -60,6 +62,7 @@ export default function TaskModal({ show, onClose, onSubmitting, defaultCategory
                 recurrence_config: {},
                 recurring_until: "",
                 tags: [],
+                lists: [],
             });
             clearErrors();
             setIsSubmitting(false);
@@ -119,6 +122,9 @@ export default function TaskModal({ show, onClose, onSubmitting, defaultCategory
         e.preventDefault();
         setIsSubmitting(true);
 
+        // Send attached lists as an array of ids the backend expects.
+        transform((d) => ({ ...d, lists: (d.lists || []).map((l) => l.id) }));
+
         post(route("tasks.store"), {
             onSuccess: () => {
                 // Force complete form reset
@@ -135,6 +141,7 @@ export default function TaskModal({ show, onClose, onSubmitting, defaultCategory
                     recurrence_type: "",
                     recurring_until: "",
                     tags: [],
+                    lists: [],
                 });
                 clearErrors();
                 setIsSubmitting(false);
@@ -165,6 +172,7 @@ export default function TaskModal({ show, onClose, onSubmitting, defaultCategory
             recurrence_type: "",
             recurring_until: "",
             tags: [],
+            lists: [],
         });
         clearErrors();
         setIsSubmitting(false);
@@ -341,6 +349,13 @@ export default function TaskModal({ show, onClose, onSubmitting, defaultCategory
                                 <div className="text-red-500 text-xs mt-1">{errors.tags}</div>
                             )}
                         </div>
+
+                        <TaskListSelector
+                            lists={lists}
+                            selectedLists={data.lists}
+                            onChange={(v) => setData("lists", v)}
+                        />
+
                         <div className="flex items-center">
                             <input
                                 type="checkbox"

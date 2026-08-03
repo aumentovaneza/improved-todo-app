@@ -81,6 +81,11 @@ class User extends Authenticatable
         return $this->hasMany(Category::class);
     }
 
+    public function taskLists(): HasMany
+    {
+        return $this->hasMany(TaskList::class);
+    }
+
     public function financeAccounts(): HasMany
     {
         return $this->hasMany(FinanceAccount::class);

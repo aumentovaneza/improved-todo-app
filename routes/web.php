@@ -8,6 +8,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardLayoutController;
 use App\Http\Controllers\GoogleCalendarController;
+use App\Http\Controllers\ListItemController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\SubtaskController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\SwimlaneController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\TaskCaptureController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskListController;
 use App\Http\Controllers\WorkspaceController;
 use App\Modules\Finance\Controllers\FinanceAccountController;
 use App\Modules\Finance\Controllers\FinanceBudgetController;
@@ -69,6 +71,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Categories
     Route::resource('categories', CategoryController::class);
 
+    // Lists
+    Route::resource('lists', TaskListController::class);
+    Route::post('lists/{list}/tasks', [TaskListController::class, 'attachTask'])->name('lists.tasks.attach');
+    Route::delete('lists/{list}/tasks/{task}', [TaskListController::class, 'detachTask'])->name('lists.tasks.detach');
+
     // Tags
     Route::resource('tags', TagController::class);
     Route::get('api/tags', [TagController::class, 'getAllTags'])->name('api.tags');
@@ -83,6 +90,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('subtasks/{subtask}', [SubtaskController::class, 'destroy'])->name('subtasks.destroy');
     Route::post('subtasks/{subtask}/toggle', [SubtaskController::class, 'toggle'])->name('subtasks.toggle');
     Route::post('subtasks/reorder', [SubtaskController::class, 'reorder'])->name('subtasks.reorder');
+
+    // List Items
+    Route::post('list-items', [ListItemController::class, 'store'])->name('list-items.store');
+    Route::put('list-items/{listItem}', [ListItemController::class, 'update'])->name('list-items.update');
+    Route::delete('list-items/{listItem}', [ListItemController::class, 'destroy'])->name('list-items.destroy');
+    Route::post('list-items/{listItem}/toggle', [ListItemController::class, 'toggle'])->name('list-items.toggle');
+    Route::post('list-items/reorder', [ListItemController::class, 'reorder'])->name('list-items.reorder');
 
     // Reminders
     Route::resource('reminders', ReminderController::class);

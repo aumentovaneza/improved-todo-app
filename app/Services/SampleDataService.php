@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Category;
 use App\Models\Task;
+use App\Models\TaskList;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -41,8 +42,10 @@ class SampleDataService
     {
         $tasks = Task::where('user_id', $user->id)->where('is_sample', true)->delete();
         $categories = Category::where('user_id', $user->id)->where('is_sample', true)->delete();
+        // Deleting the lists cascades their list_items and list_task pivot rows.
+        $taskLists = TaskList::where('user_id', $user->id)->where('is_sample', true)->delete();
 
-        return $tasks + $categories;
+        return $tasks + $categories + $taskLists;
     }
 
     /** @return array<string, Category> keyed by name */

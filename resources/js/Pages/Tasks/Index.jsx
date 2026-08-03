@@ -26,7 +26,6 @@ import {
     CheckCircle,
     Circle,
     AlertTriangle,
-    MoreVertical,
     Edit,
     Trash2,
     GripVertical,
@@ -51,6 +50,7 @@ import TaskEditModal from "@/Components/TaskEditModal";
 import TaskStatusSelect, {
     TASK_STATUS_OPTIONS,
 } from "@/Components/TaskStatusSelect";
+import TaskActionsMenu from "@/Components/TaskActionsMenu";
 import QuickSubtaskModal from "@/Components/QuickSubtaskModal";
 import Toast from "@/Components/Toast";
 import OnboardingTour from "@/Components/OnboardingTour";
@@ -288,44 +288,41 @@ function SortableTask({
                     )}
 
                     {/* Actions */}
-                    <div className="flex items-center space-x-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                        <button
-                            onClick={() => {
-                                setSelectedTask(task);
-                                setShowSubtaskModal(true);
-                            }}
-                            className="p-1 text-light-muted hover:text-emerald-500 dark:text-dark-muted dark:hover:text-emerald-300 transition-colors"
-                            title="Add Subtask"
-                        >
-                            <ListTodo className="h-4 w-4" />
-                        </button>
-                        <button
-                            onClick={() => {
-                                setSelectedTask(task);
-                                setShowViewModal(true);
-                            }}
-                            className="p-1 text-light-muted hover:text-wevie-teal dark:text-dark-muted dark:hover:text-wevie-mint transition-colors"
-                            title="View Task"
-                        >
-                            <Eye className="h-4 w-4" />
-                        </button>
-                        <button
-                            onClick={() => {
-                                setSelectedTask(task);
-                                setShowEditModal(true);
-                            }}
-                            className="p-1 text-light-muted hover:text-wevie-teal dark:text-dark-muted dark:hover:text-wevie-mint transition-colors"
-                            title="Edit Task"
-                        >
-                            <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                            onClick={() => handleDeleteTask(task)}
-                            className="p-1 text-light-muted hover:text-rose-500 dark:text-dark-muted dark:hover:text-rose-300 transition-colors"
-                            title="Remove Task"
-                        >
-                            <Trash2 className="h-4 w-4" />
-                        </button>
+                    <div className="opacity-100 transition-opacity focus-within:opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
+                        <TaskActionsMenu
+                            items={[
+                                {
+                                    label: "Add subtask",
+                                    icon: ListTodo,
+                                    onClick: () => {
+                                        setSelectedTask(task);
+                                        setShowSubtaskModal(true);
+                                    },
+                                },
+                                {
+                                    label: "View",
+                                    icon: Eye,
+                                    onClick: () => {
+                                        setSelectedTask(task);
+                                        setShowViewModal(true);
+                                    },
+                                },
+                                {
+                                    label: "Edit",
+                                    icon: Edit,
+                                    onClick: () => {
+                                        setSelectedTask(task);
+                                        setShowEditModal(true);
+                                    },
+                                },
+                                {
+                                    label: "Delete",
+                                    icon: Trash2,
+                                    danger: true,
+                                    onClick: () => handleDeleteTask(task),
+                                },
+                            ]}
+                        />
                     </div>
                 </div>
             </div>

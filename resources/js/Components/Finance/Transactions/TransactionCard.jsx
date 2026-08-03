@@ -61,14 +61,14 @@ export default function TransactionCard({ transaction, onEdit, onDelete }) {
 
             <dl className="mt-3 space-y-1 text-xs text-light-muted dark:text-dark-muted">
                 <div className="flex justify-between gap-2">
-                    <dt>Category</dt>
-                    <dd className="truncate text-right text-light-secondary dark:text-dark-secondary">
+                    <dt className="shrink-0">Category</dt>
+                    <dd className="min-w-0 truncate text-right text-light-secondary dark:text-dark-secondary">
                         {transaction.category?.name ?? "Uncategorized"}
                     </dd>
                 </div>
                 <div className="flex justify-between gap-2">
-                    <dt>Account</dt>
-                    <dd className="truncate text-right text-light-secondary dark:text-dark-secondary">
+                    <dt className="shrink-0">Account</dt>
+                    <dd className="min-w-0 truncate text-right text-light-secondary dark:text-dark-secondary">
                         {accountLabel(transaction)}
                     </dd>
                 </div>
@@ -82,8 +82,8 @@ export default function TransactionCard({ transaction, onEdit, onDelete }) {
                 )}
                 {transaction.created_by && transaction.created_by.id !== transaction.user_id && (
                     <div className="flex justify-between gap-2">
-                        <dt>Added by</dt>
-                        <dd className="truncate text-right text-light-secondary dark:text-dark-secondary">
+                        <dt className="shrink-0">Added by</dt>
+                        <dd className="min-w-0 truncate text-right text-light-secondary dark:text-dark-secondary">
                             {transaction.created_by.name}
                         </dd>
                     </div>

@@ -34,6 +34,7 @@ import {
     CreditCard,
     BookOpen,
     Tags,
+    ListChecks,
 } from "lucide-react";
 
 export default function TodoLayout({ header, children }) {
@@ -163,6 +164,13 @@ export default function TodoLayout({ header, children }) {
                     icon: FolderOpen,
                     current: route().current("categories.*"),
                     tourKey: "nav-categories",
+                },
+                {
+                    name: "Lists",
+                    href: route("lists.index"),
+                    icon: ListChecks,
+                    current: route().current("lists.*"),
+                    tourKey: "nav-lists",
                 },
             ],
         },

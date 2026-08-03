@@ -34,6 +34,11 @@ class AppServiceProvider extends ServiceProvider
         );
 
         $this->app->bind(
+            \App\Repositories\Contracts\TaskListRepositoryInterface::class,
+            \App\Repositories\Eloquent\TaskListRepository::class
+        );
+
+        $this->app->bind(
             \App\Repositories\Contracts\DailySummaryRepositoryInterface::class,
             \App\Repositories\Eloquent\DailySummaryRepository::class
         );
@@ -50,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
         // Register Services (no interfaces needed for services)
         $this->app->singleton(\App\Services\ReminderService::class);
         $this->app->singleton(\App\Services\SubtaskService::class);
+        $this->app->singleton(\App\Services\ListItemService::class);
         $this->app->singleton(\App\Services\GoogleCalendarService::class);
         $this->app->singleton(\App\Services\NotificationService::class);
         $this->app->singleton(\App\Services\SearchService::class);

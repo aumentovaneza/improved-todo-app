@@ -77,7 +77,12 @@ class TaskService
                 $this->taskRepository->syncTags($task, $tagIds);
             }
 
-            return $task->load(['category', 'subtasks', 'tags']);
+            // Handle attached lists
+            if (! empty($data['lists'])) {
+                $this->taskRepository->syncLists($task, $data['lists']);
+            }
+
+            return $task->load(['category', 'subtasks', 'tags', 'lists']);
         });
     }
 
@@ -128,7 +133,12 @@ class TaskService
                 $this->taskRepository->syncTags($updatedTask, $tagIds);
             }
 
-            return $updatedTask->load(['category', 'subtasks', 'tags']);
+            // Handle attached lists
+            if (array_key_exists('lists', $data)) {
+                $this->taskRepository->syncLists($updatedTask, ! empty($data['lists']) ? $data['lists'] : []);
+            }
+
+            return $updatedTask->load(['category', 'subtasks', 'tags', 'lists']);
         });
     }
 

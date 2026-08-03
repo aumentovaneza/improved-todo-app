@@ -1,7 +1,8 @@
+import { Link } from "@inertiajs/react";
 import Modal from "./Modal";
 import SecondaryButton from "./SecondaryButton";
 import SubtaskManager from "./SubtaskManager";
-import { Calendar, CheckCircle, Clock } from "lucide-react";
+import { Calendar, CheckCircle, Clock, List } from "lucide-react";
 
 export default function TaskViewModal({ show, onClose, task, onTaskUpdate }) {
     if (!task) return null;
@@ -259,6 +260,28 @@ export default function TaskViewModal({ show, onClose, task, onTaskUpdate }) {
                                     >
                                         {tag.name}
                                     </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Lists */}
+                    {task.lists && task.lists.length > 0 && (
+                        <div className="mb-6">
+                            <h3 className="text-sm font-medium text-light-muted dark:text-dark-muted mb-2">
+                                Lists
+                            </h3>
+                            <div className="flex flex-wrap gap-2">
+                                {task.lists.map((list) => (
+                                    <Link
+                                        key={list.id}
+                                        href={route("lists.show", list.id)}
+                                        className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium text-white hover:opacity-90 transition-opacity"
+                                        style={{ backgroundColor: list.color }}
+                                    >
+                                        <List className="h-3 w-3" />
+                                        {list.name}
+                                    </Link>
                                 ))}
                             </div>
                         </div>

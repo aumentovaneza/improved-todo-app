@@ -5,6 +5,7 @@ import PrimaryButton from "./PrimaryButton";
 import SubtaskManager from "./SubtaskManager";
 import TagInput from "./TagInput";
 import CategoryTagSelector from "./CategoryTagSelector";
+import TaskListSelector from "./TaskListSelector";
 import RecurrenceConfigFields from "./RecurrenceConfigFields";
 import { useEffect } from "react";
 
@@ -13,11 +14,12 @@ export default function TaskEditModal({
     onClose,
     task,
     categories,
+    lists = [],
     onTaskUpdate,
     workspace = null,
     board = null,
 }) {
-    const { data, setData, put, processing, errors, reset } = useForm({
+    const { data, setData, put, transform, processing, errors, reset } = useForm({
         title: "",
         description: "",
         category_id: "",
@@ -33,6 +35,7 @@ export default function TaskEditModal({
         recurrence_config: {},
         recurring_until: "",
         tags: [],
+        lists: [],
         assigned_to: "",
     });
 
@@ -75,6 +78,13 @@ export default function TaskEditModal({
                           is_new: false,
                       }))
                     : [],
+                lists: task.lists
+                    ? task.lists.map((l) => ({
+                          id: l.id,
+                          name: l.name,
+                          color: l.color,
+                      }))
+                    : [],
                 assigned_to: task.user_id || "",
             });
         }
@@ -93,6 +103,9 @@ export default function TaskEditModal({
                       task.id,
                   ])
                 : route("tasks.update", task.id);
+
+        // Send attached lists as an array of ids the backend expects.
+        transform((d) => ({ ...d, lists: (d.lists || []).map((l) => l.id) }));
 
         put(updateRoute, {
             onSuccess: () => {
@@ -288,6 +301,12 @@ export default function TaskEditModal({
                                     </div>
                                 )}
                             </div>
+
+                            <TaskListSelector
+                                lists={lists}
+                                selectedLists={data.lists}
+                                onChange={(v) => setData("lists", v)}
+                            />
 
                             <div className="flex items-center">
                                 <input

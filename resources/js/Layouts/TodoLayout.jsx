@@ -209,13 +209,17 @@ export default function TodoLayout({ header, children }) {
             current: route().current("journal.*"),
             tourKey: "nav-journal",
         },
-        {
-            name: "Meal Planning",
-            href: route("meal-planning.index"),
-            icon: UtensilsCrossed,
-            current: route().current("meal-planning.*"),
-            tourKey: "nav-meal-planning",
-        },
+        ...(user.role === "admin"
+            ? [
+                  {
+                      name: "Meal Planning",
+                      href: route("meal-planning.index"),
+                      icon: UtensilsCrossed,
+                      current: route().current("meal-planning.*"),
+                      tourKey: "nav-meal-planning",
+                  },
+              ]
+            : []),
     ];
 
     const adminNavigation = [

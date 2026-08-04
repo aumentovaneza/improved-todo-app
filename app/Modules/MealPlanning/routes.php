@@ -16,7 +16,7 @@ use App\Modules\MealPlanning\Controllers\RegionalPriceController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth', 'verified'])->group(function () {
-    Route::prefix('meal-planning')->name('meal-planning.')->group(function () {
+    Route::prefix('meal-planning')->name('meal-planning.')->middleware('admin')->group(function () {
         Route::get('/', [MealPlanningPageController::class, 'index'])->name('index');
         Route::get('{household}/planner', [MealPlanningPageController::class, 'planner'])->name('planner');
         Route::get('{household}/calendar', [MealPlanningPageController::class, 'calendar'])->name('calendar');
@@ -28,7 +28,7 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         Route::get('{household}/diary', [MealPlanningPageController::class, 'diary'])->name('diary');
     });
 
-    Route::prefix('meal-planning/api')->name('meal-planning.api.')->group(function () {
+    Route::prefix('meal-planning/api')->name('meal-planning.api.')->middleware('admin')->group(function () {
         Route::get('households', [HouseholdController::class, 'index'])->name('households.index');
         Route::post('households', [HouseholdController::class, 'store'])->name('households.store');
         Route::get('households/{household}', [HouseholdController::class, 'show'])->name('households.show');

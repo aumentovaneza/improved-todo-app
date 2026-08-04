@@ -38,3 +38,7 @@ export const SOURCE_META = {
 };
 
 export const metaForSource = (sourceType) => SOURCE_META[sourceType] ?? SOURCE_META.event;
+
+// A task chip whose underlying task is done — used to gray it out on the grid.
+export const isCompletedTask = (item) =>
+    item?.sourceType === "task" && item?.extendedProps?.task?.status === "completed";

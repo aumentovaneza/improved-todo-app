@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { isCompletedTask } from "@/Components/Calendar/CalendarItemMeta";
 import { toDateString } from "./calendarDates";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -111,6 +112,7 @@ export default function MonthGrid({
                                         key={item.id}
                                         type="button"
                                         data-source={item.sourceType}
+                                        data-completed={isCompletedTask(item) ? "true" : undefined}
                                         className={`wv-cal-chip${
                                             item.allDay
                                                 ? " wv-cal-chip--pill"

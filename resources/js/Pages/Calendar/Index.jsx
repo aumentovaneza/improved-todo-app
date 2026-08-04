@@ -431,7 +431,7 @@ export default function Index({
                             onCalendarsChange={changeCalendars}
                         />
                         <Menu as="div" className="relative">
-                            <MenuButton className="btn-primary min-h-11 flex-1 justify-center gap-2 px-6 sm:flex-none">
+                            <MenuButton className="btn-primary min-h-9 flex-1 justify-center gap-2 px-4 text-sm sm:flex-none">
                                 <Plus className="h-4 w-4" />
                                 Add
                             </MenuButton>
@@ -475,7 +475,7 @@ export default function Index({
                     data-tour="calendar-header"
                 >
                     <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1">
+                        <div className="flex flex-1 items-center gap-1">
                             <button
                                 type="button"
                                 onClick={() => setDate((current) => addPeriod(view, current, -1))}
@@ -500,7 +500,7 @@ export default function Index({
                                 Today
                             </button>
                         </div>
-                        <div className="min-w-0 text-center">
+                        <div className="min-w-0 px-2 text-center">
                             <h2 className="truncate text-base font-semibold text-light-primary dark:text-dark-primary sm:text-lg">
                                 {title}
                             </h2>
@@ -510,7 +510,7 @@ export default function Index({
                                 </p>
                             )}
                         </div>
-                        <Menu as="div" className="relative">
+                        <Menu as="div" className="relative flex flex-1 justify-end">
                             <MenuButton
                                 aria-label="More calendar options"
                                 className="min-h-11 min-w-11 rounded-xl p-2 text-light-secondary hover:bg-light-hover dark:text-dark-secondary dark:hover:bg-dark-hover"

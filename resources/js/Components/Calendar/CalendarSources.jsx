@@ -47,7 +47,7 @@ export default function CalendarSources({
 
     return (
         <Popover className="relative">
-            <PopoverButton className="btn-secondary inline-flex min-h-11 flex-1 items-center justify-center gap-2 px-6 text-sm sm:flex-none">
+            <PopoverButton className="btn-secondary inline-flex min-h-9 flex-1 items-center justify-center gap-2 px-4 text-sm sm:flex-none">
                 <Layers3 className="h-4 w-4" /> Calendars
             </PopoverButton>
             <PopoverPanel

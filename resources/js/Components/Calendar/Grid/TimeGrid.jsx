@@ -1,5 +1,6 @@
 import { addDays } from "date-fns";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { isCompletedTask } from "@/Components/Calendar/CalendarItemMeta";
 import {
     GRID_BODY_HEIGHT,
     GRID_END_HOUR,
@@ -196,6 +197,7 @@ export default function TimeGrid({
                                     key={item.id}
                                     type="button"
                                     data-source={item.sourceType}
+                                    data-completed={isCompletedTask(item) ? "true" : undefined}
                                     className="wv-cal-chip wv-cal-chip--pill"
                                     style={{ backgroundColor: item.color }}
                                     onClick={(e) => {
@@ -262,6 +264,7 @@ export default function TimeGrid({
                                             key={item.id}
                                             type="button"
                                             data-source={item.sourceType}
+                                            data-completed={isCompletedTask(item) ? "true" : undefined}
                                             className="wv-cal-block"
                                             style={{
                                                 top,

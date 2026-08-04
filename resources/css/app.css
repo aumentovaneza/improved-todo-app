@@ -99,6 +99,25 @@
     opacity: 0.55;
 }
 
+/* Completed tasks read as "done": desaturated color + faded + struck through. */
+.wv-cal-chip[data-completed="true"],
+.wv-cal-block[data-completed="true"] {
+    filter: grayscale(1);
+    opacity: 0.55;
+    text-decoration: line-through;
+}
+
+/* The base hover rules set `filter`, which would clear grayscale — keep it grayed. */
+.wv-cal-chip[data-completed="true"]:hover,
+.wv-cal-block[data-completed="true"]:hover {
+    filter: grayscale(1) brightness(0.97);
+}
+
+.dark .wv-cal-chip[data-completed="true"]:hover,
+.dark .wv-cal-block[data-completed="true"]:hover {
+    filter: grayscale(1) brightness(1.12);
+}
+
 .wv-cal-chip--timed[data-source="task"] .wv-ev-icon {
     color: theme("colors.primary.400");
 }
@@ -170,7 +189,7 @@
 }
 
 .wv-cal-allday-label {
-    @apply flex items-center justify-end border-r border-light-border pr-2 text-[0.65rem] font-medium uppercase tracking-wide text-light-muted dark:border-dark-border dark:text-dark-muted;
+    @apply flex items-center justify-center border-r border-light-border px-1 text-center text-[0.65rem] font-medium uppercase tracking-wide text-light-muted dark:border-dark-border dark:text-dark-muted;
 }
 
 .wv-cal-allday-cell {
@@ -205,6 +224,12 @@
 
 .wv-cal-hour-cell {
     @apply border-b border-light-border/70 dark:border-dark-border/70;
+}
+
+/* The time gutter shows only the hour labels — no horizontal rules crossing them
+   (the day columns keep their hour lines). */
+.wv-cal-time-axis .wv-cal-hour-cell {
+    @apply border-b-0;
 }
 
 .wv-cal-hour-label {

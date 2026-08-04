@@ -60,11 +60,11 @@ export default function DayDetailModal({
     const isEmpty = !events.length && !tasks.length && !finance && !meals.length;
 
     return (
-        <Modal show={show} onClose={onClose} maxWidth="lg" alignTop>
+        <Modal show={show} onClose={onClose} maxWidth="xl" alignTop>
             <div className="max-h-[80vh] overflow-y-auto p-5 sm:p-6">
                 <div className="flex items-start justify-between gap-3">
                     <div>
-                        <h2 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
+                        <h2 className="text-base font-semibold text-light-primary sm:text-lg dark:text-dark-primary">
                             {formatDayLabel(date)}
                         </h2>
                         <p className="mt-0.5 text-sm text-light-muted dark:text-dark-muted">
@@ -77,7 +77,7 @@ export default function DayDetailModal({
                     <button
                         type="button"
                         onClick={() => onViewDay?.(date)}
-                        className="btn-secondary min-h-10 shrink-0 gap-1.5 px-3 text-sm"
+                        className="btn-secondary shrink-0 gap-1.5 px-3 py-1.5 text-sm"
                     >
                         <Sun className="h-4 w-4" />
                         View day
@@ -88,7 +88,7 @@ export default function DayDetailModal({
                     <button
                         type="button"
                         onClick={() => onNewEvent?.(date)}
-                        className="btn-primary min-h-10 gap-1.5 px-3 text-sm"
+                        className="btn-primary flex-1 gap-1.5 px-3 py-1.5 text-sm sm:flex-none"
                     >
                         <CalendarPlus className="h-4 w-4" />
                         New event
@@ -96,7 +96,7 @@ export default function DayDetailModal({
                     <button
                         type="button"
                         onClick={() => onNewTask?.(date)}
-                        className="btn-secondary min-h-10 gap-1.5 px-3 text-sm"
+                        className="btn-secondary flex-1 gap-1.5 px-3 py-1.5 text-sm sm:flex-none"
                     >
                         <ListPlus className="h-4 w-4" />
                         New task

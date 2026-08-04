@@ -23,9 +23,9 @@ export default function Toast() {
 
     return (
         <div className="fixed bottom-4 right-4 z-50">
-            <div className="bg-green-50 dark:bg-green-900 p-4 rounded-lg shadow-lg flex items-center space-x-3">
-                <CheckCircle className="h-5 w-5 text-green-500 dark:text-green-400" />
-                <p className="text-green-800 dark:text-green-200">{message}</p>
+            <div className="bg-primary-50 dark:bg-dark-card border border-light-border/70 dark:border-white/10 shadow-soft rounded-xl p-4 flex items-center space-x-3">
+                <CheckCircle className="h-5 w-5 text-primary-500 dark:text-primary-400" />
+                <p className="text-primary-700 dark:text-primary-200">{message}</p>
             </div>
         </div>
     );

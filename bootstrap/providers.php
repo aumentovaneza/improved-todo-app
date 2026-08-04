@@ -3,4 +3,5 @@
 return [
     App\Providers\AppServiceProvider::class,
     App\Modules\Journal\JournalServiceProvider::class,
+    App\Modules\MealPlanning\MealPlanningServiceProvider::class,
 ];

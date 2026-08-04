@@ -62,6 +62,7 @@ export default function CalendarSources({
                         ["events", "Events"],
                         ["tasks", "Tasks"],
                         ["finance", "Finance"],
+                        ["meals", "Meal planning"],
                     ].map(([value, label]) => (
                         <button
                             key={value}

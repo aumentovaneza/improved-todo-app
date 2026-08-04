@@ -7,6 +7,7 @@ use App\Models\CalendarMonthTitle;
 use App\Models\Category;
 use App\Models\Task;
 use App\Modules\Finance\Models\FinanceTransaction;
+use App\Modules\MealPlanning\Models\MealCalendarEvent;
 use App\Services\CalendarEventService;
 use App\Services\TaskListService;
 use Carbon\Carbon;
@@ -49,6 +50,9 @@ class CalendarController extends Controller
         }
         if (in_array('finance', $sources, true)) {
             $items->push(...$this->financeItems($user->id, $rangeStart, $rangeEnd, $timezone));
+        }
+        if (in_array('meals', $sources, true)) {
+            $items->push(...$this->mealItems($user->id, $rangeStart, $rangeEnd, $timezone));
         }
 
         $categories = Category::query()
@@ -120,13 +124,13 @@ class CalendarController extends Controller
      */
     private function sources(Request $request): array
     {
-        $sources = $request->input('sources', ['events', 'tasks']);
+        $sources = $request->input('sources', ['events', 'tasks', 'meals']);
         if (is_string($sources)) {
             $sources = array_filter(explode(',', $sources));
         }
 
         $sources = array_values((array) $sources);
-        $allowed = ['events', 'tasks', 'finance'];
+        $allowed = ['events', 'tasks', 'finance', 'meals'];
         if (array_diff($sources, $allowed)) {
             throw ValidationException::withMessages(['sources' => 'Choose valid calendar sources.']);
         }
@@ -163,7 +167,10 @@ class CalendarController extends Controller
      */
     private function taskItems($user, Carbon $start, Carbon $end): array
     {
-        $tasks = $user->tasks()->with(['category', 'subtasks', 'tags', 'lists'])->get();
+        $tasks = $user->tasks()
+            ->where(fn ($query) => $query->whereNull('source_type')->orWhere('source_type', '!=', 'meal_calendar_event'))
+            ->with(['category', 'subtasks', 'tags', 'lists'])
+            ->get();
 
         return $tasks->flatMap(function (Task $task) use ($start, $end, $user) {
             return $task->getOccurrencesInRange($start, $end)->map(function (Task $occurrence) use ($user) {
@@ -251,6 +258,57 @@ class CalendarController extends Controller
                         'count' => $count,
                         'net' => round($net, 2),
                         'currency' => $transactions->first()->currency ?? 'PHP',
+                    ],
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function mealItems(int $userId, Carbon $start, Carbon $end, string $timezone): array
+    {
+        $colors = [
+            'meal' => '#4ACF91',
+            'grocery' => '#F59E0B',
+            'preparation' => '#0EA5E9',
+            'batch_cooking' => '#8B5CF6',
+            'defrosting' => '#06B6D4',
+            'pantry_expiry' => '#F43F5E',
+        ];
+
+        return MealCalendarEvent::query()
+            ->whereHas('household.members', fn ($query) => $query->where('user_id', $userId))
+            ->whereBetween('starts_at', [$start, $end])
+            ->orderBy('starts_at')
+            ->get()
+            ->map(function (MealCalendarEvent $event) use ($colors, $timezone) {
+                $startsAt = Carbon::parse($event->starts_at)->setTimezone($timezone);
+                $endsAt = Carbon::parse($event->ends_at ?? $event->starts_at)->setTimezone($timezone);
+                if ($event->ends_at === null) {
+                    $endsAt->addHour();
+                }
+
+                return [
+                    'id' => "meal:{$event->id}",
+                    'sourceType' => 'meal',
+                    'sourceId' => $event->household_id,
+                    'eventId' => $event->id,
+                    'occurrenceKey' => $startsAt->format('Y-m-d'),
+                    'title' => $event->title,
+                    'start' => $startsAt->toIso8601String(),
+                    'end' => $endsAt->toIso8601String(),
+                    'allDay' => false,
+                    'color' => $colors[$event->type] ?? '#4ACF91',
+                    'editable' => true,
+                    'extendedProps' => [
+                        'kind' => 'meal',
+                        'householdId' => $event->household_id,
+                        'mealEventType' => $event->type,
+                        'status' => $event->status,
+                        'metadata' => $event->metadata,
                     ],
                 ];
             })

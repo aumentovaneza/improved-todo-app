@@ -35,3 +35,19 @@ Schedule::command('calendar:dispatch-reminders')
 Schedule::command('notifications:send-digests')
     ->hourly()
     ->description('Send daily task digest emails to opted-in users');
+
+Schedule::command('meal-planning:scan-duplicates')
+    ->weekly()
+    ->description('Review the normalized recipe catalog for possible duplicates');
+
+Schedule::command('meal-planning:sync-providers --limit=20')
+    ->daily()
+    ->description('Synchronize enabled recipe providers into normalized local records');
+
+Schedule::command('meal-planning:refresh-nutrition')
+    ->weekly()
+    ->description('Refresh stale normalized nutrition records');
+
+Schedule::command('meal-planning:provider-health')
+    ->hourly()
+    ->description('Report meal provider availability, failures, and usage');

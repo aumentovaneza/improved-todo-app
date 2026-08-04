@@ -35,6 +35,10 @@ class Task extends Model
         'recurrence_type',
         'recurrence_config',
         'recurring_until',
+        'meal_household_member_id',
+        'source_type',
+        'source_id',
+        'source_metadata',
     ];
 
     protected $casts = [
@@ -50,6 +54,7 @@ class Task extends Model
         'is_recurring' => 'boolean',
         'recurrence_config' => 'encrypted:array',
         'recurring_until' => 'datetime',
+        'source_metadata' => 'array',
     ];
 
     public function user(): BelongsTo

@@ -36,6 +36,7 @@ import {
     Tags,
     ListChecks,
     Wrench,
+    UtensilsCrossed,
 } from "lucide-react";
 
 export default function TodoLayout({ header, children }) {
@@ -84,17 +85,14 @@ export default function TodoLayout({ header, children }) {
     // First-run welcome carousel. Only auto-shows on the dashboard so it never
     // pops over a deep link. Dismissal/tour-start persist the `welcome` tour key.
     const welcomeProgress = user?.tutorial_progress?.welcome ?? null;
-    const welcomeSeen =
-        !!welcomeProgress?.completed || !!welcomeProgress?.skipped;
+    const welcomeSeen = !!welcomeProgress?.completed || !!welcomeProgress?.skipped;
     const [showWelcome, setShowWelcome] = useState(
         () => !!user && !welcomeSeen && route().current("dashboard")
     );
     const [tourStartSignal, setTourStartSignal] = useState(false);
 
     const persistTutorial = (key, payload) => {
-        window.axios
-            .post(route("tutorials.update", { key }), payload)
-            .catch(() => {});
+        window.axios.post(route("tutorials.update", { key }), payload).catch(() => {});
     };
 
     const handleWelcomeDismiss = () => {
@@ -211,6 +209,13 @@ export default function TodoLayout({ header, children }) {
             current: route().current("journal.*"),
             tourKey: "nav-journal",
         },
+        {
+            name: "Meal Planning",
+            href: route("meal-planning.index"),
+            icon: UtensilsCrossed,
+            current: route().current("meal-planning.*"),
+            tourKey: "nav-meal-planning",
+        },
     ];
 
     const adminNavigation = [
@@ -289,10 +294,7 @@ export default function TodoLayout({ header, children }) {
                                             const Icon = item.icon;
                                             if (item.hasSubLinks) {
                                                 return (
-                                                    <div
-                                                        key={item.name}
-                                                        data-tour={item.tourKey}
-                                                    >
+                                                    <div key={item.name} data-tour={item.tourKey}>
                                                         <div className="flex items-center justify-between">
                                                             <Link
                                                                 href={item.href}
@@ -336,32 +338,29 @@ export default function TodoLayout({ header, children }) {
                                                         </div>
                                                         {tasksSubmenuOpen && (
                                                             <div className="ml-8 mt-1 space-y-1">
-                                                                {item.subLinks.map(
-                                                                    (sub) => {
-                                                                        const SubIcon =
-                                                                            sub.icon;
-                                                                        return (
-                                                                            <Link
-                                                                                key={sub.name}
-                                                                                href={sub.href}
-                                                                                data-tour={sub.tourKey}
-                                                                                onClick={() =>
-                                                                                    setSidebarOpen(
-                                                                                        false
-                                                                                    )
-                                                                                }
-                                                                                className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150 ${
-                                                                                    sub.current
-                                                                                        ? "bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-[#2ED7A1]"
-                                                                                        : "text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary"
-                                                                                }`}
-                                                                            >
-                                                                                <SubIcon className="h-4 w-4 mr-2" />
-                                                                                {sub.name}
-                                                                            </Link>
-                                                                        );
-                                                                    }
-                                                                )}
+                                                                {item.subLinks.map((sub) => {
+                                                                    const SubIcon = sub.icon;
+                                                                    return (
+                                                                        <Link
+                                                                            key={sub.name}
+                                                                            href={sub.href}
+                                                                            data-tour={sub.tourKey}
+                                                                            onClick={() =>
+                                                                                setSidebarOpen(
+                                                                                    false
+                                                                                )
+                                                                            }
+                                                                            className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150 ${
+                                                                                sub.current
+                                                                                    ? "bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-[#2ED7A1]"
+                                                                                    : "text-light-secondary hover:bg-light-hover hover:text-light-primary dark:text-dark-secondary dark:hover:bg-dark-hover dark:hover:text-dark-primary"
+                                                                            }`}
+                                                                        >
+                                                                            <SubIcon className="h-4 w-4 mr-2" />
+                                                                            {sub.name}
+                                                                        </Link>
+                                                                    );
+                                                                })}
                                                             </div>
                                                         )}
                                                     </div>
@@ -647,9 +646,7 @@ export default function TodoLayout({ header, children }) {
                                                 </Link>
                                                 <button
                                                     onClick={() =>
-                                                        setTasksSubmenuOpen(
-                                                            !tasksSubmenuOpen
-                                                        )
+                                                        setTasksSubmenuOpen(!tasksSubmenuOpen)
                                                     }
                                                     className={`p-2 rounded-md transition-colors duration-150 ${
                                                         item.current
@@ -1000,10 +997,7 @@ export default function TodoLayout({ header, children }) {
                 onTakeTour={handleWelcomeTakeTour}
             />
 
-            <OnboardingTour
-                requireCompleted={["welcome"]}
-                startSignal={tourStartSignal}
-            />
+            <OnboardingTour requireCompleted={["welcome"]} startSignal={tourStartSignal} />
         </div>
     );
 }

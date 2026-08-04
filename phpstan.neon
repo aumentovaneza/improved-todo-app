@@ -6,6 +6,10 @@ includes:
     - phpstan-baseline.neon
 
 parameters:
+    databaseMigrationsPath:
+        - database/migrations
+        - app/Modules/MealPlanning/database/migrations
+
     # Low baseline so it's adoptable incrementally. Raise the level as the
     # codebase is annotated/cleaned. Levels go 0 (loosest) to 10 (strictest).
     level: 3

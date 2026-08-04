@@ -44,6 +44,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             TodoSeeder::class,
             FinanceSeeder::class,
+            MealPlanningSeeder::class,
         ]);
     }
 }

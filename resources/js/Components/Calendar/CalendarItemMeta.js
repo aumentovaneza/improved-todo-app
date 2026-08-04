@@ -1,4 +1,4 @@
-import { CalendarDays, CheckCircle, Wallet } from "lucide-react";
+import { CalendarDays, CheckCircle, Utensils, Wallet } from "lucide-react";
 
 /**
  * Shared per-source presentation for calendar items so the FullCalendar
@@ -28,6 +28,12 @@ export const SOURCE_META = {
         badgeClass:
             "bg-warning-500/15 text-warning-600 dark:bg-warning-500/20 dark:text-warning-400",
         dotClass: "bg-warning-500",
+    },
+    meal: {
+        label: "Meal",
+        Icon: Utensils,
+        badgeClass: "bg-wevie-teal/15 text-primary-700 dark:bg-wevie-teal/20 dark:text-primary-300",
+        dotClass: "bg-wevie-teal",
     },
 };
 

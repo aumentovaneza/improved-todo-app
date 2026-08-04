@@ -41,6 +41,32 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'meal_planning' => [
+        'enabled' => env('MEAL_PLANNING_ENABLED', true),
+        'rate_limits' => ['themealdb' => 60, 'spoonacular' => 50, 'usda_fdc' => 60, 'edamam' => 30, 'open_food_facts' => 30],
+        'themealdb' => [
+            'key' => env('THEMEALDB_API_KEY', '1'),
+            'base_url' => env('THEMEALDB_BASE_URL', 'https://www.themealdb.com/api/json/v1'),
+        ],
+        'spoonacular' => [
+            'key' => env('SPOONACULAR_API_KEY'),
+            'base_url' => 'https://api.spoonacular.com',
+        ],
+        'usda' => [
+            'key' => env('USDA_FDC_API_KEY'),
+            'base_url' => 'https://api.nal.usda.gov/fdc/v1',
+        ],
+        'edamam' => [
+            'app_id' => env('EDAMAM_APP_ID'),
+            'app_key' => env('EDAMAM_APP_KEY'),
+            'base_url' => 'https://api.edamam.com',
+        ],
+        'open_food_facts' => [
+            'base_url' => env('OPEN_FOOD_FACTS_BASE_URL', 'https://world.openfoodfacts.org/api/v3'),
+            'user_agent' => env('OPEN_FOOD_FACTS_USER_AGENT', 'Wevie/1.0 (https://wevie.app)'),
+        ],
+    ],
+
     /*
     | Web Push (VAPID) credentials for browser/PWA push notifications. Generate a
     | keypair with `php artisan webpush:vapid` and copy the values here. The

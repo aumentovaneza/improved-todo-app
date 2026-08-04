@@ -55,12 +55,6 @@ parameters:
 			path: app/Http/Controllers/BoardController.php
 
 		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getOccurrencesInRange\(\)\.$#'
-			identifier: method.notFound
-			count: 2
-			path: app/Http/Controllers/CalendarController.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$color\.$#'
 			identifier: property.notFound
 			count: 1

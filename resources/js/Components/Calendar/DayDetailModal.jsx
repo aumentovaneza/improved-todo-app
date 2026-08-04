@@ -49,13 +49,15 @@ export default function DayDetailModal({
     onOpenEvent,
     onOpenTask,
     onOpenFinance,
+    onOpenMeal,
 }) {
     if (!date) return null;
 
     const events = items.filter((item) => item.sourceType === "event");
     const tasks = items.filter((item) => item.sourceType === "task");
     const finance = items.find((item) => item.sourceType === "finance");
-    const isEmpty = !events.length && !tasks.length && !finance;
+    const meals = items.filter((item) => item.sourceType === "meal");
+    const isEmpty = !events.length && !tasks.length && !finance && !meals.length;
 
     return (
         <Modal show={show} onClose={onClose} maxWidth="lg" alignTop>
@@ -69,6 +71,7 @@ export default function DayDetailModal({
                             {events.length} {events.length === 1 ? "event" : "events"} ·{" "}
                             {tasks.length} {tasks.length === 1 ? "task" : "tasks"}
                             {finance ? ` · ${finance.extendedProps?.count ?? 0} finance` : ""}
+                            {meals.length ? " · " + meals.length + " meal planning" : ""}
                         </p>
                     </div>
                     <button
@@ -180,6 +183,36 @@ export default function DayDetailModal({
                                             </button>
                                         );
                                     })}
+                                </div>
+                            </section>
+                        )}
+
+                        {meals.length > 0 && (
+                            <section>
+                                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-light-muted dark:text-dark-muted">
+                                    Meal planning
+                                </h3>
+                                <div className="space-y-2">
+                                    {meals.map((item) => (
+                                        <button
+                                            key={item.id}
+                                            type="button"
+                                            onClick={() => onOpenMeal?.(item)}
+                                            className="flex w-full items-center gap-3 rounded-xl border border-light-border/70 bg-light-card px-3 py-2.5 text-left hover:bg-light-hover dark:border-dark-border/70 dark:bg-dark-card dark:hover:bg-dark-hover"
+                                        >
+                                            <TypeBadge sourceType="meal" />
+                                            <span className="min-w-0 flex-1">
+                                                <span className="block truncate text-sm font-medium text-light-primary dark:text-dark-primary">
+                                                    {item.title}
+                                                </span>
+                                                <span className="text-xs text-light-muted dark:text-dark-muted">
+                                                    {formatTime(item.start)} ·{" "}
+                                                    {capitalize(item.extendedProps?.status)}
+                                                </span>
+                                            </span>
+                                            <ChevronRight className="h-4 w-4 shrink-0 text-light-muted dark:text-dark-muted" />
+                                        </button>
+                                    ))}
                                 </div>
                             </section>
                         )}

@@ -55,7 +55,7 @@ const readJson = (key, fallback) => {
 export default function Index({
     calendarItems = [],
     eventCalendars = [],
-    sourceFilters = ["events", "tasks"],
+    sourceFilters = ["events", "tasks", "meals"],
     selectedCalendarIds = [],
     currentDate,
     visibleStart,
@@ -210,6 +210,11 @@ export default function Index({
         router.visit(route("weviewallet.transactions.index", { start_date: date, end_date: date }));
     };
 
+    const openMealPlanner = (item) => {
+        const householdId = item.extendedProps?.householdId;
+        if (householdId) router.visit(route("meal-planning.planner", householdId));
+    };
+
     const handleEventClick = (info) => {
         const item = itemFromCalendarEvent(info.event);
         if (item.sourceType === "event") {
@@ -217,6 +222,8 @@ export default function Index({
         } else if (item.sourceType === "task") {
             setSelectedTask(info.event.extendedProps.task);
             setShowTaskView(true);
+        } else if (item.sourceType === "meal") {
+            openMealPlanner(item);
         } else {
             openTransactionsForDate(info.event.extendedProps.date || item.occurrenceKey);
         }
@@ -249,6 +256,29 @@ export default function Index({
 
     const persistScheduleChange = async (info) => {
         const item = itemFromCalendarEvent(info.event);
+        if (item.sourceType === "meal") {
+            const householdId = info.event.extendedProps.householdId;
+            if (!householdId || !item.eventId) {
+                info.revert();
+                return;
+            }
+            const startsAt = info.event.start;
+            const endsAt = info.event.end || new Date(startsAt.getTime() + 3600000);
+            router.patch(
+                route("meal-planning.api.events.move", [householdId, item.eventId]),
+                { starts_at: startsAt.toISOString(), ends_at: endsAt.toISOString() },
+                {
+                    preserveScroll: true,
+                    onError: () => {
+                        info.revert();
+                        toast.error(
+                            "We couldn’t move that meal item. Its original time was restored."
+                        );
+                    },
+                }
+            );
+            return;
+        }
         if (item.sourceType !== "event") {
             info.revert();
             return;
@@ -658,6 +688,10 @@ export default function Index({
                 onOpenFinance={(date) => {
                     setShowDayDetail(false);
                     openTransactionsForDate(date);
+                }}
+                onOpenMeal={(item) => {
+                    setShowDayDetail(false);
+                    openMealPlanner(item);
                 }}
             />
             <TaskViewModal

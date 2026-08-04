@@ -2,6 +2,7 @@ import ApplicationLogo from "@/Components/ApplicationLogo";
 import Dropdown from "@/Components/Dropdown";
 import MobileFab from "@/Components/Mobile/MobileFab";
 import MobileTabBar from "@/Components/Mobile/MobileTabBar";
+import NotificationBell from "@/Components/NotificationBell";
 import OnboardingTour from "@/Components/OnboardingTour";
 import WelcomeModal from "@/Components/WelcomeModal";
 import QuickAddTransactionModal from "@/Components/Mobile/QuickAddTransactionModal";
@@ -18,7 +19,6 @@ import {
     Settings,
     Sun,
     Moon,
-    Bell,
     Calendar,
     BarChart3,
     DollarSign,
@@ -948,9 +948,7 @@ export default function TodoLayout({ header, children }) {
                                 )}
                             </button>
                             {/* Notifications */}
-                            <button className="rounded-md p-2 text-light-secondary hover:text-light-primary dark:text-dark-secondary dark:hover:text-dark-primary transition-colors duration-200 hover:bg-light-hover dark:hover:bg-dark-hover">
-                                <Bell className="h-5 w-5" />
-                            </button>
+                            <NotificationBell />
                         </div>
                     </div>
                 </header>

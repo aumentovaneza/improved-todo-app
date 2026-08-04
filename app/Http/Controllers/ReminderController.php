@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreReminderRequest;
+use App\Http\Requests\UpdateReminderRequest;
 use App\Models\Reminder;
 use App\Services\ReminderService;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -33,41 +35,28 @@ class ReminderController extends Controller
     /**
      * Store a newly created reminder
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StoreReminderRequest $request): RedirectResponse
     {
         try {
-            $validated = $request->validate([
-                'task_id' => 'required|exists:tasks,id',
-                'remind_at' => 'required|date|after:now',
-                'type' => 'required|string|in:email,notification,sms',
-                'message' => 'nullable|string|max:500',
-            ]);
-
-            $reminder = $this->reminderService->createReminder($validated, Auth::id());
+            $reminder = $this->reminderService->createReminder($request->validated(), Auth::id());
 
             return back()->with('message', 'Reminder created successfully');
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to create reminder: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to create reminder: '.$e->getMessage()]);
         }
     }
 
     /**
      * Update the specified reminder
      */
-    public function update(Request $request, Reminder $reminder): RedirectResponse
+    public function update(UpdateReminderRequest $request, Reminder $reminder): RedirectResponse
     {
         try {
-            $validated = $request->validate([
-                'remind_at' => 'required|date|after:now',
-                'type' => 'required|string|in:email,notification,sms',
-                'message' => 'nullable|string|max:500',
-            ]);
-
-            $updatedReminder = $this->reminderService->updateReminder($reminder, $validated, Auth::id());
+            $updatedReminder = $this->reminderService->updateReminder($reminder, $request->validated(), Auth::id());
 
             return back()->with('message', 'Reminder updated successfully');
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to update reminder: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to update reminder: '.$e->getMessage()]);
         }
     }
 
@@ -78,9 +67,10 @@ class ReminderController extends Controller
     {
         try {
             $this->reminderService->deleteReminder($reminder, Auth::id());
+
             return back()->with('message', 'Reminder deleted successfully');
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to delete reminder: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to delete reminder: '.$e->getMessage()]);
         }
     }
 
@@ -102,7 +92,7 @@ class ReminderController extends Controller
 
             return back()->with('message', "Reminder snoozed for {$validated['minutes']} minutes");
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to snooze reminder: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to snooze reminder: '.$e->getMessage()]);
         }
     }
 
@@ -131,6 +121,7 @@ class ReminderController extends Controller
 
         try {
             $reminders = $this->reminderService->getRemindersForTask($validated['task_id'], Auth::id());
+
             return response()->json(['reminders' => $reminders]);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to fetch reminders'], 500);
@@ -159,7 +150,7 @@ class ReminderController extends Controller
 
             return back()->with('message', "Created {$reminders->count()} reminders successfully");
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to create reminders: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to create reminders: '.$e->getMessage()]);
         }
     }
 }

@@ -2,14 +2,14 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\User;
 use App\Models\Category;
-use App\Models\Task;
-use App\Models\Tag;
-use App\Models\Subtask;
 use App\Models\Reminder;
+use App\Models\Subtask;
+use App\Models\Tag;
+use App\Models\Task;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class ProductionShowcaseSeeder extends Seeder
@@ -132,12 +132,12 @@ class ProductionShowcaseSeeder extends Seeder
                     'Analyze revenue trends and patterns',
                     'Create executive summary',
                     'Review with finance team',
-                    'Submit to board portal'
+                    'Submit to board portal',
                 ],
                 'reminders' => [
                     ['type' => 'email', 'minutes_before' => 60],
                     ['type' => 'notification', 'minutes_before' => 30],
-                ]
+                ],
             ],
 
             // Today's important meeting
@@ -156,11 +156,11 @@ class ProductionShowcaseSeeder extends Seeder
                     'Review last week\'s progress',
                     'Discuss upcoming sprint goals',
                     'Prioritize feature requests',
-                    'Assign action items'
+                    'Assign action items',
                 ],
                 'reminders' => [
                     ['type' => 'notification', 'minutes_before' => 15],
-                ]
+                ],
             ],
 
             // Tomorrow's creative task
@@ -180,11 +180,11 @@ class ProductionShowcaseSeeder extends Seeder
                     'Create mood board',
                     'Design initial concepts',
                     'Write campaign copy',
-                    'Present to marketing team'
+                    'Present to marketing team',
                 ],
                 'reminders' => [
                     ['type' => 'email', 'minutes_before' => 120],
-                ]
+                ],
             ],
 
             // Completed task
@@ -202,8 +202,8 @@ class ProductionShowcaseSeeder extends Seeder
                     'Complete modules 1-5',
                     'Submit practice assignments',
                     'Build final project',
-                    'Take final assessment'
-                ]
+                    'Take final assessment',
+                ],
             ],
 
             // Future personal task
@@ -220,8 +220,8 @@ class ProductionShowcaseSeeder extends Seeder
                     'Research romantic restaurants',
                     'Check availability and make reservation',
                     'Plan transportation',
-                    'Arrange childcare if needed'
-                ]
+                    'Arrange childcare if needed',
+                ],
             ],
 
             // Recurring daily task
@@ -275,8 +275,8 @@ class ProductionShowcaseSeeder extends Seeder
                     'Categorize all expenses',
                     'Compare against budget',
                     'Identify areas for improvement',
-                    'Update savings goals'
-                ]
+                    'Update savings goals',
+                ],
             ],
 
             // Long-term project
@@ -295,8 +295,8 @@ class ProductionShowcaseSeeder extends Seeder
                     'Choose color scheme and lighting',
                     'Order furniture and supplies',
                     'Schedule installation',
-                    'Organize and decorate'
-                ]
+                    'Organize and decorate',
+                ],
             ],
 
             // Travel planning task
@@ -315,12 +315,12 @@ class ProductionShowcaseSeeder extends Seeder
                     'Book accommodations',
                     'Plan daily activities',
                     'Arrange pet care',
-                    'Create packing list'
+                    'Create packing list',
                 ],
                 'reminders' => [
                     ['type' => 'email', 'minutes_before' => 1440], // 1 day before
-                ]
-            ]
+                ],
+            ],
         ];
 
         $position = 1;
@@ -338,7 +338,7 @@ class ProductionShowcaseSeeder extends Seeder
             $task = Task::create($taskData);
 
             // Attach tags
-            if (!empty($tags)) {
+            if (! empty($tags)) {
                 $task->tags()->attach(collect($tags)->pluck('id'));
             }
 
@@ -377,7 +377,7 @@ class ProductionShowcaseSeeder extends Seeder
                 Reminder::create([
                     'task_id' => $task->id,
                     'user_id' => $user->id,
-                    'reminder_time' => $reminderTime,
+                    'remind_at' => $reminderTime,
                     'type' => $reminderData['type'],
                     'is_sent' => $reminderTime->isPast(),
                     'sent_at' => $reminderTime->isPast() ? $reminderTime : null,

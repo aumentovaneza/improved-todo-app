@@ -336,7 +336,7 @@
     }
     
     .btn-secondary {
-        @apply bg-white text-light-primary px-4 py-2 rounded-xl font-medium transition-colors duration-200 border border-light-border/70 hover:bg-light-hover focus:outline-none focus:ring-2 focus:ring-wevie-teal/30 focus:ring-offset-2 dark:bg-dark-card dark:text-dark-primary dark:border-dark-border/70 dark:hover:bg-dark-hover;
+        @apply inline-flex items-center justify-center bg-white text-light-primary px-4 py-2 rounded-xl font-medium transition-colors duration-200 border border-light-border/70 hover:bg-light-hover focus:outline-none focus:ring-2 focus:ring-wevie-teal/30 focus:ring-offset-2 dark:bg-dark-card dark:text-dark-primary dark:border-dark-border/70 dark:hover:bg-dark-hover;
     }
     
     /* Input styles with Wevie colors */

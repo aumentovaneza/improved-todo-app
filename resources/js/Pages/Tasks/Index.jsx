@@ -1064,7 +1064,7 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
                                     >
                                         <option value="">All statuses</option>
                                         <option value="pending">Ready</option>
-                                        <option value="in_progress">In flow</option>
+                                        <option value="in_progress">In Progress</option>
                                         <option value="completed">Completed</option>
                                         <option value="cancelled">Paused</option>
                                     </select>

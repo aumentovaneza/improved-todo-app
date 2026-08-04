@@ -2,6 +2,7 @@ import { useState } from "react";
 import { router } from "@inertiajs/react";
 import { formatDistanceToNow, isValid, parseISO } from "date-fns";
 import { Sparkles, RefreshCw, Lock, Wand2 } from "lucide-react";
+import Swal from "sweetalert2";
 
 function relativeTime(value) {
     if (!value) return null;
@@ -28,6 +29,34 @@ export default function FinanceInsightCard({ insight = null, canUse = true, rang
         if (loading || canUse === false) return;
         router.post(
             route("finance.insights.store"),
+            range ? { range } : {},
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onStart: () => setLoading(true),
+                onFinish: () => setLoading(false),
+            }
+        );
+    };
+
+    const regenerate = async () => {
+        if (loading || canUse === false) return;
+
+        const result = await Swal.fire({
+            title: "Regenerate this insight?",
+            text: "This replaces your current spending insight with a freshly generated one. This can’t be undone.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Regenerate",
+            cancelButtonText: "Cancel",
+            confirmButtonColor: "#4ACF91",
+            cancelButtonColor: "#6B7280",
+        });
+
+        if (!result.isConfirmed) return;
+
+        router.post(
+            route("finance.insights.regenerate"),
             range ? { range } : {},
             {
                 preserveScroll: true,
@@ -118,8 +147,8 @@ export default function FinanceInsightCard({ insight = null, canUse = true, rang
         );
     }
 
-    // 3. Has insight. One insight per period, so there is no refresh control —
-    // switching the dashboard range surfaces (or generates) that period's own.
+    // 3. Has insight. Renders the content plus a Regenerate control that
+    // overwrites this period's insight in place (after a confirm).
     const updated = relativeTime(insight.generated_at);
 
     return (
@@ -137,9 +166,25 @@ export default function FinanceInsightCard({ insight = null, canUse = true, rang
                 {insight.content}
             </p>
 
-            {updated && (
-                <div className="mt-4 text-xs text-adaptive-muted">Updated {updated}</div>
-            )}
+            <div className="mt-4 flex items-center justify-between gap-3">
+                {updated ? (
+                    <span className="text-xs text-adaptive-muted">Updated {updated}</span>
+                ) : (
+                    <span />
+                )}
+                <button
+                    type="button"
+                    onClick={regenerate}
+                    disabled={loading}
+                    className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-adaptive-muted transition-colors hover:bg-primary-50 hover:text-primary-600 disabled:cursor-not-allowed disabled:opacity-70 dark:hover:bg-primary-900/20 dark:hover:text-primary-400"
+                >
+                    <RefreshCw
+                        className={`h-3.5 w-3.5${loading ? " animate-spin" : ""}`}
+                        aria-hidden="true"
+                    />
+                    {loading ? "Regenerating…" : "Regenerate"}
+                </button>
+            </div>
         </section>
     );
 }

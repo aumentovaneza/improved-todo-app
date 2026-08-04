@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Notifications\Channels\WebPushChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -37,7 +38,28 @@ class DailyDigest extends Notification implements ShouldQueue
             $channels[] = 'mail';
         }
 
+        if (($notifiable->push_notifications_enabled ?? true)
+            && ($notifiable->daily_digest_enabled ?? true)
+            && $this->hasWebPushToken($notifiable)) {
+            $channels[] = WebPushChannel::class;
+        }
+
         return $channels;
+    }
+
+    /**
+     * Whether the notifiable has a registered web-push subscription, favouring an
+     * already-loaded relation to avoid a query per notification.
+     */
+    protected function hasWebPushToken(object $notifiable): bool
+    {
+        if (method_exists($notifiable, 'relationLoaded') && $notifiable->relationLoaded('pushTokens')) {
+            return $notifiable->pushTokens
+                ->where('provider', 'webpush')
+                ->isNotEmpty();
+        }
+
+        return $notifiable->pushTokens()->where('provider', 'webpush')->exists();
     }
 
     /**
@@ -52,6 +74,25 @@ class DailyDigest extends Notification implements ShouldQueue
                 'digest' => $this->digestData,
                 'url' => url('/tasks'),
             ]);
+    }
+
+    /**
+     * The web-push (browser) representation. Counts only — the full lists live in
+     * the email and the app.
+     *
+     * @return array<string, mixed>
+     */
+    public function toWebPush(object $notifiable): array
+    {
+        $today = $this->digestData['today_tasks']->count();
+        $overdue = $this->digestData['overdue_tasks']->count();
+
+        return [
+            'title' => 'Daily Task Digest',
+            'body' => "You have {$today} task(s) today and {$overdue} overdue.",
+            'url' => url('/tasks'),
+            'tag' => 'daily-digest',
+        ];
     }
 
     /**

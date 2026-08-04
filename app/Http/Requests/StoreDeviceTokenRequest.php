@@ -26,7 +26,7 @@ class StoreDeviceTokenRequest extends FormRequest
     {
         return [
             'platform' => ['required', 'string', Rule::in(['ios', 'android', 'web'])],
-            'provider' => ['required', 'string', Rule::in(['apns', 'fcm'])],
+            'provider' => ['required', 'string', Rule::in(['apns', 'fcm', 'webpush'])],
             'token' => ['required', 'string', 'max:512'],
             'meta' => ['nullable', 'array'],
         ];

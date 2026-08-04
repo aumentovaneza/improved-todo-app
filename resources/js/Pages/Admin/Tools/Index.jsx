@@ -1,5 +1,6 @@
 import TodoLayout from "@/Layouts/TodoLayout";
 import Toast from "@/Components/Toast";
+import { enableWebPush, isWebPushSupported } from "@/native/registerWebPush";
 import { Head, useForm, usePage } from "@inertiajs/react";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -19,6 +20,7 @@ import {
     ChevronDown,
     Check,
     Wrench,
+    Smartphone,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -29,9 +31,7 @@ function UserCombobox({ users, value, onChange, id }) {
         if (query === "") return users;
         const q = query.toLowerCase();
         return users.filter(
-            (u) =>
-                u.name.toLowerCase().includes(q) ||
-                u.email.toLowerCase().includes(q)
+            (u) => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
         );
     }, [users, query]);
 
@@ -43,9 +43,7 @@ function UserCombobox({ users, value, onChange, id }) {
                         id={id}
                         className="w-full rounded-md border border-light-border/70 dark:border-white/10 bg-white dark:bg-dark-card px-3 py-2 pr-10 text-sm text-gray-900 dark:text-white focus:border-primary-500 focus:ring-primary-500"
                         placeholder="Search by name or email..."
-                        displayValue={(user) =>
-                            user ? `${user.name} (${user.email})` : ""
-                        }
+                        displayValue={(user) => (user ? `${user.name} (${user.email})` : "")}
                         onChange={(e) => setQuery(e.target.value)}
                     />
                     <ComboboxButton className="absolute inset-y-0 right-0 flex items-center pr-2">
@@ -65,9 +63,7 @@ function UserCombobox({ users, value, onChange, id }) {
                                 className="group flex cursor-pointer items-center justify-between px-3 py-2 text-sm text-gray-900 dark:text-gray-100 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/20"
                             >
                                 <span className="truncate">
-                                    <span className="font-medium">
-                                        {user.name}
-                                    </span>{" "}
+                                    <span className="font-medium">{user.name}</span>{" "}
                                     <span className="text-gray-500 dark:text-gray-400">
                                         {user.email}
                                     </span>
@@ -93,9 +89,7 @@ function ToolCard({ icon: Icon, title, description, children }) {
                     <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
                         {title}
                     </h3>
-                    <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-                        {description}
-                    </p>
+                    <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{description}</p>
                     <div className="mt-4 space-y-3">{children}</div>
                 </div>
             </div>
@@ -133,6 +127,22 @@ export default function Index({ users }) {
             .post(route("admin.tools.test-notification"), {
                 preserveScroll: true,
             });
+    };
+
+    // Enable web push on this device (must run from a user gesture).
+    const vapidPublicKey = props.webPush?.vapidPublicKey ?? null;
+    const pushSupported = isWebPushSupported();
+    const [enablingPush, setEnablingPush] = useState(false);
+    const handleEnablePush = async () => {
+        setEnablingPush(true);
+        try {
+            await enableWebPush(vapidPublicKey);
+            toast.success("Push enabled on this device. Send yourself a test notification below.");
+        } catch (error) {
+            toast.error(error?.message || "Couldn't enable push on this device.");
+        } finally {
+            setEnablingPush(false);
+        }
     };
 
     // Clear daily summary
@@ -179,8 +189,7 @@ export default function Index({ users }) {
         "inline-flex items-center justify-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50";
     const inputClass =
         "w-full rounded-md border border-light-border/70 dark:border-white/10 bg-white dark:bg-dark-card px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-primary-500 focus:ring-primary-500";
-    const labelClass =
-        "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1";
+    const labelClass = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1";
     const errorClass = "mt-1 text-sm text-red-600 dark:text-red-400";
 
     return (
@@ -211,46 +220,36 @@ export default function Index({ users }) {
                                 type="email"
                                 required
                                 value={emailForm.data.email}
-                                onChange={(e) =>
-                                    emailForm.setData("email", e.target.value)
-                                }
+                                onChange={(e) => emailForm.setData("email", e.target.value)}
                                 placeholder="you@example.com"
                                 className={inputClass}
                             />
                             {emailForm.errors.email && (
-                                <p className={errorClass}>
-                                    {emailForm.errors.email}
-                                </p>
+                                <p className={errorClass}>{emailForm.errors.email}</p>
                             )}
                         </div>
                         <div>
                             <label htmlFor="email-subject" className={labelClass}>
-                                Subject{" "}
-                                <span className="text-gray-400">(optional)</span>
+                                Subject <span className="text-gray-400">(optional)</span>
                             </label>
                             <input
                                 id="email-subject"
                                 type="text"
                                 value={emailForm.data.subject}
-                                onChange={(e) =>
-                                    emailForm.setData("subject", e.target.value)
-                                }
+                                onChange={(e) => emailForm.setData("subject", e.target.value)}
                                 placeholder="Wevie test email"
                                 className={inputClass}
                             />
                         </div>
                         <div>
                             <label htmlFor="email-message" className={labelClass}>
-                                Message{" "}
-                                <span className="text-gray-400">(optional)</span>
+                                Message <span className="text-gray-400">(optional)</span>
                             </label>
                             <textarea
                                 id="email-message"
                                 rows={2}
                                 value={emailForm.data.message}
-                                onChange={(e) =>
-                                    emailForm.setData("message", e.target.value)
-                                }
+                                onChange={(e) => emailForm.setData("message", e.target.value)}
                                 placeholder="Custom body text..."
                                 className={inputClass}
                             />
@@ -270,8 +269,38 @@ export default function Index({ users }) {
                 <ToolCard
                     icon={Bell}
                     title="Send test notification"
-                    description="Send a test notification (email + in-app bell) to a user."
+                    description="Send a test notification (in-app bell + web push + email) to a user."
                 >
+                    <div className="rounded-md border border-light-border/70 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-3">
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                            Web push on this device
+                        </p>
+                        <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            {pushSupported
+                                ? "Enable browser notifications, then send yourself a test below to get a real device push."
+                                : "This browser doesn't support web push (needs a secure context; on iOS, install the app to your home screen first)."}
+                        </p>
+                        <button
+                            type="button"
+                            onClick={handleEnablePush}
+                            disabled={!pushSupported || !vapidPublicKey || enablingPush}
+                            className={`${primaryBtn} mt-3`}
+                            title={
+                                !vapidPublicKey
+                                    ? "Web push isn't configured on the server (missing VAPID key)."
+                                    : undefined
+                            }
+                        >
+                            <Smartphone className="h-4 w-4" />
+                            {enablingPush ? "Enabling…" : "Enable notifications on this device"}
+                        </button>
+                        {!vapidPublicKey && (
+                            <p className={errorClass}>
+                                Server VAPID key missing — run{" "}
+                                <code>php artisan webpush:vapid</code> and set it in .env.
+                            </p>
+                        )}
+                    </div>
                     <form onSubmit={submitNotification} className="space-y-3">
                         <div>
                             <label htmlFor="notify-user" className={labelClass}>
@@ -284,23 +313,18 @@ export default function Index({ users }) {
                                 onChange={setNotifyUser}
                             />
                             {notifyForm.errors.user_id && (
-                                <p className={errorClass}>
-                                    {notifyForm.errors.user_id}
-                                </p>
+                                <p className={errorClass}>{notifyForm.errors.user_id}</p>
                             )}
                         </div>
                         <div>
                             <label htmlFor="notify-message" className={labelClass}>
-                                Message{" "}
-                                <span className="text-gray-400">(optional)</span>
+                                Message <span className="text-gray-400">(optional)</span>
                             </label>
                             <textarea
                                 id="notify-message"
                                 rows={2}
                                 value={notifyForm.data.message}
-                                onChange={(e) =>
-                                    notifyForm.setData("message", e.target.value)
-                                }
+                                onChange={(e) => notifyForm.setData("message", e.target.value)}
                                 placeholder="Custom notification text..."
                                 className={inputClass}
                             />

@@ -109,6 +109,22 @@ class User extends Authenticatable
             ->all();
     }
 
+    /**
+     * Route notifications for the Web Push channel.
+     *
+     * Returns the user's web-push PushToken models (provider = webpush); the
+     * WebPushChannel reads each row's `meta` (endpoint + keys) to build the
+     * browser subscription.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, \App\Models\PushToken>
+     */
+    public function routeNotificationForWebPush()
+    {
+        return $this->pushTokens()
+            ->where('provider', 'webpush')
+            ->get();
+    }
+
     public function categories(): HasMany
     {
         return $this->hasMany(Category::class);

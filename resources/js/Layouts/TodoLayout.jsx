@@ -1,5 +1,6 @@
 import ApplicationLogo from "@/Components/ApplicationLogo";
 import Dropdown from "@/Components/Dropdown";
+import NotificationBell from "@/Components/NotificationBell";
 import MobileFab from "@/Components/Mobile/MobileFab";
 import MobileTabBar from "@/Components/Mobile/MobileTabBar";
 import OnboardingTour from "@/Components/OnboardingTour";
@@ -18,7 +19,6 @@ import {
     Settings,
     Sun,
     Moon,
-    Bell,
     Calendar,
     BarChart3,
     DollarSign,
@@ -35,6 +35,7 @@ import {
     BookOpen,
     Tags,
     ListChecks,
+    Wrench,
 } from "lucide-react";
 
 export default function TodoLayout({ header, children }) {
@@ -230,6 +231,12 @@ export default function TodoLayout({ header, children }) {
             href: route("admin.invite-codes.index"),
             icon: Users,
             current: route().current("admin.invite-codes.*"),
+        },
+        {
+            name: "Tools",
+            href: route("admin.tools.index"),
+            icon: Wrench,
+            current: route().current("admin.tools.*"),
         },
     ];
 
@@ -948,9 +955,7 @@ export default function TodoLayout({ header, children }) {
                                 )}
                             </button>
                             {/* Notifications */}
-                            <button className="rounded-md p-2 text-light-secondary hover:text-light-primary dark:text-dark-secondary dark:hover:text-dark-primary transition-colors duration-200 hover:bg-light-hover dark:hover:bg-dark-hover">
-                                <Bell className="h-5 w-5" />
-                            </button>
+                            <NotificationBell />
                         </div>
                     </div>
                 </header>

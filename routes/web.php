@@ -9,6 +9,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardLayoutController;
 use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\ListItemController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\SubtaskController;
@@ -214,10 +215,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('invite-codes', [AdminController::class, 'storeInviteCode'])->name('invite-codes.store');
         Route::patch('invite-codes/{inviteCode}/deactivate', [AdminController::class, 'deactivateInviteCode'])->name('invite-codes.deactivate');
         Route::patch('invite-codes/{inviteCode}/reactivate', [AdminController::class, 'reactivateInviteCode'])->name('invite-codes.reactivate');
+
+        // Tools - feature testing utilities
+        Route::get('tools', [AdminController::class, 'tools'])->name('tools.index');
+        Route::post('tools/test-email', [AdminController::class, 'sendTestEmail'])->name('tools.test-email');
+        Route::post('tools/test-notification', [AdminController::class, 'sendTestNotification'])->name('tools.test-notification');
+        Route::post('tools/clear-daily-summary', [AdminController::class, 'clearDailySummary'])->name('tools.clear-daily-summary');
+        Route::post('tools/clear-spending-insights', [AdminController::class, 'clearSpendingInsights'])->name('tools.clear-spending-insights');
     });
 });
 
 Route::middleware('auth')->group(function () {
+    // In-app notifications (bell)
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::post('notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+
     Route::post('/tutorials/{key}', [\App\Http\Controllers\TutorialController::class, 'update'])
         ->where('key', '[A-Za-z0-9_]+')
         ->name('tutorials.update');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\InviteCode;
 use App\Models\User;
+use App\Services\AdminToolsService;
 use App\Services\CategoryService;
 use App\Services\TaskService;
 use App\Services\UserService;
@@ -17,7 +18,8 @@ class AdminController extends Controller
     public function __construct(
         private UserService $userService,
         private TaskService $taskService,
-        private CategoryService $categoryService
+        private CategoryService $categoryService,
+        private AdminToolsService $adminToolsService
     ) {}
 
     public function dashboard(): Response
@@ -184,5 +186,75 @@ class AdminController extends Controller
         $inviteCode->update(['is_active' => true]);
 
         return redirect()->route('admin.invite-codes.index')->with('message', 'Invite code reactivated successfully');
+    }
+
+    public function tools(): Response
+    {
+        return Inertia::render('Admin/Tools/Index', [
+            'users' => User::select('id', 'name', 'email')->orderBy('name')->get(),
+        ]);
+    }
+
+    public function sendTestEmail(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|string|email|max:255',
+            'subject' => 'nullable|string|max:255',
+            'message' => 'nullable|string|max:2000',
+        ]);
+
+        try {
+            $this->adminToolsService->sendTestEmail(
+                $validated['email'],
+                $validated['subject'] ?? null,
+                $validated['message'] ?? null
+            );
+
+            return redirect()->back()->with('message', "Test email sent to {$validated['email']}.");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to send test email: '.$e->getMessage());
+        }
+    }
+
+    public function sendTestNotification(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+            'message' => 'nullable|string|max:2000',
+        ]);
+
+        $user = User::findOrFail($validated['user_id']);
+
+        try {
+            $this->adminToolsService->sendTestNotification($user, $validated['message'] ?? null);
+
+            return redirect()->back()->with('message', "Test notification sent to {$user->name}.");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to send test notification: '.$e->getMessage());
+        }
+    }
+
+    public function clearDailySummary(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+        ]);
+
+        $user = User::findOrFail($validated['user_id']);
+        $deleted = $this->adminToolsService->clearDailySummary($user);
+
+        return redirect()->back()->with('message', "Cleared {$deleted} daily summary record(s) for {$user->name}.");
+    }
+
+    public function clearSpendingInsights(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+        ]);
+
+        $user = User::findOrFail($validated['user_id']);
+        $deleted = $this->adminToolsService->clearSpendingInsights($user);
+
+        return redirect()->back()->with('message', "Cleared {$deleted} spending insight record(s) for {$user->name}.");
     }
 }

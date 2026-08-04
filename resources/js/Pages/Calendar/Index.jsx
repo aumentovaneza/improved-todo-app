@@ -328,6 +328,10 @@ export default function Index({
         () =>
             calendarItems.map((item) => ({
                 ...item,
+                // Per-event classes live on the event input in FullCalendar v7 (the
+                // v6 calendar-wide `eventClassNames` callback was dropped); this lands
+                // `wv-ev--{source}` on the event root the CSS targets.
+                classNames: ["wv-ev", `wv-ev--${item.sourceType}`],
                 extendedProps: {
                     ...item.extendedProps,
                     sourceType: item.sourceType,
@@ -580,11 +584,7 @@ export default function Index({
                         headerToolbar={false}
                         events={calendarEvents}
                         eventContent={renderEventContent}
-                        eventClassNames={(arg) => [
-                            "wv-ev",
-                            `wv-ev--${arg.event.extendedProps.sourceType}`,
-                        ]}
-                        dayCellContent={(arg) =>
+                        dayCellTopContent={(arg) =>
                             arg.date.getDate() === 1
                                 ? `${arg.date.toLocaleDateString(undefined, { month: "short" })} 1`
                                 : arg.dayNumberText

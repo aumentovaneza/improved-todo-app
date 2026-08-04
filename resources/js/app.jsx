@@ -14,6 +14,20 @@ import { initStatusBar } from "./native/statusBar";
 
 const appName = import.meta.env.VITE_APP_NAME || "Wevie";
 
+// A deploy rotates the hashed asset names; an already-open session can then try to
+// lazy-import a page chunk whose old hash is gone from both the server and the purged
+// service-worker precache, 404-ing hard. Reload once to pick up the fresh manifest,
+// guarding against a loop if the deploy is genuinely broken.
+const PRELOAD_RELOAD_KEY = "vite-preload-reloaded";
+window.addEventListener("vite:preloadError", () => {
+    if (sessionStorage.getItem(PRELOAD_RELOAD_KEY)) return;
+    sessionStorage.setItem(PRELOAD_RELOAD_KEY, "1");
+    window.location.reload();
+});
+// Re-arm once a page chunk actually loads: a genuinely broken deploy never fires
+// "success", so the flag stays set and we never hard-loop; a recovered one clears it.
+router.on("success", () => sessionStorage.removeItem(PRELOAD_RELOAD_KEY));
+
 /**
  * Bridges Inertia server responses to react-toastify.
  *

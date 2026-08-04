@@ -25,6 +25,43 @@
     overflow: hidden;
 }
 
+/* We import only FullCalendar's minimal skeleton.css, which draws almost no
+   grid lines, so paint them ourselves from the shared --fc-border-color. This
+   is what makes month/week/day read as a real grid in both themes. */
+.calendar-shell .fc .fc-scrollgrid {
+    border: 1px solid var(--fc-border-color);
+}
+
+/* Month: lines between weekday columns and between date cells. */
+.calendar-shell .fc .fc-col-header-cell,
+.calendar-shell .fc .fc-daygrid-day {
+    border-right: 1px solid var(--fc-border-color);
+}
+
+.calendar-shell .fc .fc-daygrid-day {
+    border-bottom: 1px solid var(--fc-border-color);
+}
+
+/* Week/Day: divider between the time axis and the day columns, and between days. */
+.calendar-shell .fc .fc-timegrid-axis,
+.calendar-shell .fc .fc-timegrid-col {
+    border-right: 1px solid var(--fc-border-color);
+}
+
+/* Day/Week: lines between time slots (hour lines solid, half-hour lines lighter). */
+.calendar-shell .fc .fc-timegrid-slot {
+    border-bottom: 1px solid var(--fc-border-color);
+}
+
+.calendar-shell .fc .fc-timegrid-slot-minor {
+    border-bottom-style: dotted;
+}
+
+/* Separate the all-day row from the timed grid so it stops feeling cramped. */
+.calendar-shell .fc .fc-timegrid-divider {
+    border-bottom: 1px solid var(--fc-border-color);
+}
+
 .calendar-shell .fc .fc-col-header-cell,
 .calendar-shell .fc .fc-timegrid-axis,
 .calendar-shell .fc .fc-list-day-cushion {
@@ -40,6 +77,12 @@
 
 .calendar-shell .fc .fc-day-today {
     @apply bg-wevie-teal/10 dark:bg-wevie-teal/10;
+}
+
+/* Today's date number gets a filled teal circle (the cell tint above stays),
+   so the current day is unmistakable at a glance. */
+.calendar-shell .fc .fc-day-today .fc-daygrid-day-number {
+    @apply flex h-6 min-w-6 items-center justify-center rounded-full bg-wevie-teal px-1 font-semibold text-white hover:text-white;
 }
 
 .calendar-shell .fc .fc-event {

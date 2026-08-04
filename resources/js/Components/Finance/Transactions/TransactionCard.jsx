@@ -74,8 +74,8 @@ export default function TransactionCard({ transaction, onEdit, onDelete }) {
                 </div>
                 {transaction.is_recurring && transaction.recurring_frequency && (
                     <div className="flex justify-between gap-2">
-                        <dt>Repeats</dt>
-                        <dd className="text-right capitalize text-violet-500 dark:text-violet-300">
+                        <dt className="shrink-0">Repeats</dt>
+                        <dd className="min-w-0 truncate text-right capitalize text-violet-500 dark:text-violet-300">
                             {formatFrequency(transaction.recurring_frequency)}
                         </dd>
                     </div>

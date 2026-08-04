@@ -4,6 +4,7 @@ import TodoLayout from "@/Layouts/TodoLayout";
 import OnboardingTour from "@/Components/OnboardingTour";
 import Badge from "@/Components/Finance/UI/Badge";
 import EmptyState from "@/Components/Finance/UI/EmptyState";
+import ResponsiveTable from "@/Components/Finance/UI/ResponsiveTable";
 import useWalletMutation from "@/Hooks/useWalletMutation";
 import { formatWholeCurrency, formatCurrency } from "@/Utils/currency";
 import { walletBudgetsSteps } from "@/tours";
@@ -279,10 +280,240 @@ export default function Budgets({
         setClosingBudget(null);
     }, [closeForm, closingBudget, mutate]);
 
+    const budgetMetrics = (budget) => {
+        const spent = Number(budget.current_spent ?? 0);
+        const total = Number(budget.amount ?? 0);
+        const remaining = Math.max(0, total - spent);
+        const progress =
+            total > 0
+                ? Math.min(100, Math.round((spent / total) * 100))
+                : 0;
+        const statusLabel = budget.is_active
+            ? "Active"
+            : remaining === 0
+              ? "Completed"
+              : "Closed";
+        const statusTone = budget.is_active
+            ? "success"
+            : remaining === 0
+              ? "neutral"
+              : "danger";
+        return { spent, total, remaining, progress, statusLabel, statusTone };
+    };
+
+    const rowActions = (budget) => (
+        <>
+            <button
+                type="button"
+                onClick={() => setActiveBudget(budget)}
+                className="rounded-md p-2 text-wevie-teal hover:text-wevie-teal/80 dark:text-wevie-mint"
+                title="Edit budget"
+                aria-label="Edit budget"
+            >
+                <Pencil className="h-4 w-4" />
+            </button>
+            <button
+                type="button"
+                onClick={() => handleViewTransactions(budget)}
+                className="rounded-md p-2 text-light-secondary hover:text-light-primary dark:text-dark-secondary dark:hover:text-dark-primary"
+                title="View transactions"
+                aria-label="View transactions"
+            >
+                <Eye className="h-4 w-4" />
+            </button>
+            <button
+                type="button"
+                onClick={() => handleOpenClose(budget)}
+                disabled={!budget.is_active}
+                className="rounded-md p-2 text-amber-600 hover:text-amber-700 disabled:cursor-not-allowed disabled:text-light-muted dark:text-amber-400 dark:hover:text-amber-300 dark:disabled:text-dark-muted"
+                title="Close budget"
+                aria-label="Close budget"
+            >
+                <Lock className="h-4 w-4" />
+            </button>
+            <button
+                type="button"
+                onClick={() => handleDelete(budget)}
+                className="rounded-md p-2 text-rose-600 hover:text-rose-700 dark:text-rose-300"
+                title="Delete budget"
+                aria-label="Delete budget"
+            >
+                <Trash2 className="h-4 w-4" />
+            </button>
+        </>
+    );
+
+    const columns = [
+        {
+            key: "name",
+            header: "Budget",
+            render: (budget) => (
+                <p className="font-medium text-light-primary dark:text-dark-primary">
+                    {budget.name}
+                </p>
+            ),
+        },
+        {
+            key: "budget_type",
+            header: "Type",
+            render: (budget) => (
+                <span className="text-xs capitalize text-light-muted dark:text-dark-muted">
+                    {budget.budget_type ?? "spending"}
+                </span>
+            ),
+        },
+        {
+            key: "category",
+            header: "Category",
+            render: (budget) => (
+                <span className="text-xs text-light-muted dark:text-dark-muted">
+                    {budget.category?.name ?? "All categories"}
+                </span>
+            ),
+        },
+        {
+            key: "account",
+            header: "Account",
+            render: (budget) => (
+                <span className="text-xs text-light-muted dark:text-dark-muted">
+                    {budget.account?.name ?? "—"}
+                </span>
+            ),
+        },
+        {
+            key: "status",
+            header: "Status",
+            className: "hidden md:table-cell",
+            cellClassName: "hidden md:table-cell",
+            render: (budget) => {
+                const { statusLabel, statusTone } = budgetMetrics(budget);
+                return <Badge label={statusLabel} tone={statusTone} />;
+            },
+        },
+        {
+            key: "progress",
+            header: "Progress",
+            className: "hidden md:table-cell",
+            cellClassName: "hidden min-w-[160px] md:table-cell",
+            render: (budget) => {
+                const { progress } = budgetMetrics(budget);
+                return (
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-light-muted dark:text-dark-muted">
+                            {progress}%
+                        </span>
+                        <div className="h-2 w-full rounded-full bg-light-hover dark:bg-dark-hover">
+                            <div
+                                className="h-2 rounded-full bg-rose-500 dark:bg-rose-500/80"
+                                style={{ width: `${progress}%` }}
+                            />
+                        </div>
+                    </div>
+                );
+            },
+        },
+        {
+            key: "amount",
+            header: "Amount",
+            align: "right",
+            render: (budget) => (
+                <span className="font-semibold text-light-primary dark:text-dark-primary">
+                    {formatWholeCurrency(budget.amount, budget.currency)}
+                </span>
+            ),
+        },
+        {
+            key: "remaining",
+            header: "Remaining",
+            align: "right",
+            render: (budget) => {
+                const { remaining } = budgetMetrics(budget);
+                return (
+                    <span className="text-xs text-light-muted dark:text-dark-muted">
+                        {formatWholeCurrency(remaining, budget.currency)}
+                    </span>
+                );
+            },
+        },
+        {
+            key: "actions",
+            header: "Actions",
+            align: "right",
+            render: (budget) => (
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                    {rowActions(budget)}
+                </div>
+            ),
+        },
+    ];
+
+    const renderCard = (budget) => {
+        const { remaining, progress, statusLabel, statusTone } =
+            budgetMetrics(budget);
+        return (
+            <div className="rounded-xl border border-light-border/70 p-4 dark:border-dark-border/70">
+                <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                        <p className="truncate font-medium text-light-primary dark:text-dark-primary">
+                            {budget.name}
+                        </p>
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <Badge label={statusLabel} tone={statusTone} />
+                            <span className="text-xs capitalize text-light-muted dark:text-dark-muted">
+                                {budget.budget_type ?? "spending"}
+                            </span>
+                        </div>
+                    </div>
+                    <p className="shrink-0 text-right font-semibold text-light-primary dark:text-dark-primary">
+                        {formatWholeCurrency(budget.amount, budget.currency)}
+                    </p>
+                </div>
+
+                <dl className="mt-3 space-y-1 text-xs text-light-muted dark:text-dark-muted">
+                    <div className="flex justify-between gap-2">
+                        <dt className="shrink-0">Category</dt>
+                        <dd className="min-w-0 truncate text-right text-light-secondary dark:text-dark-secondary">
+                            {budget.category?.name ?? "All categories"}
+                        </dd>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                        <dt className="shrink-0">Account</dt>
+                        <dd className="min-w-0 truncate text-right text-light-secondary dark:text-dark-secondary">
+                            {budget.account?.name ?? "—"}
+                        </dd>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                        <dt className="shrink-0">Remaining</dt>
+                        <dd className="min-w-0 truncate text-right text-light-secondary dark:text-dark-secondary">
+                            {formatWholeCurrency(remaining, budget.currency)}
+                        </dd>
+                    </div>
+                </dl>
+
+                <div className="mt-3">
+                    <div className="mb-1 flex items-center justify-between gap-2 text-xs text-light-muted dark:text-dark-muted">
+                        <span>Progress</span>
+                        <span>{progress}%</span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-light-hover dark:bg-dark-hover">
+                        <div
+                            className="h-2 rounded-full bg-rose-500 dark:bg-rose-500/80"
+                            style={{ width: `${progress}%` }}
+                        />
+                    </div>
+                </div>
+
+                <div className="mt-3 flex items-center justify-end gap-1 border-t border-light-border/50 pt-3 dark:border-dark-border/50">
+                    {rowActions(budget)}
+                </div>
+            </div>
+        );
+    };
+
     return (
         <TodoLayout header="Budgets">
             <Head title="Budgets" />
-            <div className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-5xl space-y-6">
                 <div className="card p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
@@ -368,183 +599,20 @@ export default function Budgets({
                     <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                         All budgets
                     </h3>
-                    <div className="mt-4 overflow-x-auto">
-                        <table className="min-w-[980px] w-full text-left text-sm text-light-secondary dark:text-dark-secondary">
-                            <thead className="text-xs uppercase text-light-muted dark:text-dark-muted">
-                                <tr>
-                                    <th className="py-2 pr-4">Budget</th>
-                                    <th className="py-2 pr-4">Type</th>
-                                    <th className="py-2 pr-4">Category</th>
-                                    <th className="py-2 pr-4">Account</th>
-                                    <th className="py-2 hidden md:table-cell">
-                                        Status
-                                    </th>
-                                    <th className="py-2 hidden md:table-cell">
-                                        Progress
-                                    </th>
-                                    <th className="py-2 text-right whitespace-nowrap">
-                                        Amount
-                                    </th>
-                                    <th className="py-2 text-right whitespace-nowrap">
-                                        Remaining
-                                    </th>
-                                    <th className="py-2 text-right whitespace-nowrap">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {pagedBudgets.map((budget) => {
-                                    const spent = Number(budget.current_spent ?? 0);
-                                    const total = Number(budget.amount ?? 0);
-                                    const remaining = Math.max(0, total - spent);
-                                    const progress =
-                                        total > 0
-                                            ? Math.min(
-                                                  100,
-                                                  Math.round(
-                                                      (spent / total) * 100
-                                                  )
-                                              )
-                                            : 0;
-                                    const statusLabel = budget.is_active
-                                        ? "Active"
-                                        : remaining === 0
-                                          ? "Completed"
-                                          : "Closed";
-                                    const statusTone = budget.is_active
-                                        ? "success"
-                                        : remaining === 0
-                                          ? "neutral"
-                                          : "danger";
-
-                                    return (
-                                        <tr
-                                            key={budget.id}
-                                            className="border-t border-light-border/70 dark:border-dark-border/70"
-                                        >
-                                            <td className="py-3 pr-4">
-                                                <p className="font-medium text-light-primary dark:text-dark-primary">
-                                                    {budget.name}
-                                                </p>
-                                            </td>
-                                            <td className="py-3 pr-4 capitalize text-xs text-light-muted dark:text-dark-muted">
-                                                {budget.budget_type ?? "spending"}
-                                            </td>
-                                            <td className="py-3 pr-4 text-xs text-light-muted dark:text-dark-muted">
-                                                {budget.category?.name ??
-                                                    "All categories"}
-                                            </td>
-                                            <td className="py-3 pr-4 text-xs text-light-muted dark:text-dark-muted">
-                                                {budget.account?.name ?? "—"}
-                                            </td>
-                                            <td className="py-3 hidden md:table-cell">
-                                                <Badge
-                                                    label={statusLabel}
-                                                    tone={statusTone}
-                                                />
-                                            </td>
-                                            <td className="py-3 min-w-[160px] hidden md:table-cell">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-xs text-light-muted dark:text-dark-muted">
-                                                        {progress}%
-                                                    </span>
-                                                    <div className="h-2 w-full rounded-full bg-light-hover dark:bg-dark-hover">
-                                                        <div
-                                                            className="h-2 rounded-full bg-rose-500 dark:bg-rose-500/80"
-                                                            style={{
-                                                                width: `${progress}%`,
-                                                            }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="py-3 text-right font-semibold text-light-primary dark:text-dark-primary">
-                                                {formatWholeCurrency(
-                                                    budget.amount,
-                                                    budget.currency
-                                                )}
-                                            </td>
-                                            <td className="py-3 text-right text-xs text-light-muted dark:text-dark-muted">
-                                                {formatWholeCurrency(
-                                                    remaining,
-                                                    budget.currency
-                                                )}
-                                            </td>
-                                            <td className="py-3 text-right">
-                                                <div className="flex flex-wrap items-center justify-end gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            setActiveBudget(
-                                                                budget
-                                                            )
-                                                        }
-                                                        className="rounded-md p-1 text-wevie-teal hover:text-wevie-teal/80 dark:text-wevie-mint"
-                                                        title="Edit budget"
-                                                        aria-label="Edit budget"
-                                                    >
-                                                        <Pencil className="h-4 w-4" />
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            handleViewTransactions(
-                                                                budget
-                                                            )
-                                                        }
-                                                        className="rounded-md p-1 text-light-secondary hover:text-light-primary dark:text-dark-secondary dark:hover:text-dark-primary"
-                                                        title="View transactions"
-                                                        aria-label="View transactions"
-                                                    >
-                                                        <Eye className="h-4 w-4" />
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            handleOpenClose(
-                                                                budget
-                                                            )
-                                                        }
-                                                        disabled={
-                                                            !budget.is_active
-                                                        }
-                                                        className="rounded-md p-1 text-amber-600 hover:text-amber-700 disabled:cursor-not-allowed disabled:text-light-muted dark:text-amber-400 dark:hover:text-amber-300 dark:disabled:text-dark-muted"
-                                                        title="Close budget"
-                                                        aria-label="Close budget"
-                                                    >
-                                                        <Lock className="h-4 w-4" />
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            handleDelete(budget)
-                                                        }
-                                                        className="rounded-md p-1 text-rose-600 hover:text-rose-700 dark:text-rose-300"
-                                                        title="Delete budget"
-                                                        aria-label="Delete budget"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                                {(!pagedBudgets ||
-                                    pagedBudgets.length === 0) && (
-                                    <tr>
-                                        <td colSpan={9} className="py-6">
-                                            <EmptyState
-                                                icon={PiggyBank}
-                                                title="No budgets yet"
-                                                description="No budgets match your filters. Use the New budget button to start tracking your spending."
-                                            />
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                    <div className="mt-4">
+                        <ResponsiveTable
+                            columns={columns}
+                            rows={pagedBudgets}
+                            keyField="id"
+                            renderCard={renderCard}
+                            emptyState={
+                                <EmptyState
+                                    icon={PiggyBank}
+                                    title="No budgets yet"
+                                    description="No budgets match your filters. Use the New budget button to start tracking your spending."
+                                />
+                            }
+                        />
                     </div>
                     {visibleBudgets.length > perPage && (
                         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-light-secondary dark:text-dark-secondary">

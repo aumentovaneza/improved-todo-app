@@ -57,6 +57,9 @@ export default function Transactions({
     const [startDate, setStartDate] = useState(filters.start_date ?? "");
     const [endDate, setEndDate] = useState(filters.end_date ?? "");
     const [sort, setSort] = useState(filters.sort ?? "date_desc");
+    const [accountId, setAccountId] = useState(
+        filters.finance_account_id ? String(filters.finance_account_id) : ""
+    );
     const [loadedTransactions, setLoadedTransactions] = useState(transactions);
     const [page, setPage] = useState(initialPage);
     const [hasMore, setHasMore] = useState(initialHasMore);
@@ -119,6 +122,7 @@ export default function Transactions({
                         start_date: startDate || undefined,
                         end_date: endDate || undefined,
                         sort: sort || undefined,
+                        finance_account_id: accountId || undefined,
                         wallet_user_id: walletUserId || undefined,
                     },
                 }
@@ -166,6 +170,7 @@ export default function Transactions({
                 start_date: startDate || undefined,
                 end_date: endDate || undefined,
                 sort: sort || undefined,
+                finance_account_id: accountId || undefined,
                 wallet_user_id: walletUserId || undefined,
             },
             { preserveState: true, replace: true, preserveScroll: true }
@@ -178,6 +183,7 @@ export default function Transactions({
         setStartDate("");
         setEndDate("");
         setSort("date_desc");
+        setAccountId("");
         router.get(route("weviewallet.transactions.index"), {
             wallet_user_id: walletUserId || undefined,
         });
@@ -318,6 +324,25 @@ export default function Transactions({
                                 <option value="expense">Expense</option>
                                 <option value="savings">Savings</option>
                                 <option value="transfer">Transfer</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-xs font-semibold uppercase text-light-muted dark:text-dark-muted">
+                                Account
+                            </label>
+                            <select
+                                className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary"
+                                value={accountId}
+                                onChange={(event) =>
+                                    setAccountId(event.target.value)
+                                }
+                            >
+                                <option value="">All accounts</option>
+                                {accounts.map((account) => (
+                                    <option key={account.id} value={account.id}>
+                                        {account.label || account.name}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                         <div>

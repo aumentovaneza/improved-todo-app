@@ -128,6 +128,7 @@ export default function Accounts({
                 <div data-tour="accounts-list">
                     <AccountsList
                         accounts={accounts}
+                        walletUserId={walletUserId}
                         onEdit={(account) => setActiveAccount(account)}
                         onDelete={handleDelete}
                     />

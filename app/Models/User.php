@@ -8,6 +8,8 @@ use App\Modules\Finance\Models\FinanceBudget;
 use App\Modules\Finance\Models\FinanceCategory;
 use App\Modules\Finance\Models\FinanceSavingsGoal;
 use App\Modules\Finance\Models\FinanceTransaction;
+use App\Modules\MealPlanning\Models\Household;
+use App\Modules\MealPlanning\Models\HouseholdMember;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -177,6 +179,16 @@ class User extends Authenticatable
         return $this->belongsToMany(Board::class, 'board_collaborators')
             ->withPivot('role', 'joined_at')
             ->withTimestamps();
+    }
+
+    public function ownedHouseholds(): HasMany
+    {
+        return $this->hasMany(Household::class, 'owner_user_id');
+    }
+
+    public function householdMemberships(): HasMany
+    {
+        return $this->hasMany(HouseholdMember::class);
     }
 
     public function walletCollaborators(): BelongsToMany

@@ -11,7 +11,7 @@ use App\Models\User;
  * dead endpoint, so the save appears to fail with a 404. These tests lock in
  * that mutations never redirect into a GET-less task endpoint.
  */
-function makeTask(User $user, array $attributes = []): Task
+function makeRedirectTask(User $user, array $attributes = []): Task
 {
     return Task::create(array_merge([
         'user_id' => $user->id,
@@ -24,7 +24,7 @@ function makeTask(User $user, array $attributes = []): Task
 
 it('does not redirect a task update into the GET-less task detail endpoint', function () {
     $user = User::factory()->create();
-    $task = makeTask($user);
+    $task = makeRedirectTask($user);
 
     $response = $this->actingAs($user)
         ->from("/tasks/{$task->id}")
@@ -39,7 +39,7 @@ it('does not redirect a task update into the GET-less task detail endpoint', fun
 
 it('redirects a task update back to the originating page when it is a real GET route', function () {
     $user = User::factory()->create();
-    $task = makeTask($user);
+    $task = makeRedirectTask($user);
 
     $response = $this->actingAs($user)
         ->from('/calendar')
@@ -54,7 +54,7 @@ it('redirects a task update back to the originating page when it is a real GET r
 
 it('does not redirect a delete into the GET-less task detail endpoint', function () {
     $user = User::factory()->create();
-    $task = makeTask($user);
+    $task = makeRedirectTask($user);
 
     $response = $this->actingAs($user)
         ->from("/tasks/{$task->id}")
@@ -65,7 +65,7 @@ it('does not redirect a delete into the GET-less task detail endpoint', function
 
 it('does not redirect a status toggle into its own GET-less endpoint', function () {
     $user = User::factory()->create();
-    $task = makeTask($user);
+    $task = makeRedirectTask($user);
 
     $response = $this->actingAs($user)
         ->from("/tasks/{$task->id}/toggle-status")
@@ -76,7 +76,7 @@ it('does not redirect a status toggle into its own GET-less endpoint', function 
 
 it('does not redirect a reorder into its own GET-less endpoint', function () {
     $user = User::factory()->create();
-    $task = makeTask($user);
+    $task = makeRedirectTask($user);
 
     $response = $this->actingAs($user)
         ->from('/tasks/reorder')

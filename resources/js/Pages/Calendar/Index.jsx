@@ -131,6 +131,7 @@ function MonthTitle({ currentDate, monthTitle }) {
 export default function Index({
     tasks,
     transactions,
+    mealEvents = {},
     upcomingTasks,
     recentlyAccomplishedTasks = [],
     overdueTasks,
@@ -147,21 +148,11 @@ export default function Index({
         // First-time default: list on phones (denser, easier to scan), grid on
         // larger screens. A saved preference always wins.
         const fallback =
-            typeof window !== "undefined" && window.innerWidth < 768
-                ? "list"
-                : "calendar";
-        return readStoredPreference(
-            VIEW_MODE_KEY,
-            ["calendar", "list"],
-            fallback
-        );
+            typeof window !== "undefined" && window.innerWidth < 768 ? "list" : "calendar";
+        return readStoredPreference(VIEW_MODE_KEY, ["calendar", "list"], fallback);
     });
     const [listRange, setListRange] = useState(() =>
-        readStoredPreference(
-            LIST_RANGE_KEY,
-            ["month", "week", "day"],
-            "month"
-        )
+        readStoredPreference(LIST_RANGE_KEY, ["month", "week", "day"], "month")
     );
     const [showDayTasksModal, setShowDayTasksModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
@@ -240,6 +231,7 @@ export default function Index({
             const isToday = dateStr === todayStr;
             const dayTasks = tasks[dateStr] || [];
             const dayTransactions = transactions?.[dateStr] || [];
+            const dayMealEvents = mealEvents?.[dateStr] || [];
 
             days.push({
                 date: new Date(current),
@@ -249,6 +241,7 @@ export default function Index({
                 isToday,
                 tasks: dayTasks,
                 transactions: dayTransactions,
+                mealEvents: dayMealEvents,
             });
 
             current.setDate(current.getDate() + 1);
@@ -390,9 +383,7 @@ export default function Index({
                     onSuccess: () => {
                         toast.success(
                             `Task ${
-                                newStatus === "completed"
-                                    ? "completed"
-                                    : "reopened"
+                                newStatus === "completed" ? "completed" : "reopened"
                             } successfully!`
                         );
                     },
@@ -456,6 +447,7 @@ export default function Index({
         return rangeDateStrings().map((dateStr) => {
             const dayTasks = tasks?.[dateStr] || [];
             const dayTransactions = transactions?.[dateStr] || [];
+            const dayMealEvents = mealEvents?.[dateStr] || [];
 
             const [year, month, day] = dateStr.split("-").map(Number);
             const dateObj = new Date(year, month - 1, day);
@@ -465,9 +457,13 @@ export default function Index({
                 date: dateObj,
                 day,
                 isToday: dateStr === todayStr,
-                isEmpty: dayTasks.length === 0 && dayTransactions.length === 0,
+                isEmpty:
+                    dayTasks.length === 0 &&
+                    dayTransactions.length === 0 &&
+                    dayMealEvents.length === 0,
                 tasks: dayTasks,
                 transactions: dayTransactions,
+                mealEvents: dayMealEvents,
                 dayName: dateObj.toLocaleDateString("en-US", {
                     weekday: "long",
                 }),
@@ -494,11 +490,7 @@ export default function Index({
     const renderListView = () => {
         if (dateGroups.length === 0) {
             const rangeNoun =
-                effectiveRange === "week"
-                    ? "week"
-                    : effectiveRange === "day"
-                    ? "day"
-                    : "month";
+                effectiveRange === "week" ? "week" : effectiveRange === "day" ? "day" : "month";
             return (
                 <div className="card p-6 text-center">
                     <CalendarIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
@@ -506,8 +498,7 @@ export default function Index({
                         No items this {rangeNoun}
                     </h3>
                     <p className="text-gray-500 dark:text-gray-400 mb-4">
-                        You don't have any tasks or transactions for{" "}
-                        {rangeLabel ?? monthName}.
+                        You don't have any tasks or transactions for {rangeLabel ?? monthName}.
                     </p>
                     <Link
                         href={route("tasks.index")}
@@ -524,9 +515,7 @@ export default function Index({
             <div className="space-y-4">
                 {dateGroups.map((dateGroup) => {
                     const isExpanded = expandedDates.has(dateGroup.dateStr);
-                    const visibleTasks = isExpanded
-                        ? dateGroup.tasks
-                        : dateGroup.tasks.slice(0, 2);
+                    const visibleTasks = isExpanded ? dateGroup.tasks : dateGroup.tasks.slice(0, 2);
                     const visibleTransactions = isExpanded
                         ? dateGroup.transactions
                         : dateGroup.transactions.slice(0, 2);
@@ -535,9 +524,7 @@ export default function Index({
                         <div
                             key={dateGroup.dateStr}
                             className={`card overflow-hidden ${
-                                dateGroup.isToday
-                                    ? "ring-2 ring-blue-500 dark:ring-blue-400"
-                                    : ""
+                                dateGroup.isToday ? "ring-2 ring-blue-500 dark:ring-blue-400" : ""
                             }`}
                         >
                             {/* Date Header */}
@@ -582,15 +569,10 @@ export default function Index({
                                     <div className="flex items-center space-x-2">
                                         <span className="text-sm text-gray-500 dark:text-gray-400">
                                             {dateGroup.tasks.length} task
-                                            {dateGroup.tasks.length !== 1
-                                                ? "s"
-                                                : ""}
+                                            {dateGroup.tasks.length !== 1 ? "s" : ""}
                                             {dateGroup.transactions.length > 0
                                                 ? `, ${dateGroup.transactions.length} transaction${
-                                                      dateGroup.transactions.length !==
-                                                      1
-                                                          ? "s"
-                                                          : ""
+                                                      dateGroup.transactions.length !== 1 ? "s" : ""
                                                   }`
                                                 : ""}
                                         </span>
@@ -598,9 +580,7 @@ export default function Index({
                                             dateGroup.transactions.length > 2) && (
                                             <button
                                                 onClick={() =>
-                                                    toggleDateExpansion(
-                                                        dateGroup.dateStr
-                                                    )
+                                                    toggleDateExpansion(dateGroup.dateStr)
                                                 }
                                                 className="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                                             >
@@ -622,6 +602,27 @@ export default function Index({
                                         No items for this day.
                                     </p>
                                 )}
+                                {dateGroup.mealEvents.map((event) => (
+                                    <div
+                                        key={`meal-event-${event.id}`}
+                                        className="flex items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-950/30"
+                                    >
+                                        <div className="min-w-0">
+                                            <p className="truncate font-medium text-emerald-900 dark:text-emerald-100">
+                                                {event.title}
+                                            </p>
+                                            <p className="text-xs capitalize text-emerald-700 dark:text-emerald-300">
+                                                {event.type.replaceAll("_", " ")} · {event.status}
+                                            </p>
+                                        </div>
+                                        <span className="text-xs text-emerald-700 dark:text-emerald-300">
+                                            {new Date(event.starts_at).toLocaleTimeString([], {
+                                                hour: "numeric",
+                                                minute: "2-digit",
+                                            })}
+                                        </span>
+                                    </div>
+                                ))}
                                 {visibleTasks.map((task) => (
                                     <div
                                         key={task.id}
@@ -629,9 +630,7 @@ export default function Index({
                                     >
                                         {/* Status Checkbox */}
                                         <button
-                                            onClick={() =>
-                                                handleTaskStatusToggle(task)
-                                            }
+                                            onClick={() => handleTaskStatusToggle(task)}
                                             className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
                                                 task.status === "completed"
                                                     ? "bg-green-500 border-green-500 text-white"
@@ -649,98 +648,66 @@ export default function Index({
                                                 <div className="flex-1 min-w-0">
                                                     <h4
                                                         className={`font-medium text-gray-900 dark:text-gray-100 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${
-                                                            task.status ===
-                                                            "completed"
+                                                            task.status === "completed"
                                                                 ? "line-through opacity-60"
                                                                 : ""
                                                         }`}
-                                                        onClick={() =>
-                                                            handleTaskView(task)
-                                                        }
+                                                        onClick={() => handleTaskView(task)}
                                                     >
                                                         {task.title}
                                                     </h4>
 
                                                     {/* Time */}
                                                     {!task.is_all_day &&
-                                                        (task.start_time ||
-                                                            task.end_time) && (
+                                                        (task.start_time || task.end_time) && (
                                                             <div className="flex items-center mt-1 text-sm text-gray-500 dark:text-gray-400">
                                                                 <Clock className="w-3 h-3 mr-1" />
                                                                 {(() => {
-                                                                    const formatTime =
-                                                                        (
-                                                                            timeStr
-                                                                        ) => {
-                                                                            if (
-                                                                                !timeStr
-                                                                            )
-                                                                                return "";
-                                                                            if (
-                                                                                timeStr.includes(
-                                                                                    "T"
-                                                                                ) ||
-                                                                                timeStr.includes(
-                                                                                    " "
-                                                                                )
-                                                                            ) {
-                                                                                const date =
-                                                                                    new Date(
-                                                                                        timeStr
-                                                                                    );
-                                                                                return date.toLocaleTimeString(
-                                                                                    [],
-                                                                                    {
-                                                                                        hour: "numeric",
-                                                                                        minute: "2-digit",
-                                                                                        hour12: true,
-                                                                                    }
-                                                                                );
-                                                                            }
-                                                                            const [
-                                                                                hours,
-                                                                                minutes,
-                                                                            ] =
-                                                                                timeStr.split(
-                                                                                    ":"
-                                                                                );
-                                                                            const hour =
-                                                                                parseInt(
-                                                                                    hours
-                                                                                );
-                                                                            const ampm =
-                                                                                hour >=
-                                                                                12
-                                                                                    ? "PM"
-                                                                                    : "AM";
-                                                                            const displayHour =
-                                                                                hour %
-                                                                                    12 ||
-                                                                                12;
-                                                                            return `${displayHour}:${minutes} ${ampm}`;
-                                                                        };
+                                                                    const formatTime = (
+                                                                        timeStr
+                                                                    ) => {
+                                                                        if (!timeStr) return "";
+                                                                        if (
+                                                                            timeStr.includes("T") ||
+                                                                            timeStr.includes(" ")
+                                                                        ) {
+                                                                            const date = new Date(
+                                                                                timeStr
+                                                                            );
+                                                                            return date.toLocaleTimeString(
+                                                                                [],
+                                                                                {
+                                                                                    hour: "numeric",
+                                                                                    minute: "2-digit",
+                                                                                    hour12: true,
+                                                                                }
+                                                                            );
+                                                                        }
+                                                                        const [hours, minutes] =
+                                                                            timeStr.split(":");
+                                                                        const hour =
+                                                                            parseInt(hours);
+                                                                        const ampm =
+                                                                            hour >= 12
+                                                                                ? "PM"
+                                                                                : "AM";
+                                                                        const displayHour =
+                                                                            hour % 12 || 12;
+                                                                        return `${displayHour}:${minutes} ${ampm}`;
+                                                                    };
 
-                                                                    const startTime =
-                                                                        formatTime(
-                                                                            task.start_time
-                                                                        );
-                                                                    const endTime =
-                                                                        formatTime(
-                                                                            task.end_time
-                                                                        );
+                                                                    const startTime = formatTime(
+                                                                        task.start_time
+                                                                    );
+                                                                    const endTime = formatTime(
+                                                                        task.end_time
+                                                                    );
 
-                                                                    if (
-                                                                        startTime &&
-                                                                        endTime
-                                                                    ) {
+                                                                    if (startTime && endTime) {
                                                                         return `${startTime} - ${endTime}`;
-                                                                    } else if (
-                                                                        startTime
-                                                                    ) {
+                                                                    } else if (startTime) {
                                                                         return `From ${startTime}`;
-                                                                    } else if (
-                                                                        endTime
-                                                                    ) {
+                                                                    } else if (endTime) {
                                                                         return `Until ${endTime}`;
                                                                     }
                                                                     return "All day";
@@ -755,67 +722,39 @@ export default function Index({
                                                                 className="inline-block text-xs px-2 py-1 rounded-full text-white"
                                                                 style={{
                                                                     backgroundColor:
-                                                                        task.status ===
-                                                                        "completed"
+                                                                        task.status === "completed"
                                                                             ? "#6B7280"
-                                                                            : task
-                                                                                  .category
-                                                                                  .color,
+                                                                            : task.category.color,
                                                                 }}
                                                             >
-                                                                {
-                                                                    task
-                                                                        .category
-                                                                        .name
-                                                                }
+                                                                {task.category.name}
                                                             </span>
                                                         </div>
                                                     )}
 
                                                     {/* Tags */}
-                                                    {task.tags &&
-                                                        task.tags.length >
-                                                            0 && (
-                                                            <div className="flex flex-wrap gap-1 mt-2">
-                                                                {task.tags
-                                                                    .slice(0, 3)
-                                                                    .map(
-                                                                        (
-                                                                            tag
-                                                                        ) => (
-                                                                            <span
-                                                                                key={
-                                                                                    tag.id
-                                                                                }
-                                                                                className="inline-block text-xs px-2 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full"
-                                                                            >
-                                                                                {
-                                                                                    tag.name
-                                                                                }
-                                                                            </span>
-                                                                        )
-                                                                    )}
-                                                                {task.tags
-                                                                    .length >
-                                                                    3 && (
-                                                                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                                        +
-                                                                        {task
-                                                                            .tags
-                                                                            .length -
-                                                                            3}{" "}
-                                                                        more
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        )}
+                                                    {task.tags && task.tags.length > 0 && (
+                                                        <div className="flex flex-wrap gap-1 mt-2">
+                                                            {task.tags.slice(0, 3).map((tag) => (
+                                                                <span
+                                                                    key={tag.id}
+                                                                    className="inline-block text-xs px-2 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full"
+                                                                >
+                                                                    {tag.name}
+                                                                </span>
+                                                            ))}
+                                                            {task.tags.length > 3 && (
+                                                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                                    +{task.tags.length - 3} more
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 {/* Action Button */}
                                                 <button
-                                                    onClick={() =>
-                                                        handleTaskEdit(task)
-                                                    }
+                                                    onClick={() => handleTaskEdit(task)}
                                                     className="flex-shrink-0 ml-2 p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                                                 >
                                                     <Eye className="w-4 h-4" />
@@ -837,8 +776,7 @@ export default function Index({
                                                         {transaction.description}
                                                     </p>
                                                     <p className="text-xs text-slate-400">
-                                                        {transaction.category
-                                                            ?.name ??
+                                                        {transaction.category?.name ??
                                                             "Uncategorized"}
                                                     </p>
                                                 </div>
@@ -849,8 +787,7 @@ export default function Index({
                                                 >
                                                     {formatCurrency(
                                                         transaction.amount,
-                                                        transaction.currency ??
-                                                            "PHP"
+                                                        transaction.currency ?? "PHP"
                                                     )}
                                                 </span>
                                             </div>
@@ -862,37 +799,21 @@ export default function Index({
                                 {!isExpanded &&
                                     (dateGroup.tasks.length > 2 ||
                                         dateGroup.transactions.length > 2) && (
-                                    <button
-                                        onClick={() =>
-                                            toggleDateExpansion(
-                                                dateGroup.dateStr
-                                            )
-                                        }
-                                        className="w-full py-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-                                    >
-                                        Show{" "}
-                                        {Math.max(
-                                            0,
-                                            dateGroup.tasks.length - 2
-                                        ) +
-                                            Math.max(
-                                                0,
-                                                dateGroup.transactions.length - 2
-                                            )}{" "}
-                                        more item
-                                        {Math.max(
-                                            0,
-                                            dateGroup.tasks.length - 2
-                                        ) +
-                                            Math.max(
-                                                0,
-                                                dateGroup.transactions.length - 2
-                                            ) !==
-                                        1
-                                            ? "s"
-                                            : ""}
-                                    </button>
-                                )}
+                                        <button
+                                            onClick={() => toggleDateExpansion(dateGroup.dateStr)}
+                                            className="w-full py-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                                        >
+                                            Show{" "}
+                                            {Math.max(0, dateGroup.tasks.length - 2) +
+                                                Math.max(0, dateGroup.transactions.length - 2)}{" "}
+                                            more item
+                                            {Math.max(0, dateGroup.tasks.length - 2) +
+                                                Math.max(0, dateGroup.transactions.length - 2) !==
+                                            1
+                                                ? "s"
+                                                : ""}
+                                        </button>
+                                    )}
                             </div>
                         </div>
                     );
@@ -918,10 +839,7 @@ export default function Index({
                                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
                                     {rangeLabel ?? monthName}
                                 </h2>
-                                <MonthTitle
-                                    currentDate={currentDate}
-                                    monthTitle={monthTitle}
-                                />
+                                <MonthTitle currentDate={currentDate} monthTitle={monthTitle} />
                             </div>
                             <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                                 {/* View + range controls (wrap together on mobile) */}
@@ -941,9 +859,7 @@ export default function Index({
                                             <List className="w-4 h-4" />
                                         </button>
                                         <button
-                                            onClick={() =>
-                                                changeViewMode("calendar")
-                                            }
+                                            onClick={() => changeViewMode("calendar")}
                                             title="Calendar view"
                                             aria-pressed={viewMode === "calendar"}
                                             className={`p-2 rounded-md transition-colors ${
@@ -959,28 +875,20 @@ export default function Index({
                                     {/* List range: Month / Week / Day */}
                                     {viewMode === "list" && (
                                         <div className="flex items-center bg-gray-100 dark:bg-dark-card rounded-lg p-1">
-                                            {["month", "week", "day"].map(
-                                                (option) => (
-                                                    <button
-                                                        key={option}
-                                                        onClick={() =>
-                                                            changeListRange(
-                                                                option
-                                                            )
-                                                        }
-                                                        aria-pressed={
-                                                            listRange === option
-                                                        }
-                                                        className={`px-2.5 sm:px-3 py-1.5 rounded-md text-sm font-medium capitalize transition-colors ${
-                                                            listRange === option
-                                                                ? "bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm"
-                                                                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-                                                        }`}
-                                                    >
-                                                        {option}
-                                                    </button>
-                                                )
-                                            )}
+                                            {["month", "week", "day"].map((option) => (
+                                                <button
+                                                    key={option}
+                                                    onClick={() => changeListRange(option)}
+                                                    aria-pressed={listRange === option}
+                                                    className={`px-2.5 sm:px-3 py-1.5 rounded-md text-sm font-medium capitalize transition-colors ${
+                                                        listRange === option
+                                                            ? "bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm"
+                                                            : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                                                    }`}
+                                                >
+                                                    {option}
+                                                </button>
+                                            ))}
                                         </div>
                                     )}
                                 </div>
@@ -1002,9 +910,7 @@ export default function Index({
                                         <ChevronRight className="w-5 h-5" />
                                     </button>
                                     <button
-                                        onClick={() =>
-                                            loadCalendar(toDateStr(new Date()))
-                                        }
+                                        onClick={() => loadCalendar(toDateStr(new Date()))}
                                         className="ml-1 inline-flex items-center px-3 py-2 bg-gradient-to-r from-wevie-teal to-wevie-mint border border-transparent rounded-xl font-medium text-sm text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wevie-teal/40 transition-colors"
                                     >
                                         Today
@@ -1021,22 +927,16 @@ export default function Index({
                                 <>
                                     {/* Day Headers */}
                                     <div className="grid grid-cols-7 gap-px mb-4">
-                                        {[
-                                            "Sun",
-                                            "Mon",
-                                            "Tue",
-                                            "Wed",
-                                            "Thu",
-                                            "Fri",
-                                            "Sat",
-                                        ].map((day) => (
-                                            <div
-                                                key={day}
-                                                className="py-2 text-center text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400"
-                                            >
-                                                {day}
-                                            </div>
-                                        ))}
+                                        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+                                            (day) => (
+                                                <div
+                                                    key={day}
+                                                    className="py-2 text-center text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400"
+                                                >
+                                                    {day}
+                                                </div>
+                                            )
+                                        )}
                                     </div>
 
                                     {/* Calendar Days */}
@@ -1053,94 +953,93 @@ export default function Index({
                                                         ? "ring-2 ring-blue-500 dark:ring-blue-400"
                                                         : ""
                                                 }`}
-                                                onClick={() =>
-                                                    handleDayClick(day)
-                                                }
+                                                onClick={() => handleDayClick(day)}
                                             >
                                                 <div
                                                     className={`text-xs sm:text-sm font-medium mb-1 sm:mb-2 ${
                                                         !day.isCurrentMonth
                                                             ? "text-gray-400 dark:text-gray-500"
                                                             : day.isToday
-                                                            ? "text-blue-600 dark:text-blue-400"
-                                                            : "text-gray-900 dark:text-gray-100"
+                                                              ? "text-blue-600 dark:text-blue-400"
+                                                              : "text-gray-900 dark:text-gray-100"
                                                     }`}
                                                 >
                                                     {day.day}
                                                 </div>
                                                 {/* Tasks for this day */}
                                                 <div className="space-y-1">
+                                                    {day.mealEvents
+                                                        .slice(0, isMobile ? 1 : 2)
+                                                        .map((event) => (
+                                                            <div
+                                                                key={`meal-${event.id}`}
+                                                                className="truncate rounded bg-emerald-600 p-1 text-xs text-white"
+                                                                title={`${event.title} · ${event.status}`}
+                                                            >
+                                                                {event.title}
+                                                            </div>
+                                                        ))}
                                                     {day.tasks
-                                                        .slice(
-                                                            0,
-                                                            isMobile ? 2 : 3
-                                                        )
+                                                        .slice(0, isMobile ? 2 : 3)
                                                         .map((task) => (
                                                             <div
                                                                 key={task.id}
                                                                 className={`text-xs p-1 rounded text-white truncate ${getTaskStatusColor(
                                                                     task.status
                                                                 )}`}
-                                                                title={`${
-                                                                    task.title
-                                                                } - ${
+                                                                title={`${task.title} - ${
                                                                     task.is_all_day ||
                                                                     (!task.start_time &&
                                                                         !task.end_time)
                                                                         ? "All day"
                                                                         : (() => {
-                                                                              const formatTime =
-                                                                                  (
-                                                                                      timeStr
-                                                                                  ) => {
-                                                                                      if (
-                                                                                          !timeStr
+                                                                              const formatTime = (
+                                                                                  timeStr
+                                                                              ) => {
+                                                                                  if (!timeStr)
+                                                                                      return "";
+                                                                                  if (
+                                                                                      timeStr.includes(
+                                                                                          "T"
+                                                                                      ) ||
+                                                                                      timeStr.includes(
+                                                                                          " "
                                                                                       )
-                                                                                          return "";
-                                                                                      if (
-                                                                                          timeStr.includes(
-                                                                                              "T"
-                                                                                          ) ||
-                                                                                          timeStr.includes(
-                                                                                              " "
-                                                                                          )
-                                                                                      ) {
-                                                                                          const date =
-                                                                                              new Date(
-                                                                                                  timeStr
-                                                                                              );
-                                                                                          return date.toLocaleTimeString(
-                                                                                              [],
-                                                                                              {
-                                                                                                  hour: "numeric",
-                                                                                                  minute: "2-digit",
-                                                                                                  hour12: true,
-                                                                                              }
+                                                                                  ) {
+                                                                                      const date =
+                                                                                          new Date(
+                                                                                              timeStr
                                                                                           );
-                                                                                      }
-                                                                                      // Just time string like "14:30:00" or "14:30"
-                                                                                      const [
-                                                                                          hours,
-                                                                                          minutes,
-                                                                                      ] =
-                                                                                          timeStr.split(
-                                                                                              ":"
-                                                                                          );
-                                                                                      const hour =
-                                                                                          parseInt(
-                                                                                              hours
-                                                                                          );
-                                                                                      const ampm =
-                                                                                          hour >=
-                                                                                          12
-                                                                                              ? "PM"
-                                                                                              : "AM";
-                                                                                      const displayHour =
-                                                                                          hour %
-                                                                                              12 ||
-                                                                                          12;
-                                                                                      return `${displayHour}:${minutes} ${ampm}`;
-                                                                                  };
+                                                                                      return date.toLocaleTimeString(
+                                                                                          [],
+                                                                                          {
+                                                                                              hour: "numeric",
+                                                                                              minute: "2-digit",
+                                                                                              hour12: true,
+                                                                                          }
+                                                                                      );
+                                                                                  }
+                                                                                  // Just time string like "14:30:00" or "14:30"
+                                                                                  const [
+                                                                                      hours,
+                                                                                      minutes,
+                                                                                  ] =
+                                                                                      timeStr.split(
+                                                                                          ":"
+                                                                                      );
+                                                                                  const hour =
+                                                                                      parseInt(
+                                                                                          hours
+                                                                                      );
+                                                                                  const ampm =
+                                                                                      hour >= 12
+                                                                                          ? "PM"
+                                                                                          : "AM";
+                                                                                  const displayHour =
+                                                                                      hour % 12 ||
+                                                                                      12;
+                                                                                  return `${displayHour}:${minutes} ${ampm}`;
+                                                                              };
 
                                                                               const startTime =
                                                                                   formatTime(
@@ -1160,9 +1059,7 @@ export default function Index({
                                                                                   startTime
                                                                               ) {
                                                                                   return `From ${startTime}`;
-                                                                              } else if (
-                                                                                  endTime
-                                                                              ) {
+                                                                              } else if (endTime) {
                                                                                   return `Until ${endTime}`;
                                                                               }
                                                                               return "All day";
@@ -1171,9 +1068,7 @@ export default function Index({
                                                             >
                                                                 <div className="flex items-center justify-between">
                                                                     <span className="truncate flex-1">
-                                                                        {
-                                                                            task.title
-                                                                        }
+                                                                        {task.title}
                                                                     </span>
                                                                     {!task.is_all_day &&
                                                                         (task.start_time ||
@@ -1264,10 +1159,7 @@ export default function Index({
                                                             </div>
                                                         ))}
                                                     {day.transactions
-                                                        .slice(
-                                                            0,
-                                                            isMobile ? 1 : 2
-                                                        )
+                                                        .slice(0, isMobile ? 1 : 2)
                                                         .map((transaction) => (
                                                             <div
                                                                 key={`transaction-${transaction.id}`}
@@ -1278,15 +1170,12 @@ export default function Index({
                                                                     transaction.description
                                                                 } - ${formatCurrency(
                                                                     transaction.amount,
-                                                                    transaction.currency ??
-                                                                        "PHP"
+                                                                    transaction.currency ?? "PHP"
                                                                 )}`}
                                                             >
                                                                 <div className="flex items-center justify-between">
                                                                     <span className="truncate flex-1">
-                                                                        {
-                                                                            transaction.description
-                                                                        }
+                                                                        {transaction.description}
                                                                     </span>
                                                                     <span className="ml-1 opacity-75 text-xs">
                                                                         {formatCurrency(
@@ -1298,14 +1187,9 @@ export default function Index({
                                                                 </div>
                                                             </div>
                                                         ))}
-                                                    {day.tasks.length >
-                                                        (isMobile ? 2 : 3) && (
+                                                    {day.tasks.length > (isMobile ? 2 : 3) && (
                                                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                            +
-                                                            {day.tasks.length -
-                                                                (isMobile
-                                                                    ? 2
-                                                                    : 3)}{" "}
+                                                            +{day.tasks.length - (isMobile ? 2 : 3)}{" "}
                                                             more
                                                         </div>
                                                     )}
@@ -1314,9 +1198,7 @@ export default function Index({
                                                         <div className="text-xs text-gray-500 dark:text-gray-400">
                                                             +
                                                             {day.transactions.length -
-                                                                (isMobile
-                                                                    ? 1
-                                                                    : 2)}{" "}
+                                                                (isMobile ? 1 : 2)}{" "}
                                                             more transactions
                                                         </div>
                                                     )}
@@ -1386,11 +1268,9 @@ export default function Index({
                                                 className="inline-block text-xs px-2 py-1 rounded-full text-white mt-2"
                                                 style={{
                                                     backgroundColor:
-                                                        task.status ===
-                                                        "completed"
+                                                        task.status === "completed"
                                                             ? "#6B7280"
-                                                            : task.category
-                                                                  .color,
+                                                            : task.category.color,
                                                 }}
                                             >
                                                 {task.category.name}
@@ -1435,11 +1315,9 @@ export default function Index({
                                                 className="inline-block text-xs px-2 py-1 rounded-full text-white mt-2"
                                                 style={{
                                                     backgroundColor:
-                                                        task.status ===
-                                                        "completed"
+                                                        task.status === "completed"
                                                             ? "#6B7280"
-                                                            : task.category
-                                                                  .color,
+                                                            : task.category.color,
                                                 }}
                                             >
                                                 {task.category.name}
@@ -1460,8 +1338,7 @@ export default function Index({
                         <div className="flex items-center mb-4">
                             <CheckCircle className="w-4 sm:w-5 h-4 sm:h-5 text-primary mr-2" />
                             <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                Recently Accomplished (
-                                {recentlyAccomplishedTasks.length})
+                                Recently Accomplished ({recentlyAccomplishedTasks.length})
                             </h3>
                         </div>
                         <div className="space-y-3 max-h-64 overflow-y-auto">
@@ -1482,15 +1359,13 @@ export default function Index({
                                             )}
                                         </div>
                                         <p className="text-xs text-green-700 dark:text-green-400 mt-1">
-                                            Completed:{" "}
-                                            {formatCompletedAt(task.completed_at)}
+                                            Completed: {formatCompletedAt(task.completed_at)}
                                         </p>
                                         {task.category && (
                                             <span
                                                 className="inline-block text-xs px-2 py-1 rounded-full text-white mt-2"
                                                 style={{
-                                                    backgroundColor:
-                                                        task.category.color,
+                                                    backgroundColor: task.category.color,
                                                 }}
                                             >
                                                 {task.category.name}
@@ -1523,10 +1398,7 @@ export default function Index({
                 onTaskStatusToggle={handleTaskStatusToggle}
             />
 
-            <TaskModal
-                show={showCreateTaskModal}
-                onClose={() => setShowCreateTaskModal(false)}
-            />
+            <TaskModal show={showCreateTaskModal} onClose={() => setShowCreateTaskModal(false)} />
 
             <TaskViewModal
                 show={showViewModal}

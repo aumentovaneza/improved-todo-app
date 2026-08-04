@@ -7,6 +7,7 @@ use App\Models\CalendarMonthTitle;
 use App\Models\Category;
 use App\Models\Task;
 use App\Modules\Finance\Models\FinanceTransaction;
+use App\Modules\MealPlanning\Models\MealCalendarEvent;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,6 +51,9 @@ class CalendarController extends Controller
 
         // Get all tasks (both regular and recurring)
         $allTasks = $user->tasks()
+            ->where(function ($query) {
+                $query->whereNull('source_type')->orWhere('source_type', '!=', 'meal_calendar_event');
+            })
             ->with(['category', 'subtasks', 'tags'])
             ->withCount([
                 'subtasks',
@@ -113,6 +117,15 @@ class CalendarController extends Controller
 
             return $userDate->format('Y-m-d');
         });
+
+        // Household meal events are first-class Calendar entries. Linked prep
+        // tasks are filtered above so the same activity is not rendered twice.
+        $mealEvents = MealCalendarEvent::query()
+            ->whereHas('household.members', fn ($query) => $query->where('user_id', $user->id))
+            ->whereBetween('starts_at', [$rangeStart, $rangeEnd])
+            ->orderBy('starts_at')
+            ->get()
+            ->groupBy(fn (MealCalendarEvent $event) => $user->toUserTimezone($event->starts_at)->format('Y-m-d'));
 
         // Get upcoming tasks (next 7 days) - both regular and recurring
         $userNow = $user->toUserTimezone(now());
@@ -185,6 +198,7 @@ class CalendarController extends Controller
         return Inertia::render('Calendar/Index', [
             'tasks' => $tasks,
             'transactions' => $transactionsByDate,
+            'mealEvents' => $mealEvents,
             'upcomingTasks' => $upcomingTasks,
             'recentlyAccomplishedTasks' => $recentlyAccomplishedTasks,
             'overdueTasks' => $overdueTasks,

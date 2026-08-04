@@ -45,8 +45,12 @@ class MealDiaryController extends Controller
         if ($request->filled('meal_plan_item_id')) {
             abort_unless(MealPlanItem::whereKey($request->integer('meal_plan_item_id'))->whereHas('mealPlan', fn ($query) => $query->where('household_id', $household->id))->exists(), 404);
         }
+        $data = ['household_id' => $household->id, ...$request->validated()];
+        if (isset($data['consumed_at'])) {
+            $data['consumed_at'] = Carbon::parse($data['consumed_at'], $household->timezone)->utc();
+        }
 
-        return MealDiaryEntryResource::make($this->diary->create(['household_id' => $household->id, ...$request->validated()], $request->user()->id))->response()->setStatusCode(201);
+        return MealDiaryEntryResource::make($this->diary->create($data, $request->user()->id))->response()->setStatusCode(201);
     }
 
     public function update(DiaryEntryRequest $request, Household $household, MealDiaryEntry $entry)
@@ -60,8 +64,12 @@ class MealDiaryController extends Controller
         if ($request->filled('meal_plan_item_id')) {
             abort_unless(MealPlanItem::whereKey($request->integer('meal_plan_item_id'))->whereHas('mealPlan', fn ($query) => $query->where('household_id', $household->id))->exists(), 404);
         }
+        $data = $request->validated();
+        if (isset($data['consumed_at'])) {
+            $data['consumed_at'] = Carbon::parse($data['consumed_at'], $household->timezone)->utc();
+        }
 
-        return MealDiaryEntryResource::make($this->diary->update($entry, $request->validated(), $request->user()->id));
+        return MealDiaryEntryResource::make($this->diary->update($entry, $data, $request->user()->id));
     }
 
     public function destroy(Request $request, Household $household, MealDiaryEntry $entry)
@@ -90,7 +98,7 @@ class MealDiaryController extends Controller
         $member = HouseholdMember::where('household_id', $household->id)->findOrFail($validated['household_member_id']);
         $this->access->ensureDiaryAccess($member, $request->user());
 
-        return MealDiaryEntryResource::make($this->diary->markAsPlanned($item, $member, $request->user()->id, isset($validated['consumed_at']) ? Carbon::parse($validated['consumed_at']) : null))->response()->setStatusCode(201);
+        return MealDiaryEntryResource::make($this->diary->markAsPlanned($item, $member, $request->user()->id, isset($validated['consumed_at']) ? Carbon::parse($validated['consumed_at'], $household->timezone)->utc() : null))->response()->setStatusCode(201);
     }
 
     public function summary(NutritionSummaryRequest $request, Household $household, HouseholdMember $member)

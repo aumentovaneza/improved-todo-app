@@ -34,7 +34,7 @@ class MealDiaryService
     {
         $portion = $item->portions()->where('household_member_id', $member->id)->firstOrFail();
 
-        return $this->create([
+        $payload = [
             'household_id' => $item->mealPlan->household_id,
             'household_member_id' => $member->id,
             'meal_plan_item_id' => $item->id,
@@ -52,7 +52,11 @@ class MealDiaryService
                 'nutrition_confidence' => 'high',
                 'calculation_version' => $item->mealPlan->calculation_version,
             ]],
-        ], $userId);
+        ];
+
+        $existing = MealDiaryEntry::where('meal_plan_item_id', $item->id)->where('household_member_id', $member->id)->first();
+
+        return $existing ? $this->update($existing, $payload, $userId) : $this->create($payload, $userId);
     }
 
     public function update(MealDiaryEntry $entry, array $data, int $userId): MealDiaryEntry
@@ -83,6 +87,9 @@ class MealDiaryService
             foreach ($planned as $key => $_) {
                 $planned[$key] += (float) ($entry->planned_nutrition_snapshot[$key] ?? 0);
             }
+            if ($entry->status === 'skipped') {
+                continue;
+            }
             foreach ($entry->items as $item) {
                 foreach ($totals as $key => $_) {
                     $totals[$key] += (float) ($item->nutrition_snapshot[$key] ?? 0);
@@ -92,7 +99,7 @@ class MealDiaryService
 
         $base = ['member_id' => $member->id, 'from' => $start->toDateString(), 'to' => $end->toDateString(), 'totals' => array_map(fn ($v) => round($v, 2), $totals), 'meals_logged' => $entries->where('status', '!=', 'skipped')->count(), 'meals_skipped' => $entries->where('status', 'skipped')->count(), 'child_safe' => $member->isChild()];
         if ($member->isChild()) {
-            $items = $entries->flatMap->items;
+            $items = $entries->where('status', '!=', 'skipped')->flatMap->items;
             $produceServings = $items->filter(fn ($item) => $item->ingredient?->category === 'produce')->sum('serving_multiplier');
 
             return [...$base, 'participation' => ['meals_logged' => $base['meals_logged']], 'variety' => ['unique_foods' => $items->pluck('name')->map(fn ($name) => mb_strtolower($name))->unique()->count()], 'food_groups' => $items->pluck('ingredient.category')->filter()->unique()->values(), 'fruit_and_vegetable_servings' => round((float) $produceServings, 2)];

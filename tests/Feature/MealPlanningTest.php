@@ -12,6 +12,7 @@ use App\Modules\MealPlanning\Models\PantryItem;
 use App\Modules\MealPlanning\Models\Recipe;
 use App\Modules\MealPlanning\Providers\OpenFoodFactsProductProvider;
 use App\Modules\MealPlanning\Providers\TheMealDbRecipeProvider;
+use App\Modules\MealPlanning\Services\MealCalendarService;
 use App\Modules\MealPlanning\Services\MealPlanGenerator;
 use App\Modules\MealPlanning\Services\NutritionTargetCalculator;
 use App\Modules\MealPlanning\Services\PantryAllocationService;
@@ -214,6 +215,77 @@ test('diary index only exposes the requesting member unless they administer', fu
     // Administrators still see the whole household.
     $all = $this->actingAs($owner)->getJson(route('meal-planning.api.diary.index', $household))->assertOk()->json('data');
     expect(collect($all)->pluck('member.id')->unique()->sort()->values()->all())->toBe(collect([$ownerMember->id, $member->id])->sort()->values()->all());
+});
+
+test('naive diary consumed_at is interpreted in the household timezone', function () {
+    $owner = User::factory()->create();
+    $household = mealHousehold($owner); // Asia/Manila (UTC+08:00)
+    $member = $household->members()->first();
+    $payload = ['household_member_id' => $member->id, 'consumed_at' => '2026-08-05T12:00', 'meal_slot' => 'lunch', 'status' => 'modified', 'items' => [['type' => 'manual', 'name' => 'Rice bowl', 'serving_multiplier' => 1, 'nutrition_snapshot' => ['calories' => 450], 'nutrition_source' => 'manual', 'nutrition_confidence' => 'low', 'calculation_version' => 'manual-v1']]];
+    $response = $this->actingAs($owner)->postJson(route('meal-planning.api.diary.store', $household), $payload)->assertCreated();
+    $entry = MealDiaryEntry::findOrFail($response->json('data.id'));
+    // Noon in Manila is stored as 04:00 UTC, keeping it inside the household's day boundaries.
+    expect($entry->consumed_at->utc()->toDateTimeString())->toBe('2026-08-05 04:00:00');
+});
+
+test('skipped diary entries are excluded from consumed nutrition totals', function () {
+    $owner = User::factory()->create();
+    $household = mealHousehold($owner);
+    $member = $household->members()->first();
+    $payload = ['household_member_id' => $member->id, 'consumed_at' => '2026-08-05T12:00', 'meal_slot' => 'lunch', 'status' => 'modified', 'items' => [['type' => 'manual', 'name' => 'Rice bowl', 'serving_multiplier' => 1, 'nutrition_snapshot' => ['calories' => 450, 'protein' => 20], 'nutrition_source' => 'manual', 'nutrition_confidence' => 'low', 'calculation_version' => 'manual-v1']]];
+    $response = $this->actingAs($owner)->postJson(route('meal-planning.api.diary.store', $household), $payload)->assertCreated();
+    $entry = MealDiaryEntry::findOrFail($response->json('data.id'));
+
+    // Skip the meal without replacing items (items are left intact by design).
+    $this->actingAs($owner)->patchJson(route('meal-planning.api.diary.update', [$household, $entry]), ['status' => 'skipped'])->assertOk();
+
+    $summary = $this->actingAs($owner)->getJson(route('meal-planning.api.diary.summary', [$household, $member, 'date' => '2026-08-05']))->assertOk()->json('data');
+    expect($summary['totals']['calories'])->toEqual(0)
+        ->and($summary['totals']['protein'])->toEqual(0)
+        ->and($summary['meals_skipped'])->toBe(1)
+        ->and($summary['meals_logged'])->toBe(0);
+});
+
+test('marking a planned meal eaten twice reuses the diary entry', function () {
+    $this->seed(MealPlanningSeeder::class);
+    $owner = User::factory()->create();
+    $household = mealHousehold($owner);
+    $member = $household->members()->first();
+    $recipe = Recipe::where('name', 'Chicken Adobo')->firstOrFail();
+    $plan = MealPlan::create(['household_id' => $household->id, 'created_by_user_id' => $owner->id, 'start_date' => '2026-08-10', 'number_of_days' => 1, 'status' => 'ready', 'priority_profile' => 'balanced']);
+    $item = $plan->items()->create(['recipe_version_id' => $recipe->latestVersion->id, 'scheduled_date' => '2026-08-10', 'meal_slot' => 'dinner']);
+    $item->portions()->create(['household_member_id' => $member->id, 'serving_multiplier' => 1, 'nutrition_snapshot' => ['calories' => 600]]);
+
+    $route = route('meal-planning.api.diary.mark-planned', [$household, $item]);
+    $this->actingAs($owner)->postJson($route, ['household_member_id' => $member->id])->assertCreated();
+    $this->actingAs($owner)->postJson($route, ['household_member_id' => $member->id])->assertCreated();
+
+    expect(MealDiaryEntry::where('meal_plan_item_id', $item->id)->where('household_member_id', $member->id)->count())->toBe(1);
+});
+
+test('syncing a plan preserves calendar event identities and clears orphans', function () {
+    $this->seed(MealPlanningSeeder::class);
+    $owner = User::factory()->create();
+    $household = mealHousehold($owner);
+    $recipe = Recipe::where('name', 'Chicken Adobo')->firstOrFail();
+    $plan = MealPlan::create(['household_id' => $household->id, 'created_by_user_id' => $owner->id, 'start_date' => '2026-08-10', 'number_of_days' => 2, 'status' => 'ready', 'priority_profile' => 'balanced']);
+    $first = $plan->items()->create(['recipe_version_id' => $recipe->latestVersion->id, 'scheduled_date' => '2026-08-10', 'meal_slot' => 'dinner']);
+    $second = $plan->items()->create(['recipe_version_id' => $recipe->latestVersion->id, 'scheduled_date' => '2026-08-11', 'meal_slot' => 'dinner']);
+
+    $calendar = app(MealCalendarService::class);
+    $calendar->syncPlan($plan);
+    $mealEvent = MealCalendarEvent::where('meal_plan_item_id', $first->id)->where('type', 'meal')->firstOrFail();
+    $originalId = $mealEvent->id;
+
+    // A prep task pins itself to the event id; the linkage must survive a re-sync.
+    Task::create(['user_id' => $owner->id, 'title' => 'Prep dinner', 'due_date' => '2026-08-10', 'status' => 'pending', 'source_type' => 'meal_calendar_event', 'source_id' => $mealEvent->id, 'meal_household_id' => $household->id]);
+
+    $second->delete();
+    $calendar->syncPlan($plan->fresh());
+
+    expect(MealCalendarEvent::where('meal_plan_item_id', $first->id)->where('type', 'meal')->count())->toBe(1)
+        ->and(MealCalendarEvent::where('meal_plan_item_id', $first->id)->where('type', 'meal')->value('id'))->toBe($originalId)
+        ->and(MealCalendarEvent::where('meal_plan_item_id', $second->id)->exists())->toBeFalse();
 });
 
 test('provider adapters normalize and cache external data without exposing raw payloads', function () {

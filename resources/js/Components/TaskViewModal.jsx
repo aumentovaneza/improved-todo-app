@@ -31,7 +31,7 @@ export default function TaskViewModal({ show, onClose, task, onTaskUpdate }) {
     };
 
     return (
-        <Modal show={show} onClose={onClose} maxWidth="2xl">
+        <Modal show={show} onClose={onClose} maxWidth="lg" alignTop>
             <div className="max-h-[70vh] overflow-y-auto">
                 <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
@@ -51,7 +51,7 @@ export default function TaskViewModal({ show, onClose, task, onTaskUpdate }) {
                         </p>
                     )}
 
-                    <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                         {/* Category */}
                         <div>
                             <h3 className="text-sm font-medium text-light-muted dark:text-dark-muted mb-1">

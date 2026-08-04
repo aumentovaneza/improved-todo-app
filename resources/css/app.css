@@ -62,10 +62,14 @@
     border-bottom: 1px solid var(--fc-border-color);
 }
 
-.calendar-shell .fc .fc-col-header-cell,
 .calendar-shell .fc .fc-timegrid-axis,
 .calendar-shell .fc .fc-list-day-cushion {
     @apply bg-light-hover text-light-secondary dark:bg-dark-hover dark:text-dark-secondary;
+}
+
+/* Google-style weekday header: plain uppercase labels, no filled bar. */
+.calendar-shell .fc .fc-col-header-cell {
+    @apply bg-transparent py-2 text-center text-[0.7rem] font-medium uppercase tracking-wide text-light-muted dark:text-dark-muted;
 }
 
 .calendar-shell .fc .fc-daygrid-day-number,
@@ -86,12 +90,12 @@
 }
 
 .calendar-shell .fc .fc-event {
-    @apply rounded-md border-0 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wevie-teal;
+    @apply rounded-md border-0 shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wevie-teal;
 }
 
 /* Day numbers sit clear of events, and clicking them is discoverable. */
 .calendar-shell .fc .fc-daygrid-day-top {
-    @apply flex-row justify-end px-1 pt-1;
+    @apply flex-row justify-center px-1 pt-1;
 }
 
 .calendar-shell .fc .fc-daygrid-day-number {
@@ -121,30 +125,55 @@
     display: none;
 }
 
-/* Type accent + readable hover for month/week/day chips. */
-.calendar-shell .fc .wv-ev {
-    border-inline-start: 3px solid transparent;
+/* Google-style month layout: timed events are transparent rows (dark text +
+   a per-source colored icon + subtle hover fill), while all-day / multi-day
+   events stay solid filled pills painted from the event color. */
+.calendar-shell .fc .fc-daygrid-dot-event {
+    @apply bg-transparent px-1 text-light-primary shadow-none dark:text-dark-primary;
 }
 
-.calendar-shell .fc .wv-ev--task {
-    border-inline-start-color: theme("colors.primary.400");
+.calendar-shell .fc .fc-daygrid-dot-event:hover {
+    @apply bg-light-hover shadow-none dark:bg-dark-hover;
+    filter: none;
 }
 
-.calendar-shell .fc .wv-ev--finance {
-    border-inline-start-color: theme("colors.warning.500");
+.calendar-shell .fc .fc-daygrid-block-event {
+    @apply rounded px-1.5 py-0.5 font-medium;
 }
 
-.calendar-shell .fc .wv-ev--event {
-    border-inline-start-color: theme("colors.secondary.400");
+/* Per-source icon color on the transparent timed rows. */
+.calendar-shell .fc .fc-daygrid-dot-event.wv-ev--task .wv-ev-icon {
+    color: theme("colors.primary.400");
 }
 
-.calendar-shell .fc .fc-event:hover {
+.calendar-shell .fc .fc-daygrid-dot-event.wv-ev--finance .wv-ev-icon {
+    color: theme("colors.warning.500");
+}
+
+.calendar-shell .fc .fc-daygrid-dot-event.wv-ev--event .wv-ev-icon {
+    color: theme("colors.secondary.400");
+}
+
+/* Filled pills (all-day + week/day timegrid blocks) darken slightly on hover. */
+.calendar-shell .fc .fc-daygrid-block-event:hover,
+.calendar-shell .fc .fc-timegrid-event:hover {
     @apply shadow-md;
     filter: brightness(0.97);
 }
 
-.dark .calendar-shell .fc .fc-event:hover {
+.dark .calendar-shell .fc .fc-daygrid-block-event:hover,
+.dark .calendar-shell .fc .fc-timegrid-event:hover {
     filter: brightness(1.12);
+}
+
+/* Google touch: dim days outside the current month and fade past events so the
+   present month and upcoming items stand out. */
+.calendar-shell .fc .fc-day-other .fc-daygrid-day-number {
+    @apply text-light-muted/60 dark:text-dark-muted/60;
+}
+
+.calendar-shell .fc .fc-day-past:not(.fc-day-today) .fc-daygrid-dot-event {
+    opacity: 0.55;
 }
 
 /* Time-grid: side-by-side tiling (slotEventOverlap=false) plus breathing room. */

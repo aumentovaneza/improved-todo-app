@@ -392,7 +392,7 @@ export default function Index({
 
         return (
             <div className="wv-ev-chip flex items-center gap-1 overflow-hidden" title={tooltip}>
-                <meta.Icon className="h-3 w-3 shrink-0 opacity-90" />
+                <meta.Icon className="wv-ev-icon h-3 w-3 shrink-0" />
                 {!event.allDay && timeText && (
                     <span className="shrink-0 text-[0.65rem] font-medium opacity-90">
                         {timeText}
@@ -584,6 +584,11 @@ export default function Index({
                             "wv-ev",
                             `wv-ev--${arg.event.extendedProps.sourceType}`,
                         ]}
+                        dayCellContent={(arg) =>
+                            arg.date.getDate() === 1
+                                ? `${arg.date.toLocaleDateString(undefined, { month: "short" })} 1`
+                                : arg.dayNumberText
+                        }
                         datesSet={handleDatesSet}
                         selectable
                         selectMirror

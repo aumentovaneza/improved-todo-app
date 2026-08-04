@@ -18,3 +18,15 @@ Schedule::command('tasks:reset-recurring')
 Schedule::command('app:generate-daily-summaries')
     ->hourly()
     ->description('Generate AI daily summaries');
+
+// Dispatch due reminders and due-soon/overdue task notifications. Runs often so
+// due-soon windows are caught promptly; idempotency markers prevent duplicates.
+Schedule::command('notifications:dispatch')
+    ->everyFifteenMinutes()
+    ->description('Dispatch reminder and task due/overdue notifications');
+
+// Dispatch daily digests every hour; the command sends to each user only when
+// their local time hits the digest hour.
+Schedule::command('notifications:send-digests')
+    ->hourly()
+    ->description('Send daily task digest emails to opted-in users');

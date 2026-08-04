@@ -223,25 +223,23 @@ export default function FinanceDashboard({
                                     key={budget.id}
                                     className="rounded-xl border border-light-border/70 px-3 py-2 dark:border-dark-border/70"
                                 >
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="font-medium text-light-primary dark:text-dark-primary">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <p className="truncate font-medium text-light-primary dark:text-dark-primary">
                                                 {budget.name}
                                             </p>
-                                            <p className="text-xs text-light-muted dark:text-dark-muted">
-                                                {budget.category?.name ?? "All categories"}
+                                            <p className="truncate text-xs text-light-muted dark:text-dark-muted">
+                                                {[
+                                                    budget.category?.name ?? "All categories",
+                                                    budget.budget_type === "saved" ? "Saved" : null,
+                                                    budget.account?.name
+                                                        ? `Account: ${budget.account.name}`
+                                                        : null,
+                                                ]
+                                                    .filter(Boolean)
+                                                    .join(" · ")}
                                             </p>
-                                            {budget.budget_type === "saved" && (
-                                                <p className="text-xs text-light-muted dark:text-dark-muted">
-                                                    Saved budget
-                                                </p>
-                                            )}
-                                            {budget.account?.name && (
-                                                <p className="text-xs text-light-muted dark:text-dark-muted">
-                                                    Account: {budget.account.name}
-                                                </p>
-                                            )}
-                                            <div className="mt-2 flex items-center gap-2">
+                                            <div className="mt-2 flex items-center gap-1">
                                                 <button
                                                     type="button"
                                                     onClick={() =>
@@ -251,7 +249,7 @@ export default function FinanceDashboard({
                                                             data: budget,
                                                         })
                                                     }
-                                                    className="rounded-md p-1 text-wevie-teal hover:text-wevie-teal/80"
+                                                    className="rounded-md p-2 text-wevie-teal hover:text-wevie-teal/80"
                                                     title="Edit"
                                                     aria-label="Edit"
                                                 >
@@ -261,7 +259,7 @@ export default function FinanceDashboard({
                                                     <button
                                                         type="button"
                                                         onClick={() => onViewBudget?.(budget)}
-                                                        className="rounded-md p-1 text-light-secondary hover:text-light-primary dark:text-dark-secondary dark:hover:text-dark-primary"
+                                                        className="rounded-md p-2 text-light-secondary hover:text-light-primary dark:text-dark-secondary dark:hover:text-dark-primary"
                                                         title="View"
                                                         aria-label="View"
                                                     >
@@ -271,7 +269,7 @@ export default function FinanceDashboard({
                                                 <button
                                                     type="button"
                                                     onClick={() => onDeleteBudget?.(budget)}
-                                                    className="rounded-md p-1 text-rose-600 hover:text-rose-700 dark:text-rose-300 dark:hover:text-rose-200"
+                                                    className="rounded-md p-2 text-rose-600 hover:text-rose-700 dark:text-rose-300 dark:hover:text-rose-200"
                                                     title="Remove"
                                                     aria-label="Remove"
                                                 >
@@ -279,7 +277,7 @@ export default function FinanceDashboard({
                                                 </button>
                                             </div>
                                         </div>
-                                        <div className="text-right text-sm">
+                                        <div className="shrink-0 text-right text-sm">
                                             <p className="font-semibold text-light-primary dark:text-dark-primary">
                                                 {formatCurrency(budget.amount, budget.currency)}
                                             </p>

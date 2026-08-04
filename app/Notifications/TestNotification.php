@@ -9,12 +9,12 @@ class TestNotification extends Notification
 {
     public string $title;
 
-    public string $body;
+    public string $message;
 
     public function __construct(?string $message = null)
     {
         $this->title = 'Test notification';
-        $this->body = $message ?: 'This is a test notification sent from the Wevie admin Tools page.';
+        $this->message = $message ?: 'This is a test notification sent from the Wevie admin Tools page.';
     }
 
     /**
@@ -32,7 +32,7 @@ class TestNotification extends Notification
         return (new MailMessage)
             ->subject($this->title.' - '.config('app.name'))
             ->greeting('Hello '.($notifiable->name ?? '').'!')
-            ->line($this->body)
+            ->line($this->message)
             ->line('No action is required — this is only a test.');
     }
 
@@ -46,7 +46,7 @@ class TestNotification extends Notification
         return [
             'type' => 'test',
             'title' => $this->title,
-            'body' => $this->body,
+            'message' => $this->message,
         ];
     }
 }

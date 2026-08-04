@@ -35,6 +35,12 @@ class User extends Authenticatable
         'dashboard_widgets',
         'daily_summary_enabled',
         'daily_summary_time',
+        'email_notifications_enabled',
+        'sms_notifications_enabled',
+        'push_notifications_enabled',
+        'daily_digest_enabled',
+        'weekly_summary_enabled',
+        'reminder_notifications_enabled',
         'tutorial_progress',
         'last_active_at',
     ];
@@ -62,6 +68,12 @@ class User extends Authenticatable
             'tutorial_progress' => 'encrypted:array',
             'dashboard_widgets' => 'array',
             'daily_summary_enabled' => 'boolean',
+            'email_notifications_enabled' => 'boolean',
+            'sms_notifications_enabled' => 'boolean',
+            'push_notifications_enabled' => 'boolean',
+            'daily_digest_enabled' => 'boolean',
+            'weekly_summary_enabled' => 'boolean',
+            'reminder_notifications_enabled' => 'boolean',
             'last_active_at' => 'datetime',
         ];
     }
@@ -74,6 +86,27 @@ class User extends Authenticatable
     public function reminders(): HasMany
     {
         return $this->hasMany(Reminder::class);
+    }
+
+    public function pushTokens(): HasMany
+    {
+        return $this->hasMany(PushToken::class);
+    }
+
+    /**
+     * Route notifications for the APNs channel.
+     *
+     * The apn channel calls this to resolve the device tokens to push to. We
+     * return the user's active APNs device-token strings (provider = apns).
+     *
+     * @return array<int, string>
+     */
+    public function routeNotificationForApn(): array
+    {
+        return $this->pushTokens()
+            ->where('provider', 'apns')
+            ->pluck('token')
+            ->all();
     }
 
     public function categories(): HasMany

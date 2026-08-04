@@ -5,11 +5,13 @@ namespace App\Services;
 use App\Models\Reminder;
 use App\Models\Task;
 use App\Models\User;
+use App\Notifications\CustomReminder;
+use App\Notifications\DailyDigest;
+use App\Notifications\TaskDueReminder;
+use App\Notifications\TaskOverdue;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Notification;
 
 class NotificationService
 {
@@ -23,22 +25,12 @@ class NotificationService
     public function sendTaskDueReminder(Task $task): array
     {
         try {
-            $user = $task->user;
+            // Dispatch through the notification system; each notification's
+            // via() decides the active channels (Phase 1: database bell only).
+            $task->user->notify(new TaskDueReminder($task));
 
-            // Create notification data
-            $notificationData = [
-                'title' => 'Task Due Reminder',
-                'message' => "Your task '{$task->title}' is due soon.",
-                'task_id' => $task->id,
-                'due_date' => $task->due_date,
-                'priority' => $task->priority,
-                'type' => 'task_due_reminder',
-            ];
-
-            // Send email notification
-            if ($user->email_notifications_enabled ?? true) {
-                $this->sendEmail($user, 'task-due-reminder', $notificationData);
-            }
+            // Idempotency marker so the scheduled dispatcher never re-notifies.
+            $task->update(['due_notified_at' => now()]);
 
             return ['success' => true, 'message' => 'Due reminder sent successfully'];
         } catch (\Exception $e) {
@@ -54,22 +46,10 @@ class NotificationService
     public function sendTaskOverdueNotification(Task $task): array
     {
         try {
-            $user = $task->user;
+            $task->user->notify(new TaskOverdue($task));
 
-            $notificationData = [
-                'title' => 'Task Overdue',
-                'message' => "Your task '{$task->title}' is now overdue.",
-                'task_id' => $task->id,
-                'due_date' => $task->due_date,
-                'days_overdue' => now()->diffInDays($task->due_date),
-                'priority' => $task->priority,
-                'type' => 'task_overdue',
-            ];
-
-            // Send email notification
-            if ($user->email_notifications_enabled ?? true) {
-                $this->sendEmail($user, 'task-overdue', $notificationData);
-            }
+            // Idempotency marker so the scheduled dispatcher never re-notifies.
+            $task->update(['overdue_notified_at' => now()]);
 
             return ['success' => true, 'message' => 'Overdue notification sent successfully'];
         } catch (\Exception $e) {
@@ -114,33 +94,13 @@ class NotificationService
     public function sendCustomReminder(Reminder $reminder): array
     {
         try {
-            $task = $reminder->task;
-            $user = $task->user;
+            // The reminder's channel routing lives in CustomReminder::via();
+            // the app-level type set (email/notification/sms/both/push) will be
+            // honored there as Phase 2/3 channels come online. Phase 1 delivers
+            // to the in-app database bell regardless of type.
+            $reminder->task->user->notify(new CustomReminder($reminder));
 
-            $notificationData = [
-                'title' => 'Custom Reminder',
-                'message' => $reminder->message ?: "Reminder for task '{$task->title}'",
-                'task_id' => $task->id,
-                'reminder_id' => $reminder->id,
-                'remind_at' => $reminder->remind_at,
-                'type' => $reminder->type,
-            ];
-
-            // Send notification based on type
-            switch ($reminder->type) {
-                case 'email':
-                    $this->sendEmail($user, 'custom-reminder', $notificationData);
-                    break;
-                case 'sms':
-                    $this->sendSMS($user, $notificationData);
-                    break;
-                case 'notification':
-                default:
-                    $this->sendInAppNotification($user, $notificationData);
-                    break;
-            }
-
-            // Mark reminder as sent
+            // Mark reminder as sent (idempotency for the scheduled dispatcher).
             $this->reminderService->markReminderAsSent($reminder);
 
             return ['success' => true, 'message' => 'Custom reminder sent successfully'];
@@ -190,7 +150,7 @@ class NotificationService
 
             // Only send if there are tasks to report
             if ($todayTasks->count() > 0 || $overdueTasks->count() > 0 || $upcomingTasks->count() > 0) {
-                $this->sendEmail($user, 'daily-digest', $digestData);
+                $user->notify(new DailyDigest($digestData));
 
                 return ['success' => true, 'message' => 'Daily digest sent successfully'];
             }
@@ -356,26 +316,6 @@ class NotificationService
 
         // In a real implementation, you would do:
         // Mail::to($user)->send(new TaskNotificationMail($template, $data));
-    }
-
-    /**
-     * Send SMS notification
-     */
-    private function sendSMS(User $user, array $data): void
-    {
-        // This would integrate with SMS service (Twilio, etc.)
-        Log::info("SMS notification sent to {$user->phone}", [
-            'message' => $data['message'],
-        ]);
-    }
-
-    /**
-     * Send in-app notification
-     */
-    private function sendInAppNotification(User $user, array $data): void
-    {
-        // This would create an in-app notification record
-        Log::info("In-app notification sent to user {$user->id}", $data);
     }
 
     /**

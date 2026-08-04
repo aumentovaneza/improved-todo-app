@@ -13,14 +13,15 @@ class Reminder extends Model
     protected $fillable = [
         'task_id',
         'user_id',
-        'reminder_time',
+        'remind_at',
         'type',
+        'message',
         'is_sent',
         'sent_at',
     ];
 
     protected $casts = [
-        'reminder_time' => 'datetime',
+        'remind_at' => 'datetime',
         'is_sent' => 'boolean',
         'sent_at' => 'datetime',
     ];

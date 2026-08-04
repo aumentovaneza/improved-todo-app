@@ -4,6 +4,7 @@ import TodoLayout from "@/Layouts/TodoLayout";
 import OnboardingTour from "@/Components/OnboardingTour";
 import Badge from "@/Components/Finance/UI/Badge";
 import EmptyState from "@/Components/Finance/UI/EmptyState";
+import ResponsiveTable from "@/Components/Finance/UI/ResponsiveTable";
 import useWalletMutation from "@/Hooks/useWalletMutation";
 import { formatWholeCurrency, formatCurrency } from "@/Utils/currency";
 import { walletLoansSteps } from "@/tours";
@@ -173,10 +174,199 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
         [mutate]
     );
 
+    const loanMetrics = (loan) => {
+        const total = Number(loan.total_amount ?? 0);
+        const remaining = Number(loan.remaining_amount ?? 0);
+        const progress =
+            total > 0
+                ? Math.min(
+                      100,
+                      Math.round(((total - remaining) / total) * 100)
+                  )
+                : 0;
+        return { total, remaining, progress };
+    };
+
+    const rowActions = (loan) => (
+        <>
+            <button
+                type="button"
+                onClick={() => setActiveLoan(loan)}
+                className="rounded-md p-2 text-wevie-teal hover:text-wevie-teal/80 dark:text-wevie-mint"
+                title="Edit loan"
+                aria-label="Edit loan"
+            >
+                <Pencil className="h-4 w-4" />
+            </button>
+            <button
+                type="button"
+                onClick={() => handleViewTransactions(loan)}
+                className="rounded-md p-2 text-light-secondary hover:text-light-primary dark:text-dark-secondary dark:hover:text-dark-primary"
+                title="View transactions"
+                aria-label="View transactions"
+            >
+                <Eye className="h-4 w-4" />
+            </button>
+            <button
+                type="button"
+                onClick={() => handleDelete(loan)}
+                className="rounded-md p-2 text-rose-600 hover:text-rose-700 dark:text-rose-300"
+                title="Delete loan"
+                aria-label="Delete loan"
+            >
+                <Trash2 className="h-4 w-4" />
+            </button>
+        </>
+    );
+
+    const columns = [
+        {
+            key: "name",
+            header: "Loan",
+            render: (loan) => (
+                <p className="font-medium text-light-primary dark:text-dark-primary">
+                    {loan.name}
+                </p>
+            ),
+        },
+        {
+            key: "target_date",
+            header: "Due date",
+            render: (loan) => (
+                <span className="text-xs text-light-muted dark:text-dark-muted">
+                    {formatDate(loan.target_date)}
+                </span>
+            ),
+        },
+        {
+            key: "status",
+            header: "Status",
+            className: "hidden md:table-cell",
+            cellClassName: "hidden md:table-cell",
+            render: (loan) => (
+                <Badge
+                    label={loan.is_active ? "Active" : "Closed"}
+                    tone={loan.is_active ? "success" : "neutral"}
+                />
+            ),
+        },
+        {
+            key: "progress",
+            header: "Progress",
+            className: "hidden md:table-cell",
+            cellClassName: "hidden min-w-[160px] md:table-cell",
+            render: (loan) => {
+                const { progress } = loanMetrics(loan);
+                return (
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-light-muted dark:text-dark-muted">
+                            {progress}%
+                        </span>
+                        <div className="h-2 w-full rounded-full bg-light-hover dark:bg-dark-hover">
+                            <div
+                                className="h-2 rounded-full bg-amber-500 dark:bg-amber-500/80"
+                                style={{ width: `${progress}%` }}
+                            />
+                        </div>
+                    </div>
+                );
+            },
+        },
+        {
+            key: "remaining",
+            header: "Remaining",
+            align: "right",
+            render: (loan) => {
+                const { remaining } = loanMetrics(loan);
+                return (
+                    <span className="font-semibold text-light-primary dark:text-dark-primary">
+                        {formatWholeCurrency(remaining, loan.currency)}
+                    </span>
+                );
+            },
+        },
+        {
+            key: "total",
+            header: "Total",
+            align: "right",
+            render: (loan) => {
+                const { total } = loanMetrics(loan);
+                return (
+                    <span className="text-xs text-light-muted dark:text-dark-muted">
+                        {formatWholeCurrency(total, loan.currency)}
+                    </span>
+                );
+            },
+        },
+        {
+            key: "actions",
+            header: "Actions",
+            align: "right",
+            render: (loan) => (
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                    {rowActions(loan)}
+                </div>
+            ),
+        },
+    ];
+
+    const renderCard = (loan) => {
+        const { total, remaining, progress } = loanMetrics(loan);
+        return (
+            <div className="rounded-xl border border-light-border/70 p-4 dark:border-dark-border/70">
+                <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                        <p className="truncate font-medium text-light-primary dark:text-dark-primary">
+                            {loan.name}
+                        </p>
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <Badge
+                                label={loan.is_active ? "Active" : "Closed"}
+                                tone={loan.is_active ? "success" : "neutral"}
+                            />
+                            <span className="text-xs text-light-muted dark:text-dark-muted">
+                                {formatDate(loan.target_date)}
+                            </span>
+                        </div>
+                    </div>
+                    <p className="shrink-0 text-right font-semibold text-light-primary dark:text-dark-primary">
+                        {formatWholeCurrency(remaining, loan.currency)}
+                    </p>
+                </div>
+
+                <dl className="mt-3 space-y-1 text-xs text-light-muted dark:text-dark-muted">
+                    <div className="flex justify-between gap-2">
+                        <dt className="shrink-0">Total</dt>
+                        <dd className="min-w-0 truncate text-right text-light-secondary dark:text-dark-secondary">
+                            {formatWholeCurrency(total, loan.currency)}
+                        </dd>
+                    </div>
+                </dl>
+
+                <div className="mt-3">
+                    <div className="mb-1 flex items-center justify-between gap-2 text-xs text-light-muted dark:text-dark-muted">
+                        <span>Progress</span>
+                        <span>{progress}%</span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-light-hover dark:bg-dark-hover">
+                        <div
+                            className="h-2 rounded-full bg-amber-500 dark:bg-amber-500/80"
+                            style={{ width: `${progress}%` }}
+                        />
+                    </div>
+                </div>
+
+                <div className="mt-3 flex items-center justify-end gap-1 border-t border-light-border/50 pt-3 dark:border-dark-border/50">
+                    {rowActions(loan)}
+                </div>
+            </div>
+        );
+    };
+
     return (
         <TodoLayout header="Loans">
             <Head title="Loans" />
-            <div className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-5xl space-y-6">
                 <div className="card p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
@@ -261,158 +451,20 @@ export default function Loans({ loans = [], walletUserId, filters = {} }) {
                     <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                         All loans
                     </h3>
-                    <div className="mt-4 overflow-x-auto">
-                        <table className="min-w-[880px] w-full text-left text-sm text-light-secondary dark:text-dark-secondary">
-                            <thead className="text-xs uppercase text-light-muted dark:text-dark-muted">
-                                <tr>
-                                    <th className="py-2 pr-4">Loan</th>
-                                    <th className="py-2 pr-4">Due date</th>
-                                    <th className="py-2 hidden md:table-cell">
-                                        Status
-                                    </th>
-                                    <th className="py-2 hidden md:table-cell">
-                                        Progress
-                                    </th>
-                                    <th className="py-2 text-right whitespace-nowrap">
-                                        Remaining
-                                    </th>
-                                    <th className="py-2 text-right whitespace-nowrap">
-                                        Total
-                                    </th>
-                                    <th className="py-2 text-right whitespace-nowrap">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {pagedLoans.map((loan) => {
-                                    const total = Number(loan.total_amount ?? 0);
-                                    const remaining = Number(
-                                        loan.remaining_amount ?? 0
-                                    );
-                                    const progress =
-                                        total > 0
-                                            ? Math.min(
-                                                  100,
-                                                  Math.round(
-                                                      ((total - remaining) /
-                                                          total) *
-                                                          100
-                                                  )
-                                              )
-                                            : 0;
-
-                                    return (
-                                        <tr
-                                            key={loan.id}
-                                            className="border-t border-light-border/70 dark:border-dark-border/70"
-                                        >
-                                            <td className="py-3 pr-4">
-                                                <p className="font-medium text-light-primary dark:text-dark-primary">
-                                                    {loan.name}
-                                                </p>
-                                            </td>
-                                            <td className="py-3 pr-4 text-xs text-light-muted dark:text-dark-muted">
-                                                {formatDate(loan.target_date)}
-                                            </td>
-                                            <td className="py-3 hidden md:table-cell">
-                                                <Badge
-                                                    label={
-                                                        loan.is_active
-                                                            ? "Active"
-                                                            : "Closed"
-                                                    }
-                                                    tone={
-                                                        loan.is_active
-                                                            ? "success"
-                                                            : "neutral"
-                                                    }
-                                                />
-                                            </td>
-                                            <td className="py-3 min-w-[160px] hidden md:table-cell">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-xs text-light-muted dark:text-dark-muted">
-                                                        {progress}%
-                                                    </span>
-                                                    <div className="h-2 w-full rounded-full bg-light-hover dark:bg-dark-hover">
-                                                        <div
-                                                            className="h-2 rounded-full bg-amber-500 dark:bg-amber-500/80"
-                                                            style={{
-                                                                width: `${progress}%`,
-                                                            }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="py-3 text-right font-semibold text-light-primary dark:text-dark-primary">
-                                                {formatWholeCurrency(
-                                                    remaining,
-                                                    loan.currency
-                                                )}
-                                            </td>
-                                            <td className="py-3 text-right text-xs text-light-muted dark:text-dark-muted">
-                                                {formatWholeCurrency(
-                                                    total,
-                                                    loan.currency
-                                                )}
-                                            </td>
-                                            <td className="py-3 text-right">
-                                                <div className="flex flex-wrap items-center justify-end gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            setActiveLoan(
-                                                                loan
-                                                            )
-                                                        }
-                                                        className="rounded-md p-1 text-wevie-teal hover:text-wevie-teal/80 dark:text-wevie-mint"
-                                                        title="Edit loan"
-                                                        aria-label="Edit loan"
-                                                    >
-                                                        <Pencil className="h-4 w-4" />
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            handleViewTransactions(
-                                                                loan
-                                                            )
-                                                        }
-                                                        className="rounded-md p-1 text-light-secondary hover:text-light-primary dark:text-dark-secondary dark:hover:text-dark-primary"
-                                                        title="View transactions"
-                                                        aria-label="View transactions"
-                                                    >
-                                                        <Eye className="h-4 w-4" />
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            handleDelete(loan)
-                                                        }
-                                                        className="rounded-md p-1 text-rose-600 hover:text-rose-700 dark:text-rose-300"
-                                                        title="Delete loan"
-                                                        aria-label="Delete loan"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                                {(!pagedLoans || pagedLoans.length === 0) && (
-                                    <tr>
-                                        <td colSpan={7} className="py-6">
-                                            <EmptyState
-                                                icon={Landmark}
-                                                title="No loans yet"
-                                                description="No loans match your filters. Use the New loan button to start tracking what you owe."
-                                            />
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                    <div className="mt-4">
+                        <ResponsiveTable
+                            columns={columns}
+                            rows={pagedLoans}
+                            keyField="id"
+                            renderCard={renderCard}
+                            emptyState={
+                                <EmptyState
+                                    icon={Landmark}
+                                    title="No loans yet"
+                                    description="No loans match your filters. Use the New loan button to start tracking what you owe."
+                                />
+                            }
+                        />
                     </div>
                 </div>
                 {loans.length > perPage && (

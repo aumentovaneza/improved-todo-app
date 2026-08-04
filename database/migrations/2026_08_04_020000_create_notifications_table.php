@@ -6,6 +6,13 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     *
+     * Standard Laravel notifications table, made portable: the primary key is a
+     * string UUID and the payload column is `text` (not `json`) so it runs on
+     * MySQL, SQLite, and Postgres alike.
+     */
     public function up(): void
     {
         Schema::create('notifications', function (Blueprint $table) {
@@ -18,6 +25,9 @@ return new class extends Migration
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('notifications');

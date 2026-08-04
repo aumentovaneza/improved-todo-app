@@ -63,23 +63,23 @@ export default function CategoryList({
 
     return (
         <div className="card p-4">
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+            <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                 Finance categories
             </h3>
             <div className="mt-4 space-y-3">
                 {categories.map((category) => (
                     <div
                         key={category.id}
-                        className="rounded-lg border border-light-border/70 px-3 py-2 text-sm text-slate-600 dark:border-white/10 dark:text-slate-300"
+                        className="rounded-lg border border-light-border/70 px-3 py-2 text-sm text-light-secondary dark:border-dark-border/70 dark:text-dark-secondary"
                     >
                         <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
+                            <div className="flex min-w-0 items-center gap-3">
                                 <span
-                                    className="h-3 w-3 rounded-full"
+                                    className="h-3 w-3 shrink-0 rounded-full"
                                     style={{ backgroundColor: category.color }}
                                 />
                                 {category.icon && (
-                                    <span className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-200">
+                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-light-hover text-light-secondary dark:bg-dark-hover dark:text-dark-secondary">
                                         {iconMap[category.icon] ? (
                                             (() => {
                                                 const Icon = iconMap[category.icon];
@@ -92,20 +92,20 @@ export default function CategoryList({
                                         )}
                                     </span>
                                 )}
-                                <div>
-                                    <p className="font-medium text-slate-800 dark:text-slate-100">
+                                <div className="min-w-0">
+                                    <p className="truncate font-medium text-light-primary dark:text-dark-primary">
                                         {category.name}
                                     </p>
-                                    <p className="text-xs text-slate-400">
+                                    <p className="text-xs capitalize text-light-muted dark:text-dark-muted">
                                         {category.type}
                                     </p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex shrink-0 items-center gap-2">
                                 <button
                                     type="button"
                                     onClick={() => startEdit(category)}
-                                    className="rounded-md p-1 text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                    className="rounded-md p-2 text-wevie-teal hover:text-wevie-teal/80 dark:text-wevie-mint dark:hover:text-wevie-mint/80"
                                     title="Edit"
                                     aria-label="Edit"
                                 >
@@ -114,7 +114,7 @@ export default function CategoryList({
                                 <button
                                     type="button"
                                     onClick={() => onDelete?.(category)}
-                                    className="rounded-md p-1 text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
+                                    className="rounded-md p-2 text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
                                     title="Delete"
                                     aria-label="Delete"
                                 >
@@ -126,21 +126,21 @@ export default function CategoryList({
                         {editingId === category.id && (
                             <div className="mt-3 grid gap-3 sm:grid-cols-2">
                                 <div>
-                                    <label className="text-xs text-slate-500 dark:text-slate-400">
+                                    <label className="text-xs text-light-muted dark:text-dark-muted">
                                         Name
                                     </label>
                                     <input
-                                        className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                        className="mt-1 w-full rounded-md border border-light-border px-2 py-1 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal dark:border-dark-border dark:bg-dark-hover dark:text-dark-primary"
                                         value={draft.name}
                                         onChange={updateField("name")}
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-500 dark:text-slate-400">
+                                    <label className="text-xs text-light-muted dark:text-dark-muted">
                                         Type
                                     </label>
                                     <select
-                                        className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                                        className="mt-1 w-full rounded-md border border-light-border px-2 py-1 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal dark:border-dark-border dark:bg-dark-hover dark:text-dark-primary"
                                         value={draft.type}
                                         onChange={updateField("type")}
                                     >
@@ -151,12 +151,12 @@ export default function CategoryList({
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-500 dark:text-slate-400">
+                                    <label className="text-xs text-light-muted dark:text-dark-muted">
                                         Color
                                     </label>
                                     <input
                                         type="color"
-                                        className="mt-1 h-9 w-full rounded-md border border-slate-300 p-1 dark:border-slate-600 dark:bg-slate-800"
+                                        className="mt-1 h-9 w-full rounded-md border border-light-border p-1 dark:border-dark-border dark:bg-dark-hover"
                                         value={draft.color}
                                         onChange={updateField("color")}
                                     />
@@ -176,14 +176,14 @@ export default function CategoryList({
                                     <button
                                         type="button"
                                         onClick={cancelEdit}
-                                        className="rounded-md border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:text-slate-700 dark:border-slate-700 dark:text-slate-300 dark:hover:text-slate-100"
+                                        className="rounded-md border border-light-border px-3 py-1 text-xs font-semibold text-light-secondary hover:text-light-primary dark:border-dark-border dark:text-dark-secondary dark:hover:text-dark-primary"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => saveEdit(category)}
-                                        className="rounded-md bg-indigo-600 px-3 py-1 text-xs font-semibold text-white hover:bg-indigo-500"
+                                        className="rounded-md bg-wevie-teal px-3 py-1 text-xs font-semibold text-white hover:bg-wevie-teal/90"
                                     >
                                         Save
                                     </button>
@@ -193,7 +193,7 @@ export default function CategoryList({
                     </div>
                 ))}
                 {(!categories || categories.length === 0) && (
-                    <p className="text-sm text-slate-400 dark:text-slate-500">
+                    <p className="text-sm text-light-muted dark:text-dark-muted">
                         No finance categories yet.
                     </p>
                 )}

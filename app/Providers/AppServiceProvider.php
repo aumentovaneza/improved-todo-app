@@ -58,6 +58,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Services\ListItemService::class);
         $this->app->singleton(\App\Services\GoogleCalendarService::class);
         $this->app->singleton(\App\Services\NotificationService::class);
+        $this->app->singleton(\App\Services\DeviceTokenService::class);
         $this->app->singleton(\App\Services\SearchService::class);
         $this->app->singleton(\App\Services\ReportingService::class);
 

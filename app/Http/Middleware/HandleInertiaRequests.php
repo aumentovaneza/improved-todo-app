@@ -33,41 +33,13 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
+                'unreadNotifications' => $request->user() ? $request->user()->unreadNotifications()->count() : 0,
             ],
-            'notifications' => fn () => $this->notificationsFor($request),
             'flash' => [
                 'subtask' => fn () => $request->session()->get('subtask'),
                 'message' => fn () => $request->session()->get('message'),
                 'error' => fn () => $request->session()->get('error'),
             ],
-        ];
-    }
-
-    /**
-     * Recent in-app notifications + unread count for the bell.
-     *
-     * @return array{items: array<int, array<string, mixed>>, unread_count: int}
-     */
-    protected function notificationsFor(Request $request): array
-    {
-        $user = $request->user();
-
-        if (! $user) {
-            return ['items' => [], 'unread_count' => 0];
-        }
-
-        $items = $user->notifications()->latest()->limit(15)->get()->map(fn ($n) => [
-            'id' => $n->id,
-            'title' => $n->data['title'] ?? 'Notification',
-            'body' => $n->data['body'] ?? '',
-            'type' => $n->data['type'] ?? 'general',
-            'read' => $n->read_at !== null,
-            'created_at' => $n->created_at?->toIso8601String(),
-        ])->all();
-
-        return [
-            'items' => $items,
-            'unread_count' => $user->unreadNotifications()->count(),
         ];
     }
 }

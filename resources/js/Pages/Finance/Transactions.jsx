@@ -238,7 +238,7 @@ export default function Transactions({
     return (
         <TodoLayout header="All Transactions">
             <Head title="All Transactions" />
-            <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-6xl space-y-6">
                 <div className="card p-4" data-tour="transactions-filters">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
@@ -449,8 +449,8 @@ export default function Transactions({
                                                                     className="rounded-lg border border-light-border/70 p-3 dark:border-dark-border/70"
                                                                 >
                                                                     <div className="flex flex-wrap items-center justify-between gap-2">
-                                                                        <div>
-                                                                            <p className="font-medium text-light-primary dark:text-dark-primary">
+                                                                        <div className="min-w-0">
+                                                                            <p className="break-words font-medium text-light-primary dark:text-dark-primary">
                                                                                 {
                                                                                     transaction.description
                                                                                 }

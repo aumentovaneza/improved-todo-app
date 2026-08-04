@@ -7,8 +7,10 @@ use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardLayoutController;
+use App\Http\Controllers\DeviceTokenController;
 use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\ListItemController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\SubtaskController;
@@ -100,6 +102,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Reminders
     Route::resource('reminders', ReminderController::class);
+
+    // Notifications (in-app bell + notification center)
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('notifications/feed', [NotificationController::class, 'feed'])->name('notifications.feed');
+    Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.readAll');
+    Route::delete('notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+
+    // Native push device tokens (Capacitor iOS / APNs, session-authed)
+    Route::post('device-tokens', [DeviceTokenController::class, 'store'])->name('device-tokens.store');
+    Route::delete('device-tokens', [DeviceTokenController::class, 'destroy'])->name('device-tokens.destroy');
 
     // Calendar
     Route::get('calendar', [CalendarController::class, 'index'])->name('calendar.index');

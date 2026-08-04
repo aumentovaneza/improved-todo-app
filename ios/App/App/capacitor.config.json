@@ -9,5 +9,7 @@
 	"ios": {
 		"contentInset": "automatic"
 	},
-	"packageClassList": []
+	"packageClassList": [
+		"PushNotificationsPlugin"
+	]
 }

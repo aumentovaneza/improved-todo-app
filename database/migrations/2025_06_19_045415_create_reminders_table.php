@@ -15,8 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('task_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->dateTime('reminder_time');
-            $table->enum('type', ['email', 'notification', 'both'])->default('notification');
+            $table->dateTime('remind_at');
+            // App-level type set (portable string, not a DB enum): email, notification, sms, both, push.
+            $table->string('type')->default('notification');
+            $table->string('message', 500)->nullable();
             $table->boolean('is_sent')->default(false);
             $table->dateTime('sent_at')->nullable();
             $table->timestamps();

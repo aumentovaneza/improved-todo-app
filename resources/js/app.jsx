@@ -1,14 +1,53 @@
 import "../css/app.css";
 import "./bootstrap";
+import "react-toastify/dist/ReactToastify.css";
 
-import { createInertiaApp } from "@inertiajs/react";
+import { createInertiaApp, router } from "@inertiajs/react";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
+import { useEffect } from "react";
 import { createRoot } from "react-dom/client";
+import { ToastContainer, toast } from "react-toastify";
 import { PomodoroProvider } from "./Components/Pomodoro";
 import NavigationLoader from "./Components/NavigationLoader";
 import { registerSW } from "virtual:pwa-register";
 
 const appName = import.meta.env.VITE_APP_NAME || "Wevie";
+
+/**
+ * Bridges Inertia server responses to react-toastify.
+ *
+ * The existing `Components/Toast.jsx` already surfaces `flash.message`
+ * (success toasts), so to avoid double-toasting we only bridge `flash.error`
+ * and the first validation error here. Listens on the Inertia router event
+ * bus (works outside the <App> context) so it never fires on initial load.
+ */
+function FlashToaster() {
+    useEffect(() => {
+        const stop = router.on("success", (event) => {
+            const page = event.detail?.page;
+            if (!page) return;
+
+            const flash = page.props?.flash || {};
+            const errors = page.props?.errors || {};
+
+            if (flash.error) {
+                toast.error(flash.error);
+                return;
+            }
+
+            const firstError = Object.values(errors)[0];
+            if (firstError) {
+                toast.error(
+                    Array.isArray(firstError) ? firstError[0] : firstError
+                );
+            }
+        });
+
+        return () => stop();
+    }, []);
+
+    return null;
+}
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
@@ -24,6 +63,17 @@ createInertiaApp({
             <PomodoroProvider>
                 <App {...props} />
                 <NavigationLoader />
+                <FlashToaster />
+                <ToastContainer
+                    position="bottom-right"
+                    autoClose={4000}
+                    newestOnTop
+                    closeOnClick
+                    pauseOnHover
+                    draggable
+                    theme="colored"
+                    aria-label="Notifications"
+                />
             </PomodoroProvider>
         );
     },
@@ -36,3 +86,8 @@ createInertiaApp({
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
     registerSW({ immediate: true });
 }
+
+// Native push (APNs) registration for the Capacitor iOS shell. Lazy-imported so
+// none of the push code lands in the web main bundle; `registerPush` itself
+// no-ops on web/PWA (it's gated behind Capacitor.isNativePlatform()).
+import("./native/registerPush").then(({ registerPush }) => registerPush());

@@ -90,6 +90,7 @@ class ReminderService
             }
 
             // Set defaults
+            $data['user_id'] = $userId;
             $data['is_sent'] = false;
             $data['type'] = $data['type'] ?? 'notification';
 

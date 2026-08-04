@@ -9,8 +9,9 @@ import { formatCurrency } from "@/Utils/currency";
 import { TRANSACTION_LABEL, TRANSACTION_TONE } from "@/Utils/finance";
 import { walletTransactionsSteps } from "@/tours";
 import { Head, router } from "@inertiajs/react";
-import { Plus, Receipt } from "lucide-react";
+import { Pencil, Plus, Receipt, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Swal from "sweetalert2";
 
 const formatDateLabel = (dateKey) => {
     const [year, month, day] = dateKey.split("-").map(Number);
@@ -52,6 +53,7 @@ export default function Transactions({
 }) {
     const mutate = useWalletMutation(walletUserId);
     const [showCreate, setShowCreate] = useState(false);
+    const [editingTransaction, setEditingTransaction] = useState(null);
     const [search, setSearch] = useState(filters.search ?? "");
     const [type, setType] = useState(filters.type ?? "");
     const [startDate, setStartDate] = useState(filters.start_date ?? "");
@@ -111,27 +113,21 @@ export default function Transactions({
         }
         setIsLoadingMore(true);
         try {
-            const response = await window.axios.get(
-                route("weviewallet.api.transactions.grouped"),
-                {
-                    params: {
-                        page: page + 1,
-                        per_page_dates: perPageDates,
-                        search: search || undefined,
-                        type: type || undefined,
-                        start_date: startDate || undefined,
-                        end_date: endDate || undefined,
-                        sort: sort || undefined,
-                        finance_account_id: accountId || undefined,
-                        wallet_user_id: walletUserId || undefined,
-                    },
-                }
-            );
+            const response = await window.axios.get(route("weviewallet.api.transactions.grouped"), {
+                params: {
+                    page: page + 1,
+                    per_page_dates: perPageDates,
+                    search: search || undefined,
+                    type: type || undefined,
+                    start_date: startDate || undefined,
+                    end_date: endDate || undefined,
+                    sort: sort || undefined,
+                    finance_account_id: accountId || undefined,
+                    wallet_user_id: walletUserId || undefined,
+                },
+            });
             const payload = response.data ?? {};
-            setLoadedTransactions((prev) => [
-                ...prev,
-                ...(payload.transactions ?? []),
-            ]);
+            setLoadedTransactions((prev) => [...prev, ...(payload.transactions ?? [])]);
             setPage(payload.page ?? page + 1);
             setHasMore(Boolean(payload.has_more));
         } finally {
@@ -212,19 +208,13 @@ export default function Transactions({
                     transferDestination === "external"
                         ? formData.external_account_name || null
                         : null,
-                finance_credit_card_account_id:
-                    formData.finance_credit_card_account_id || null,
-                finance_budget_id: loanSelected
-                    ? null
-                    : formData.finance_budget_id || null,
+                finance_credit_card_account_id: formData.finance_credit_card_account_id || null,
+                finance_budget_id: loanSelected ? null : formData.finance_budget_id || null,
             };
 
             const result = await mutate({
                 request: () =>
-                    window.axios.post(
-                        route("weviewallet.api.transactions.store"),
-                        payload
-                    ),
+                    window.axios.post(route("weviewallet.api.transactions.store"), payload),
                 only: ["transactions", "totalAmount", "page", "hasMore"],
                 successMessage: "Transaction saved.",
             });
@@ -240,6 +230,88 @@ export default function Transactions({
         }
         return ok;
     };
+
+    const handleEditTransaction = useCallback(
+        async (formData) => {
+            if (!formData?.id) {
+                return false;
+            }
+
+            const loanSelected = Boolean(formData.finance_loan_id);
+            const transferDestination =
+                formData.transfer_destination ||
+                (formData.finance_transfer_account_id ? "internal" : "external");
+            const payload = {
+                ...formData,
+                wallet_user_id: walletUserId || undefined,
+                amount: formData.amount ? Number(formData.amount) : 0,
+                finance_category_id: formData.finance_category_id || null,
+                finance_loan_id: formData.finance_loan_id || null,
+                finance_savings_goal_id: formData.finance_savings_goal_id || null,
+                finance_account_id: formData.finance_account_id || null,
+                finance_transfer_account_id:
+                    transferDestination === "internal"
+                        ? formData.finance_transfer_account_id || null
+                        : null,
+                transfer_destination: transferDestination,
+                external_account_name:
+                    transferDestination === "external"
+                        ? formData.external_account_name || null
+                        : null,
+                finance_credit_card_account_id: formData.finance_credit_card_account_id || null,
+                finance_budget_id: loanSelected ? null : formData.finance_budget_id || null,
+            };
+
+            const result = await mutate({
+                request: () =>
+                    window.axios.put(
+                        `${route("weviewallet.api.transactions.index")}/${formData.id}`,
+                        payload
+                    ),
+                only: ["transactions", "totalAmount", "page", "hasMore"],
+                successMessage: "Transaction updated.",
+            });
+            return result !== false;
+        },
+        [mutate, walletUserId]
+    );
+
+    const handleEditAndClose = async (payload) => {
+        const ok = await handleEditTransaction(payload);
+        if (ok !== false) {
+            setEditingTransaction(null);
+        }
+        return ok;
+    };
+
+    const handleDeleteTransaction = useCallback(
+        async (transaction) => {
+            const result = await Swal.fire({
+                title: "Delete this transaction?",
+                text: "This removes the transaction and reverses its effect on your balances. This can’t be undone.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Delete",
+                cancelButtonText: "Cancel",
+                confirmButtonColor: "#E11D48",
+                cancelButtonColor: "#6B7280",
+            });
+
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            await mutate({
+                request: () =>
+                    window.axios.delete(
+                        `${route("weviewallet.api.transactions.index")}/${transaction.id}`
+                    ),
+                only: ["transactions", "totalAmount", "page", "hasMore"],
+                successMessage: "Transaction removed.",
+            });
+        },
+        [mutate]
+    );
 
     return (
         <TodoLayout header="All Transactions">
@@ -268,13 +340,9 @@ export default function Transactions({
                             <button
                                 type="button"
                                 onClick={() =>
-                                    router.get(
-                                        route("weviewallet.dashboard"),
-                                        {
-                                            wallet_user_id:
-                                                walletUserId || undefined,
-                                        }
-                                    )
+                                    router.get(route("weviewallet.dashboard"), {
+                                        wallet_user_id: walletUserId || undefined,
+                                    })
                                 }
                                 className="rounded-xl border border-light-border/70 px-3 py-2 text-sm font-semibold text-light-secondary hover:bg-light-hover dark:border-dark-border/70 dark:text-dark-secondary dark:hover:bg-dark-hover"
                             >
@@ -285,9 +353,7 @@ export default function Transactions({
                     {type && (
                         <div className="mt-3 rounded-lg border border-light-border/70 bg-light-hover px-3 py-2 text-sm text-light-secondary dark:border-dark-border/70 dark:bg-dark-card/70 dark:text-dark-secondary">
                             Total {type} transactions:{" "}
-                            <span className="font-semibold">
-                                {formatCurrency(totalAmount)}
-                            </span>
+                            <span className="font-semibold">{formatCurrency(totalAmount)}</span>
                         </div>
                     )}
                     <form
@@ -302,9 +368,7 @@ export default function Transactions({
                                 className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary dark:placeholder:text-dark-muted"
                                 placeholder="Search description, notes, category, or tags"
                                 value={search}
-                                onChange={(event) =>
-                                    setSearch(event.target.value)
-                                }
+                                onChange={(event) => setSearch(event.target.value)}
                             />
                         </div>
                         <div>
@@ -314,9 +378,7 @@ export default function Transactions({
                             <select
                                 className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary"
                                 value={type}
-                                onChange={(event) =>
-                                    setType(event.target.value)
-                                }
+                                onChange={(event) => setType(event.target.value)}
                             >
                                 <option value="">All types</option>
                                 <option value="income">Income</option>
@@ -333,9 +395,7 @@ export default function Transactions({
                             <select
                                 className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary"
                                 value={accountId}
-                                onChange={(event) =>
-                                    setAccountId(event.target.value)
-                                }
+                                onChange={(event) => setAccountId(event.target.value)}
                             >
                                 <option value="">All accounts</option>
                                 {accounts.map((account) => (
@@ -352,22 +412,12 @@ export default function Transactions({
                             <select
                                 className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary"
                                 value={sort}
-                                onChange={(event) =>
-                                    setSort(event.target.value)
-                                }
+                                onChange={(event) => setSort(event.target.value)}
                             >
-                                <option value="date_desc">
-                                    Date (newest first)
-                                </option>
-                                <option value="date_asc">
-                                    Date (oldest first)
-                                </option>
-                                <option value="amount_desc">
-                                    Amount (high to low)
-                                </option>
-                                <option value="amount_asc">
-                                    Amount (low to high)
-                                </option>
+                                <option value="date_desc">Date (newest first)</option>
+                                <option value="date_asc">Date (oldest first)</option>
+                                <option value="amount_desc">Amount (high to low)</option>
+                                <option value="amount_asc">Amount (low to high)</option>
                             </select>
                         </div>
                         <div>
@@ -378,9 +428,7 @@ export default function Transactions({
                                 type="date"
                                 className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary"
                                 value={startDate}
-                                onChange={(event) =>
-                                    setStartDate(event.target.value)
-                                }
+                                onChange={(event) => setStartDate(event.target.value)}
                             />
                         </div>
                         <div>
@@ -391,9 +439,7 @@ export default function Transactions({
                                 type="date"
                                 className="mt-1 w-full rounded-md border border-light-border/70 px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary"
                                 value={endDate}
-                                onChange={(event) =>
-                                    setEndDate(event.target.value)
-                                }
+                                onChange={(event) => setEndDate(event.target.value)}
                             />
                         </div>
                         <div className="flex items-end gap-2">
@@ -425,177 +471,179 @@ export default function Transactions({
                 ) : (
                     <div className="space-y-6">
                         {sortedDateKeys.map((dateKey) => (
-                                <div key={dateKey} className="card p-4">
-                                    <h3 className="text-base font-semibold text-light-primary dark:text-dark-primary">
-                                        {formatDateLabel(dateKey)}
-                                    </h3>
-                                    <div className="mt-4 space-y-4">
-                                        {Object.keys(groupedTransactions[dateKey])
-                                            .sort(
-                                                (a, b) =>
-                                                    typeOrder.indexOf(a) -
-                                                    typeOrder.indexOf(b)
-                                            )
-                                            .map((transactionType) => (
-                                                <div key={transactionType}>
-                                                    <div className="mb-2 flex items-center gap-2">
-                                                        <Badge
-                                                            label={
-                                                                TRANSACTION_LABEL[
-                                                                    transactionType
-                                                                ] ??
+                            <div key={dateKey} className="card p-4">
+                                <h3 className="text-base font-semibold text-light-primary dark:text-dark-primary">
+                                    {formatDateLabel(dateKey)}
+                                </h3>
+                                <div className="mt-4 space-y-4">
+                                    {Object.keys(groupedTransactions[dateKey])
+                                        .sort((a, b) => typeOrder.indexOf(a) - typeOrder.indexOf(b))
+                                        .map((transactionType) => (
+                                            <div key={transactionType}>
+                                                <div className="mb-2 flex items-center gap-2">
+                                                    <Badge
+                                                        label={
+                                                            TRANSACTION_LABEL[transactionType] ??
+                                                            transactionType
+                                                        }
+                                                        tone={
+                                                            TRANSACTION_TONE[transactionType] ??
+                                                            "neutral"
+                                                        }
+                                                    />
+                                                    <span className="text-xs text-light-muted dark:text-dark-muted">
+                                                        {
+                                                            groupedTransactions[dateKey][
                                                                 transactionType
-                                                            }
-                                                            tone={
-                                                                TRANSACTION_TONE[
-                                                                    transactionType
-                                                                ] ?? "neutral"
-                                                            }
-                                                        />
-                                                        <span className="text-xs text-light-muted dark:text-dark-muted">
-                                                            {
-                                                                groupedTransactions[
-                                                                    dateKey
-                                                                ][transactionType]
-                                                                    .length
-                                                            }{" "}
-                                                            transactions
-                                                        </span>
-                                                    </div>
-                                                    <div className="space-y-3">
-                                                        {groupedTransactions[
-                                                            dateKey
-                                                        ][transactionType].map(
-                                                            (transaction) => (
-                                                                <div
-                                                                    key={
-                                                                        transaction.id
-                                                                    }
-                                                                    className="rounded-lg border border-light-border/70 p-3 dark:border-dark-border/70"
-                                                                >
-                                                                    <div className="flex flex-wrap items-center justify-between gap-2">
-                                                                        <div className="min-w-0">
-                                                                            <p className="break-words font-medium text-light-primary dark:text-dark-primary">
+                                                            ].length
+                                                        }{" "}
+                                                        transactions
+                                                    </span>
+                                                </div>
+                                                <div className="space-y-3">
+                                                    {groupedTransactions[dateKey][
+                                                        transactionType
+                                                    ].map((transaction) => (
+                                                        <div
+                                                            key={transaction.id}
+                                                            className="rounded-lg border border-light-border/70 p-3 dark:border-dark-border/70"
+                                                        >
+                                                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                                                <div className="min-w-0">
+                                                                    <p className="break-words font-medium text-light-primary dark:text-dark-primary">
+                                                                        {transaction.description}
+                                                                    </p>
+                                                                    <p className="text-xs text-light-muted dark:text-dark-muted">
+                                                                        {transaction.category
+                                                                            ?.name ??
+                                                                            "Uncategorized"}
+                                                                    </p>
+                                                                    {(transaction.account?.name ||
+                                                                        transaction.account
+                                                                            ?.label) && (
+                                                                        <p className="text-xs text-light-muted dark:text-dark-muted">
+                                                                            {transaction.type ===
+                                                                            "transfer"
+                                                                                ? `From: ${transaction.account.label ?? transaction.account.name}`
+                                                                                : `Account: ${transaction.account.label ?? transaction.account.name}`}
+                                                                        </p>
+                                                                    )}
+                                                                    {transaction.type ===
+                                                                        "transfer" &&
+                                                                        transaction.transfer_account
+                                                                            ?.name && (
+                                                                            <p className="text-xs text-light-muted dark:text-dark-muted">
+                                                                                To:{" "}
+                                                                                {transaction
+                                                                                    .transfer_account
+                                                                                    .label ??
+                                                                                    transaction
+                                                                                        .transfer_account
+                                                                                        .name}
+                                                                            </p>
+                                                                        )}
+                                                                    {transaction.type ===
+                                                                        "transfer" &&
+                                                                        !transaction
+                                                                            .transfer_account
+                                                                            ?.name &&
+                                                                        transaction.metadata
+                                                                            ?.external_account_name && (
+                                                                            <p className="text-xs text-light-muted dark:text-dark-muted">
+                                                                                To:{" "}
                                                                                 {
-                                                                                    transaction.description
+                                                                                    transaction
+                                                                                        .metadata
+                                                                                        .external_account_name
                                                                                 }
                                                                             </p>
+                                                                        )}
+                                                                    {transaction.created_by &&
+                                                                        transaction.created_by
+                                                                            .id !==
+                                                                            transaction.user_id && (
                                                                             <p className="text-xs text-light-muted dark:text-dark-muted">
-                                                                                {transaction.category
-                                                                                    ?.name ??
-                                                                                    "Uncategorized"}
+                                                                                Added by{" "}
+                                                                                {
+                                                                                    transaction
+                                                                                        .created_by
+                                                                                        .name
+                                                                                }
                                                                             </p>
-                                                                            {(transaction.account
-                                                                                ?.name ||
-                                                                                transaction.account
-                                                                                    ?.label) && (
-                                                                                <p className="text-xs text-light-muted dark:text-dark-muted">
-                                                                                    {transaction.type ===
-                                                                                    "transfer"
-                                                                                        ? `From: ${transaction.account.label ?? transaction.account.name}`
-                                                                                        : `Account: ${transaction.account.label ?? transaction.account.name}`}
-                                                                                </p>
-                                                                            )}
-                                                                            {transaction.type ===
-                                                                                "transfer" &&
-                                                                                transaction
-                                                                                    .transfer_account
-                                                                                    ?.name && (
-                                                                                    <p className="text-xs text-light-muted dark:text-dark-muted">
-                                                                                        To:{" "}
-                                                                                        {
-                                                                                            transaction
-                                                                                                .transfer_account
-                                                                                                .label ??
-                                                                                            transaction
-                                                                                                .transfer_account
-                                                                                                .name
-                                                                                        }
-                                                                                    </p>
-                                                                                )}
-                                                                            {transaction.type ===
-                                                                                "transfer" &&
-                                                                                !transaction
-                                                                                    .transfer_account
-                                                                                    ?.name &&
-                                                                                transaction
-                                                                                    .metadata
-                                                                                    ?.external_account_name && (
-                                                                                    <p className="text-xs text-light-muted dark:text-dark-muted">
-                                                                                        To:{" "}
-                                                                                        {
-                                                                                            transaction
-                                                                                                .metadata
-                                                                                                .external_account_name
-                                                                                        }
-                                                                                    </p>
-                                                                                )}
-                                                                            {transaction.created_by &&
-                                                                                transaction
-                                                                                    .created_by
-                                                                                    .id !==
-                                                                                    transaction.user_id && (
-                                                                                    <p className="text-xs text-light-muted dark:text-dark-muted">
-                                                                                        Added by{" "}
-                                                                                        {
-                                                                                            transaction
-                                                                                                .created_by
-                                                                                                .name
-                                                                                        }
-                                                                                    </p>
-                                                                                )}
-                                                                        </div>
-                                                                        <div className="text-right">
-                                                                            <p className="text-sm font-semibold text-light-primary dark:text-dark-primary">
-                                                                                {formatCurrency(
-                                                                                    transaction.amount,
-                                                                                    transaction.currency ??
-                                                                                        "PHP"
-                                                                                )}
-                                                                            </p>
-                                                                            <p className="text-xs text-light-muted dark:text-dark-muted">
-                                                                                {transaction.payment_method ??
-                                                                                    "—"}
-                                                                            </p>
-                                                                        </div>
-                                                                    </div>
-                                                                    {transaction.tags &&
-                                                                        transaction
-                                                                            .tags
-                                                                            .length >
-                                                                            0 && (
-                                                                            <div className="mt-2 flex flex-wrap gap-2">
-                                                                                {transaction.tags.map(
-                                                                                    (tag) => (
-                                                                                        <span
-                                                                                            key={
-                                                                                                tag.id
-                                                                                            }
-                                                                                            className="rounded-full px-2 py-1 text-xs text-white"
-                                                                                            style={{
-                                                                                                backgroundColor:
-                                                                                                    tag.color ??
-                                                                                                    "#6B7280",
-                                                                                            }}
-                                                                                        >
-                                                                                            {
-                                                                                                tag.name
-                                                                                            }
-                                                                                        </span>
-                                                                                    )
-                                                                                )}
-                                                                            </div>
                                                                         )}
                                                                 </div>
-                                                            )
-                                                        )}
-                                                    </div>
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="text-right">
+                                                                        <p className="text-sm font-semibold text-light-primary dark:text-dark-primary">
+                                                                            {formatCurrency(
+                                                                                transaction.amount,
+                                                                                transaction.currency ??
+                                                                                    "PHP"
+                                                                            )}
+                                                                        </p>
+                                                                        <p className="text-xs text-light-muted dark:text-dark-muted">
+                                                                            {transaction.payment_method ??
+                                                                                "—"}
+                                                                        </p>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() =>
+                                                                                setEditingTransaction(
+                                                                                    transaction
+                                                                                )
+                                                                            }
+                                                                            aria-label="Edit transaction"
+                                                                            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-wevie-teal hover:bg-light-hover dark:text-wevie-mint dark:hover:bg-dark-hover"
+                                                                        >
+                                                                            <Pencil className="h-4 w-4" />
+                                                                            Edit
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() =>
+                                                                                handleDeleteTransaction(
+                                                                                    transaction
+                                                                                )
+                                                                            }
+                                                                            aria-label="Delete transaction"
+                                                                            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-900/20"
+                                                                        >
+                                                                            <Trash2 className="h-4 w-4" />
+                                                                            Delete
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            {transaction.tags &&
+                                                                transaction.tags.length > 0 && (
+                                                                    <div className="mt-2 flex flex-wrap gap-2">
+                                                                        {transaction.tags.map(
+                                                                            (tag) => (
+                                                                                <span
+                                                                                    key={tag.id}
+                                                                                    className="rounded-full px-2 py-1 text-xs text-white"
+                                                                                    style={{
+                                                                                        backgroundColor:
+                                                                                            tag.color ??
+                                                                                            "#6B7280",
+                                                                                    }}
+                                                                                >
+                                                                                    {tag.name}
+                                                                                </span>
+                                                                            )
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                            )
-                                        )}
-                                    </div>
+                                            </div>
+                                        ))}
                                 </div>
-                            ))}
+                            </div>
+                        ))}
                         {loadedTransactions.length > 0 && (
                             <div
                                 ref={loadMoreRef}
@@ -612,11 +660,7 @@ export default function Transactions({
                 )}
             </div>
 
-            <Modal
-                show={showCreate}
-                onClose={() => setShowCreate(false)}
-                maxWidth="2xl"
-            >
+            <Modal show={showCreate} onClose={() => setShowCreate(false)} maxWidth="2xl">
                 <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
                     <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                         Add transaction
@@ -632,6 +676,32 @@ export default function Transactions({
                         accounts={accounts}
                         submitLabel="Add transaction"
                     />
+                </div>
+            </Modal>
+
+            <Modal
+                show={Boolean(editingTransaction)}
+                onClose={() => setEditingTransaction(null)}
+                maxWidth="2xl"
+            >
+                <div className="border-b border-light-border/70 px-6 py-4 dark:border-dark-border/70">
+                    <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
+                        Edit transaction
+                    </h3>
+                </div>
+                <div className="px-6 py-4">
+                    {editingTransaction && (
+                        <TransactionForm
+                            initialValues={editingTransaction}
+                            onSubmit={handleEditAndClose}
+                            categories={categories}
+                            savingsGoals={savingsGoals}
+                            loans={loans}
+                            budgets={budgets}
+                            accounts={accounts}
+                            submitLabel="Save changes"
+                        />
+                    )}
                 </div>
             </Modal>
             <OnboardingTour

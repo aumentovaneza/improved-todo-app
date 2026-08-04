@@ -40,6 +40,11 @@ class HandleInertiaRequests extends Middleware
                 'message' => fn () => $request->session()->get('message'),
                 'error' => fn () => $request->session()->get('error'),
             ],
+            'webPush' => [
+                // Public VAPID key so the browser can subscribe. Safe to expose;
+                // the private key stays server-side. Null when unconfigured.
+                'vapidPublicKey' => config('services.vapid.public_key'),
+            ],
         ];
     }
 }

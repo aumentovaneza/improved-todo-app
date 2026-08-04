@@ -39,6 +39,20 @@ return [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_URI'),
-    ]
+    ],
+
+    /*
+    | Web Push (VAPID) credentials for browser/PWA push notifications. Generate a
+    | keypair with `php artisan webpush:vapid` and copy the values here. The
+    | public key is also exposed to the frontend (see HandleInertiaRequests) so
+    | the browser can subscribe; the private key must stay server-side. `subject`
+    | is a contact URL or mailto: identifying the application server to push
+    | services (required by the VAPID spec).
+    */
+    'vapid' => [
+        'public_key' => env('VAPID_PUBLIC_KEY'),
+        'private_key' => env('VAPID_PRIVATE_KEY'),
+        'subject' => env('VAPID_SUBJECT', env('APP_URL', 'https://wevie.app')),
+    ],
 
 ];

@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Reminder;
+use App\Notifications\Channels\WebPushChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -46,6 +47,12 @@ class CustomReminder extends Notification implements ShouldQueue
             $channels[] = ApnChannel::class;
         }
 
+        if (($notifiable->push_notifications_enabled ?? true)
+            && ($notifiable->reminder_notifications_enabled ?? true)
+            && $this->hasWebPushToken($notifiable)) {
+            $channels[] = WebPushChannel::class;
+        }
+
         return $channels;
     }
 
@@ -62,6 +69,21 @@ class CustomReminder extends Notification implements ShouldQueue
         }
 
         return $notifiable->pushTokens()->where('provider', 'apns')->exists();
+    }
+
+    /**
+     * Whether the notifiable has a registered web-push subscription, favouring an
+     * already-loaded relation to avoid a query per notification.
+     */
+    protected function hasWebPushToken(object $notifiable): bool
+    {
+        if (method_exists($notifiable, 'relationLoaded') && $notifiable->relationLoaded('pushTokens')) {
+            return $notifiable->pushTokens
+                ->where('provider', 'webpush')
+                ->isNotEmpty();
+        }
+
+        return $notifiable->pushTokens()->where('provider', 'webpush')->exists();
     }
 
     /**
@@ -94,6 +116,24 @@ class CustomReminder extends Notification implements ShouldQueue
             ->body($body)
             ->custom('task_id', $this->reminder->task_id)
             ->custom('reminder_id', $this->reminder->id);
+    }
+
+    /**
+     * The web-push (browser) representation. `url` deep-links to the task; `tag`
+     * collapses repeated pushes for the same reminder.
+     *
+     * @return array<string, mixed>
+     */
+    public function toWebPush(object $notifiable): array
+    {
+        $task = $this->reminder->task;
+
+        return [
+            'title' => 'Reminder',
+            'body' => $this->reminder->message ?: "Reminder for task '{$task->title}'",
+            'url' => url('/tasks?task='.$this->reminder->task_id),
+            'tag' => 'reminder-'.$this->reminder->id,
+        ];
     }
 
     /**

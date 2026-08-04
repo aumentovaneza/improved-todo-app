@@ -62,6 +62,10 @@ export default defineConfig({
             },
             workbox: {
                 cleanupOutdatedCaches: true,
+                // Layer our Web Push handlers (push / notificationclick) onto the
+                // generated SW without touching the caching config below. Served
+                // as a static file from public/push-sw.js.
+                importScripts: ['/push-sw.js'],
                 navigateFallback: '/offline.html',
                 navigateFallbackDenylist: [
                     /^\/api\//,

@@ -37,6 +37,8 @@ class HandleInertiaRequests extends Middleware
             ],
             'flash' => [
                 'subtask' => fn () => $request->session()->get('subtask'),
+                'message' => fn () => $request->session()->get('message'),
+                'error' => fn () => $request->session()->get('error'),
             ],
         ];
     }

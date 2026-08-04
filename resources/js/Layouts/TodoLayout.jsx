@@ -1,8 +1,8 @@
 import ApplicationLogo from "@/Components/ApplicationLogo";
 import Dropdown from "@/Components/Dropdown";
+import NotificationBell from "@/Components/NotificationBell";
 import MobileFab from "@/Components/Mobile/MobileFab";
 import MobileTabBar from "@/Components/Mobile/MobileTabBar";
-import NotificationBell from "@/Components/NotificationBell";
 import OnboardingTour from "@/Components/OnboardingTour";
 import WelcomeModal from "@/Components/WelcomeModal";
 import QuickAddTransactionModal from "@/Components/Mobile/QuickAddTransactionModal";
@@ -35,6 +35,7 @@ import {
     BookOpen,
     Tags,
     ListChecks,
+    Wrench,
 } from "lucide-react";
 
 export default function TodoLayout({ header, children }) {
@@ -230,6 +231,12 @@ export default function TodoLayout({ header, children }) {
             href: route("admin.invite-codes.index"),
             icon: Users,
             current: route().current("admin.invite-codes.*"),
+        },
+        {
+            name: "Tools",
+            href: route("admin.tools.index"),
+            icon: Wrench,
+            current: route().current("admin.tools.*"),
         },
     ];
 

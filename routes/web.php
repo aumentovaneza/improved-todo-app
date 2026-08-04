@@ -227,6 +227,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('invite-codes', [AdminController::class, 'storeInviteCode'])->name('invite-codes.store');
         Route::patch('invite-codes/{inviteCode}/deactivate', [AdminController::class, 'deactivateInviteCode'])->name('invite-codes.deactivate');
         Route::patch('invite-codes/{inviteCode}/reactivate', [AdminController::class, 'reactivateInviteCode'])->name('invite-codes.reactivate');
+
+        // Tools - feature testing utilities
+        Route::get('tools', [AdminController::class, 'tools'])->name('tools.index');
+        Route::post('tools/test-email', [AdminController::class, 'sendTestEmail'])->name('tools.test-email');
+        Route::post('tools/test-notification', [AdminController::class, 'sendTestNotification'])->name('tools.test-notification');
+        Route::post('tools/clear-daily-summary', [AdminController::class, 'clearDailySummary'])->name('tools.clear-daily-summary');
+        Route::post('tools/clear-spending-insights', [AdminController::class, 'clearSpendingInsights'])->name('tools.clear-spending-insights');
     });
 });
 

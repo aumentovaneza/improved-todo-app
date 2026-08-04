@@ -269,9 +269,11 @@ export default function Dashboard(props) {
                 finance_savings_goal_id: formData.finance_savings_goal_id || null,
                 finance_account_id: formData.finance_account_id || null,
                 finance_transfer_account_id:
-                    transferDestination === "internal"
+                    formData.type === "savings"
                         ? formData.finance_transfer_account_id || null
-                        : null,
+                        : transferDestination === "internal"
+                          ? formData.finance_transfer_account_id || null
+                          : null,
                 transfer_destination: transferDestination,
                 external_account_name:
                     transferDestination === "external"
@@ -580,9 +582,11 @@ export default function Dashboard(props) {
                 finance_savings_goal_id: formData.finance_savings_goal_id || null,
                 finance_account_id: formData.finance_account_id || null,
                 finance_transfer_account_id:
-                    transferDestination === "internal"
+                    formData.type === "savings"
                         ? formData.finance_transfer_account_id || null
-                        : null,
+                        : transferDestination === "internal"
+                          ? formData.finance_transfer_account_id || null
+                          : null,
                 transfer_destination: transferDestination,
                 external_account_name:
                     transferDestination === "external"

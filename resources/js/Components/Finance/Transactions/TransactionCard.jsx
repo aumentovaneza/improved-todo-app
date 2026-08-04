@@ -16,14 +16,24 @@ const amountTone = {
 };
 
 const accountLabel = (transaction) => {
-    if (transaction.type === "transfer") {
-        const from = transaction.account?.label ?? transaction.account?.name ?? "—";
+    if (transaction.type === "transfer" || transaction.type === "savings") {
+        const from = transaction.account?.label ?? transaction.account?.name;
         const to =
             transaction.transfer_account?.label ??
             transaction.transfer_account?.name ??
-            transaction.metadata?.external_account_name ??
-            "External";
-        return `${from} → ${to}`;
+            (transaction.type === "transfer"
+                ? transaction.metadata?.external_account_name ?? "External"
+                : null);
+        if (from && to) {
+            return `${from} → ${to}`;
+        }
+        if (from) {
+            return from;
+        }
+        if (to) {
+            return to;
+        }
+        return "—";
     }
     return transaction.account?.label ?? transaction.account?.name ?? "—";
 };

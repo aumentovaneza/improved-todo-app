@@ -109,7 +109,9 @@ export default function TransactionForm({
                     ? transferDestination === "internal"
                         ? form.finance_transfer_account_id
                         : ""
-                    : "",
+                    : form.type === "savings"
+                      ? form.finance_transfer_account_id
+                      : "",
             metadata:
                 form.type === "transfer"
                     ? {
@@ -157,6 +159,13 @@ export default function TransactionForm({
         if (form.type === "transfer" && form.finance_savings_goal_id) {
             setForm((prev) => ({ ...prev, finance_savings_goal_id: "" }));
         }
+        if (
+            form.type !== "transfer" &&
+            form.type !== "savings" &&
+            form.finance_transfer_account_id
+        ) {
+            setForm((prev) => ({ ...prev, finance_transfer_account_id: "" }));
+        }
         if (form.type !== "transfer" && form.transfer_fee !== "") {
             setForm((prev) => ({ ...prev, transfer_fee: "" }));
         }
@@ -166,7 +175,37 @@ export default function TransactionForm({
         form.finance_loan_id,
         form.finance_budget_id,
         form.finance_savings_goal_id,
+        form.finance_transfer_account_id,
         form.transfer_fee,
+    ]);
+
+    useEffect(() => {
+        if (form.type !== "savings" || !form.finance_savings_goal_id) {
+            return;
+        }
+        const goal = savingsGoals.find(
+            (item) => String(item.id) === String(form.finance_savings_goal_id)
+        );
+        const goalAccountId = goal?.finance_account_id;
+        if (!goalAccountId) {
+            return;
+        }
+        if (
+            String(goalAccountId) === String(form.finance_account_id) ||
+            form.finance_transfer_account_id
+        ) {
+            return;
+        }
+        setForm((prev) => ({
+            ...prev,
+            finance_transfer_account_id: String(goalAccountId),
+        }));
+    }, [
+        form.type,
+        form.finance_savings_goal_id,
+        form.finance_account_id,
+        form.finance_transfer_account_id,
+        savingsGoals,
     ]);
 
     useEffect(() => {
@@ -309,7 +348,7 @@ export default function TransactionForm({
                 )}
                 <div className="md:col-span-1">
                     <label className="text-sm text-slate-500 dark:text-slate-400">
-                        {form.type === "transfer"
+                        {form.type === "transfer" || form.type === "savings"
                             ? "From account"
                             : "Account (optional)"}
                     </label>
@@ -322,7 +361,9 @@ export default function TransactionForm({
                         <option value="">
                             {form.type === "transfer"
                                 ? "Select account"
-                                : "No account linked"}
+                                : form.type === "savings"
+                                  ? "No source account"
+                                  : "No account linked"}
                         </option>
                         {accountGroups.map((group) => (
                             <optgroup key={group.type} label={group.label}>
@@ -365,7 +406,9 @@ export default function TransactionForm({
                         />
                     </div>
                 )}
-                {form.type === "transfer" && form.transfer_destination === "internal" && (
+                {((form.type === "transfer" &&
+                    form.transfer_destination === "internal") ||
+                    form.type === "savings") && (
                     <div className="md:col-span-1">
                         <label className="text-sm text-slate-500 dark:text-slate-400">
                             To account
@@ -374,9 +417,13 @@ export default function TransactionForm({
                             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-dark-card dark:text-slate-100 dark:placeholder:text-slate-500"
                             value={form.finance_transfer_account_id}
                             onChange={updateField("finance_transfer_account_id")}
-                            required
+                            required={form.type === "transfer"}
                         >
-                            <option value="">Select account</option>
+                            <option value="">
+                                {form.type === "savings"
+                                    ? "No destination account"
+                                    : "Select account"}
+                            </option>
                             {transferTargetGroups.map((group) => (
                                 <optgroup key={group.type} label={group.label}>
                                     {group.accounts.map((account) => (

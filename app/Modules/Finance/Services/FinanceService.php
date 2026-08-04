@@ -476,8 +476,19 @@ class FinanceService
             $this->adjustBudgetsForExpense($transaction, $direction);
         }
 
-        if ($transaction->finance_account_id) {
+        if (
+            $transaction->type === 'savings' &&
+            $transaction->finance_account_id &&
+            $transaction->finance_transfer_account_id
+        ) {
+            $this->adjustTransferBalances($transaction, $direction);
+        } elseif ($transaction->finance_account_id) {
             $this->adjustAccountBalance($transaction, $direction);
+        } elseif (
+            $transaction->type === 'savings' &&
+            $transaction->finance_transfer_account_id
+        ) {
+            $this->adjustSavingsDestinationBalance($transaction, $direction);
         }
 
         if ($transaction->finance_credit_card_account_id) {
@@ -523,6 +534,23 @@ class FinanceService
         if ($destination) {
             $this->accountRepository->adjustBalance($destination, $amount);
         }
+    }
+
+    private function adjustSavingsDestinationBalance(FinanceTransaction $transaction, int $direction): void
+    {
+        $account = $this->accountRepository->findOptionalForUser(
+            $transaction->user_id,
+            $transaction->finance_transfer_account_id
+        );
+
+        if (!$account) {
+            return;
+        }
+
+        $this->accountRepository->adjustBalance(
+            $account,
+            (float) $transaction->amount * $direction
+        );
     }
 
     private function adjustAccountBalance(FinanceTransaction $transaction, int $direction): void

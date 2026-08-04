@@ -160,11 +160,33 @@ export default function FinanceDashboard({
                 <h2 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
                     Overview
                 </h2>
-                <Tabs
-                    tabs={RANGE_TABS}
-                    active={summary?.range ?? "this_month"}
-                    onChange={handleRangeChange}
-                />
+                <div className="w-full sm:w-auto lg:hidden">
+                    <label
+                        htmlFor="wallet-overview-range"
+                        className="text-xs font-semibold uppercase tracking-wide text-light-muted dark:text-dark-muted"
+                    >
+                        Period
+                    </label>
+                    <select
+                        id="wallet-overview-range"
+                        value={summary?.range ?? "this_month"}
+                        onChange={(event) => handleRangeChange(event.target.value)}
+                        className="mt-1 w-full rounded-xl border border-light-border/70 bg-light-card px-3 py-2 text-sm text-light-primary focus:border-wevie-teal focus:outline-none focus:ring-1 focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card dark:text-dark-primary sm:min-w-48"
+                    >
+                        {RANGE_TABS.map((range) => (
+                            <option key={range.value} value={range.value}>
+                                {range.label}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div className="hidden lg:block">
+                    <Tabs
+                        tabs={RANGE_TABS}
+                        active={summary?.range ?? "this_month"}
+                        onChange={handleRangeChange}
+                    />
+                </div>
             </div>
 
             <div data-tour="wallet-summary">

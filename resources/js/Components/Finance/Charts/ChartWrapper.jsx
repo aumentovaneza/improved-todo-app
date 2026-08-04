@@ -6,7 +6,7 @@ import { Card, Title } from "@tremor/react";
  */
 export default function ChartWrapper({ title, subtitle, actions, children, className = "" }) {
     return (
-        <Card className={className}>
+        <Card className={`min-w-0 max-w-full overflow-hidden ${className}`}>
             <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
                     <Title>{title}</Title>

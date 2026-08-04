@@ -2,6 +2,7 @@ import TodoLayout from "@/Layouts/TodoLayout";
 import Modal from "@/Components/Modal";
 import OnboardingTour from "@/Components/OnboardingTour";
 import TransactionForm from "@/Components/Finance/Transactions/TransactionForm";
+import TransactionCard from "@/Components/Finance/Transactions/TransactionCard";
 import Badge from "@/Components/Finance/UI/Badge";
 import EmptyState from "@/Components/Finance/UI/EmptyState";
 import useWalletMutation from "@/Hooks/useWalletMutation";
@@ -508,10 +509,19 @@ export default function Transactions({
                                                     {groupedTransactions[dateKey][
                                                         transactionType
                                                     ].map((transaction) => (
-                                                        <div
-                                                            key={transaction.id}
-                                                            className="rounded-lg border border-light-border/70 p-3 dark:border-dark-border/70"
-                                                        >
+                                                        <div key={transaction.id}>
+                                                            <div className="lg:hidden">
+                                                                <TransactionCard
+                                                                    transaction={transaction}
+                                                                    onEdit={
+                                                                        setEditingTransaction
+                                                                    }
+                                                                    onDelete={
+                                                                        handleDeleteTransaction
+                                                                    }
+                                                                />
+                                                            </div>
+                                                            <div className="hidden rounded-lg border border-light-border/70 p-3 dark:border-dark-border/70 lg:block">
                                                             <div className="flex flex-wrap items-center justify-between gap-2">
                                                                 <div className="min-w-0">
                                                                     <p className="break-words font-medium text-light-primary dark:text-dark-primary">
@@ -546,6 +556,18 @@ export default function Transactions({
                                                                                         .name}
                                                                             </p>
                                                                         )}
+                                                                    {transaction
+                                                                        .credit_card_account && (
+                                                                        <p className="text-xs text-light-muted dark:text-dark-muted">
+                                                                            Card: {" "}
+                                                                            {transaction
+                                                                                .credit_card_account
+                                                                                .label ??
+                                                                                transaction
+                                                                                    .credit_card_account
+                                                                                    .name}
+                                                                        </p>
+                                                                    )}
                                                                     {transaction.type ===
                                                                         "transfer" &&
                                                                         !transaction
@@ -640,6 +662,7 @@ export default function Transactions({
                                                                         )}
                                                                     </div>
                                                                 )}
+                                                            </div>
                                                         </div>
                                                     ))}
                                                 </div>

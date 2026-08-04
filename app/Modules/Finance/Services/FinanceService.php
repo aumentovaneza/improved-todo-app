@@ -472,7 +472,11 @@ class FinanceService
             $this->adjustLoanBalance($transaction, $direction);
         }
 
-        if ($transaction->type === 'expense' && !$transaction->finance_loan_id) {
+        if (
+            $transaction->type === 'expense' &&
+            !$transaction->finance_loan_id &&
+            !$transaction->isCreditCardPayment()
+        ) {
             $this->adjustBudgetsForExpense($transaction, $direction);
         }
 
@@ -702,6 +706,7 @@ class FinanceService
             $query = FinanceTransaction::query()
                 ->where('user_id', $userId)
                 ->where('type', 'expense')
+                ->excludingCreditCardPayments()
                 ->whereNull('finance_loan_id');
 
             if ($budget->finance_category_id) {
@@ -822,6 +827,7 @@ class FinanceService
         $query = FinanceTransaction::query()
             ->where('user_id', $budget->user_id)
             ->where('type', 'expense')
+            ->excludingCreditCardPayments()
             ->whereNull('finance_loan_id')
             ->whereNull('finance_budget_id')
             ->where('finance_category_id', $budget->finance_category_id);

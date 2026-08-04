@@ -61,7 +61,7 @@ export default function ResponsiveTable({
                 </table>
             </div>
 
-            <div className="space-y-3 lg:hidden">
+            <div className="min-w-0 max-w-full space-y-2 lg:hidden">
                 {rows.map((row) => (
                     <div key={row[keyField]}>{renderCard?.(row)}</div>
                 ))}

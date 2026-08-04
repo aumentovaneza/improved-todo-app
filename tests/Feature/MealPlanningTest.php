@@ -194,6 +194,28 @@ test('diary entries preserve immutable item snapshots and enforce member isolati
     expect($entry->fresh()->deleted_at)->toBeNull();
 });
 
+test('diary index only exposes the requesting member unless they administer', function () {
+    $owner = User::factory()->create();
+    $memberUser = User::factory()->create();
+    $household = mealHousehold($owner);
+    $ownerMember = $household->members()->first();
+    $member = $household->members()->create(['user_id' => $memberUser->id, 'name' => $memberUser->name, 'role' => 'member', 'classification' => 'adult']);
+    $base = ['consumed_at' => '2026-08-05 12:00:00', 'meal_slot' => 'lunch', 'status' => 'modified', 'items' => [['type' => 'manual', 'name' => 'Rice bowl', 'serving_multiplier' => 1, 'nutrition_snapshot' => ['calories' => 450], 'nutrition_source' => 'manual', 'nutrition_confidence' => 'low', 'calculation_version' => 'manual-v1']]];
+    $this->actingAs($owner)->postJson(route('meal-planning.api.diary.store', $household), [...$base, 'household_member_id' => $ownerMember->id])->assertCreated();
+    $this->actingAs($memberUser)->postJson(route('meal-planning.api.diary.store', $household), [...$base, 'household_member_id' => $member->id])->assertCreated();
+
+    // Non-admin omitting member_id sees only their own entries, never the owner's.
+    $mine = $this->actingAs($memberUser)->getJson(route('meal-planning.api.diary.index', $household))->assertOk()->json('data');
+    expect(collect($mine)->pluck('member.id')->unique()->all())->toBe([$member->id]);
+
+    // Non-admin cannot reach another member's diary by supplying member_id.
+    $this->actingAs($memberUser)->getJson(route('meal-planning.api.diary.index', [$household, 'member_id' => $ownerMember->id]))->assertForbidden();
+
+    // Administrators still see the whole household.
+    $all = $this->actingAs($owner)->getJson(route('meal-planning.api.diary.index', $household))->assertOk()->json('data');
+    expect(collect($all)->pluck('member.id')->unique()->sort()->values()->all())->toBe(collect([$ownerMember->id, $member->id])->sort()->values()->all());
+});
+
 test('provider adapters normalize and cache external data without exposing raw payloads', function () {
     config(['services.meal_planning.themealdb.key' => 'test-key', 'services.meal_planning.themealdb.base_url' => 'https://themealdb.test/api']);
     Http::fake(['themealdb.test/*' => Http::response(['meals' => [['idMeal' => '42', 'strMeal' => 'Test Stew', 'strArea' => 'Filipino', 'strCategory' => 'Chicken', 'strIngredient1' => 'Chicken', 'strMeasure1' => '500 g', 'strInstructions' => "Cook gently.\nServe hot.", 'strMealThumb' => 'https://images.test/stew.jpg']]])]);

@@ -4,6 +4,7 @@ namespace App\Modules\MealPlanning\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\MealPlanning\Models\Household;
+use App\Modules\MealPlanning\Models\HouseholdMember;
 use App\Modules\MealPlanning\Models\Ingredient;
 use App\Modules\MealPlanning\Models\MealCalendarEvent;
 use App\Modules\MealPlanning\Models\MealDiaryEntry;
@@ -84,8 +85,16 @@ class MealPlanningPageController extends Controller
 
     public function diary(Request $request, Household $household): Response
     {
-        $this->access->ensureMember($household, $request->user());
-        $entries = MealDiaryEntry::with(['member', 'items'])->where('household_id', $household->id)->whereDate('consumed_at', $request->get('date', now($household->timezone)->toDateString()))->orderBy('consumed_at')->get();
+        $actor = $this->access->ensureMember($household, $request->user());
+        $query = MealDiaryEntry::with(['member', 'items'])->where('household_id', $household->id)->whereDate('consumed_at', $request->get('date', now($household->timezone)->toDateString()));
+        if ($request->filled('member_id')) {
+            $member = HouseholdMember::where('household_id', $household->id)->findOrFail($request->integer('member_id'));
+            $this->access->ensureDiaryAccess($member, $request->user());
+            $query->where('household_member_id', $member->id);
+        } elseif (! $actor->canAdminister()) {
+            $query->where('household_member_id', $actor->id);
+        }
+        $entries = $query->orderBy('consumed_at')->get();
 
         return $this->page('Diary', $household, ['entries' => MealDiaryEntryResource::collection($entries)->resolve(), 'date' => $request->get('date', now($household->timezone)->toDateString())]);
     }

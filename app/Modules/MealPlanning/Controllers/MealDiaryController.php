@@ -22,11 +22,16 @@ class MealDiaryController extends Controller
 
     public function index(Request $request, Household $household)
     {
-        $this->access->ensureMember($household, $request->user());
+        $actor = $this->access->ensureMember($household, $request->user());
         $query = MealDiaryEntry::with(['member', 'items'])->where('household_id', $household->id);
         if ($request->filled('member_id')) {
-            $query->where('household_member_id', $request->integer('member_id'));
-        } if ($request->filled('date')) {
+            $member = HouseholdMember::where('household_id', $household->id)->findOrFail($request->integer('member_id'));
+            $this->access->ensureDiaryAccess($member, $request->user());
+            $query->where('household_member_id', $member->id);
+        } elseif (! $actor->canAdminister()) {
+            $query->where('household_member_id', $actor->id);
+        }
+        if ($request->filled('date')) {
             $query->whereDate('consumed_at', $request->date('date'));
         }
 

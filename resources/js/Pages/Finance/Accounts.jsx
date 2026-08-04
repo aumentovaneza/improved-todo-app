@@ -13,6 +13,7 @@ export default function Accounts({
     accounts = [],
     accountSuggestions = {},
     walletUserId,
+    currentMonth,
 }) {
     const mutate = useWalletMutation(walletUserId);
     const [showCreate, setShowCreate] = useState(false);
@@ -129,6 +130,7 @@ export default function Accounts({
                     <AccountsList
                         accounts={accounts}
                         walletUserId={walletUserId}
+                        currentMonth={currentMonth}
                         onEdit={(account) => setActiveAccount(account)}
                         onDelete={handleDelete}
                     />

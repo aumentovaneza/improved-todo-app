@@ -156,9 +156,9 @@ class FinanceInsightService
 
         $lines[] = 'TOTALS:';
         $lines[] = '- Income: '.$this->money($summary['income'] ?? 0);
-        $lines[] = '- Expenses: '.$this->money($summary['expenses'] ?? 0);
+        $lines[] = '- Spending (credit-card payments excluded): '.$this->money($summary['expenses'] ?? 0);
         $lines[] = '- Savings: '.$this->money($summary['savings'] ?? 0);
-        $lines[] = '- Net (income + loans - expenses): '.$this->money($summary['net'] ?? 0);
+        $lines[] = '- Net (income + loans - spending): '.$this->money($summary['net'] ?? 0);
         if (isset($summary['budget_utilization'])) {
             $lines[] = '- Budget utilization: '.number_format((float) $summary['budget_utilization'], 1).'% of budgeted amounts spent';
         }

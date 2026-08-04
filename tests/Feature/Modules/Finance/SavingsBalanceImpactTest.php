@@ -150,6 +150,49 @@ class SavingsBalanceImpactTest extends TestCase
         $this->assertEqualsWithDelta(0.0, (float) $goal->refresh()->current_amount, 0.001);
     }
 
+    public function test_savings_transaction_can_add_to_a_destination_without_a_source()
+    {
+        $destination = $this->makeAccount(100);
+        $goal = $this->makeGoal();
+
+        $this->service->createTransaction([
+            'finance_transfer_account_id' => $destination->id,
+            'finance_savings_goal_id' => $goal->id,
+            'type' => 'savings',
+            'amount' => 250,
+            'currency' => 'PHP',
+            'description' => 'Deposit savings',
+            'occurred_at' => now(),
+        ], $this->userId, $this->userId);
+
+        $this->assertEqualsWithDelta(350.0, (float) $destination->refresh()->current_balance, 0.001);
+        $this->assertEqualsWithDelta(250.0, (float) $goal->refresh()->current_amount, 0.001);
+    }
+
+    public function test_updating_savings_transfer_recalculates_both_accounts_and_goal()
+    {
+        $source = $this->makeAccount(1000);
+        $destination = $this->makeAccount(100);
+        $goal = $this->makeGoal();
+
+        $transaction = $this->service->createTransaction([
+            'finance_account_id' => $source->id,
+            'finance_transfer_account_id' => $destination->id,
+            'finance_savings_goal_id' => $goal->id,
+            'type' => 'savings',
+            'amount' => 250,
+            'currency' => 'PHP',
+            'description' => 'Move savings',
+            'occurred_at' => now(),
+        ], $this->userId, $this->userId);
+
+        $this->service->updateTransaction($transaction, ['amount' => 100], $this->userId);
+
+        $this->assertEqualsWithDelta(900.0, (float) $source->refresh()->current_balance, 0.001);
+        $this->assertEqualsWithDelta(200.0, (float) $destination->refresh()->current_balance, 0.001);
+        $this->assertEqualsWithDelta(100.0, (float) $goal->refresh()->current_amount, 0.001);
+    }
+
     public function test_income_and_loan_add_while_expense_subtracts()
     {
         $account = $this->makeAccount(1000);

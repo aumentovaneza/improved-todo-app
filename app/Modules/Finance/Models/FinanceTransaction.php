@@ -5,6 +5,7 @@ namespace App\Modules\Finance\Models;
 use App\Models\Tag;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -49,6 +50,22 @@ class FinanceTransaction extends Model
         'metadata' => 'array',
         'occurred_at' => 'datetime',
     ];
+
+    /**
+     * Credit-card payments move cash to a liability; they are not new spending.
+     */
+    public function scopeExcludingCreditCardPayments(Builder $query): Builder
+    {
+        return $query->where(function (Builder $query) {
+            $query->where('type', '!=', 'expense')
+                ->orWhereNull('finance_credit_card_account_id');
+        });
+    }
+
+    public function isCreditCardPayment(): bool
+    {
+        return $this->type === 'expense' && $this->finance_credit_card_account_id !== null;
+    }
 
     public function user(): BelongsTo
     {

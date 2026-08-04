@@ -16,6 +16,17 @@ const amountTone = {
 };
 
 const accountLabel = (transaction) => {
+    if (transaction.finance_credit_card_account_id) {
+        const from = transaction.account?.label ?? transaction.account?.name;
+        const card =
+            transaction.credit_card_account?.label ??
+            transaction.credit_card_account?.name;
+        if (from && card) {
+            return `${from} → ${card}`;
+        }
+        return from ?? card ?? "—";
+    }
+
     if (transaction.type === "transfer" || transaction.type === "savings") {
         const from = transaction.account?.label ?? transaction.account?.name;
         const to =
@@ -39,87 +50,84 @@ const accountLabel = (transaction) => {
 };
 
 /**
- * Mobile-friendly card representation of a transaction — the stacked
- * counterpart to the desktop table row, with larger tap targets.
+ * Compact mobile ledger row used below the desktop-table breakpoint.
  */
 export default function TransactionCard({ transaction, onEdit, onDelete }) {
     const type = transaction.type ?? "expense";
     const prefix = transactionAmountPrefix(type);
 
     return (
-        <div className="rounded-xl border border-light-border/70 p-4 dark:border-dark-border/70">
-            <div className="flex items-start justify-between gap-3">
+        <div className="max-w-full rounded-lg border border-light-border/70 p-3 dark:border-dark-border/70">
+            <div className="flex min-w-0 items-start justify-between gap-2">
                 <div className="min-w-0">
-                    <p className="truncate font-medium text-light-primary dark:text-dark-primary">
+                    <p className="truncate text-sm font-semibold text-light-primary dark:text-dark-primary">
                         {transaction.description || "Untitled"}
                     </p>
-                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <div className="mt-1 flex min-w-0 items-center gap-1.5">
                         <Badge
                             label={TRANSACTION_LABEL[type] ?? type}
                             tone={TRANSACTION_TONE[type] ?? "neutral"}
                         />
-                        <span className="text-xs text-light-muted dark:text-dark-muted">
+                        <span className="min-w-0 truncate text-[11px] text-light-muted dark:text-dark-muted">
+                            {transaction.category?.name ?? "Uncategorized"}
+                        </span>
+                        <span className="shrink-0 text-[11px] text-light-muted dark:text-dark-muted">
+                            ·
+                        </span>
+                        <span className="shrink-0 text-[11px] text-light-muted dark:text-dark-muted">
                             {formatDate(transaction.occurred_at)}
                         </span>
                     </div>
                 </div>
-                <p className={`shrink-0 text-right font-semibold ${amountTone[type] ?? ""}`}>
+                <p
+                    className={`shrink-0 text-right text-sm font-semibold ${
+                        amountTone[type] ?? ""
+                    }`}
+                >
                     {prefix}
                     {formatCurrency(transaction.amount, transaction.currency ?? "PHP")}
                 </p>
             </div>
 
-            <dl className="mt-3 space-y-1 text-xs text-light-muted dark:text-dark-muted">
-                <div className="flex justify-between gap-2">
-                    <dt className="shrink-0">Category</dt>
-                    <dd className="min-w-0 truncate text-right text-light-secondary dark:text-dark-secondary">
-                        {transaction.category?.name ?? "Uncategorized"}
-                    </dd>
-                </div>
-                <div className="flex justify-between gap-2">
-                    <dt className="shrink-0">Account</dt>
-                    <dd className="min-w-0 truncate text-right text-light-secondary dark:text-dark-secondary">
-                        {accountLabel(transaction)}
-                    </dd>
-                </div>
+            <div className="mt-2 flex min-w-0 items-center justify-between gap-2">
+                <p className="min-w-0 truncate text-xs text-light-secondary dark:text-dark-secondary">
+                    {accountLabel(transaction)}
+                </p>
                 {transaction.is_recurring && transaction.recurring_frequency && (
-                    <div className="flex justify-between gap-2">
-                        <dt className="shrink-0">Repeats</dt>
-                        <dd className="min-w-0 truncate text-right capitalize text-violet-500 dark:text-violet-300">
-                            {formatFrequency(transaction.recurring_frequency)}
-                        </dd>
-                    </div>
+                    <span className="shrink-0 text-[11px] capitalize text-violet-500 dark:text-violet-300">
+                        {formatFrequency(transaction.recurring_frequency)}
+                    </span>
                 )}
-                {transaction.created_by && transaction.created_by.id !== transaction.user_id && (
-                    <div className="flex justify-between gap-2">
-                        <dt className="shrink-0">Added by</dt>
-                        <dd className="min-w-0 truncate text-right text-light-secondary dark:text-dark-secondary">
-                            {transaction.created_by.name}
-                        </dd>
-                    </div>
-                )}
-            </dl>
+            </div>
+
+            {transaction.created_by && transaction.created_by.id !== transaction.user_id && (
+                <p className="mt-1 truncate text-[11px] text-light-muted dark:text-dark-muted">
+                    Added by {transaction.created_by.name}
+                </p>
+            )}
 
             {(onEdit || onDelete) && (
-                <div className="mt-3 flex items-center justify-end gap-1 border-t border-light-border/50 pt-3 dark:border-dark-border/50">
+                <div className="mt-2 flex items-center justify-end gap-1 border-t border-light-border/50 pt-2 dark:border-dark-border/50">
                     {onEdit && (
                         <button
                             type="button"
                             onClick={() => onEdit(transaction)}
-                            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-wevie-teal hover:bg-light-hover dark:text-wevie-mint dark:hover:bg-dark-hover"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-wevie-teal hover:bg-light-hover dark:text-wevie-mint dark:hover:bg-dark-hover"
+                            title="Edit transaction"
+                            aria-label="Edit transaction"
                         >
                             <Pencil className="h-4 w-4" />
-                            Edit
                         </button>
                     )}
                     {onDelete && (
                         <button
                             type="button"
                             onClick={() => onDelete(transaction)}
-                            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-900/20"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-rose-600 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-900/20"
+                            title="Remove transaction"
+                            aria-label="Remove transaction"
                         >
                             <Trash2 className="h-4 w-4" />
-                            Remove
                         </button>
                     )}
                 </div>

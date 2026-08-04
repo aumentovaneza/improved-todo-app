@@ -20,6 +20,17 @@ const amountTone = {
 };
 
 const accountLabel = (transaction) => {
+    if (transaction.finance_credit_card_account_id) {
+        const from = transaction.account?.label ?? transaction.account?.name;
+        const card =
+            transaction.credit_card_account?.label ??
+            transaction.credit_card_account?.name;
+        if (from && card) {
+            return `${from} → ${card}`;
+        }
+        return from ?? card ?? "—";
+    }
+
     if (transaction.type === "transfer" || transaction.type === "savings") {
         const from = transaction.account?.label ?? transaction.account?.name;
         const to =

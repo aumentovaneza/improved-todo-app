@@ -2,39 +2,39 @@
 
 namespace Tests\Unit\Modules\Finance;
 
+use App\Models\User;
 use App\Modules\Finance\Models\FinanceAccount;
 use App\Modules\Finance\Repositories\FinanceAccountRepository;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class CreditCardResetUnitTest extends TestCase
 {
+    use RefreshDatabase;
+
     private FinanceAccountRepository $repository;
+
+    private int $userId;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->repository = app(FinanceAccountRepository::class);
+        $this->userId = User::factory()->create()->id;
     }
 
     public function test_credit_card_adjust_balance_reverts_to_full_limit_when_fully_paid()
     {
-        // Create a mock credit card account
-        $account = new FinanceAccount([
+        $account = FinanceAccount::create([
+            'user_id' => $this->userId,
+            'name' => 'Test Card',
             'type' => 'credit-card',
+            'currency' => 'PHP',
             'credit_limit' => 50000,
             'used_credit' => 20000,
             'available_credit' => 30000,
+            'is_active' => true,
         ]);
-
-        // Mock the save method to avoid database operations
-        $account->save = function() {
-            return true;
-        };
-
-        // Mock the refresh method
-        $account->refresh = function() {
-            return $this;
-        };
 
         // Pay off the full amount (positive delta increases available credit)
         $updatedAccount = $this->repository->adjustBalance($account, 20000);
@@ -47,23 +47,16 @@ class CreditCardResetUnitTest extends TestCase
 
     public function test_credit_card_adjust_balance_partial_payment()
     {
-        // Create a mock credit card account
-        $account = new FinanceAccount([
+        $account = FinanceAccount::create([
+            'user_id' => $this->userId,
+            'name' => 'Test Card',
             'type' => 'credit-card',
+            'currency' => 'PHP',
             'credit_limit' => 50000,
             'used_credit' => 20000,
             'available_credit' => 30000,
+            'is_active' => true,
         ]);
-
-        // Mock the save method to avoid database operations
-        $account->save = function() {
-            return true;
-        };
-
-        // Mock the refresh method
-        $account->refresh = function() {
-            return $this;
-        };
 
         // Make a partial payment
         $updatedAccount = $this->repository->adjustBalance($account, 5000);
@@ -76,23 +69,16 @@ class CreditCardResetUnitTest extends TestCase
 
     public function test_credit_card_update_to_zero_reverts_to_full_limit()
     {
-        // Create a mock credit card account
-        $account = new FinanceAccount([
+        $account = FinanceAccount::create([
+            'user_id' => $this->userId,
+            'name' => 'Test Card',
             'type' => 'credit-card',
+            'currency' => 'PHP',
             'credit_limit' => 50000,
             'used_credit' => 20000,
             'available_credit' => 30000,
+            'is_active' => true,
         ]);
-
-        // Mock the save method to avoid database operations
-        $account->save = function() {
-            return true;
-        };
-
-        // Mock the refresh method
-        $account->refresh = function() {
-            return $this;
-        };
 
         // Manually set used_credit to 0
         $updatedAccount = $this->repository->update($account, ['used_credit' => 0]);
@@ -105,23 +91,16 @@ class CreditCardResetUnitTest extends TestCase
 
     public function test_credit_card_prevents_negative_used_credit()
     {
-        // Create a mock credit card account
-        $account = new FinanceAccount([
+        $account = FinanceAccount::create([
+            'user_id' => $this->userId,
+            'name' => 'Test Card',
             'type' => 'credit-card',
+            'currency' => 'PHP',
             'credit_limit' => 50000,
             'used_credit' => 20000,
             'available_credit' => 30000,
+            'is_active' => true,
         ]);
-
-        // Mock the save method to avoid database operations
-        $account->save = function() {
-            return true;
-        };
-
-        // Mock the refresh method
-        $account->refresh = function() {
-            return $this;
-        };
 
         // Try to pay more than the used amount
         $updatedAccount = $this->repository->adjustBalance($account, 25000);

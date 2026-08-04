@@ -24,15 +24,15 @@ export default function Modal({
 
     // Prevent body scroll when modal is open
     useEffect(() => {
-        if (show) {
-            document.body.style.overflow = "hidden";
-        } else {
-            document.body.style.overflow = "unset";
+        if (!show) {
+            return undefined;
         }
 
-        // Cleanup function to restore scroll when component unmounts
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+
         return () => {
-            document.body.style.overflow = "unset";
+            document.body.style.overflow = previousOverflow;
         };
     }, [show]);
 
@@ -75,7 +75,7 @@ export default function Modal({
                     leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                 >
                     <DialogPanel
-                        className={`relative z-10 mt-16 mb-6 max-h-[calc(100vh-8rem)] transform overflow-y-auto rounded-2xl bg-white shadow-soft ring-1 ring-black/5 transition-all sm:mx-auto sm:w-full dark:bg-dark-secondary dark:ring-white/5 ${maxWidthClass}`}
+                        className={`relative z-10 mt-16 mb-6 w-full max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-8rem)] transform overflow-y-auto rounded-2xl bg-white shadow-soft ring-1 ring-black/5 transition-all sm:mx-auto dark:bg-dark-secondary dark:ring-white/5 ${maxWidthClass}`}
                     >
                         {children}
                     </DialogPanel>

@@ -70,6 +70,7 @@ class FinanceTransactionRepository
     public function getTotalsForUser(int $userId, Carbon $startDate, Carbon $endDate): array
     {
         $totals = FinanceTransaction::where('user_id', $userId)
+            ->excludingCreditCardPayments()
             ->whereBetween('occurred_at', [$startDate->startOfDay(), $endDate->endOfDay()])
             ->select('type', DB::raw('SUM(amount) as total'))
             ->groupBy('type')
@@ -97,6 +98,7 @@ class FinanceTransactionRepository
         $periodExpr = $this->monthPeriodExpression('occurred_at');
 
         $monthlyTotals = FinanceTransaction::where('user_id', $userId)
+            ->excludingCreditCardPayments()
             ->where('occurred_at', '>=', $start)
             ->select(
                 DB::raw("$periodExpr as period"),
@@ -132,6 +134,7 @@ class FinanceTransactionRepository
         $start = now()->subDays($daysBack - 1)->startOfDay();
 
         $dailyTotals = FinanceTransaction::where('user_id', $userId)
+            ->excludingCreditCardPayments()
             ->where('occurred_at', '>=', $start)
             ->select(
                 DB::raw('DATE(occurred_at) as period'),
@@ -168,6 +171,7 @@ class FinanceTransactionRepository
             ->with('category')
             ->where('user_id', $userId)
             ->where('type', 'expense')
+            ->excludingCreditCardPayments()
             ->whereBetween('occurred_at', [$startDate->startOfDay(), $endDate->endOfDay()])
             ->select('finance_category_id', DB::raw('SUM(amount) as total'))
             ->groupBy('finance_category_id')
@@ -185,6 +189,7 @@ class FinanceTransactionRepository
             ->with('category')
             ->where('user_id', $userId)
             ->whereIn('type', $types)
+            ->excludingCreditCardPayments()
             ->whereBetween('occurred_at', [$startDate->startOfDay(), $endDate->endOfDay()])
             ->select('finance_category_id', 'type', DB::raw('SUM(amount) as total'))
             ->groupBy('finance_category_id', 'type')

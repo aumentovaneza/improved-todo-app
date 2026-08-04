@@ -631,6 +631,15 @@ export default function Index({
                         eventDrop={persistScheduleChange}
                         eventResize={persistScheduleChange}
                         dayMaxEvents={3}
+                        moreLinkClick={(arg) => {
+                            // Route "+N more" to our themed day panel instead of
+                            // FullCalendar's body-portaled popover (which our
+                            // .calendar-shell-scoped styles can't reach, so its
+                            // events overlap). "none" suppresses that popover.
+                            setDayDetailDate(toDateString(arg.date));
+                            setShowDayDetail(true);
+                            return "none";
+                        }}
                         slotEventOverlap={false}
                         nowIndicator
                         allDaySlot

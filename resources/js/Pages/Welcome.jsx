@@ -684,11 +684,11 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                     <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-sky-600 dark:text-sky-400" />
                                 </div>
                                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
-                                    Calendar + Google Sync
+                                    Flexible Calendar
                                 </h3>
                                 <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                                    See tasks and finances together in month, week, or day views,
-                                    and connect Google Calendar to bring your events into one place.
+                                    See native events, classes, appointments, routines, tasks, and
+                                    optional finances together in month, week, day, or agenda views.
                                 </p>
                             </div>
 
@@ -1107,7 +1107,7 @@ export default function Welcome({ auth, status, canResetPassword }) {
                                                 </li>
                                                 <li className="flex items-center">
                                                     <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
-                                                    Journal & Google Calendar sync
+                                                    Journal & flexible native calendar
                                                 </li>
                                                 <li className="flex items-center">
                                                     <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />

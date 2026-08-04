@@ -29,11 +29,16 @@ class TaskController extends Controller
      */
     public function index(Request $request): Response
     {
+        $view = in_array($request->get('view'), ['today', 'upcoming', 'inbox', 'all', 'completed'], true)
+            ? $request->get('view')
+            : 'today';
         $filters = $request->only(['search', 'status', 'priority', 'category_id', 'tag_id', 'due_date_filter']);
+        $filters['focus_view'] = $view;
+        $filters['today'] = Auth::user()->todayInUserTimezone()->format('Y-m-d');
 
         // Exclude completed tasks by default unless a status filter is explicitly set
-        if (empty($filters['status'])) {
-            $filters['status'] = 'not_completed';
+        if ($view !== 'all' || empty($filters['status'])) {
+            $filters['status'] = $view === 'completed' ? 'completed' : 'not_completed';
         }
 
         // Return the full working set; the page groups/sorts client-side
@@ -54,8 +59,26 @@ class TaskController extends Controller
             'tags' => $tags,
             'lists' => $lists,
             'filters' => $request->only(['search', 'status', 'priority', 'category_id', 'tag_id', 'due_date_filter']),
+            'view' => $view,
+            'taskCounts' => $this->focusViewCounts(Auth::user()),
+            'today' => $filters['today'],
             'canUseTaskCapture' => $this->entitlement->canUse(Auth::user(), 'task_capture'),
         ]);
+    }
+
+    private function focusViewCounts($user): array
+    {
+        $today = $user->todayInUserTimezone()->format('Y-m-d');
+        $active = $user->tasks()->where('status', '!=', 'completed');
+
+        return [
+            'today' => (clone $active)->whereDate('due_date', '<=', $today)->count(),
+            'upcoming' => (clone $active)->whereDate('due_date', '>', $today)->count(),
+            'inbox' => (clone $active)->whereNull('due_date')->count(),
+            'all' => (clone $active)->count(),
+            'completed' => $user->tasks()->where('status', 'completed')->count(),
+            'overdue' => (clone $active)->whereDate('due_date', '<', $today)->count(),
+        ];
     }
 
     /**

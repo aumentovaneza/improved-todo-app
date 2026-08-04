@@ -264,6 +264,15 @@ class TaskRepository implements TaskRepositoryInterface
      */
     private function applyFilters(Builder $query, array $filters): void
     {
+        $focusView = $filters['focus_view'] ?? 'all';
+        $today = $filters['today'] ?? Carbon::today()->format('Y-m-d');
+        match ($focusView) {
+            'today' => $query->whereNotNull('due_date')->whereDate('due_date', '<=', $today),
+            'upcoming' => $query->whereDate('due_date', '>', $today),
+            'inbox' => $query->whereNull('due_date'),
+            default => null,
+        };
+
         // Filter by status
         if (! empty($filters['status'])) {
             if ($filters['status'] === 'not_completed') {
@@ -314,16 +323,20 @@ class TaskRepository implements TaskRepositoryInterface
             $filter = $filters['due_date_filter'];
             switch ($filter) {
                 case 'today':
-                    $query->whereDate('due_date', Carbon::today());
+                    $query->whereDate('due_date', $today);
                     break;
                 case 'tomorrow':
-                    $query->whereDate('due_date', Carbon::tomorrow());
+                    $query->whereDate('due_date', Carbon::parse($today)->addDay()->format('Y-m-d'));
                     break;
                 case 'this_week':
-                    $query->whereBetween('due_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+                    $localToday = Carbon::parse($today);
+                    $query->whereBetween('due_date', [
+                        $localToday->copy()->startOfWeek()->format('Y-m-d'),
+                        $localToday->copy()->endOfWeek()->format('Y-m-d'),
+                    ]);
                     break;
                 case 'overdue':
-                    $query->overdue();
+                    $query->whereDate('due_date', '<', $today);
                     break;
             }
         }

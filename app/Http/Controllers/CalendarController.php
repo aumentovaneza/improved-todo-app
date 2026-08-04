@@ -7,207 +7,82 @@ use App\Models\CalendarMonthTitle;
 use App\Models\Category;
 use App\Models\Task;
 use App\Modules\Finance\Models\FinanceTransaction;
+use App\Services\CalendarEventService;
+use App\Services\TaskListService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class CalendarController extends Controller
 {
-    /**
-     * Display the calendar view.
-     */
+    public function __construct(
+        private CalendarEventService $events,
+        private TaskListService $taskLists
+    ) {}
+
     public function index(Request $request): Response
     {
-        $user = Auth::user();
-        $currentDate = $request->get('date', now()->format('Y-m-d'));
-        $date = Carbon::parse($currentDate);
+        $request->validate([
+            'date' => ['nullable', 'date'],
+            'start' => ['nullable', 'required_with:end', 'date'],
+            'end' => ['nullable', 'required_with:start', 'date', 'after_or_equal:start'],
+            'view' => ['nullable', 'in:dayGridMonth,timeGridWeek,timeGridDay,listMonth'],
+        ]);
 
-        // Determine the range window to load (month | week | day). Weeks are
-        // Sunday-first to match the calendar grid's Sun..Sat headers.
-        $range = in_array($request->get('range'), ['month', 'week', 'day'], true)
-            ? $request->get('range')
-            : 'month';
+        $user = $request->user();
+        $timezone = $user->getTimezone();
+        $anchor = Carbon::parse($request->string('date', now($timezone)->format('Y-m-d'))->toString(), $timezone);
+        [$rangeStart, $rangeEnd] = $this->visibleRange($request, $anchor, $timezone);
+        $sources = $this->sources($request);
+        $calendars = $this->events->calendarsFor($user);
+        $calendarIds = $this->calendarIds($request, $calendars->pluck('id')->all());
+        $items = collect();
 
-        // Convert the user timezone range to UTC for database queries.
-        $userDate = $user->toUserTimezone($date);
-        [$rangeStart, $rangeEnd] = match ($range) {
-            'week' => [
-                $userDate->copy()->startOfWeek(Carbon::SUNDAY)->utc(),
-                $userDate->copy()->endOfWeek(Carbon::SATURDAY)->utc(),
-            ],
-            'day' => [
-                $userDate->copy()->startOfDay()->utc(),
-                $userDate->copy()->endOfDay()->utc(),
-            ],
-            default => [
-                $userDate->copy()->startOfMonth()->utc(),
-                $userDate->copy()->endOfMonth()->utc(),
-            ],
-        };
-
-        // Get all tasks (both regular and recurring)
-        $allTasks = $user->tasks()
-            ->with(['category', 'subtasks', 'tags'])
-            ->withCount([
-                'subtasks',
-                'subtasks as completed_subtasks_count' => function ($query) {
-                    $query->where('is_completed', true);
-                },
-            ])
-            ->get();
-
-        // Generate task occurrences for the month
-        $taskOccurrences = collect();
-        foreach ($allTasks as $task) {
-            $occurrences = $task->getOccurrencesInRange($rangeStart, $rangeEnd);
-            $taskOccurrences = $taskOccurrences->merge($occurrences);
+        if (in_array('events', $sources, true) && (! $request->has('calendars') || $calendarIds !== [])) {
+            $items->push(...$this->events->itemsForRange($user, $rangeStart, $rangeEnd, $calendarIds));
+        }
+        if (in_array('tasks', $sources, true)) {
+            $items->push(...$this->taskItems($user, $rangeStart, $rangeEnd));
+        }
+        if (in_array('finance', $sources, true)) {
+            $items->push(...$this->financeItems($user->id, $rangeStart, $rangeEnd, $timezone));
         }
 
-        // Group tasks by date (in user's timezone). A task that spans multiple
-        // days — an end_date later than its due_date — fans out into every day
-        // bucket from its start date through its end date, inclusive. Tasks with
-        // no end_date (or end_date == due_date) land in a single bucket exactly
-        // as before. Insertion order is preserved so per-bucket ordering is
-        // unchanged. Recurring instances always occupy a single day (their
-        // absolute end_date does not relate to a generated occurrence date).
-        $fannedOut = collect();
-        foreach ($taskOccurrences as $task) {
-            $startDay = $user->toUserTimezone($task->due_date)->startOfDay();
-
-            $endSource = (empty($task->is_recurring_instance) && $task->end_date)
-                ? $task->end_date
-                : $task->due_date;
-            $endDay = $user->toUserTimezone($endSource)->startOfDay();
-
-            // Guard against a malformed end date earlier than the start date.
-            if ($endDay->lt($startDay)) {
-                $endDay = $startDay->copy();
-            }
-
-            for ($day = $startDay->copy(); $day->lte($endDay); $day->addDay()) {
-                $fannedOut->push(['key' => $day->format('Y-m-d'), 'task' => $task]);
-            }
-        }
-
-        $tasks = $fannedOut
-            ->groupBy('key')
-            ->map(fn ($items) => $items->pluck('task')->values());
-
-        // Get finance transactions (including recurring) for the month
-        $transactions = FinanceTransaction::with('category')
+        $categories = Category::query()
+            ->where('is_active', true)
             ->where('user_id', $user->id)
-            ->get();
-
-        $transactionOccurrences = collect();
-        foreach ($transactions as $transaction) {
-            $occurrences = $transaction->getOccurrencesInRange($rangeStart, $rangeEnd);
-            $transactionOccurrences = $transactionOccurrences->merge($occurrences);
-        }
-
-        $transactionsByDate = $transactionOccurrences->groupBy(function ($transaction) use ($user) {
-            $transactionDate = $transaction->occurred_at;
-            $userDate = $user->toUserTimezone($transactionDate);
-
-            return $userDate->format('Y-m-d');
-        });
-
-        // Get upcoming tasks (next 7 days) - both regular and recurring
-        $userNow = $user->toUserTimezone(now());
-        $upcomingTaskOccurrences = collect();
-        foreach ($allTasks as $task) {
-            $occurrences = $task->getOccurrencesInRange($userNow->copy()->utc(), $userNow->copy()->addDays(7)->utc());
-            $upcomingTaskOccurrences = $upcomingTaskOccurrences->merge($occurrences);
-        }
-        $upcomingTasks = $upcomingTaskOccurrences->where('status', 'pending');
-
-        // Get recently accomplished tasks (completed in the last 24 hours),
-        // ordered by most recently completed.
-        $recentlyAccomplishedTasks = $user->tasks()
-            ->with('category')
-            ->where('status', 'completed')
-            ->whereNotNull('completed_at')
-            ->where('completed_at', '>=', now()->subDay())
-            ->orderByDesc('completed_at')
-            ->get();
-
-        // Ensure a minimum of 5 are shown by backfilling with the most recent
-        // completions when the last 24 hours contain fewer than 5.
-        if ($recentlyAccomplishedTasks->count() < 5) {
-            $recentlyAccomplishedTasks = $user->tasks()
-                ->with('category')
-                ->where('status', 'completed')
-                ->whereNotNull('completed_at')
-                ->orderByDesc('completed_at')
-                ->limit(5)
-                ->get();
-        }
-
-        // Get overdue tasks (only regular tasks can be overdue)
-        $overdueTasks = Task::with(['category', 'subtasks', 'tags'])
-            ->withCount([
-                'subtasks',
-                'subtasks as completed_subtasks_count' => function ($query) {
-                    $query->where('is_completed', true);
-                },
-            ])
-            ->overdueForUser($user)
-            ->where('is_recurring', false)
-            ->orderByDateTime()
-            ->get();
-
-        // Get categories (name is encrypted at rest, so sort in PHP)
-        $categories = Category::where('is_active', true)
-            ->where('user_id', Auth::id())
             ->get()
             ->sortBy(fn ($category) => mb_strtolower(trim((string) $category->name)))
             ->values();
 
-        // Optional user-authored title/theme for the month the current date
-        // falls in (e.g. "Sprint 4" or "Wedding season"). Null when unset.
-        $monthTitle = CalendarMonthTitle::where('user_id', $user->id)
-            ->where('year', (int) $date->format('Y'))
-            ->where('month', (int) $date->format('n'))
-            ->value('title');
-
-        // Human-readable label for the active range (in the user's timezone).
-        $rangeLabel = match ($range) {
-            'week' => $this->weekRangeLabel(
-                $userDate->copy()->startOfWeek(Carbon::SUNDAY),
-                $userDate->copy()->endOfWeek(Carbon::SATURDAY)
-            ),
-            'day' => $userDate->format('l, M j, Y'),
-            default => $userDate->format('F Y'),
-        };
-
         return Inertia::render('Calendar/Index', [
-            'tasks' => $tasks,
-            'transactions' => $transactionsByDate,
-            'upcomingTasks' => $upcomingTasks,
-            'recentlyAccomplishedTasks' => $recentlyAccomplishedTasks,
-            'overdueTasks' => $overdueTasks,
-            'currentDate' => $date->format('Y-m-d'),
-            'monthName' => $date->format('F Y'),
-            'monthTitle' => $monthTitle,
-            'range' => $range,
-            'rangeLabel' => $rangeLabel,
+            'calendarItems' => $items->sortBy('start')->values(),
+            'eventCalendars' => $calendars,
+            'sourceFilters' => $sources,
+            'selectedCalendarIds' => $calendarIds,
+            'currentDate' => $anchor->format('Y-m-d'),
+            'visibleStart' => $rangeStart->setTimezone($timezone)->format('Y-m-d'),
+            'visibleEnd' => $rangeEnd->setTimezone($timezone)->format('Y-m-d'),
+            'monthTitle' => CalendarMonthTitle::query()
+                ->where('user_id', $user->id)
+                ->where('year', $anchor->year)
+                ->where('month', $anchor->month)
+                ->value('title'),
             'categories' => $categories,
+            'lists' => $this->taskLists->getTaskListsForUser($user->id),
+            'userTimezone' => $timezone,
         ]);
     }
 
-    /**
-     * Create, update, or clear the current user's custom title for a month.
-     * An empty title removes the record so the month falls back to no title.
-     */
     public function updateMonthTitle(UpdateMonthTitleRequest $request): RedirectResponse
     {
         $data = $request->validated();
         $title = trim($data['title'] ?? '');
-
         $attributes = [
-            'user_id' => Auth::id(),
+            'user_id' => $request->user()->id,
             'year' => $data['year'],
             'month' => $data['month'],
         ];
@@ -222,19 +97,146 @@ class CalendarController extends Controller
     }
 
     /**
-     * Format a week span, collapsing the month/year when they are shared.
-     * e.g. "Jul 20 – 26, 2026" or "Jul 28 – Aug 3, 2026".
+     * @return array{Carbon, Carbon}
      */
-    private function weekRangeLabel(Carbon $start, Carbon $end): string
+    private function visibleRange(Request $request, Carbon $anchor, string $timezone): array
     {
-        if ($start->year !== $end->year) {
-            return $start->format('M j, Y').' – '.$end->format('M j, Y');
+        if ($request->filled(['start', 'end'])) {
+            $start = Carbon::parse($request->string('start')->toString(), $timezone)->startOfDay();
+            $end = Carbon::parse($request->string('end')->toString(), $timezone)->endOfDay();
+            abort_if($start->diffInDays($end) > 400, 422, 'Calendar range is too large.');
+
+            return [$start->utc(), $end->utc()];
         }
 
-        if ($start->month !== $end->month) {
-            return $start->format('M j').' – '.$end->format('M j, Y');
+        return [
+            $anchor->copy()->startOfMonth()->startOfWeek(Carbon::SUNDAY)->utc(),
+            $anchor->copy()->endOfMonth()->endOfWeek(Carbon::SATURDAY)->endOfDay()->utc(),
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function sources(Request $request): array
+    {
+        $sources = $request->input('sources', ['events', 'tasks']);
+        if (is_string($sources)) {
+            $sources = array_filter(explode(',', $sources));
         }
 
-        return $start->format('M j').' – '.$end->format('j, Y');
+        $sources = array_values((array) $sources);
+        $allowed = ['events', 'tasks', 'finance'];
+        if (array_diff($sources, $allowed)) {
+            throw ValidationException::withMessages(['sources' => 'Choose valid calendar sources.']);
+        }
+
+        return $sources;
+    }
+
+    /**
+     * @param  array<int, int>  $availableIds
+     * @return array<int, int>
+     */
+    private function calendarIds(Request $request, array $availableIds): array
+    {
+        $selected = $request->input('calendars', $availableIds);
+        if (is_string($selected)) {
+            $selected = array_filter(explode(',', $selected));
+        }
+
+        $selected = array_values((array) $selected);
+        if (collect($selected)->contains(fn ($id) => filter_var($id, FILTER_VALIDATE_INT) === false)) {
+            throw ValidationException::withMessages(['calendars' => 'Choose valid calendars.']);
+        }
+
+        $normalized = collect($selected)->map(fn ($id) => (int) $id)->values();
+        if ($normalized->diff($availableIds)->isNotEmpty()) {
+            throw ValidationException::withMessages(['calendars' => 'Choose calendars that belong to you.']);
+        }
+
+        return $normalized->all();
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function taskItems($user, Carbon $start, Carbon $end): array
+    {
+        $tasks = $user->tasks()->with(['category', 'subtasks', 'tags', 'lists'])->get();
+
+        return $tasks->flatMap(function (Task $task) use ($start, $end, $user) {
+            return $task->getOccurrencesInRange($start, $end)->map(function (Task $occurrence) use ($user) {
+                $date = $occurrence->due_date->format('Y-m-d');
+                $endDate = (! empty($occurrence->is_recurring_instance) || ! $occurrence->end_date)
+                    ? $date
+                    : $occurrence->end_date->format('Y-m-d');
+                $key = $date;
+
+                if ($occurrence->is_all_day || (! $occurrence->start_time && ! $occurrence->end_time)) {
+                    $displayStart = $date;
+                    $displayEnd = Carbon::parse($endDate)->addDay()->format('Y-m-d');
+                    $allDay = true;
+                } else {
+                    $startTime = $occurrence->start_time ?: $occurrence->end_time;
+                    $endTime = $occurrence->end_time ?: Carbon::parse($startTime)->addHour()->format('H:i:s');
+                    $displayStart = Carbon::parse("{$date} {$startTime}", $user->getTimezone())->utc()->toIso8601String();
+                    $displayEnd = Carbon::parse("{$endDate} {$endTime}", $user->getTimezone())->utc()->toIso8601String();
+                    $allDay = false;
+                }
+
+                return [
+                    'id' => "task:{$occurrence->id}:{$key}",
+                    'sourceType' => 'task',
+                    'sourceId' => $occurrence->category_id,
+                    'eventId' => null,
+                    'occurrenceKey' => $key,
+                    'title' => $occurrence->title,
+                    'start' => $displayStart,
+                    'end' => $displayEnd,
+                    'allDay' => $allDay,
+                    'color' => $occurrence->category?->color ?? '#0EA5E9',
+                    'editable' => false,
+                    'extendedProps' => [
+                        'task' => $occurrence,
+                        'isRecurring' => (bool) $occurrence->is_recurring,
+                        'kind' => 'task',
+                    ],
+                ];
+            });
+        })->values()->all();
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function financeItems(int $userId, Carbon $start, Carbon $end, string $timezone): array
+    {
+        return FinanceTransaction::query()
+            ->where('user_id', $userId)
+            ->with('category')
+            ->get()
+            ->flatMap(fn ($transaction) => $transaction->getOccurrencesInRange($start, $end))
+            ->map(function ($transaction) use ($timezone) {
+                $date = $transaction->occurred_at->setTimezone($timezone)->format('Y-m-d');
+                $colors = ['income' => '#10B981', 'expense' => '#F43F5E', 'savings' => '#8B5CF6'];
+
+                return [
+                    'id' => "finance:{$transaction->id}:{$date}",
+                    'sourceType' => 'finance',
+                    'sourceId' => $transaction->category_id,
+                    'eventId' => null,
+                    'occurrenceKey' => $date,
+                    'title' => $transaction->description,
+                    'start' => $date,
+                    'end' => Carbon::parse($date)->addDay()->format('Y-m-d'),
+                    'allDay' => true,
+                    'color' => $colors[$transaction->type] ?? '#64748B',
+                    'editable' => false,
+                    'extendedProps' => ['transaction' => $transaction, 'kind' => 'finance'],
+                ];
+            })
+            ->values()
+            ->all();
     }
 }

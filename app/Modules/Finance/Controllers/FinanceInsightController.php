@@ -41,4 +41,26 @@ class FinanceInsightController extends Controller
 
         return back();
     }
+
+    /**
+     * Regenerate the user's spending insight for the current period, overwriting
+     * the stored one. Unlike store(), this intentionally bypasses the
+     * "already generated" guard so the user can refresh a stale insight.
+     */
+    public function regenerate(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        if (! $this->insightService->userCanUseInsights($user)) {
+            return back()->with('error', 'Spending insights are not available on your plan.');
+        }
+
+        $validated = $request->validate([
+            'range' => ['nullable', 'string', 'in:'.implode(',', FinanceReportService::RANGES)],
+        ]);
+
+        $this->insightService->generateForUser($user, $validated['range'] ?? null);
+
+        return back()->with('success', 'Your spending insight was regenerated.');
+    }
 }

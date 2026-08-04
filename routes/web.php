@@ -125,7 +125,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Finance
     Route::get('weviewallet', [FinanceDashboardController::class, 'index'])->name('weviewallet.dashboard');
     Route::post('weviewallet/insights', [FinanceInsightController::class, 'store'])
-        ->name('finance.insights.store');
+        ->name('finance.insights.store')
+        ->middleware('throttle:6,1');
+    Route::post('weviewallet/insights/regenerate', [FinanceInsightController::class, 'regenerate'])
+        ->name('finance.insights.regenerate')
+        ->middleware('throttle:6,1'); // AI call costs money — cap regeneration.
     Route::post('weviewallet/collaborators', [FinanceWalletCollaboratorController::class, 'store'])
         ->name('weviewallet.collaborators.store');
     Route::delete('weviewallet/collaborators/{user}', [FinanceWalletCollaboratorController::class, 'destroy'])

@@ -72,10 +72,10 @@ export default function Index({
     const [title, setTitle] = useState("");
     const [view, setView] = useState(() => {
         if (typeof window === "undefined") return "dayGridMonth";
-        return (
-            localStorage.getItem(VIEW_KEY) ||
-            (window.innerWidth < 768 ? "listMonth" : "dayGridMonth")
-        );
+        // Agenda (listMonth) is retired; ignore a stored/legacy value so nobody
+        // is stranded on a view the toggle no longer offers.
+        const stored = localStorage.getItem(VIEW_KEY);
+        return stored && stored !== "listMonth" ? stored : "dayGridMonth";
     });
     const [sources, setSources] = useState(() => readJson(SOURCE_KEY, sourceFilters));
     const [calendarIds, setCalendarIds] = useState(() => {
@@ -384,9 +384,14 @@ export default function Index({
         }
 
         const label = aggregated ? `${count} · ${formatCompactCurrency(net, currency)}` : title;
+        // Aggregated finance chips are cryptic on their own ("28 · -₱132.5K"),
+        // so spell out what the numbers mean on hover/tap.
+        const tooltip = aggregated
+            ? `${count} transactions · Net ${formatCompactCurrency(net, currency)}`
+            : title;
 
         return (
-            <div className="wv-ev-chip flex items-center gap-1 overflow-hidden">
+            <div className="wv-ev-chip flex items-center gap-1 overflow-hidden" title={tooltip}>
                 <meta.Icon className="h-3 w-3 shrink-0 opacity-90" />
                 {!event.allDay && timeText && (
                     <span className="shrink-0 text-[0.65rem] font-medium opacity-90">
@@ -402,7 +407,6 @@ export default function Index({
         ["dayGridMonth", "Month"],
         ["timeGridWeek", "Week"],
         ["timeGridDay", "Day"],
-        ["listMonth", "Agenda"],
     ];
 
     return (

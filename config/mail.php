@@ -111,7 +111,7 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@wevieapp.online'),
+        'address' => env('MAIL_FROM_ADDRESS', 'hello@wevie.app'),
         'name' => env('MAIL_FROM_NAME', 'Wevie'),
     ],
 

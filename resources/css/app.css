@@ -2,214 +2,257 @@
 @tailwind components;
 @tailwind utilities;
 
-/* FullCalendar is only the interaction/view engine. These overrides keep its
-   surfaces inside Wevie's design system in both themes. */
-.calendar-shell .fc {
-    --fc-border-color: #dde6e8;
-    --fc-page-bg-color: transparent;
-    --fc-neutral-bg-color: #eef5f6;
-    --fc-list-event-hover-bg-color: #eef5f6;
-    color: #1f2f33;
+/* Custom Wevie calendar engine (replaces FullCalendar). A Google-style month
+   grid and a week/day time grid, built from Wevie tokens for light + dark. The
+   `.wv-ev-icon` per-source coloring and solid-pill vs transparent-row look are
+   preserved from the old FullCalendar theme. */
+.calendar-shell {
+    @apply text-light-primary dark:text-dark-primary;
 }
 
-.dark .calendar-shell .fc {
-    --fc-border-color: #2f4a50;
-    --fc-neutral-bg-color: #2a4247;
-    --fc-list-event-hover-bg-color: #2a4247;
-    color: #e6f2f3;
-}
-
-.calendar-shell .fc .fc-scrollgrid,
-.calendar-shell .fc .fc-list {
-    border-radius: 0.75rem;
-    overflow: hidden;
-}
-
-/* We import only FullCalendar's minimal skeleton.css, which draws almost no
-   grid lines, so paint them ourselves from the shared --fc-border-color. This
-   is what makes month/week/day read as a real grid in both themes. */
-.calendar-shell .fc .fc-scrollgrid {
-    border: 1px solid var(--fc-border-color);
-}
-
-/* Month: lines between weekday columns and between date cells. */
-.calendar-shell .fc .fc-col-header-cell,
-.calendar-shell .fc .fc-daygrid-day {
-    border-right: 1px solid var(--fc-border-color);
-}
-
-.calendar-shell .fc .fc-daygrid-day {
-    border-bottom: 1px solid var(--fc-border-color);
-}
-
-/* Week/Day: divider between the time axis and the day columns, and between days. */
-.calendar-shell .fc .fc-timegrid-axis,
-.calendar-shell .fc .fc-timegrid-col {
-    border-right: 1px solid var(--fc-border-color);
-}
-
-/* Day/Week: lines between time slots (hour lines solid, half-hour lines lighter). */
-.calendar-shell .fc .fc-timegrid-slot {
-    border-bottom: 1px solid var(--fc-border-color);
-}
-
-.calendar-shell .fc .fc-timegrid-slot-minor {
-    border-bottom-style: dotted;
-}
-
-/* Separate the all-day row from the timed grid so it stops feeling cramped. */
-.calendar-shell .fc .fc-timegrid-divider {
-    border-bottom: 1px solid var(--fc-border-color);
-}
-
-.calendar-shell .fc .fc-timegrid-axis,
-.calendar-shell .fc .fc-list-day-cushion {
-    @apply bg-light-hover text-light-secondary dark:bg-dark-hover dark:text-dark-secondary;
-}
-
-/* Google-style weekday header: plain uppercase labels, no filled bar. */
-.calendar-shell .fc .fc-col-header-cell {
-    @apply bg-transparent py-2 text-center text-[0.7rem] font-medium uppercase tracking-wide text-light-muted dark:text-dark-muted;
-}
-
-.calendar-shell .fc .fc-daygrid-day-number,
-.calendar-shell .fc .fc-timegrid-slot-label,
-.calendar-shell .fc .fc-list-event-time,
-.calendar-shell .fc .fc-list-event-title {
-    @apply text-light-secondary dark:text-dark-secondary;
-}
-
-.calendar-shell .fc .fc-day-today {
-    @apply bg-wevie-teal/10 dark:bg-wevie-teal/10;
-}
-
-/* Today's date number gets a filled teal circle (the cell tint above stays),
-   so the current day is unmistakable at a glance. */
-.calendar-shell .fc .fc-day-today .fc-daygrid-day-number {
-    @apply flex h-6 min-w-6 items-center justify-center rounded-full bg-wevie-teal px-1 font-semibold text-white hover:text-white;
-}
-
-.calendar-shell .fc .fc-event {
-    @apply rounded-md border-0 shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wevie-teal;
-}
-
-/* Day numbers sit clear of events, and clicking them is discoverable. */
-.calendar-shell .fc .fc-daygrid-day-top {
-    @apply flex-row justify-center px-1 pt-1;
-}
-
-.calendar-shell .fc .fc-daygrid-day-number {
-    @apply rounded-md px-1 text-xs font-medium hover:text-wevie-teal;
-}
-
-.calendar-shell .fc .fc-daygrid-day-events {
-    margin-top: 0.125rem;
-}
-
-/* Compact, single-line chips that truncate instead of overflowing the cell. */
-.calendar-shell .fc .fc-daygrid-event {
-    @apply my-px rounded-md px-1.5 py-0.5 text-xs font-medium leading-tight;
-}
-
-.calendar-shell .fc .wv-ev-chip {
+.wv-ev-chip {
     width: 100%;
     min-width: 0;
 }
 
-.calendar-shell .fc .fc-event .fc-event-main {
-    overflow: hidden;
+/* ---------- Month view ---------- */
+.wv-cal-month {
+    @apply overflow-hidden rounded-xl border border-light-border dark:border-dark-border;
 }
 
-/* Our chip already carries a type icon, so drop FullCalendar's default dot. */
-.calendar-shell .fc .fc-daygrid-event .fc-daygrid-event-dot {
-    display: none;
+.wv-cal-weekdays {
+    @apply grid grid-cols-7 border-b border-light-border dark:border-dark-border;
 }
 
-/* Google-style month layout: timed events are transparent rows (dark text +
-   a per-source colored icon + subtle hover fill), while all-day / multi-day
-   events stay solid filled pills painted from the event color. */
-.calendar-shell .fc .fc-daygrid-dot-event {
-    @apply bg-transparent px-1 text-light-primary shadow-none dark:text-dark-primary;
+.wv-cal-weekday {
+    @apply py-2 text-center text-[0.7rem] font-medium uppercase tracking-wide text-light-muted dark:text-dark-muted;
 }
 
-.calendar-shell .fc .fc-daygrid-dot-event:hover {
-    @apply bg-light-hover shadow-none dark:bg-dark-hover;
-    filter: none;
+.wv-cal-grid {
+    @apply grid grid-cols-7;
+    grid-auto-rows: minmax(6.5rem, 1fr);
 }
 
-.calendar-shell .fc .fc-daygrid-block-event {
-    @apply rounded px-1.5 py-0.5 font-medium;
+.wv-cal-day {
+    @apply flex min-h-[6.5rem] cursor-pointer flex-col gap-0.5 border-b border-r border-light-border p-1 dark:border-dark-border;
 }
 
-/* Per-source icon color on the transparent timed rows. */
-.calendar-shell .fc .fc-daygrid-dot-event.wv-ev--task .wv-ev-icon {
-    color: theme("colors.primary.400");
+.wv-cal-grid > .wv-cal-day:nth-child(7n) {
+    @apply border-r-0;
 }
 
-.calendar-shell .fc .fc-daygrid-dot-event.wv-ev--finance .wv-ev-icon {
-    color: theme("colors.warning.500");
+.wv-cal-grid > .wv-cal-day:nth-last-child(-n + 7) {
+    @apply border-b-0;
 }
 
-.calendar-shell .fc .fc-daygrid-dot-event.wv-ev--event .wv-ev-icon {
-    color: theme("colors.secondary.400");
+.wv-cal-day--other {
+    @apply bg-light-hover/40 dark:bg-dark-hover/30;
 }
 
-/* Filled pills (all-day + week/day timegrid blocks) darken slightly on hover. */
-.calendar-shell .fc .fc-daygrid-block-event:hover,
-.calendar-shell .fc .fc-timegrid-event:hover {
-    @apply shadow-md;
-    filter: brightness(0.97);
+.wv-cal-day--today {
+    @apply bg-wevie-teal/10;
 }
 
-.dark .calendar-shell .fc .fc-daygrid-block-event:hover,
-.dark .calendar-shell .fc .fc-timegrid-event:hover {
-    filter: brightness(1.12);
+.wv-cal-day-top {
+    @apply flex justify-center;
 }
 
-/* Google touch: dim days outside the current month and fade past events so the
-   present month and upcoming items stand out. */
-.calendar-shell .fc .fc-day-other .fc-daygrid-day-number {
+.wv-cal-daynum {
+    @apply rounded-md px-1 py-0.5 text-xs font-medium text-light-secondary hover:text-wevie-teal dark:text-dark-secondary;
+}
+
+.wv-cal-day--other .wv-cal-daynum {
     @apply text-light-muted/60 dark:text-dark-muted/60;
 }
 
-.calendar-shell .fc .fc-day-past:not(.fc-day-today) .fc-daygrid-dot-event {
+.wv-cal-daynum--today {
+    @apply flex h-6 min-w-6 items-center justify-center rounded-full bg-wevie-teal px-1 font-semibold text-white hover:text-white;
+}
+
+.wv-cal-day-events {
+    @apply flex flex-1 flex-col gap-px overflow-hidden;
+}
+
+/* Shared chip: transparent timed rows (dark text + colored source icon) and
+   solid pills for all-day / multi-day items painted from the item color. */
+.wv-cal-chip {
+    @apply flex w-full items-center rounded-md px-1 py-0.5 text-left text-xs font-medium leading-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wevie-teal;
+}
+
+.wv-cal-chip--timed {
+    @apply bg-transparent text-light-primary hover:bg-light-hover dark:text-dark-primary dark:hover:bg-dark-hover;
+}
+
+.wv-cal-chip--pill {
+    @apply text-white;
+}
+
+.wv-cal-chip--pill:hover {
+    filter: brightness(0.97);
+}
+
+.dark .wv-cal-chip--pill:hover {
+    filter: brightness(1.12);
+}
+
+.wv-cal-chip--past {
     opacity: 0.55;
 }
 
-/* Time-grid: side-by-side tiling (slotEventOverlap=false) plus breathing room. */
-.calendar-shell .fc .fc-timegrid-event {
-    @apply rounded-md text-xs;
+.wv-cal-chip--timed[data-source="task"] .wv-ev-icon {
+    color: theme("colors.primary.400");
 }
 
-.calendar-shell .fc .fc-timegrid-event-harness {
-    inset-inline: 1px;
+.wv-cal-chip--timed[data-source="finance"] .wv-ev-icon {
+    color: theme("colors.warning.500");
 }
 
-.calendar-shell .fc .fc-timegrid-event .fc-event-main {
-    @apply px-1 py-0.5;
+.wv-cal-chip--timed[data-source="event"] .wv-ev-icon {
+    color: theme("colors.secondary.400");
 }
 
-/* Agenda: our custom row renders the badge + secondary text, so hide the
-   repetitive default time cell and let the title cell span the row. */
-.calendar-shell .fc .fc-list-event-time {
-    display: none;
+.wv-cal-chip--timed[data-source="meal"] .wv-ev-icon {
+    color: theme("colors.wevie.teal");
 }
 
-.calendar-shell .fc .fc-list-event-title {
-    @apply w-full;
+.wv-cal-more {
+    @apply mt-px rounded-md px-1 py-0.5 text-left text-[0.7rem] font-medium text-light-muted hover:bg-light-hover hover:text-light-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wevie-teal dark:text-dark-muted dark:hover:bg-dark-hover dark:hover:text-dark-primary;
 }
 
-.calendar-shell .fc .fc-list-event:hover td {
-    @apply bg-light-hover dark:bg-dark-hover;
+/* ---------- Week / Day time grid ---------- */
+.wv-cal-time {
+    --wv-gutter: 3.5rem;
+    @apply overflow-hidden rounded-xl border border-light-border dark:border-dark-border;
+}
+
+.wv-cal-time-head,
+.wv-cal-allday,
+.wv-cal-time-scroll,
+.wv-cal-time-cols {
+    @apply flex;
+}
+
+.wv-cal-time-head {
+    @apply border-b border-light-border bg-light-card dark:border-dark-border dark:bg-dark-card;
+}
+
+.wv-cal-time-gutter {
+    width: var(--wv-gutter);
+    @apply shrink-0;
+}
+
+.wv-cal-time-corner {
+    @apply border-r border-light-border dark:border-dark-border;
+}
+
+.wv-cal-colhead {
+    @apply flex flex-1 flex-col items-center gap-0.5 border-r border-light-border py-2 dark:border-dark-border;
+}
+
+.wv-cal-colhead:last-child {
+    @apply border-r-0;
+}
+
+.wv-cal-colhead-day {
+    @apply text-[0.7rem] font-medium uppercase tracking-wide text-light-muted dark:text-dark-muted;
+}
+
+.wv-cal-colhead-num {
+    @apply flex h-7 min-w-7 items-center justify-center rounded-full px-1 text-sm font-semibold text-light-primary hover:text-wevie-teal dark:text-dark-primary;
+}
+
+.wv-cal-colhead-num--today {
+    @apply bg-wevie-teal text-white hover:text-white;
+}
+
+.wv-cal-allday {
+    @apply border-b border-light-border bg-light-card dark:border-dark-border dark:bg-dark-card;
+}
+
+.wv-cal-allday-label {
+    @apply flex items-center justify-end border-r border-light-border pr-2 text-[0.65rem] font-medium uppercase tracking-wide text-light-muted dark:border-dark-border dark:text-dark-muted;
+}
+
+.wv-cal-allday-cell {
+    @apply flex min-h-[2rem] flex-1 cursor-pointer flex-col gap-0.5 border-r border-light-border p-1 dark:border-dark-border;
+}
+
+.wv-cal-allday-cell:last-child {
+    @apply border-r-0;
+}
+
+.wv-cal-time-body {
+    @apply overflow-y-auto;
+    max-height: 32rem;
+}
+
+.wv-cal-time-axis {
+    width: var(--wv-gutter);
+    @apply shrink-0 border-r border-light-border dark:border-dark-border;
+}
+
+.wv-cal-time-cols {
+    @apply flex-1;
+}
+
+.wv-cal-time-col {
+    @apply relative flex-1 border-r border-light-border dark:border-dark-border;
+}
+
+.wv-cal-time-col:last-child {
+    @apply border-r-0;
+}
+
+.wv-cal-hour-cell {
+    @apply border-b border-light-border/70 dark:border-dark-border/70;
+}
+
+.wv-cal-hour-label {
+    @apply -mt-2 block pr-1.5 text-right text-[0.65rem] text-light-muted dark:text-dark-muted;
+}
+
+.wv-cal-block {
+    @apply absolute overflow-hidden rounded-md px-1 py-0.5 text-left text-xs font-medium leading-tight text-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wevie-teal;
+}
+
+.wv-cal-block:hover {
+    filter: brightness(0.97);
+}
+
+.dark .wv-cal-block:hover {
+    filter: brightness(1.12);
+}
+
+.wv-cal-slot-mirror {
+    @apply pointer-events-none absolute inset-x-1 rounded-md bg-wevie-teal/25 ring-1 ring-wevie-teal;
+}
+
+/* Red "now" indicator on today's column. */
+.wv-cal-now {
+    @apply pointer-events-none absolute inset-x-0 z-10 border-t-2;
+    border-color: theme("colors.error.500");
+}
+
+.wv-cal-now-dot {
+    @apply absolute -left-1 -top-1 h-2 w-2 rounded-full;
+    background-color: theme("colors.error.500");
 }
 
 @media (max-width: 640px) {
-    .calendar-shell .fc .fc-toolbar-title {
-        font-size: 1rem;
+    .wv-cal-grid {
+        grid-auto-rows: minmax(4.5rem, 1fr);
     }
 
-    .calendar-shell .fc .fc-daygrid-day-frame {
-        min-height: 5rem;
+    .wv-cal-day {
+        @apply min-h-[4.5rem];
+    }
+
+    .wv-cal-time {
+        --wv-gutter: 2.75rem;
+    }
+
+    .wv-cal-time-body {
+        max-height: 26rem;
     }
 }
 

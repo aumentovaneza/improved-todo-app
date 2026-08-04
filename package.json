@@ -48,7 +48,6 @@
         "@dnd-kit/utilities": "^3.2.2",
         "@emoji-mart/data": "^1.2.1",
         "@emoji-mart/react": "^1.1.1",
-        "@fullcalendar/react": "^7.0.2",
         "@tiptap/extension-document": "^3.28.0",
         "@tiptap/extension-highlight": "^3.28.0",
         "@tiptap/extension-image": "^3.28.0",

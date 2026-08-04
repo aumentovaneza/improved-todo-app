@@ -2,18 +2,21 @@ import { metaForSource } from "@/Components/Calendar/CalendarItemMeta";
 import CalendarSources from "@/Components/Calendar/CalendarSources";
 import DayDetailModal from "@/Components/Calendar/DayDetailModal";
 import EventModal from "@/Components/Calendar/EventModal";
+import {
+    addPeriod,
+    dayRange,
+    monthGridRange,
+    parseAnchor,
+    toDateString,
+    weekRange,
+} from "@/Components/Calendar/Grid/calendarDates";
+import WevieCalendar from "@/Components/Calendar/Grid/WevieCalendar";
 import OnboardingTour from "@/Components/OnboardingTour";
 import TaskModal from "@/Components/TaskModal";
 import TaskViewModal from "@/Components/TaskViewModal";
 import TodoLayout from "@/Layouts/TodoLayout";
 import { calendarSteps } from "@/tours";
 import { formatCompactCurrency } from "@/Utils/currency";
-import FullCalendar from "@fullcalendar/react";
-import dayGridPlugin from "@fullcalendar/react/daygrid";
-import interactionPlugin from "@fullcalendar/react/interaction";
-import listPlugin from "@fullcalendar/react/list";
-import timeGridPlugin from "@fullcalendar/react/timegrid";
-import "@fullcalendar/react/skeleton.css";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { Head, router, usePage } from "@inertiajs/react";
 import { CalendarPlus, ChevronLeft, ChevronRight, Ellipsis, ListPlus, Plus } from "lucide-react";
@@ -26,12 +29,18 @@ const VIEW_KEY = "calendar.view.v2";
 const SOURCE_KEY = "calendar.sources.v2";
 const CALENDAR_KEY = "calendar.native-sources.v2";
 
-const toDateString = (value) => {
-    const date = new Date(value);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+// The backend still validates FullCalendar's view names, so translate our short
+// names on the way out (query param) and map any stored/legacy FC name back in.
+const VIEW_TO_FC = { month: "dayGridMonth", week: "timeGridWeek", day: "timeGridDay" };
+const FC_TO_VIEW = {
+    dayGridMonth: "month",
+    timeGridWeek: "week",
+    timeGridDay: "day",
+    listMonth: "month", // agenda is retired
 };
 
-const capitalize = (value) => (value ? value.charAt(0).toUpperCase() + value.slice(1) : "");
+const formatClock = (value) =>
+    new Date(value).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true });
 
 // The local calendar date an item belongs to: all-day/finance items carry a
 // Y-m-d occurrenceKey; timed items derive it from their start.
@@ -40,7 +49,7 @@ const itemDateKey = (item) => {
         const key = item.occurrenceKey || item.start;
         return String(key).slice(0, 10);
     }
-    return toDateString(item.start);
+    return toDateString(new Date(item.start));
 };
 
 const readJson = (key, fallback) => {
@@ -67,16 +76,16 @@ export default function Index({
 }) {
     const userId = usePage().props.auth?.user?.id || "guest";
     const calendarStorageKey = `${CALENDAR_KEY}.${userId}`;
-    const calendarRef = useRef(null);
     const loadedRangeRef = useRef(`${visibleStart}|${visibleEnd}`);
-    const [title, setTitle] = useState("");
     const [view, setView] = useState(() => {
-        if (typeof window === "undefined") return "dayGridMonth";
-        // Agenda (listMonth) is retired; ignore a stored/legacy value so nobody
-        // is stranded on a view the toggle no longer offers.
+        if (typeof window === "undefined") return "month";
+        // Map any stored FC/legacy name (incl. retired listMonth) to a short name
+        // so nobody is stranded on a view the toggle no longer offers.
         const stored = localStorage.getItem(VIEW_KEY);
-        return stored && stored !== "listMonth" ? stored : "dayGridMonth";
+        if (!stored) return "month";
+        return FC_TO_VIEW[stored] || (["month", "week", "day"].includes(stored) ? stored : "month");
     });
+    const [date, setDate] = useState(() => parseAnchor(currentDate));
     const [sources, setSources] = useState(() => readJson(SOURCE_KEY, sourceFilters));
     const [calendarIds, setCalendarIds] = useState(() => {
         const hasStoredChoice =
@@ -106,6 +115,39 @@ export default function Index({
         });
     }, [eventCalendars]);
 
+    // The rendered heading, previously supplied by FullCalendar's view.title.
+    const title = useMemo(() => {
+        if (view === "month") {
+            return date.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+        }
+        if (view === "day") {
+            return date.toLocaleDateString(undefined, {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+            });
+        }
+        const { days } = weekRange(date);
+        const first = days[0];
+        const last = days[6];
+        const sameMonth = first.getMonth() === last.getMonth();
+        const startLabel = first.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+        const endLabel = last.toLocaleDateString(
+            undefined,
+            sameMonth
+                ? { day: "numeric", year: "numeric" }
+                : { month: "short", day: "numeric", year: "numeric" }
+        );
+        return `${startLabel} – ${endLabel}`;
+    }, [view, date]);
+
+    const currentRange = () => {
+        if (view === "week") return weekRange(date);
+        if (view === "day") return dayRange(date);
+        return monthGridRange(date);
+    };
+
     const queryRange = (start, end, anchor, nextSources = sources, nextCalendars = calendarIds) => {
         const inclusiveEnd = new Date(end.getTime() - 1);
         const rangeKey = `${toDateString(start)}|${toDateString(inclusiveEnd)}`;
@@ -116,7 +158,7 @@ export default function Index({
                 date: toDateString(anchor),
                 start: toDateString(start),
                 end: toDateString(inclusiveEnd),
-                view: calendarRef.current?.getApi().view.type || view,
+                view: VIEW_TO_FC[view],
                 sources: nextSources.join(","),
                 calendars: nextCalendars.join(","),
             },
@@ -132,30 +174,22 @@ export default function Index({
     };
 
     const reloadCurrentRange = (nextSources = sources, nextCalendars = calendarIds) => {
-        const api = calendarRef.current?.getApi();
-        if (!api) return;
-        queryRange(
-            api.view.activeStart,
-            api.view.activeEnd,
-            api.getDate(),
-            nextSources,
-            nextCalendars
-        );
+        const range = currentRange();
+        queryRange(range.start, range.end, date, nextSources, nextCalendars);
     };
 
-    const handleDatesSet = (info) => {
-        setTitle(info.view.title);
-        const inclusiveEnd = new Date(info.end.getTime() - 1);
-        const rangeKey = `${toDateString(info.start)}|${toDateString(inclusiveEnd)}`;
+    // Replaces FullCalendar's datesSet: refetch only when the visible range moves.
+    const handleRangeChange = ({ start, end }) => {
+        const inclusiveEnd = new Date(end.getTime() - 1);
+        const rangeKey = `${toDateString(start)}|${toDateString(inclusiveEnd)}`;
         if (rangeKey !== loadedRangeRef.current) {
-            queryRange(info.start, info.end, info.view.currentStart);
+            queryRange(start, end, date);
         }
     };
 
     const changeView = (nextView) => {
         setView(nextView);
         localStorage.setItem(VIEW_KEY, nextView);
-        calendarRef.current?.getApi().changeView(nextView);
     };
 
     const changeSources = (nextSources) => {
@@ -177,37 +211,13 @@ export default function Index({
         setShowEventModal(true);
     };
 
-    const handleSelect = (info) => {
-        // In month view a single-day click is handled by dateClick (it opens the
-        // day panel); only a multi-day drag should start a ranged event here.
-        if (
-            info.view.type === "dayGridMonth" &&
-            info.end.getTime() - info.start.getTime() <= 86400000
-        ) {
-            calendarRef.current?.getApi().unselect();
-            return;
-        }
-        openEvent(null, {
-            start: info.startStr,
-            end: info.endStr,
-            allDay: info.allDay,
-            kind: "event",
-        });
-        calendarRef.current?.getApi().unselect();
-    };
-
-    const itemFromCalendarEvent = (event) => ({
-        eventId: event.extendedProps.eventId || event.extendedProps.event?.id || null,
-        occurrenceKey: event.extendedProps.occurrenceKey,
-        sourceType: event.extendedProps.sourceType,
-        start: event.startStr,
-        end: event.endStr,
-        allDay: event.allDay,
-        extendedProps: event.extendedProps,
-    });
-
-    const openTransactionsForDate = (date) => {
-        router.visit(route("weviewallet.transactions.index", { start_date: date, end_date: date }));
+    const openTransactionsForDate = (transactionDate) => {
+        router.visit(
+            route("weviewallet.transactions.index", {
+                start_date: transactionDate,
+                end_date: transactionDate,
+            })
+        );
     };
 
     const openMealPlanner = (item) => {
@@ -215,47 +225,56 @@ export default function Index({
         if (householdId) router.visit(route("meal-planning.planner", householdId));
     };
 
-    const handleEventClick = (info) => {
-        const item = itemFromCalendarEvent(info.event);
+    // A calendar item was clicked → route it to the right destination.
+    const handleSelectEvent = (item) => {
         if (item.sourceType === "event") {
             openEvent(item);
         } else if (item.sourceType === "task") {
-            setSelectedTask(info.event.extendedProps.task);
+            setSelectedTask(item.extendedProps?.task);
             setShowTaskView(true);
         } else if (item.sourceType === "meal") {
             openMealPlanner(item);
         } else {
-            openTransactionsForDate(info.event.extendedProps.date || item.occurrenceKey);
+            openTransactionsForDate(item.extendedProps?.date || item.occurrenceKey);
         }
     };
 
-    const handleDateClick = (info) => {
-        // The day panel is the month-view affordance; in week/day a slot click
-        // still creates an event through the select handler.
-        if (info.view.type !== "dayGridMonth") return;
-        setDayDetailDate(info.dateStr);
+    // Month empty-day click / "+N more" → the themed day panel.
+    const handleSelectDay = (dateStr) => {
+        setDayDetailDate(dateStr);
         setShowDayDetail(true);
     };
 
-    const openNewEventForDate = (date) => {
-        setShowDayDetail(false);
-        openEvent(null, { start: date, allDay: true, kind: "event" });
+    // Week/Day empty slot (click or short drag) → prefilled new-event modal.
+    const handleSelectSlot = ({ start, end, allDay }) => {
+        openEvent(null, { start, end, allDay, kind: "event" });
     };
 
-    const openNewTaskForDate = (date) => {
+    const openNewEventForDate = (dateStr) => {
         setShowDayDetail(false);
-        setTaskDefaultDueDate(date);
+        openEvent(null, { start: dateStr, allDay: true, kind: "event" });
+    };
+
+    const openNewTaskForDate = (dateStr) => {
+        setShowDayDetail(false);
+        setTaskDefaultDueDate(dateStr);
         setShowTaskModal(true);
     };
 
-    const viewDay = (date) => {
+    const viewDay = (dateStr) => {
         setShowDayDetail(false);
-        changeView("timeGridDay");
-        calendarRef.current?.getApi().gotoDate(date);
+        changeView("day");
+        setDate(parseAnchor(dateStr));
     };
 
+    // Kept for the (deferred) drag-to-reschedule phase; intentionally unwired.
+    // eslint-disable-next-line no-unused-vars
     const persistScheduleChange = async (info) => {
-        const item = itemFromCalendarEvent(info.event);
+        const item = {
+            eventId: info.event.eventId,
+            occurrenceKey: info.event.occurrenceKey,
+            sourceType: info.event.sourceType,
+        };
         if (item.sourceType === "meal") {
             const householdId = info.event.extendedProps.householdId;
             if (!householdId || !item.eventId) {
@@ -342,7 +361,6 @@ export default function Index({
     };
 
     const saveMonthTitle = () => {
-        const date = calendarRef.current?.getApi().getDate() || new Date(currentDate);
         router.post(
             route("calendar.month-title.update"),
             {
@@ -354,69 +372,18 @@ export default function Index({
         );
     };
 
-    const calendarEvents = useMemo(
-        () =>
-            calendarItems.map((item) => ({
-                ...item,
-                // Per-event classes live on the event input in FullCalendar v7 (the
-                // v6 calendar-wide `eventClassNames` callback was dropped); this lands
-                // `wv-ev--{source}` on the event root the CSS targets.
-                classNames: ["wv-ev", `wv-ev--${item.sourceType}`],
-                extendedProps: {
-                    ...item.extendedProps,
-                    sourceType: item.sourceType,
-                    sourceId: item.sourceId,
-                    eventId: item.eventId,
-                    occurrenceKey: item.occurrenceKey,
-                },
-            })),
-        [calendarItems]
-    );
-
     const itemsForDate = useMemo(() => {
         if (!dayDetailDate) return [];
-        return calendarEvents.filter((item) => itemDateKey(item) === dayDetailDate);
-    }, [calendarEvents, dayDetailDate]);
+        return calendarItems.filter((item) => itemDateKey(item) === dayDetailDate);
+    }, [calendarItems, dayDetailDate]);
 
-    // One renderer for every view: a compact, truncating chip in month/week/day
-    // and a labelled row in the agenda, so the three sources stay distinct and
-    // never overlap.
-    const renderEventContent = (arg) => {
-        const { event, view, timeText } = arg;
-        const sourceType = event.extendedProps.sourceType;
-        const meta = metaForSource(sourceType);
-        const { aggregated, count, net, currency, task } = event.extendedProps;
-
-        const title = aggregated ? `${count} transactions` : event.title;
-
-        if (view.type === "listMonth") {
-            let secondary = event.allDay ? "All-day" : timeText;
-            if (sourceType === "task" && task) {
-                secondary = [capitalize(task.priority), capitalize(task.status?.replace("_", " "))]
-                    .filter(Boolean)
-                    .join(" · ");
-            } else if (aggregated) {
-                secondary = `Net ${formatCompactCurrency(net, currency)}`;
-            }
-
-            return (
-                <div className="flex w-full items-center gap-2">
-                    <span
-                        className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${meta.badgeClass}`}
-                    >
-                        <meta.Icon className="h-3 w-3" />
-                        {meta.label}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate font-medium">{title}</span>
-                    {secondary && (
-                        <span className="shrink-0 text-xs text-light-muted dark:text-dark-muted">
-                            {secondary}
-                        </span>
-                    )}
-                </div>
-            );
-        }
-
+    // One compact chip renderer for every view: a per-source icon + optional time
+    // + a truncating label, so the sources stay visually distinct and never overflow.
+    const renderEvent = (item) => {
+        const meta = metaForSource(item.sourceType);
+        const { aggregated, count, net, currency } = item.extendedProps || {};
+        const title = aggregated ? `${count} transactions` : item.title;
+        const timeText = !item.allDay && item.start ? formatClock(item.start) : "";
         const label = aggregated ? `${count} · ${formatCompactCurrency(net, currency)}` : title;
         // Aggregated finance chips are cryptic on their own ("28 · -₱132.5K"),
         // so spell out what the numbers mean on hover/tap.
@@ -427,7 +394,7 @@ export default function Index({
         return (
             <div className="wv-ev-chip flex items-center gap-1 overflow-hidden" title={tooltip}>
                 <meta.Icon className="wv-ev-icon h-3 w-3 shrink-0" />
-                {!event.allDay && timeText && (
+                {timeText && (
                     <span className="shrink-0 text-[0.65rem] font-medium opacity-90">
                         {timeText}
                     </span>
@@ -438,9 +405,9 @@ export default function Index({
     };
 
     const viewOptions = [
-        ["dayGridMonth", "Month"],
-        ["timeGridWeek", "Week"],
-        ["timeGridDay", "Day"],
+        ["month", "Month"],
+        ["week", "Week"],
+        ["day", "Day"],
     ];
 
     return (
@@ -511,7 +478,7 @@ export default function Index({
                         <div className="flex items-center gap-1">
                             <button
                                 type="button"
-                                onClick={() => calendarRef.current?.getApi().prev()}
+                                onClick={() => setDate((current) => addPeriod(view, current, -1))}
                                 aria-label="Previous period"
                                 className="min-h-11 min-w-11 rounded-xl p-2 text-light-secondary hover:bg-light-hover dark:text-dark-secondary dark:hover:bg-dark-hover"
                             >
@@ -519,7 +486,7 @@ export default function Index({
                             </button>
                             <button
                                 type="button"
-                                onClick={() => calendarRef.current?.getApi().next()}
+                                onClick={() => setDate((current) => addPeriod(view, current, 1))}
                                 aria-label="Next period"
                                 className="min-h-11 min-w-11 rounded-xl p-2 text-light-secondary hover:bg-light-hover dark:text-dark-secondary dark:hover:bg-dark-hover"
                             >
@@ -527,7 +494,7 @@ export default function Index({
                             </button>
                             <button
                                 type="button"
-                                onClick={() => calendarRef.current?.getApi().today()}
+                                onClick={() => setDate(new Date())}
                                 className="btn-secondary min-h-11 text-sm"
                             >
                                 Today
@@ -606,49 +573,17 @@ export default function Index({
                             Updating calendar…
                         </div>
                     )}
-                    <FullCalendar
-                        ref={calendarRef}
-                        plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
-                        initialView={view}
-                        initialDate={currentDate}
-                        headerToolbar={false}
-                        events={calendarEvents}
-                        eventContent={renderEventContent}
-                        dayCellTopContent={(arg) =>
-                            arg.date.getDate() === 1
-                                ? `${arg.date.toLocaleDateString(undefined, { month: "short" })} 1`
-                                : arg.dayNumberText
-                        }
-                        datesSet={handleDatesSet}
-                        selectable
-                        selectMirror
-                        select={handleSelect}
-                        eventClick={handleEventClick}
-                        navLinks
-                        navLinkDayClick={(date) => viewDay(toDateString(date))}
-                        dateClick={handleDateClick}
-                        editable
-                        eventDrop={persistScheduleChange}
-                        eventResize={persistScheduleChange}
-                        dayMaxEvents={3}
-                        moreLinkClick={(arg) => {
-                            // Route "+N more" to our themed day panel instead of
-                            // FullCalendar's body-portaled popover (which our
-                            // .calendar-shell-scoped styles can't reach, so its
-                            // events overlap). "none" suppresses that popover.
-                            setDayDetailDate(toDateString(arg.date));
-                            setShowDayDetail(true);
-                            return "none";
-                        }}
-                        slotEventOverlap={false}
-                        nowIndicator
-                        allDaySlot
-                        slotMinTime="05:00:00"
-                        slotMaxTime="24:00:00"
-                        scrollTime="07:00:00"
-                        height="auto"
-                        eventTimeFormat={{ hour: "numeric", minute: "2-digit", meridiem: "short" }}
-                        noEventsContent="Nothing scheduled here yet."
+                    <WevieCalendar
+                        view={view}
+                        date={date}
+                        events={calendarItems}
+                        renderEvent={renderEvent}
+                        onRangeChange={handleRangeChange}
+                        onSelectEvent={handleSelectEvent}
+                        onSelectDay={handleSelectDay}
+                        onSelectSlot={handleSelectSlot}
+                        onMore={handleSelectDay}
+                        onNavLinkDay={viewDay}
                     />
                 </div>
             </div>
@@ -694,9 +629,9 @@ export default function Index({
                     setSelectedTask(task);
                     setShowTaskView(true);
                 }}
-                onOpenFinance={(date) => {
+                onOpenFinance={(financeDate) => {
                     setShowDayDetail(false);
-                    openTransactionsForDate(date);
+                    openTransactionsForDate(financeDate);
                 }}
                 onOpenMeal={(item) => {
                     setShowDayDetail(false);

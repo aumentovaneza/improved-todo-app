@@ -1,5 +1,6 @@
 import TodoLayout from "@/Layouts/TodoLayout";
-import { Head, Link, router, usePage } from "@inertiajs/react";
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from "@headlessui/react";
+import { Head, router } from "@inertiajs/react";
 import { useState, useEffect, useMemo } from "react";
 import {
     DndContext,
@@ -10,7 +11,6 @@ import {
     useSensors,
 } from "@dnd-kit/core";
 import {
-    arrayMove,
     SortableContext,
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
@@ -21,11 +21,6 @@ import {
     Plus,
     Search,
     Filter,
-    Calendar,
-    Clock,
-    CheckCircle,
-    Circle,
-    AlertTriangle,
     Edit,
     Trash2,
     GripVertical,
@@ -33,24 +28,18 @@ import {
     ListTodo,
     ChevronDown,
     ChevronRight,
-    Star,
-    User,
-    Tag as TagIcon,
     CalendarDays,
     Clock3,
     Flag,
     CheckSquare,
     Square,
-    Pause,
-    FolderOpen,
     List,
+    X,
 } from "lucide-react";
 import TaskModal from "@/Components/TaskModal";
 import TaskViewModal from "@/Components/TaskViewModal";
 import TaskEditModal from "@/Components/TaskEditModal";
-import TaskStatusSelect, {
-    TASK_STATUS_OPTIONS,
-} from "@/Components/TaskStatusSelect";
+import { TASK_STATUS_OPTIONS } from "@/Components/TaskStatusSelect";
 import TaskActionsMenu from "@/Components/TaskActionsMenu";
 import QuickSubtaskModal from "@/Components/QuickSubtaskModal";
 import Toast from "@/Components/Toast";
@@ -58,29 +47,37 @@ import OnboardingTour from "@/Components/OnboardingTour";
 import { tasksSteps } from "@/tours";
 import { toast } from "react-toastify";
 
+const PRIORITY_GROUP_ORDER = ["urgent", "high", "medium", "low"];
+const PRIORITY_GROUP_LABELS = {
+    urgent: "Focus",
+    high: "High",
+    medium: "Medium",
+    low: "Low",
+};
+const PRIORITY_GROUP_COLORS = {
+    urgent: "#F59E0B",
+    high: "#F97316",
+    medium: "#0EA5E9",
+    low: "#10B981",
+};
+
+const taskDateValue = (value) =>
+    value ? new Date(`${String(value).slice(0, 10)}T12:00:00`) : null;
+
 function SortableTask({
     task,
-    globalIndex,
-    getPriorityColor,
-    getStatusIcon,
     isOverdue,
     toggleTaskStatus,
-    onStatusChange,
     setSelectedTask,
     setShowViewModal,
     setShowEditModal,
     setShowSubtaskModal,
     handleDeleteTask,
+    reorderable,
 }) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: task.id.toString(),
+        disabled: !reorderable,
     });
 
     const style = {
@@ -134,8 +131,7 @@ function SortableTask({
                   {
                       label: "Open list",
                       icon: List,
-                      onClick: () =>
-                          router.visit(route("lists.show", task.lists[0].id)),
+                      onClick: () => router.visit(route("lists.show", task.lists[0].id)),
                   },
               ]
             : []),
@@ -158,23 +154,23 @@ function SortableTask({
             <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center">
                 {/* Drag Handle */}
                 <div className="flex w-full items-center space-x-3 min-w-0 flex-1">
-                    <div
-                        {...attributes}
-                        {...listeners}
-                        className="hidden sm:inline-flex text-light-muted hover:text-light-secondary dark:text-dark-muted dark:hover:text-dark-secondary cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Drag to reorder"
-                    >
-                        <GripVertical className="h-4 w-4" />
-                    </div>
+                    {reorderable && (
+                        <div
+                            {...attributes}
+                            {...listeners}
+                            className="hidden sm:inline-flex text-light-muted hover:text-light-secondary dark:text-dark-muted dark:hover:text-dark-secondary cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Drag to reorder"
+                        >
+                            <GripVertical className="h-4 w-4" />
+                        </div>
+                    )}
 
                     {/* Status Checkbox */}
                     <button
                         onClick={() => toggleTaskStatus(task)}
                         className="flex-shrink-0 transition-colors"
                         title={`Mark task as ${
-                            task.status === "completed"
-                                ? "pending"
-                                : "completed"
+                            task.status === "completed" ? "pending" : "completed"
                         }`}
                     >
                         {task.status === "completed" ? (
@@ -183,7 +179,6 @@ function SortableTask({
                             <Square className="h-5 w-5 text-slate-300 hover:text-emerald-500" />
                         )}
                     </button>
-
 
                     {/* Task Title */}
                     <div className="flex-1 min-w-0">
@@ -199,13 +194,10 @@ function SortableTask({
                             }`}
                             title={task.title}
                         >
-                            {task.title.length > 100 ? `${task.title.substring(0, 100)}...` : task.title}
+                            {task.title.length > 100
+                                ? `${task.title.substring(0, 100)}...`
+                                : task.title}
                         </button>
-                        {task.description && (
-                            <p className="text-xs text-light-muted dark:text-dark-muted truncate mt-1">
-                                {task.description}
-                            </p>
-                        )}
                     </div>
 
                     {/* Actions (mobile: pinned to the title row so it never wraps) */}
@@ -229,38 +221,37 @@ function SortableTask({
                         </span>
                     </div>
 
-                    {/* Status */}
-                    <div className="flex items-center space-x-2">
-                        <TaskStatusSelect
-                            task={task}
-                            onChange={onStatusChange}
-                        />
-                    </div>
-
                     {/* Priority */}
-                    <div className="flex items-center space-x-1" title={`Priority: ${task.priority}`}>
+                    <div
+                        className="flex items-center space-x-1"
+                        title={`Priority: ${task.priority}`}
+                    >
                         {getPriorityIcon(task.priority)}
                         <span className="text-xs text-light-muted dark:text-dark-muted hidden sm:inline">
                             {task.priority === "urgent"
                                 ? "Focus"
-                                : task.priority.charAt(0).toUpperCase() +
-                                  task.priority.slice(1)}
+                                : task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
                         </span>
                     </div>
 
                     {/* Due Date */}
                     {task.due_date && (
-                        <div className={`flex items-center space-x-1 ${
-                            isOverdue(task.due_date, task.status)
-                                ? "text-amber-600 dark:text-amber-200"
-                                : "text-light-muted dark:text-dark-muted"
-                        }`}>
+                        <div
+                            className={`flex items-center space-x-1 ${
+                                isOverdue(task.due_date, task.status)
+                                    ? "text-amber-600 dark:text-amber-200"
+                                    : "text-light-muted dark:text-dark-muted"
+                            }`}
+                        >
                             <CalendarDays className="h-4 w-4" />
                             <span className="text-xs hidden sm:inline">
-                                {new Date(task.due_date).toLocaleDateString()}
+                                {taskDateValue(task.due_date).toLocaleDateString()}
                             </span>
                             <span className="text-xs sm:hidden">
-                                {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                {taskDateValue(task.due_date).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                })}
                             </span>
                         </div>
                     )}
@@ -304,63 +295,6 @@ function SortableTask({
                         </div>
                     )}
 
-                    {/* Subtasks */}
-                    {task.subtasks_count > 0 && (
-                        <div className="flex items-center space-x-1 text-light-muted dark:text-dark-muted">
-                            <ListTodo className="h-4 w-4" />
-                            <span className="text-xs">
-                                {task.completed_subtasks_count || 0}/{task.subtasks_count || 0}
-                            </span>
-                        </div>
-                    )}
-
-                    {/* Tags */}
-                    {task.tags && task.tags.length > 0 && (
-                        <div className="hidden sm:flex items-center space-x-1">
-                            <TagIcon className="h-4 w-4 text-light-muted dark:text-dark-muted" />
-                            <div className="flex space-x-1">
-                                {task.tags.slice(0, 2).map((tag) => (
-                                    <span
-                                        key={tag.id}
-                                        className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium text-white"
-                                        style={{ backgroundColor: tag.color }}
-                                    >
-                                        {tag.name}
-                                    </span>
-                                ))}
-                                {task.tags.length > 2 && (
-                                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                                        +{task.tags.length - 2}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Lists */}
-                    {task.lists && task.lists.length > 0 && (
-                        <div className="hidden sm:flex items-center space-x-1">
-                            <List className="h-4 w-4 text-light-muted dark:text-dark-muted" />
-                            <div className="flex space-x-1">
-                                {task.lists.slice(0, 2).map((list) => (
-                                    <span
-                                        key={list.id}
-                                        className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium text-white"
-                                        style={{ backgroundColor: list.color }}
-                                        title={list.name}
-                                    >
-                                        {list.name}
-                                    </span>
-                                ))}
-                                {task.lists.length > 2 && (
-                                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                                        +{task.lists.length - 2}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
                     {/* Actions (desktop: hover-reveal at the end of the meta row) */}
                     <div className="hidden opacity-100 transition-opacity focus-within:opacity-100 sm:block sm:opacity-0 sm:group-hover:opacity-100">
                         <TaskActionsMenu items={actionItems} />
@@ -371,20 +305,22 @@ function SortableTask({
     );
 }
 
-export default function Index({ tasks = [], categories, tags = [], lists = [], filters }) {
+export default function Index({
+    tasks = [],
+    categories = [],
+    tags = [],
+    lists = [],
+    filters = {},
+    view = "today",
+    taskCounts = {},
+    today = null,
+}) {
     const [allTasks, setAllTasks] = useState([]);
     const [search, setSearch] = useState(filters.search || "");
-    const [statusFilter, setStatusFilter] = useState(filters.status || "");
-    const [priorityFilter, setPriorityFilter] = useState(
-        filters.priority || ""
-    );
-    const [categoryFilter, setCategoryFilter] = useState(
-        filters.category_id || ""
-    );
+    const [priorityFilter, setPriorityFilter] = useState(filters.priority || "");
+    const [categoryFilter, setCategoryFilter] = useState(filters.category_id || "");
     const [tagFilter, setTagFilter] = useState(filters.tag_id || "");
-    const [dueDateFilter, setDueDateFilter] = useState(
-        filters.due_date_filter || ""
-    );
+    const [dueDateFilter, setDueDateFilter] = useState(filters.due_date_filter || "");
     const [showFilters, setShowFilters] = useState(false);
     const [groupBy, setGroupBy] = useState(() => {
         if (typeof window !== "undefined") {
@@ -400,6 +336,13 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
     const [selectedTask, setSelectedTask] = useState(null);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [isTaskSubmitting, setIsTaskSubmitting] = useState(false);
+    const [needsAttentionOpen, setNeedsAttentionOpen] = useState(false);
+
+    const currentView = view || "today";
+    const now = new Date();
+    const todayKey =
+        today ||
+        `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
     // Load the full task set from props (already ordered and eager-loaded server-side)
     useEffect(() => {
@@ -425,74 +368,16 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
         });
     };
 
-    // Handle quick add task for specific category
-    const handleQuickAddTask = (categoryId, event) => {
-        event.stopPropagation();
-        setSelectedCategory(categoryId);
-        setShowTaskModal(true);
-    };
-
-    // Handle task status change
-    const handleTaskStatusChange = (task, newStatus) => {
-        // Optimistically update the task status in the UI
-        setAllTasks(
-            allTasks.map((t) =>
-                t.id === task.id
-                    ? {
-                          ...t,
-                          status: newStatus,
-                          completed_at:
-                              newStatus === "completed"
-                                  ? new Date().toISOString()
-                                  : null,
-                      }
-                    : t
-            )
-        );
-
-        // Send the status change to the server
-        router.post(
-            route("tasks.toggle-status", task.id),
-            { status: newStatus },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                    toast.success("Status updated gently.");
-                },
-                onError: () => {
-                    // Revert the optimistic update on error
-                    setAllTasks(
-                        allTasks.map((t) =>
-                            t.id === task.id ? task : t
-                        )
-                    );
-                    toast.error(
-                        "We couldn’t update that just now. Try again when you’re ready."
-                    );
-                },
-            }
-        );
-    };
-
     // Handle task updates from modals
     const handleTaskUpdate = (updatedTask) => {
         setSelectedTask(updatedTask);
         // Also update the task in the all tasks list
-        setAllTasks(
-            allTasks.map((t) =>
-                t.id === updatedTask.id ? updatedTask : t
-            )
-        );
+        setAllTasks(allTasks.map((t) => (t.id === updatedTask.id ? updatedTask : t)));
     };
 
     // Handle task deletion
     const handleDeleteTask = (task) => {
-        if (
-            !confirm(
-                `Remove "${task.title}"? You can add it again anytime.`
-            )
-        ) {
+        if (!confirm(`Remove "${task.title}"? You can add it again anytime.`)) {
             return;
         }
 
@@ -511,9 +396,7 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
             onError: () => {
                 // Revert to original state on error
                 setAllTasks(originalTasks);
-                toast.error(
-                    "We couldn’t remove that just now. Please try again."
-                );
+                toast.error("We couldn’t remove that just now. Please try again.");
             },
         });
     };
@@ -532,12 +415,8 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
             return;
         }
 
-        const activeIndex = allTasks.findIndex(
-            (task) => task.id.toString() === active.id
-        );
-        const overIndex = allTasks.findIndex(
-            (task) => task.id.toString() === over.id
-        );
+        const activeIndex = allTasks.findIndex((task) => task.id.toString() === active.id);
+        const overIndex = allTasks.findIndex((task) => task.id.toString() === over.id);
 
         if (activeIndex === -1 || overIndex === -1) {
             return;
@@ -547,10 +426,7 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
         const overTask = allTasks[overIndex];
 
         // Only allow reordering within the same status and priority group
-        if (
-            activeTask.status !== overTask.status ||
-            activeTask.priority !== overTask.priority
-        ) {
+        if (activeTask.status !== overTask.status || activeTask.priority !== overTask.priority) {
             return;
         }
 
@@ -582,9 +458,7 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
             .catch(() => {
                 // Revert to original state on error
                 setAllTasks(originalTasks);
-                toast.error(
-                    "We couldn’t reorder that just now. Please try again."
-                );
+                toast.error("We couldn’t reorder that just now. Please try again.");
             });
     };
 
@@ -593,8 +467,8 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
         router.get(
             route("tasks.index"),
             {
+                view: currentView,
                 search: value,
-                status: statusFilter,
                 priority: priorityFilter,
                 category_id: categoryFilter,
                 tag_id: tagFilter,
@@ -608,16 +482,12 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
     };
 
     const handleFilter = (type, value) => {
-        let newStatusFilter = statusFilter;
         let newPriorityFilter = priorityFilter;
         let newCategoryFilter = categoryFilter;
         let newTagFilter = tagFilter;
         let newDueDateFilter = dueDateFilter;
 
         switch (type) {
-            case "status":
-                newStatusFilter = value;
-                break;
             case "priority":
                 newPriorityFilter = value;
                 break;
@@ -632,7 +502,6 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
                 break;
         }
 
-        setStatusFilter(newStatusFilter);
         setPriorityFilter(newPriorityFilter);
         setCategoryFilter(newCategoryFilter);
         setTagFilter(newTagFilter);
@@ -641,8 +510,8 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
         router.get(
             route("tasks.index"),
             {
+                view: currentView,
                 search,
-                status: newStatusFilter,
                 priority: newPriorityFilter,
                 category_id: newCategoryFilter,
                 tag_id: newTagFilter,
@@ -655,40 +524,41 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
         );
     };
 
-    const getPriorityColor = (priority) => {
-        switch (priority) {
-            case "urgent":
-                return "text-amber-700 bg-amber-100/70 dark:text-amber-200 dark:bg-amber-900/20";
-            case "high":
-                return "text-orange-700 bg-orange-100/70 dark:text-orange-200 dark:bg-orange-900/20";
-            case "medium":
-                return "text-sky-700 bg-sky-100/70 dark:text-sky-200 dark:bg-sky-900/20";
-            case "low":
-                return "text-emerald-700 bg-emerald-100/70 dark:text-emerald-200 dark:bg-emerald-900/20";
-            default:
-                return "text-slate-600 bg-slate-100/70 dark:text-slate-300 dark:bg-slate-800/40";
-        }
+    const navigateView = (nextView) => {
+        router.get(
+            route("tasks.index"),
+            {
+                view: nextView,
+                search,
+                priority: priorityFilter,
+                category_id: categoryFilter,
+                tag_id: tagFilter,
+                due_date_filter: dueDateFilter,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+            }
+        );
     };
 
-    const getStatusIcon = (status) => {
-        switch (status) {
-            case "completed":
-                return <CheckCircle className="h-5 w-5 text-emerald-500" />;
-            case "in_progress":
-                return <Clock className="h-5 w-5 text-sky-500" />;
-            case "cancelled":
-                return <AlertTriangle className="h-5 w-5 text-slate-400" />;
-            default:
-                return <Circle className="h-5 w-5 text-amber-500" />;
-        }
+    const clearFilters = () => {
+        setPriorityFilter("");
+        setCategoryFilter("");
+        setTagFilter("");
+        setDueDateFilter("");
+
+        router.get(
+            route("tasks.index"),
+            { view: currentView, search },
+            { preserveState: true, preserveScroll: true, replace: true }
+        );
     };
 
     const isOverdue = (dueDate, status) => {
         if (!dueDate || status === "completed") return false;
-        return (
-            new Date(dueDate) < new Date() &&
-            new Date(dueDate).toDateString() !== new Date().toDateString()
-        );
+        return String(dueDate).slice(0, 10) < todayKey;
     };
 
     const toggleTaskStatus = (task) => {
@@ -701,10 +571,7 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
                     ? {
                           ...t,
                           status: newStatus,
-                          completed_at:
-                              newStatus === "completed"
-                                  ? new Date().toISOString()
-                                  : null,
+                          completed_at: newStatus === "completed" ? new Date().toISOString() : null,
                       }
                     : t
             )
@@ -725,8 +592,7 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
                 },
                 onError: () => {
                     // Revert changes on error
-                    const revertStatus =
-                        newStatus === "completed" ? "pending" : "completed";
+                    const revertStatus = newStatus === "completed" ? "pending" : "completed";
                     setAllTasks(
                         allTasks.map((t) =>
                             t.id === task.id
@@ -741,9 +607,7 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
                                 : t
                         )
                     );
-                    toast.error(
-                        "We couldn’t update that just now. Try again when you’re ready."
-                    );
+                    toast.error("We couldn’t update that just now. Try again when you’re ready.");
                 },
             }
         );
@@ -752,15 +616,11 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
     // Bucket a task's due date into a coarse time window for date grouping
     const getDueBucket = (task) => {
         if (!task.due_date) return "none";
-        const due = new Date(task.due_date);
+        const due = taskDateValue(task.due_date);
         if (Number.isNaN(due.getTime())) return "none";
 
         const now = new Date();
-        const startOfToday = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate()
-        );
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const startOfTomorrow = new Date(startOfToday);
         startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
         const startOfDayAfter = new Date(startOfToday);
@@ -773,20 +633,6 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
         if (due < startOfDayAfter) return "tomorrow";
         if (due < startOfNextWeek) return "this_week";
         return "later";
-    };
-
-    const priorityGroupOrder = ["urgent", "high", "medium", "low"];
-    const priorityGroupLabels = {
-        urgent: "Focus",
-        high: "High",
-        medium: "Medium",
-        low: "Low",
-    };
-    const priorityGroupColors = {
-        urgent: "#F59E0B",
-        high: "#F97316",
-        medium: "#0EA5E9",
-        low: "#10B981",
     };
 
     // Build the visible sections from the flat task list based on groupBy.
@@ -811,9 +657,7 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
                 }
                 map.get(key).tasks.push(task);
             });
-            return Array.from(map.values()).sort((a, b) =>
-                a.label.localeCompare(b.label)
-            );
+            return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
         }
 
         if (groupBy === "tag") {
@@ -843,9 +687,7 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
                     map.get(tag.id).tasks.push(task);
                 });
             });
-            const groups = Array.from(map.values()).sort((a, b) =>
-                a.label.localeCompare(b.label)
-            );
+            const groups = Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
             if (untagged.tasks.length) groups.push(untagged);
             return groups;
         }
@@ -857,16 +699,14 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
                 if (!map.has(key)) {
                     map.set(key, {
                         key: `priority-${key}`,
-                        label: priorityGroupLabels[key] || "No priority",
-                        color: priorityGroupColors[key] || "#6B7280",
+                        label: PRIORITY_GROUP_LABELS[key] || "No priority",
+                        color: PRIORITY_GROUP_COLORS[key] || "#6B7280",
                         tasks: [],
                     });
                 }
                 map.get(key).tasks.push(task);
             });
-            const ordered = priorityGroupOrder
-                .filter((p) => map.has(p))
-                .map((p) => map.get(p));
+            const ordered = PRIORITY_GROUP_ORDER.filter((p) => map.has(p)).map((p) => map.get(p));
             if (map.has("none")) ordered.push(map.get("none"));
             return ordered;
         }
@@ -932,9 +772,9 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
                 const key = buckets.has(task.status) ? task.status : "pending";
                 buckets.get(key).tasks.push(task);
             });
-            return TASK_STATUS_OPTIONS.map((option) =>
-                buckets.get(option.value)
-            ).filter((bucket) => bucket.tasks.length);
+            return TASK_STATUS_OPTIONS.map((option) => buckets.get(option.value)).filter(
+                (bucket) => bucket.tasks.length
+            );
         }
 
         return [{ key: "all", label: null, color: null, tasks: allTasks }];
@@ -942,38 +782,72 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
 
     // Render a drag-reorderable list of tasks. Each group gets its own
     // DndContext so reordering stays within a group.
-    const renderTaskList = (tasks) => (
+    const renderTaskList = (tasks, reorderable = currentView === "all") => (
         <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
+            onDragEnd={reorderable ? handleDragEnd : undefined}
         >
             <SortableContext
                 items={tasks.map((task) => task.id.toString())}
                 strategy={verticalListSortingStrategy}
             >
                 <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                    {tasks.map((task, index) => (
+                    {tasks.map((task) => (
                         <SortableTask
                             key={task.id}
                             task={task}
-                            globalIndex={index}
-                            getPriorityColor={getPriorityColor}
-                            getStatusIcon={getStatusIcon}
                             isOverdue={isOverdue}
                             toggleTaskStatus={toggleTaskStatus}
-                            onStatusChange={handleTaskStatusChange}
                             setSelectedTask={setSelectedTask}
                             setShowViewModal={setShowViewModal}
                             setShowEditModal={setShowEditModal}
                             setShowSubtaskModal={setShowSubtaskModal}
                             handleDeleteTask={handleDeleteTask}
+                            reorderable={reorderable}
                         />
                     ))}
                 </div>
             </SortableContext>
         </DndContext>
     );
+
+    const focusViews = [
+        { value: "today", label: "Today" },
+        { value: "upcoming", label: "Upcoming" },
+        { value: "inbox", label: "Inbox" },
+        { value: "all", label: "All" },
+        { value: "completed", label: "Completed" },
+    ];
+    const activeFilters = [
+        priorityFilter && {
+            type: "priority",
+            label: `Priority: ${priorityFilter === "urgent" ? "Focus" : priorityFilter}`,
+        },
+        categoryFilter && {
+            type: "category",
+            label: `Category: ${categories.find((category) => String(category.id) === String(categoryFilter))?.name || "Selected"}`,
+        },
+        tagFilter && {
+            type: "tag",
+            label: `Tag: ${tags.find((tag) => String(tag.id) === String(tagFilter))?.name || "Selected"}`,
+        },
+        dueDateFilter && {
+            type: "due_date",
+            label: `Date: ${dueDateFilter.replaceAll("_", " ")}`,
+        },
+    ].filter(Boolean);
+    const needsAttentionTasks =
+        currentView === "today"
+            ? allTasks.filter(
+                  (task) => task.due_date && String(task.due_date).slice(0, 10) < todayKey
+              )
+            : [];
+    const todayTasks =
+        currentView === "today"
+            ? allTasks.filter((task) => String(task.due_date).slice(0, 10) === todayKey)
+            : allTasks;
+    const viewLabel = focusViews.find((item) => item.value === currentView)?.label || "Tasks";
 
     return (
         <TodoLayout
@@ -992,11 +866,7 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
                             onClick={() => setShowTaskModal(true)}
                             disabled={isTaskSubmitting}
                             className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-wevie-teal to-wevie-mint border border-transparent rounded-xl font-medium text-sm text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wevie-teal/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            title={
-                                isTaskSubmitting
-                                    ? "Saving your task..."
-                                    : "Create a new task"
-                            }
+                            title={isTaskSubmitting ? "Saving your task..." : "Create a new task"}
                         >
                             <Plus className="mr-2 h-4 w-4" />
                             New task
@@ -1008,6 +878,40 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
             <Head title="Tasks" />
 
             <div className="space-y-6">
+                <nav
+                    aria-label="Task views"
+                    data-tour="tasks-views"
+                    className="flex gap-1 overflow-x-auto rounded-2xl border border-light-border/70 bg-white p-1.5 dark:border-dark-border/70 dark:bg-dark-card"
+                >
+                    {focusViews.map((item) => {
+                        const isActive = currentView === item.value;
+                        return (
+                            <button
+                                key={item.value}
+                                type="button"
+                                onClick={() => navigateView(item.value)}
+                                aria-current={isActive ? "page" : undefined}
+                                className={`inline-flex min-w-max items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-wevie-teal/40 ${
+                                    isActive
+                                        ? "bg-wevie-teal/10 text-wevie-teal dark:bg-wevie-mint/10 dark:text-wevie-mint"
+                                        : "text-light-secondary hover:bg-light-hover dark:text-dark-secondary dark:hover:bg-dark-hover"
+                                }`}
+                            >
+                                {item.label}
+                                <span
+                                    className={`rounded-full px-2 py-0.5 text-xs ${
+                                        isActive
+                                            ? "bg-wevie-teal/15 dark:bg-wevie-mint/15"
+                                            : "bg-light-hover text-light-muted dark:bg-dark-hover dark:text-dark-muted"
+                                    }`}
+                                >
+                                    {taskCounts[item.value] ?? 0}
+                                </span>
+                            </button>
+                        );
+                    })}
+                </nav>
+
                 {/* Search and Filters */}
                 <div className="card" data-tour="tasks-filters">
                     <div className="p-4 border-b border-light-border/70 dark:border-dark-border/70">
@@ -1020,9 +924,7 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
                                         type="text"
                                         placeholder="Search by title or notes..."
                                         value={search}
-                                        onChange={(e) =>
-                                            handleSearch(e.target.value)
-                                        }
+                                        onChange={(e) => handleSearch(e.target.value)}
                                         className="w-full pl-10 pr-4 py-2.5 border border-light-border/70 dark:border-dark-border/70 rounded-xl focus:ring-2 focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary text-sm"
                                     />
                                 </div>
@@ -1032,128 +934,186 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
                                 className={`inline-flex items-center justify-center px-4 py-2.5 border rounded-xl text-sm font-medium transition-colors ${
-                                    showFilters || statusFilter || priorityFilter || categoryFilter || tagFilter || dueDateFilter
+                                    showFilters ||
+                                    priorityFilter ||
+                                    categoryFilter ||
+                                    tagFilter ||
+                                    dueDateFilter
                                         ? "bg-wevie-teal/10 border-wevie-teal/30 text-wevie-text-primary dark:bg-wevie-teal/10 dark:border-wevie-teal/30 dark:text-wevie-dark-text-primary"
                                         : "bg-white dark:bg-dark-card border-light-border/70 dark:border-dark-border/70 text-light-secondary dark:text-dark-secondary hover:bg-light-hover dark:hover:bg-dark-hover"
                                 }`}
                             >
                                 <Filter className="mr-2 h-4 w-4" />
                                 Filters
-                                {(statusFilter || priorityFilter || categoryFilter || tagFilter || dueDateFilter) && (
+                                {(priorityFilter ||
+                                    categoryFilter ||
+                                    tagFilter ||
+                                    dueDateFilter) && (
                                     <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-wevie-teal/20 text-wevie-text-primary dark:bg-wevie-teal/20 dark:text-wevie-dark-text-primary">
-                                        {[statusFilter, priorityFilter, categoryFilter, tagFilter, dueDateFilter].filter(Boolean).length}
+                                        {
+                                            [
+                                                priorityFilter,
+                                                categoryFilter,
+                                                tagFilter,
+                                                dueDateFilter,
+                                            ].filter(Boolean).length
+                                        }
                                     </span>
                                 )}
                             </button>
                         </div>
 
                         {/* Filter Options */}
-                        {showFilters && (
-                            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {/* Status Filter */}
-                                <div>
-                                    <label className="block text-sm font-medium text-light-secondary dark:text-dark-secondary mb-2">
-                                        Status
-                                    </label>
-                                    <select
-                                        value={statusFilter}
-                                        onChange={(e) =>
-                                            handleFilter("status", e.target.value)
-                                        }
-                                        className="block w-full border border-light-border/70 dark:border-dark-border/70 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
-                                    >
-                                        <option value="">All statuses</option>
-                                        <option value="pending">Ready</option>
-                                        <option value="in_progress">In Progress</option>
-                                        <option value="completed">Completed</option>
-                                        <option value="cancelled">Paused</option>
-                                    </select>
-                                </div>
-
-                                {/* Priority Filter */}
-                                <div>
-                                    <label className="block text-sm font-medium text-light-secondary dark:text-dark-secondary mb-2">
-                                        Priority
-                                    </label>
-                                    <select
-                                        value={priorityFilter}
-                                        onChange={(e) =>
-                                            handleFilter("priority", e.target.value)
-                                        }
-                                        className="block w-full border border-light-border/70 dark:border-dark-border/70 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
-                                    >
-                                        <option value="">All priorities</option>
-                                        <option value="low">Low</option>
-                                        <option value="medium">Medium</option>
-                                        <option value="high">High</option>
-                                        <option value="urgent">Focus</option>
-                                    </select>
-                                </div>
-
-                                {/* Category Filter */}
-                                <div>
-                                    <label className="block text-sm font-medium text-light-secondary dark:text-dark-secondary mb-2">
-                                        Category
-                                    </label>
-                                    <select
-                                        value={categoryFilter}
-                                        onChange={(e) =>
-                                            handleFilter("category", e.target.value)
-                                        }
-                                        className="block w-full border border-light-border/70 dark:border-dark-border/70 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
-                                    >
-                                        <option value="">All categories</option>
-                                        {categories.map((category) => (
-                                            <option
-                                                key={category.id}
-                                                value={category.id}
+                        <Dialog
+                            open={showFilters}
+                            onClose={setShowFilters}
+                            className="relative z-50"
+                        >
+                            <DialogBackdrop className="fixed inset-0 bg-slate-950/35 backdrop-blur-[1px]" />
+                            <div className="fixed inset-0 flex justify-end">
+                                <DialogPanel className="relative flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-light-border bg-light-card shadow-2xl dark:border-dark-border dark:bg-dark-card">
+                                    <div className="sticky top-0 z-10 flex items-center justify-between border-b border-light-border bg-light-card px-5 py-4 dark:border-dark-border dark:bg-dark-card">
+                                        <div>
+                                            <DialogTitle className="font-semibold text-light-primary dark:text-dark-primary">
+                                                Filters
+                                            </DialogTitle>
+                                            <p className="mt-0.5 text-xs text-light-muted dark:text-dark-muted">
+                                                Narrow this view without losing your place.
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowFilters(false)}
+                                            aria-label="Close filters"
+                                            className="rounded-xl p-2 text-light-muted hover:bg-light-hover dark:text-dark-muted dark:hover:bg-dark-hover"
+                                        >
+                                            <X className="h-5 w-5" />
+                                        </button>
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2">
+                                        {/* Priority Filter */}
+                                        <div>
+                                            <label
+                                                htmlFor="task-priority-filter"
+                                                className="block text-sm font-medium text-light-secondary dark:text-dark-secondary mb-2"
                                             >
-                                                {category.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                                                Priority
+                                            </label>
+                                            <select
+                                                id="task-priority-filter"
+                                                value={priorityFilter}
+                                                onChange={(e) =>
+                                                    handleFilter("priority", e.target.value)
+                                                }
+                                                className="block w-full border border-light-border/70 dark:border-dark-border/70 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
+                                            >
+                                                <option value="">All priorities</option>
+                                                <option value="low">Low</option>
+                                                <option value="medium">Medium</option>
+                                                <option value="high">High</option>
+                                                <option value="urgent">Focus</option>
+                                            </select>
+                                        </div>
 
-                                {/* Tag Filter */}
-                                <div>
-                                    <label className="block text-sm font-medium text-light-secondary dark:text-dark-secondary mb-2">
-                                        Tag
-                                    </label>
-                                    <select
-                                        value={tagFilter}
-                                        onChange={(e) =>
-                                            handleFilter("tag", e.target.value)
-                                        }
-                                        className="block w-full border border-light-border/70 dark:border-dark-border/70 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
-                                    >
-                                        <option value="">All tags</option>
-                                        {tags.map((tag) => (
-                                            <option key={tag.id} value={tag.id}>
-                                                {tag.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                                        {/* Category Filter */}
+                                        <div>
+                                            <label
+                                                htmlFor="task-category-filter"
+                                                className="block text-sm font-medium text-light-secondary dark:text-dark-secondary mb-2"
+                                            >
+                                                Category
+                                            </label>
+                                            <select
+                                                id="task-category-filter"
+                                                value={categoryFilter}
+                                                onChange={(e) =>
+                                                    handleFilter("category", e.target.value)
+                                                }
+                                                className="block w-full border border-light-border/70 dark:border-dark-border/70 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
+                                            >
+                                                <option value="">All categories</option>
+                                                {categories.map((category) => (
+                                                    <option key={category.id} value={category.id}>
+                                                        {category.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
 
-                                {/* Due Date Filter */}
-                                <div>
-                                    <label className="block text-sm font-medium text-light-secondary dark:text-dark-secondary mb-2">
-                                        Due date
-                                    </label>
-                                    <select
-                                        value={dueDateFilter}
-                                        onChange={(e) =>
-                                            handleFilter("due_date", e.target.value)
-                                        }
-                                        className="block w-full border border-light-border/70 dark:border-dark-border/70 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
+                                        {/* Tag Filter */}
+                                        <div>
+                                            <label
+                                                htmlFor="task-tag-filter"
+                                                className="block text-sm font-medium text-light-secondary dark:text-dark-secondary mb-2"
+                                            >
+                                                Tag
+                                            </label>
+                                            <select
+                                                id="task-tag-filter"
+                                                value={tagFilter}
+                                                onChange={(e) =>
+                                                    handleFilter("tag", e.target.value)
+                                                }
+                                                className="block w-full border border-light-border/70 dark:border-dark-border/70 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
+                                            >
+                                                <option value="">All tags</option>
+                                                {tags.map((tag) => (
+                                                    <option key={tag.id} value={tag.id}>
+                                                        {tag.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Due Date Filter */}
+                                        <div>
+                                            <label
+                                                htmlFor="task-date-filter"
+                                                className="block text-sm font-medium text-light-secondary dark:text-dark-secondary mb-2"
+                                            >
+                                                Due date
+                                            </label>
+                                            <select
+                                                id="task-date-filter"
+                                                value={dueDateFilter}
+                                                onChange={(e) =>
+                                                    handleFilter("due_date", e.target.value)
+                                                }
+                                                className="block w-full border border-light-border/70 dark:border-dark-border/70 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
+                                            >
+                                                <option value="">All dates</option>
+                                                <option value="today">Today</option>
+                                                <option value="tomorrow">Tomorrow</option>
+                                                <option value="this_week">This week</option>
+                                                <option value="overdue">Needs attention</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </DialogPanel>
+                            </div>
+                        </Dialog>
+
+                        {activeFilters.length > 0 && (
+                            <div className="mt-4 flex flex-wrap items-center gap-2">
+                                {activeFilters.map((filter) => (
+                                    <button
+                                        key={filter.type}
+                                        type="button"
+                                        onClick={() => handleFilter(filter.type, "")}
+                                        className="inline-flex items-center gap-1.5 rounded-full bg-wevie-teal/10 px-3 py-1.5 text-xs font-medium capitalize text-wevie-teal hover:bg-wevie-teal/15 focus:outline-none focus:ring-2 focus:ring-wevie-teal/40 dark:bg-wevie-mint/10 dark:text-wevie-mint"
+                                        title={`Remove ${filter.label} filter`}
                                     >
-                                        <option value="">All dates</option>
-                                        <option value="today">Today</option>
-                                        <option value="tomorrow">Tomorrow</option>
-                                        <option value="this_week">This week</option>
-                                        <option value="overdue">Needs attention</option>
-                                    </select>
-                                </div>
+                                        {filter.label}
+                                        <X className="h-3.5 w-3.5" />
+                                    </button>
+                                ))}
+                                <button
+                                    type="button"
+                                    onClick={clearFilters}
+                                    className="px-2 py-1.5 text-xs font-medium text-light-muted hover:text-light-primary dark:text-dark-muted dark:hover:text-dark-primary"
+                                >
+                                    Clear all
+                                </button>
                             </div>
                         )}
                     </div>
@@ -1166,36 +1126,38 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
                         <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-4">
                                 <h3 className="text-sm font-medium text-light-secondary dark:text-dark-secondary">
-                                    All Tasks ({allTasks.length})
+                                    {viewLabel} ({allTasks.length})
                                 </h3>
                             </div>
                             <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-2">
-                                    <label
-                                        htmlFor="group-by"
-                                        className="text-xs font-medium text-light-secondary dark:text-dark-secondary whitespace-nowrap"
-                                    >
-                                        Group by
-                                    </label>
-                                    <select
-                                        id="group-by"
-                                        value={groupBy}
-                                        onChange={(e) =>
-                                            setGroupBy(e.target.value)
-                                        }
-                                        className="border border-light-border/70 dark:border-dark-border/70 rounded-lg pl-2.5 pr-8 py-1.5 text-xs focus:ring-2 focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
-                                    >
-                                        <option value="none">None</option>
-                                        <option value="category">Category</option>
-                                        <option value="tag">Tag</option>
-                                        <option value="due_date">Due date</option>
-                                        <option value="priority">Priority</option>
-                                        <option value="status">Status</option>
-                                    </select>
-                                </div>
-                                <span className="hidden lg:inline text-xs text-light-muted dark:text-dark-muted">
-                                    Drag to reorder • Tap a task to see details
-                                </span>
+                                {currentView === "all" && (
+                                    <>
+                                        <div className="flex items-center gap-2">
+                                            <label
+                                                htmlFor="group-by"
+                                                className="text-xs font-medium text-light-secondary dark:text-dark-secondary whitespace-nowrap"
+                                            >
+                                                Group by
+                                            </label>
+                                            <select
+                                                id="group-by"
+                                                value={groupBy}
+                                                onChange={(e) => setGroupBy(e.target.value)}
+                                                className="border border-light-border/70 dark:border-dark-border/70 rounded-lg pl-2.5 pr-8 py-1.5 text-xs focus:ring-2 focus:ring-wevie-teal/40 focus:border-wevie-teal dark:bg-dark-card dark:text-dark-primary"
+                                            >
+                                                <option value="none">None</option>
+                                                <option value="category">Category</option>
+                                                <option value="tag">Tag</option>
+                                                <option value="due_date">Due date</option>
+                                                <option value="priority">Priority</option>
+                                                <option value="status">Status</option>
+                                            </select>
+                                        </div>
+                                        <span className="hidden lg:inline text-xs text-light-muted dark:text-dark-muted">
+                                            Drag to reorder • Tap a task to see details
+                                        </span>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -1211,7 +1173,6 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
                             </h3>
                             <p className="text-light-muted dark:text-dark-muted mb-6 max-w-md mx-auto">
                                 {search ||
-                                statusFilter ||
                                 priorityFilter ||
                                 categoryFilter ||
                                 tagFilter ||
@@ -1220,7 +1181,6 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
                                     : "Start with one small task when you’re ready."}
                             </p>
                             {!search &&
-                                !statusFilter &&
                                 !priorityFilter &&
                                 !categoryFilter &&
                                 !tagFilter &&
@@ -1235,21 +1195,57 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
                                     </button>
                                 )}
                         </div>
-                    ) : groupBy === "none" ? (
+                    ) : currentView === "today" ? (
+                        <div>
+                            {needsAttentionTasks.length > 0 && (
+                                <div className="border-b border-light-border/70 dark:border-dark-border/70">
+                                    <button
+                                        type="button"
+                                        onClick={() => setNeedsAttentionOpen(!needsAttentionOpen)}
+                                        className="flex w-full items-center gap-2 bg-amber-50/60 px-4 py-3 text-left transition-colors hover:bg-amber-50 dark:bg-amber-950/10 dark:hover:bg-amber-950/20"
+                                        aria-expanded={needsAttentionOpen}
+                                    >
+                                        {needsAttentionOpen ? (
+                                            <ChevronDown className="h-4 w-4 text-amber-600 dark:text-amber-300" />
+                                        ) : (
+                                            <ChevronRight className="h-4 w-4 text-amber-600 dark:text-amber-300" />
+                                        )}
+                                        <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                                            Needs attention
+                                        </span>
+                                        <span className="text-xs text-amber-700 dark:text-amber-300">
+                                            {needsAttentionTasks.length}
+                                        </span>
+                                    </button>
+                                    {needsAttentionOpen &&
+                                        renderTaskList(needsAttentionTasks, false)}
+                                </div>
+                            )}
+                            {todayTasks.length > 0 ? (
+                                renderTaskList(todayTasks, false)
+                            ) : (
+                                <div className="p-10 text-center">
+                                    <CheckSquare className="mx-auto mb-3 h-12 w-12 text-light-muted dark:text-dark-muted" />
+                                    <h3 className="text-base font-medium text-light-primary dark:text-dark-primary">
+                                        Today is clear
+                                    </h3>
+                                    <p className="mt-1 text-sm text-light-muted dark:text-dark-muted">
+                                        Add one task if something needs your focus.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    ) : currentView !== "all" || groupBy === "none" ? (
                         renderTaskList(allTasks)
                     ) : (
                         <div className="divide-y divide-light-border/70 dark:divide-dark-border/70">
                             {taskGroups.map((group) => {
-                                const isCollapsed = collapsedGroups.has(
-                                    group.key
-                                );
+                                const isCollapsed = collapsedGroups.has(group.key);
                                 return (
                                     <div key={group.key}>
                                         <button
                                             type="button"
-                                            onClick={() =>
-                                                toggleGroupCollapse(group.key)
-                                            }
+                                            onClick={() => toggleGroupCollapse(group.key)}
                                             className="w-full flex items-center gap-2 px-4 py-2.5 bg-light-hover dark:bg-dark-hover hover:bg-light-border/40 dark:hover:bg-dark-border/40 transition-colors text-left"
                                         >
                                             {isCollapsed ? (
@@ -1261,8 +1257,7 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
                                                 <span
                                                     className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                                                     style={{
-                                                        backgroundColor:
-                                                            group.color,
+                                                        backgroundColor: group.color,
                                                     }}
                                                 />
                                             )}
@@ -1273,8 +1268,7 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
                                                 ({group.tasks.length})
                                             </span>
                                         </button>
-                                        {!isCollapsed &&
-                                            renderTaskList(group.tasks)}
+                                        {!isCollapsed && renderTaskList(group.tasks)}
                                     </div>
                                 );
                             })}
@@ -1322,18 +1316,13 @@ export default function Index({ tasks = [], categories, tags = [], lists = [], f
                     // new subtask without reloading the page.
                     handleTaskUpdate({
                         ...selectedTask,
-                        subtasks_count:
-                            (selectedTask.subtasks_count || 0) + 1,
+                        subtasks_count: (selectedTask.subtasks_count || 0) + 1,
                     });
                 }}
             />
 
             <Toast />
-            <OnboardingTour
-                tourKey="tasks"
-                steps={tasksSteps}
-                requireCompleted={["onboarding"]}
-            />
+            <OnboardingTour tourKey="tasks" steps={tasksSteps} requireCompleted={["onboarding"]} />
         </TodoLayout>
     );
 }

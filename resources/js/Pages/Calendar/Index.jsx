@@ -1,1552 +1,507 @@
-import TodoLayout from "@/Layouts/TodoLayout";
+import CalendarSources from "@/Components/Calendar/CalendarSources";
+import EventModal from "@/Components/Calendar/EventModal";
 import OnboardingTour from "@/Components/OnboardingTour";
-import { calendarSteps } from "@/tours";
-import { Head, Link, router } from "@inertiajs/react";
-import {
-    Calendar as CalendarIcon,
-    ChevronLeft,
-    ChevronRight,
-    Clock,
-    AlertTriangle,
-    CheckCircle,
-    Plus,
-    Eye,
-    List,
-    Grid3X3,
-    ChevronDown,
-    ChevronUp,
-    Pencil,
-} from "lucide-react";
-import { useState, useEffect } from "react";
-import DayTasksModal from "@/Components/DayTasksModal";
-import TaskViewModal from "@/Components/TaskViewModal";
-import TaskEditModal from "@/Components/TaskEditModal";
 import TaskModal from "@/Components/TaskModal";
+import TaskViewModal from "@/Components/TaskViewModal";
+import TodoLayout from "@/Layouts/TodoLayout";
+import { calendarSteps } from "@/tours";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/react/daygrid";
+import interactionPlugin from "@fullcalendar/react/interaction";
+import listPlugin from "@fullcalendar/react/list";
+import timeGridPlugin from "@fullcalendar/react/timegrid";
+import "@fullcalendar/react/skeleton.css";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+import { Head, router, usePage } from "@inertiajs/react";
+import { CalendarPlus, ChevronLeft, ChevronRight, Ellipsis, ListPlus, Plus } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Swal from "sweetalert2";
 import { toast } from "react-toastify";
+import { Temporal } from "temporal-polyfill";
 
-const VIEW_MODE_KEY = "calendar_view_mode"; // 'calendar' | 'list'
-const LIST_RANGE_KEY = "calendar_list_range"; // 'month' | 'week' | 'day'
+const VIEW_KEY = "calendar.view.v2";
+const SOURCE_KEY = "calendar.sources.v2";
+const CALENDAR_KEY = "calendar.native-sources.v2";
 
-const readStoredPreference = (key, allowed, fallback) => {
-    if (typeof window === "undefined") return fallback;
-    const stored = window.localStorage.getItem(key);
-    return allowed.includes(stored) ? stored : fallback;
+const toDateString = (value) => {
+    const date = new Date(value);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 };
 
-// Subtle, optional per-month title/theme shown beneath the calendar heading.
-// When empty it renders a quiet "Add a title" affordance so it stays out of the
-// way for people who don't use it; click to edit inline, clear to remove.
-function MonthTitle({ currentDate, monthTitle }) {
-    const [isEditing, setIsEditing] = useState(false);
-    const [value, setValue] = useState(monthTitle ?? "");
-    const [saving, setSaving] = useState(false);
+const readJson = (key, fallback) => {
+    if (typeof window === "undefined") return fallback;
+    try {
+        return JSON.parse(localStorage.getItem(key)) ?? fallback;
+    } catch {
+        return fallback;
+    }
+};
 
-    // Keep the local draft in sync when navigating between months.
+export default function Index({
+    calendarItems = [],
+    eventCalendars = [],
+    sourceFilters = ["events", "tasks"],
+    selectedCalendarIds = [],
+    currentDate,
+    visibleStart,
+    visibleEnd,
+    monthTitle,
+    categories = [],
+    lists = [],
+    userTimezone = "UTC",
+}) {
+    const userId = usePage().props.auth?.user?.id || "guest";
+    const calendarStorageKey = `${CALENDAR_KEY}.${userId}`;
+    const calendarRef = useRef(null);
+    const loadedRangeRef = useRef(`${visibleStart}|${visibleEnd}`);
+    const [title, setTitle] = useState("");
+    const [view, setView] = useState(() => {
+        if (typeof window === "undefined") return "dayGridMonth";
+        return (
+            localStorage.getItem(VIEW_KEY) ||
+            (window.innerWidth < 768 ? "listMonth" : "dayGridMonth")
+        );
+    });
+    const [sources, setSources] = useState(() => readJson(SOURCE_KEY, sourceFilters));
+    const [calendarIds, setCalendarIds] = useState(() => {
+        const hasStoredChoice =
+            typeof window !== "undefined" && localStorage.getItem(calendarStorageKey) !== null;
+        const stored = hasStoredChoice ? readJson(calendarStorageKey, []) : selectedCalendarIds;
+        const available = eventCalendars.map((calendar) => calendar.id);
+        return stored.filter((id) => available.includes(id));
+    });
+    const [showEventModal, setShowEventModal] = useState(false);
+    const [showTaskModal, setShowTaskModal] = useState(false);
+    const [showTaskView, setShowTaskView] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [selectedTask, setSelectedTask] = useState(null);
+    const [selection, setSelection] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [monthTitleDraft, setMonthTitleDraft] = useState(monthTitle || "");
+
+    useEffect(() => setMonthTitleDraft(monthTitle || ""), [monthTitle]);
+
     useEffect(() => {
-        if (!isEditing) setValue(monthTitle ?? "");
-    }, [monthTitle, isEditing]);
+        const available = eventCalendars.map((calendar) => calendar.id);
+        setCalendarIds((current) => {
+            return current.filter((id) => available.includes(id));
+        });
+    }, [eventCalendars]);
 
-    const save = () => {
-        const trimmed = value.trim();
-        // Nothing changed — just leave edit mode without a round-trip.
-        if (trimmed === (monthTitle ?? "")) {
-            setIsEditing(false);
-            setValue(monthTitle ?? "");
-            return;
-        }
-
-        const [year, month] = currentDate.split("-").map(Number);
-        setSaving(true);
-        router.post(
-            route("calendar.month-title.update"),
-            { year, month, title: trimmed },
+    const queryRange = (start, end, anchor, nextSources = sources, nextCalendars = calendarIds) => {
+        const inclusiveEnd = new Date(end.getTime() - 1);
+        const rangeKey = `${toDateString(start)}|${toDateString(inclusiveEnd)}`;
+        loadedRangeRef.current = rangeKey;
+        router.get(
+            route("calendar.index"),
             {
-                preserveScroll: true,
+                date: toDateString(anchor),
+                start: toDateString(start),
+                end: toDateString(inclusiveEnd),
+                view: calendarRef.current?.getApi().view.type || view,
+                sources: nextSources.join(","),
+                calendars: nextCalendars.join(","),
+            },
+            {
                 preserveState: true,
-                onFinish: () => {
-                    setSaving(false);
-                    setIsEditing(false);
-                },
+                preserveScroll: true,
+                replace: true,
+                onStart: () => setIsLoading(true),
+                onFinish: () => setIsLoading(false),
+                onError: () => toast.error("We couldn’t load that calendar range."),
             }
         );
     };
 
-    const cancel = () => {
-        setValue(monthTitle ?? "");
-        setIsEditing(false);
+    const reloadCurrentRange = (nextSources = sources, nextCalendars = calendarIds) => {
+        const api = calendarRef.current?.getApi();
+        if (!api) return;
+        queryRange(
+            api.view.activeStart,
+            api.view.activeEnd,
+            api.getDate(),
+            nextSources,
+            nextCalendars
+        );
     };
 
-    if (isEditing) {
-        return (
-            <input
-                type="text"
-                autoFocus
-                value={value}
-                maxLength={60}
-                disabled={saving}
-                onChange={(e) => setValue(e.target.value)}
-                onBlur={save}
-                onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                        e.preventDefault();
-                        save();
-                    } else if (e.key === "Escape") {
-                        e.preventDefault();
-                        cancel();
-                    }
-                }}
-                placeholder="Name this month…"
-                aria-label="Month title"
-                className="mt-0.5 w-full max-w-xs bg-transparent border-b border-gray-300 dark:border-gray-600 px-0 py-0.5 text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-wevie-teal"
-            />
-        );
-    }
+    const handleDatesSet = (info) => {
+        setTitle(info.view.title);
+        const inclusiveEnd = new Date(info.end.getTime() - 1);
+        const rangeKey = `${toDateString(info.start)}|${toDateString(inclusiveEnd)}`;
+        if (rangeKey !== loadedRangeRef.current) {
+            queryRange(info.start, info.end, info.view.currentStart);
+        }
+    };
 
-    if (monthTitle) {
-        return (
-            <button
-                type="button"
-                onClick={() => setIsEditing(true)}
-                title="Edit month title"
-                className="group mt-0.5 flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-            >
-                <span>{monthTitle}</span>
-                <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-        );
-    }
+    const changeView = (nextView) => {
+        setView(nextView);
+        localStorage.setItem(VIEW_KEY, nextView);
+        calendarRef.current?.getApi().changeView(nextView);
+    };
 
-    return (
-        <button
-            type="button"
-            onClick={() => setIsEditing(true)}
-            className="mt-0.5 inline-flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-        >
-            <Pencil className="w-3 h-3" />
-            <span>Add a title</span>
-        </button>
-    );
-}
+    const changeSources = (nextSources) => {
+        const safeSources = nextSources.length ? nextSources : ["events"];
+        setSources(safeSources);
+        localStorage.setItem(SOURCE_KEY, JSON.stringify(safeSources));
+        reloadCurrentRange(safeSources, calendarIds);
+    };
 
-export default function Index({
-    tasks,
-    transactions,
-    upcomingTasks,
-    recentlyAccomplishedTasks = [],
-    overdueTasks,
-    currentDate,
-    monthName,
-    monthTitle,
-    range,
-    rangeLabel,
-    categories,
-}) {
-    const [selectedDate, setSelectedDate] = useState(null);
-    const [isMobile, setIsMobile] = useState(false);
-    const [viewMode, setViewMode] = useState(() => {
-        // First-time default: list on phones (denser, easier to scan), grid on
-        // larger screens. A saved preference always wins.
-        const fallback =
-            typeof window !== "undefined" && window.innerWidth < 768
-                ? "list"
-                : "calendar";
-        return readStoredPreference(
-            VIEW_MODE_KEY,
-            ["calendar", "list"],
-            fallback
-        );
+    const changeCalendars = (nextIds) => {
+        setCalendarIds(nextIds);
+        localStorage.setItem(calendarStorageKey, JSON.stringify(nextIds));
+        reloadCurrentRange(sources, nextIds);
+    };
+
+    const openEvent = (item, initial = null) => {
+        setSelectedItem(item);
+        setSelection(initial);
+        setShowEventModal(true);
+    };
+
+    const handleSelect = (info) => {
+        openEvent(null, {
+            start: info.startStr,
+            end: info.endStr,
+            allDay: info.allDay,
+            kind: "event",
+        });
+        calendarRef.current?.getApi().unselect();
+    };
+
+    const itemFromCalendarEvent = (event) => ({
+        eventId: event.extendedProps.eventId || event.extendedProps.event?.id || null,
+        occurrenceKey: event.extendedProps.occurrenceKey,
+        sourceType: event.extendedProps.sourceType,
+        start: event.startStr,
+        end: event.endStr,
+        allDay: event.allDay,
+        extendedProps: event.extendedProps,
     });
-    const [listRange, setListRange] = useState(() =>
-        readStoredPreference(
-            LIST_RANGE_KEY,
-            ["month", "week", "day"],
-            "month"
-        )
-    );
-    const [showDayTasksModal, setShowDayTasksModal] = useState(false);
-    const [showViewModal, setShowViewModal] = useState(false);
-    const [showEditModal, setShowEditModal] = useState(false);
-    const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
-    const [selectedTask, setSelectedTask] = useState(null);
-    const [expandedDates, setExpandedDates] = useState(new Set());
 
-    // The data window the server should load for the current view. The month
-    // grid always needs a full month; the list honors the Month/Week/Day pick.
-    const effectiveRange = viewMode === "calendar" ? "month" : listRange;
-
-    useEffect(() => {
-        const checkMobile = () => {
-            setIsMobile(window.innerWidth < 768); // Changed to 768px for better mobile detection
-        };
-
-        checkMobile();
-        window.addEventListener("resize", checkMobile);
-
-        return () => window.removeEventListener("resize", checkMobile);
-    }, []);
-
-    // Persist the user's view + range choices so the page reopens as they left it.
-    useEffect(() => {
-        window.localStorage.setItem(VIEW_MODE_KEY, viewMode);
-    }, [viewMode]);
-
-    useEffect(() => {
-        window.localStorage.setItem(LIST_RANGE_KEY, listRange);
-    }, [listRange]);
-
-    // On mount, if the server's loaded window doesn't match the persisted
-    // preference, reload once with the correct range.
-    useEffect(() => {
-        if (range !== effectiveRange) {
-            router.get(
-                route("calendar.index"),
-                { date: currentDate, range: effectiveRange },
-                { preserveState: true, preserveScroll: true }
-            );
+    const handleEventClick = (info) => {
+        const item = itemFromCalendarEvent(info.event);
+        if (item.sourceType === "event") {
+            openEvent(item);
+        } else if (item.sourceType === "task") {
+            setSelectedTask(info.event.extendedProps.task);
+            setShowTaskView(true);
+        } else {
+            toast.info("Finance entries are managed from WevieWallet.");
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    };
 
-    // Generate calendar days
-    const generateCalendarDays = () => {
-        const date = new Date(currentDate);
-        const year = date.getFullYear();
-        const month = date.getMonth();
+    const persistScheduleChange = async (info) => {
+        const item = itemFromCalendarEvent(info.event);
+        if (item.sourceType !== "event") {
+            info.revert();
+            return;
+        }
 
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        const startDate = new Date(firstDay);
-        startDate.setDate(startDate.getDate() - firstDay.getDay());
-
-        const days = [];
-        const current = new Date(startDate);
-
-        for (let i = 0; i < 42; i++) {
-            // Use local date string to avoid timezone conversion issues
-            const dateStr =
-                current.getFullYear() +
-                "-" +
-                String(current.getMonth() + 1).padStart(2, "0") +
-                "-" +
-                String(current.getDate()).padStart(2, "0");
-            const isCurrentMonth = current.getMonth() === month;
-            const today = new Date();
-            const todayStr =
-                today.getFullYear() +
-                "-" +
-                String(today.getMonth() + 1).padStart(2, "0") +
-                "-" +
-                String(today.getDate()).padStart(2, "0");
-            const isToday = dateStr === todayStr;
-            const dayTasks = tasks[dateStr] || [];
-            const dayTransactions = transactions?.[dateStr] || [];
-
-            days.push({
-                date: new Date(current),
-                dateStr,
-                day: current.getDate(),
-                isCurrentMonth,
-                isToday,
-                tasks: dayTasks,
-                transactions: dayTransactions,
+        let scope = "series";
+        if (info.event.extendedProps.isRecurring) {
+            const result = await Swal.fire({
+                title: "Change this schedule?",
+                text: "Choose whether this move applies once or to the whole series.",
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: "This occurrence",
+                denyButtonText: "Whole series",
+                confirmButtonColor: "#4ACF91",
             });
-
-            current.setDate(current.getDate() + 1);
+            if (result.isDismissed) {
+                info.revert();
+                return;
+            }
+            scope = result.isDenied ? "series" : "occurrence";
+        } else {
+            const result = await Swal.fire({
+                title: "Save the new time?",
+                showCancelButton: true,
+                confirmButtonText: "Save change",
+                confirmButtonColor: "#4ACF91",
+            });
+            if (!result.isConfirmed) {
+                info.revert();
+                return;
+            }
         }
 
-        return days;
+        const payload = {
+            scope,
+            occurrence_key: item.occurrenceKey,
+            is_all_day: info.event.allDay,
+            timezone: userTimezone,
+        };
+        if (info.event.allDay) {
+            payload.start_date = info.event.startStr.slice(0, 10);
+            const exclusiveEnd = (info.event.endStr || info.event.startStr).slice(0, 10);
+            payload.end_date = info.event.end
+                ? Temporal.PlainDate.from(exclusiveEnd).subtract({ days: 1 }).toString()
+                : exclusiveEnd;
+        } else {
+            payload.starts_at = info.event.start.toISOString();
+            payload.ends_at = (
+                info.event.end || new Date(info.event.start.getTime() + 3600000)
+            ).toISOString();
+        }
+
+        router.put(route("calendar-events.update", item.eventId), payload, {
+            preserveScroll: true,
+            onError: () => {
+                info.revert();
+                toast.error("We couldn’t move that event. Its original time was restored.");
+            },
+        });
     };
 
-    const calendarDays = generateCalendarDays();
-
-    const toDateStr = (date) =>
-        date.getFullYear() +
-        "-" +
-        String(date.getMonth() + 1).padStart(2, "0") +
-        "-" +
-        String(date.getDate()).padStart(2, "0");
-
-    const loadCalendar = (dateStr, nextRange = effectiveRange) => {
-        router.get(
-            route("calendar.index"),
-            { date: dateStr, range: nextRange },
-            { preserveState: true }
+    const saveMonthTitle = () => {
+        const date = calendarRef.current?.getApi().getDate() || new Date(currentDate);
+        router.post(
+            route("calendar.month-title.update"),
+            {
+                year: date.getFullYear(),
+                month: date.getMonth() + 1,
+                title: monthTitleDraft.trim(),
+            },
+            { preserveScroll: true }
         );
     };
 
-    // Step the visible window by the active unit (month grid steps by month;
-    // the list steps by its selected Month/Week/Day range).
-    const navigate = (direction) => {
-        // Parse "YYYY-MM-DD" as a local date to avoid the UTC-midnight day shift.
-        const [year, month, day] = currentDate.split("-").map(Number);
-        const date = new Date(year, month - 1, day);
-        if (effectiveRange === "week") {
-            date.setDate(date.getDate() + direction * 7);
-        } else if (effectiveRange === "day") {
-            date.setDate(date.getDate() + direction);
-        } else {
-            date.setMonth(date.getMonth() + direction);
-        }
-        loadCalendar(toDateStr(date));
-    };
-
-    // Switch between the month grid and the agenda list. Leaving the list
-    // forces the server back to a full month window for the grid.
-    const changeViewMode = (nextView) => {
-        if (nextView === viewMode) return;
-        setViewMode(nextView);
-        const nextRange = nextView === "calendar" ? "month" : listRange;
-        if (nextRange !== range) {
-            loadCalendar(currentDate, nextRange);
-        }
-    };
-
-    // Change the list's Month/Week/Day range and reload that window.
-    const changeListRange = (nextRange) => {
-        if (nextRange === listRange) return;
-        setListRange(nextRange);
-        if (nextRange !== range) {
-            loadCalendar(currentDate, nextRange);
-        }
-    };
-
-    const getTaskStatusColor = (status) => {
-        switch (status) {
-            case "completed":
-                return "bg-gray-500";
-            case "in_progress":
-                return "bg-green-500";
-            case "pending":
-                return "bg-blue-500";
-            default:
-                return "bg-gray-500";
-        }
-    };
-
-    const getTransactionTypeColor = (type) => {
-        switch (type) {
-            case "income":
-                return "bg-emerald-500";
-            case "expense":
-                return "bg-rose-500";
-            case "savings":
-                return "bg-purple-500";
-            default:
-                return "bg-gray-500";
-        }
-    };
-
-    const formatCurrency = (amount, currency = "PHP") =>
-        new Intl.NumberFormat("en-PH", {
-            style: "currency",
-            currency,
-            maximumFractionDigits: 0,
-        }).format(amount ?? 0);
-
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString("en-US", {
-            weekday: "short",
-            month: "short",
-            day: "numeric",
-        });
-    };
-
-    const formatCompletedAt = (dateString) =>
-        new Date(dateString).toLocaleString("en-US", {
-            weekday: "short",
-            month: "short",
-            day: "numeric",
-            hour: "numeric",
-            minute: "2-digit",
-        });
-
-    const handleDayClick = (day) => {
-        setSelectedDate(day.dateStr);
-        setShowDayTasksModal(true);
-    };
-
-    const handleTaskView = (task) => {
-        setSelectedTask(task);
-        setShowViewModal(true);
-    };
-
-    const handleTaskEdit = (task) => {
-        setSelectedTask(task);
-        setShowEditModal(true);
-    };
-
-    const handleTaskStatusToggle = async (task) => {
-        const newStatus = task.status === "completed" ? "pending" : "completed";
-
-        try {
-            await router.patch(
-                route("tasks.update", task.id),
-                {
-                    status: newStatus,
+    const calendarEvents = useMemo(
+        () =>
+            calendarItems.map((item) => ({
+                ...item,
+                extendedProps: {
+                    ...item.extendedProps,
+                    sourceType: item.sourceType,
+                    sourceId: item.sourceId,
+                    eventId: item.eventId,
+                    occurrenceKey: item.occurrenceKey,
                 },
-                {
-                    preserveState: true,
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        toast.success(
-                            `Task ${
-                                newStatus === "completed"
-                                    ? "completed"
-                                    : "reopened"
-                            } successfully!`
-                        );
-                    },
-                    onError: () => {
-                        toast.error("Failed to update task status");
-                    },
-                }
-            );
-        } catch (error) {
-            toast.error("Failed to update task status");
-        }
-    };
+            })),
+        [calendarItems]
+    );
 
-    const handleTaskUpdate = () => {
-        // Refresh the page data after task update
-        router.reload({ preserveState: true, preserveScroll: true });
-    };
-
-    const getSelectedDateTasks = () => {
-        if (!selectedDate) return [];
-        return tasks[selectedDate] || [];
-    };
-
-    // Enumerate every day in the active range so the list can show empty days
-    // too. Derived from currentDate + effectiveRange to match the server window
-    // (weeks are Sunday-first, matching the grid headers and the controller).
-    const rangeDateStrings = () => {
-        const [year, month, day] = currentDate.split("-").map(Number);
-        const base = new Date(year, month - 1, day);
-
-        if (effectiveRange === "day") {
-            return [toDateStr(base)];
-        }
-
-        let start;
-        let count;
-        if (effectiveRange === "week") {
-            start = new Date(base);
-            start.setDate(start.getDate() - start.getDay()); // back to Sunday
-            count = 7;
-        } else {
-            start = new Date(year, month - 1, 1);
-            count = new Date(year, month, 0).getDate(); // days in month
-        }
-
-        const days = [];
-        const cursor = new Date(start);
-        for (let i = 0; i < count; i++) {
-            days.push(toDateStr(cursor));
-            cursor.setDate(cursor.getDate() + 1);
-        }
-        return days;
-    };
-
-    // Build the agenda list grouped per day. Every day in the range is included
-    // (even with no tasks/transactions) so users can still see and act on it.
-    const buildDateGroups = () => {
-        const today = new Date();
-        const todayStr = toDateStr(today);
-
-        return rangeDateStrings().map((dateStr) => {
-            const dayTasks = tasks?.[dateStr] || [];
-            const dayTransactions = transactions?.[dateStr] || [];
-
-            const [year, month, day] = dateStr.split("-").map(Number);
-            const dateObj = new Date(year, month - 1, day);
-
-            return {
-                dateStr,
-                date: dateObj,
-                day,
-                isToday: dateStr === todayStr,
-                isEmpty: dayTasks.length === 0 && dayTransactions.length === 0,
-                tasks: dayTasks,
-                transactions: dayTransactions,
-                dayName: dateObj.toLocaleDateString("en-US", {
-                    weekday: "long",
-                }),
-                formattedDate: dateObj.toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                }),
-            };
-        });
-    };
-
-    const dateGroups = buildDateGroups();
-
-    const toggleDateExpansion = (dateStr) => {
-        const newExpanded = new Set(expandedDates);
-        if (newExpanded.has(dateStr)) {
-            newExpanded.delete(dateStr);
-        } else {
-            newExpanded.add(dateStr);
-        }
-        setExpandedDates(newExpanded);
-    };
-
-    const renderListView = () => {
-        if (dateGroups.length === 0) {
-            const rangeNoun =
-                effectiveRange === "week"
-                    ? "week"
-                    : effectiveRange === "day"
-                    ? "day"
-                    : "month";
-            return (
-                <div className="card p-6 text-center">
-                    <CalendarIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                        No items this {rangeNoun}
-                    </h3>
-                    <p className="text-gray-500 dark:text-gray-400 mb-4">
-                        You don't have any tasks or transactions for{" "}
-                        {rangeLabel ?? monthName}.
-                    </p>
-                    <Link
-                        href={route("tasks.index")}
-                        className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-wevie-teal to-wevie-mint border border-transparent rounded-xl font-medium text-sm text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wevie-teal/40 transition-colors"
-                    >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create New Task
-                    </Link>
-                </div>
-            );
-        }
-
-        return (
-            <div className="space-y-4">
-                {dateGroups.map((dateGroup) => {
-                    const isExpanded = expandedDates.has(dateGroup.dateStr);
-                    const visibleTasks = isExpanded
-                        ? dateGroup.tasks
-                        : dateGroup.tasks.slice(0, 2);
-                    const visibleTransactions = isExpanded
-                        ? dateGroup.transactions
-                        : dateGroup.transactions.slice(0, 2);
-
-                    return (
-                        <div
-                            key={dateGroup.dateStr}
-                            className={`card overflow-hidden ${
-                                dateGroup.isToday
-                                    ? "ring-2 ring-blue-500 dark:ring-blue-400"
-                                    : ""
-                            }`}
-                        >
-                            {/* Date Header */}
-                            <div
-                                className={`p-4 border-b border-gray-200 dark:border-white/10 ${
-                                    dateGroup.isToday
-                                        ? "bg-blue-50 dark:bg-blue-900/20"
-                                        : "bg-gray-50 dark:bg-dark-card/70"
-                                }`}
-                            >
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-3">
-                                        <div
-                                            className={`text-2xl font-bold ${
-                                                dateGroup.isToday
-                                                    ? "text-blue-600 dark:text-blue-400"
-                                                    : "text-gray-900 dark:text-gray-100"
-                                            }`}
-                                        >
-                                            {dateGroup.day}
-                                        </div>
-                                        <div>
-                                            <div
-                                                className={`font-medium ${
-                                                    dateGroup.isToday
-                                                        ? "text-blue-600 dark:text-blue-400"
-                                                        : "text-gray-900 dark:text-gray-100"
-                                                }`}
-                                            >
-                                                {dateGroup.dayName}
-                                            </div>
-                                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                {dateGroup.formattedDate}
-                                            </div>
-                                        </div>
-                                        {dateGroup.isToday && (
-                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                                Today
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                                            {dateGroup.tasks.length} task
-                                            {dateGroup.tasks.length !== 1
-                                                ? "s"
-                                                : ""}
-                                            {dateGroup.transactions.length > 0
-                                                ? `, ${dateGroup.transactions.length} transaction${
-                                                      dateGroup.transactions.length !==
-                                                      1
-                                                          ? "s"
-                                                          : ""
-                                                  }`
-                                                : ""}
-                                        </span>
-                                        {(dateGroup.tasks.length > 2 ||
-                                            dateGroup.transactions.length > 2) && (
-                                            <button
-                                                onClick={() =>
-                                                    toggleDateExpansion(
-                                                        dateGroup.dateStr
-                                                    )
-                                                }
-                                                className="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                                            >
-                                                {isExpanded ? (
-                                                    <ChevronUp className="w-4 h-4 text-gray-500" />
-                                                ) : (
-                                                    <ChevronDown className="w-4 h-4 text-gray-500" />
-                                                )}
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Tasks List */}
-                            <div className="p-4 space-y-3">
-                                {dateGroup.isEmpty && (
-                                    <p className="text-sm text-gray-400 dark:text-gray-500 italic">
-                                        No items for this day.
-                                    </p>
-                                )}
-                                {visibleTasks.map((task) => (
-                                    <div
-                                        key={task.id}
-                                        className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50 dark:bg-dark-card/70 hover:bg-gray-100 dark:hover:bg-dark-card transition-colors"
-                                    >
-                                        {/* Status Checkbox */}
-                                        <button
-                                            onClick={() =>
-                                                handleTaskStatusToggle(task)
-                                            }
-                                            className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                                                task.status === "completed"
-                                                    ? "bg-green-500 border-green-500 text-white"
-                                                    : "border-gray-300 dark:border-gray-600 hover:border-green-500"
-                                            }`}
-                                        >
-                                            {task.status === "completed" && (
-                                                <CheckCircle className="w-3 h-3" />
-                                            )}
-                                        </button>
-
-                                        {/* Task Content */}
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex-1 min-w-0">
-                                                    <h4
-                                                        className={`font-medium text-gray-900 dark:text-gray-100 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${
-                                                            task.status ===
-                                                            "completed"
-                                                                ? "line-through opacity-60"
-                                                                : ""
-                                                        }`}
-                                                        onClick={() =>
-                                                            handleTaskView(task)
-                                                        }
-                                                    >
-                                                        {task.title}
-                                                    </h4>
-
-                                                    {/* Time */}
-                                                    {!task.is_all_day &&
-                                                        (task.start_time ||
-                                                            task.end_time) && (
-                                                            <div className="flex items-center mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                                                <Clock className="w-3 h-3 mr-1" />
-                                                                {(() => {
-                                                                    const formatTime =
-                                                                        (
-                                                                            timeStr
-                                                                        ) => {
-                                                                            if (
-                                                                                !timeStr
-                                                                            )
-                                                                                return "";
-                                                                            if (
-                                                                                timeStr.includes(
-                                                                                    "T"
-                                                                                ) ||
-                                                                                timeStr.includes(
-                                                                                    " "
-                                                                                )
-                                                                            ) {
-                                                                                const date =
-                                                                                    new Date(
-                                                                                        timeStr
-                                                                                    );
-                                                                                return date.toLocaleTimeString(
-                                                                                    [],
-                                                                                    {
-                                                                                        hour: "numeric",
-                                                                                        minute: "2-digit",
-                                                                                        hour12: true,
-                                                                                    }
-                                                                                );
-                                                                            }
-                                                                            const [
-                                                                                hours,
-                                                                                minutes,
-                                                                            ] =
-                                                                                timeStr.split(
-                                                                                    ":"
-                                                                                );
-                                                                            const hour =
-                                                                                parseInt(
-                                                                                    hours
-                                                                                );
-                                                                            const ampm =
-                                                                                hour >=
-                                                                                12
-                                                                                    ? "PM"
-                                                                                    : "AM";
-                                                                            const displayHour =
-                                                                                hour %
-                                                                                    12 ||
-                                                                                12;
-                                                                            return `${displayHour}:${minutes} ${ampm}`;
-                                                                        };
-
-                                                                    const startTime =
-                                                                        formatTime(
-                                                                            task.start_time
-                                                                        );
-                                                                    const endTime =
-                                                                        formatTime(
-                                                                            task.end_time
-                                                                        );
-
-                                                                    if (
-                                                                        startTime &&
-                                                                        endTime
-                                                                    ) {
-                                                                        return `${startTime} - ${endTime}`;
-                                                                    } else if (
-                                                                        startTime
-                                                                    ) {
-                                                                        return `From ${startTime}`;
-                                                                    } else if (
-                                                                        endTime
-                                                                    ) {
-                                                                        return `Until ${endTime}`;
-                                                                    }
-                                                                    return "All day";
-                                                                })()}
-                                                            </div>
-                                                        )}
-
-                                                    {/* Category */}
-                                                    {task.category && (
-                                                        <div className="mt-2">
-                                                            <span
-                                                                className="inline-block text-xs px-2 py-1 rounded-full text-white"
-                                                                style={{
-                                                                    backgroundColor:
-                                                                        task.status ===
-                                                                        "completed"
-                                                                            ? "#6B7280"
-                                                                            : task
-                                                                                  .category
-                                                                                  .color,
-                                                                }}
-                                                            >
-                                                                {
-                                                                    task
-                                                                        .category
-                                                                        .name
-                                                                }
-                                                            </span>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Tags */}
-                                                    {task.tags &&
-                                                        task.tags.length >
-                                                            0 && (
-                                                            <div className="flex flex-wrap gap-1 mt-2">
-                                                                {task.tags
-                                                                    .slice(0, 3)
-                                                                    .map(
-                                                                        (
-                                                                            tag
-                                                                        ) => (
-                                                                            <span
-                                                                                key={
-                                                                                    tag.id
-                                                                                }
-                                                                                className="inline-block text-xs px-2 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full"
-                                                                            >
-                                                                                {
-                                                                                    tag.name
-                                                                                }
-                                                                            </span>
-                                                                        )
-                                                                    )}
-                                                                {task.tags
-                                                                    .length >
-                                                                    3 && (
-                                                                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                                        +
-                                                                        {task
-                                                                            .tags
-                                                                            .length -
-                                                                            3}{" "}
-                                                                        more
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                </div>
-
-                                                {/* Action Button */}
-                                                <button
-                                                    onClick={() =>
-                                                        handleTaskEdit(task)
-                                                    }
-                                                    className="flex-shrink-0 ml-2 p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                                                >
-                                                    <Eye className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-
-                                {visibleTransactions.map((transaction) => (
-                                    <div
-                                        key={`transaction-${transaction.id}`}
-                                        className="flex items-start justify-between space-x-3 p-3 rounded-lg bg-slate-50 dark:bg-dark-card/70"
-                                    >
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center justify-between">
-                                                <div className="min-w-0">
-                                                    <p className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">
-                                                        {transaction.description}
-                                                    </p>
-                                                    <p className="text-xs text-slate-400">
-                                                        {transaction.category
-                                                            ?.name ??
-                                                            "Uncategorized"}
-                                                    </p>
-                                                </div>
-                                                <span
-                                                    className={`ml-3 rounded-full px-2 py-0.5 text-xs text-white ${getTransactionTypeColor(
-                                                        transaction.type
-                                                    )}`}
-                                                >
-                                                    {formatCurrency(
-                                                        transaction.amount,
-                                                        transaction.currency ??
-                                                            "PHP"
-                                                    )}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-
-                                {/* Show More Button */}
-                                {!isExpanded &&
-                                    (dateGroup.tasks.length > 2 ||
-                                        dateGroup.transactions.length > 2) && (
-                                    <button
-                                        onClick={() =>
-                                            toggleDateExpansion(
-                                                dateGroup.dateStr
-                                            )
-                                        }
-                                        className="w-full py-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-                                    >
-                                        Show{" "}
-                                        {Math.max(
-                                            0,
-                                            dateGroup.tasks.length - 2
-                                        ) +
-                                            Math.max(
-                                                0,
-                                                dateGroup.transactions.length - 2
-                                            )}{" "}
-                                        more item
-                                        {Math.max(
-                                            0,
-                                            dateGroup.tasks.length - 2
-                                        ) +
-                                            Math.max(
-                                                0,
-                                                dateGroup.transactions.length - 2
-                                            ) !==
-                                        1
-                                            ? "s"
-                                            : ""}
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-        );
-    };
+    const viewOptions = [
+        ["dayGridMonth", "Month"],
+        ["timeGridWeek", "Week"],
+        ["timeGridDay", "Day"],
+        ["listMonth", "Agenda"],
+    ];
 
     return (
-        <TodoLayout header="Calendar">
-            <Head title="Calendar" />
-
-            <div className="flex flex-col lg:flex-row gap-6">
-                {/* Main Calendar */}
-                <div className="flex-1 order-2 lg:order-1">
-                    <div className="card" data-tour="calendar-grid">
-                        {/* Calendar Header */}
-                        <div
-                            className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 gap-4"
-                            data-tour="calendar-header"
-                        >
-                            <div className="min-w-0">
-                                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                    {rangeLabel ?? monthName}
-                                </h2>
-                                <MonthTitle
-                                    currentDate={currentDate}
-                                    monthTitle={monthTitle}
-                                />
-                            </div>
-                            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                                {/* View + range controls (wrap together on mobile) */}
-                                <div className="flex flex-wrap items-center gap-2">
-                                    {/* View Toggle: Calendar grid vs. List */}
-                                    <div className="flex items-center bg-gray-100 dark:bg-dark-card rounded-lg p-1">
-                                        <button
-                                            onClick={() => changeViewMode("list")}
-                                            title="List view"
-                                            aria-pressed={viewMode === "list"}
-                                            className={`p-2 rounded-md transition-colors ${
-                                                viewMode === "list"
-                                                    ? "bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm"
-                                                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-                                            }`}
-                                        >
-                                            <List className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            onClick={() =>
-                                                changeViewMode("calendar")
-                                            }
-                                            title="Calendar view"
-                                            aria-pressed={viewMode === "calendar"}
-                                            className={`p-2 rounded-md transition-colors ${
-                                                viewMode === "calendar"
-                                                    ? "bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm"
-                                                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-                                            }`}
-                                        >
-                                            <Grid3X3 className="w-4 h-4" />
-                                        </button>
-                                    </div>
-
-                                    {/* List range: Month / Week / Day */}
-                                    {viewMode === "list" && (
-                                        <div className="flex items-center bg-gray-100 dark:bg-dark-card rounded-lg p-1">
-                                            {["month", "week", "day"].map(
-                                                (option) => (
-                                                    <button
-                                                        key={option}
-                                                        onClick={() =>
-                                                            changeListRange(
-                                                                option
-                                                            )
-                                                        }
-                                                        aria-pressed={
-                                                            listRange === option
-                                                        }
-                                                        className={`px-2.5 sm:px-3 py-1.5 rounded-md text-sm font-medium capitalize transition-colors ${
-                                                            listRange === option
-                                                                ? "bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm"
-                                                                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-                                                        }`}
-                                                    >
-                                                        {option}
-                                                    </button>
-                                                )
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Navigation (stays right-aligned, wraps as a unit) */}
-                                <div className="flex items-center gap-1 ml-auto sm:ml-0">
+        <TodoLayout
+            header={
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 className="text-xl font-semibold text-light-primary dark:text-dark-primary">
+                            Calendar
+                        </h1>
+                        <p className="mt-1 text-sm text-light-muted dark:text-dark-muted">
+                            See your time clearly, without the extra noise.
+                        </p>
+                    </div>
+                    <div className="relative flex flex-wrap items-center gap-2">
+                        <CalendarSources
+                            calendars={eventCalendars}
+                            sources={sources}
+                            selectedCalendarIds={calendarIds}
+                            onSourcesChange={changeSources}
+                            onCalendarsChange={changeCalendars}
+                        />
+                        <Menu as="div" className="relative">
+                            <MenuButton className="btn-primary min-h-11 gap-2">
+                                <Plus className="h-4 w-4" />
+                                Add
+                            </MenuButton>
+                            <MenuItems
+                                anchor="bottom end"
+                                className="z-40 mt-2 w-52 rounded-xl border border-light-border bg-light-card p-1.5 shadow-xl dark:border-dark-border dark:bg-dark-card"
+                            >
+                                <MenuItem>
                                     <button
-                                        onClick={() => navigate(-1)}
-                                        aria-label="Previous"
-                                        className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors"
+                                        type="button"
+                                        onClick={() => openEvent(null)}
+                                        className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm text-light-primary hover:bg-light-hover focus:bg-light-hover focus:outline-none dark:text-dark-primary dark:hover:bg-dark-hover dark:focus:bg-dark-hover"
                                     >
-                                        <ChevronLeft className="w-5 h-5" />
+                                        <CalendarPlus className="h-4 w-4 text-wevie-teal" />
+                                        New event
                                     </button>
+                                </MenuItem>
+                                <MenuItem>
                                     <button
-                                        onClick={() => navigate(1)}
-                                        aria-label="Next"
-                                        className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors"
+                                        type="button"
+                                        onClick={() => setShowTaskModal(true)}
+                                        className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm text-light-primary hover:bg-light-hover focus:bg-light-hover focus:outline-none dark:text-dark-primary dark:hover:bg-dark-hover dark:focus:bg-dark-hover"
                                     >
-                                        <ChevronRight className="w-5 h-5" />
+                                        <ListPlus className="h-4 w-4 text-info-500" />
+                                        New task
                                     </button>
-                                    <button
-                                        onClick={() =>
-                                            loadCalendar(toDateStr(new Date()))
-                                        }
-                                        className="ml-1 inline-flex items-center px-3 py-2 bg-gradient-to-r from-wevie-teal to-wevie-mint border border-transparent rounded-xl font-medium text-sm text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wevie-teal/40 transition-colors"
-                                    >
-                                        Today
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Calendar Content */}
-                        <div className="p-3 sm:p-6">
-                            {viewMode === "list" ? (
-                                renderListView()
-                            ) : (
-                                <>
-                                    {/* Day Headers */}
-                                    <div className="grid grid-cols-7 gap-px mb-4">
-                                        {[
-                                            "Sun",
-                                            "Mon",
-                                            "Tue",
-                                            "Wed",
-                                            "Thu",
-                                            "Fri",
-                                            "Sat",
-                                        ].map((day) => (
-                                            <div
-                                                key={day}
-                                                className="py-2 text-center text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400"
-                                            >
-                                                {day}
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    {/* Calendar Days */}
-                                    <div className="grid grid-cols-7 gap-px">
-                                        {calendarDays.map((day, index) => (
-                                            <div
-                                                key={index}
-                                                className={`min-h-[80px] sm:min-h-[120px] p-1 sm:p-2 border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
-                                                    !day.isCurrentMonth
-                                                        ? "bg-gray-50 dark:bg-dark-card/70"
-                                                        : "bg-white dark:bg-dark-card"
-                                                } ${
-                                                    day.isToday
-                                                        ? "ring-2 ring-blue-500 dark:ring-blue-400"
-                                                        : ""
-                                                }`}
-                                                onClick={() =>
-                                                    handleDayClick(day)
-                                                }
-                                            >
-                                                <div
-                                                    className={`text-xs sm:text-sm font-medium mb-1 sm:mb-2 ${
-                                                        !day.isCurrentMonth
-                                                            ? "text-gray-400 dark:text-gray-500"
-                                                            : day.isToday
-                                                            ? "text-blue-600 dark:text-blue-400"
-                                                            : "text-gray-900 dark:text-gray-100"
-                                                    }`}
-                                                >
-                                                    {day.day}
-                                                </div>
-                                                {/* Tasks for this day */}
-                                                <div className="space-y-1">
-                                                    {day.tasks
-                                                        .slice(
-                                                            0,
-                                                            isMobile ? 2 : 3
-                                                        )
-                                                        .map((task) => (
-                                                            <div
-                                                                key={task.id}
-                                                                className={`text-xs p-1 rounded text-white truncate ${getTaskStatusColor(
-                                                                    task.status
-                                                                )}`}
-                                                                title={`${
-                                                                    task.title
-                                                                } - ${
-                                                                    task.is_all_day ||
-                                                                    (!task.start_time &&
-                                                                        !task.end_time)
-                                                                        ? "All day"
-                                                                        : (() => {
-                                                                              const formatTime =
-                                                                                  (
-                                                                                      timeStr
-                                                                                  ) => {
-                                                                                      if (
-                                                                                          !timeStr
-                                                                                      )
-                                                                                          return "";
-                                                                                      if (
-                                                                                          timeStr.includes(
-                                                                                              "T"
-                                                                                          ) ||
-                                                                                          timeStr.includes(
-                                                                                              " "
-                                                                                          )
-                                                                                      ) {
-                                                                                          const date =
-                                                                                              new Date(
-                                                                                                  timeStr
-                                                                                              );
-                                                                                          return date.toLocaleTimeString(
-                                                                                              [],
-                                                                                              {
-                                                                                                  hour: "numeric",
-                                                                                                  minute: "2-digit",
-                                                                                                  hour12: true,
-                                                                                              }
-                                                                                          );
-                                                                                      }
-                                                                                      // Just time string like "14:30:00" or "14:30"
-                                                                                      const [
-                                                                                          hours,
-                                                                                          minutes,
-                                                                                      ] =
-                                                                                          timeStr.split(
-                                                                                              ":"
-                                                                                          );
-                                                                                      const hour =
-                                                                                          parseInt(
-                                                                                              hours
-                                                                                          );
-                                                                                      const ampm =
-                                                                                          hour >=
-                                                                                          12
-                                                                                              ? "PM"
-                                                                                              : "AM";
-                                                                                      const displayHour =
-                                                                                          hour %
-                                                                                              12 ||
-                                                                                          12;
-                                                                                      return `${displayHour}:${minutes} ${ampm}`;
-                                                                                  };
-
-                                                                              const startTime =
-                                                                                  formatTime(
-                                                                                      task.start_time
-                                                                                  );
-                                                                              const endTime =
-                                                                                  formatTime(
-                                                                                      task.end_time
-                                                                                  );
-
-                                                                              if (
-                                                                                  startTime &&
-                                                                                  endTime
-                                                                              ) {
-                                                                                  return `${startTime} - ${endTime}`;
-                                                                              } else if (
-                                                                                  startTime
-                                                                              ) {
-                                                                                  return `From ${startTime}`;
-                                                                              } else if (
-                                                                                  endTime
-                                                                              ) {
-                                                                                  return `Until ${endTime}`;
-                                                                              }
-                                                                              return "All day";
-                                                                          })()
-                                                                }`}
-                                                            >
-                                                                <div className="flex items-center justify-between">
-                                                                    <span className="truncate flex-1">
-                                                                        {
-                                                                            task.title
-                                                                        }
-                                                                    </span>
-                                                                    {!task.is_all_day &&
-                                                                        (task.start_time ||
-                                                                            task.end_time) && (
-                                                                            <span className="ml-1 opacity-75 text-xs">
-                                                                                {(() => {
-                                                                                    const formatTime =
-                                                                                        (
-                                                                                            timeStr
-                                                                                        ) => {
-                                                                                            if (
-                                                                                                !timeStr
-                                                                                            )
-                                                                                                return "";
-                                                                                            if (
-                                                                                                timeStr.includes(
-                                                                                                    "T"
-                                                                                                ) ||
-                                                                                                timeStr.includes(
-                                                                                                    " "
-                                                                                                )
-                                                                                            ) {
-                                                                                                const date =
-                                                                                                    new Date(
-                                                                                                        timeStr
-                                                                                                    );
-                                                                                                return date.toLocaleTimeString(
-                                                                                                    [],
-                                                                                                    {
-                                                                                                        hour: "numeric",
-                                                                                                        minute: "2-digit",
-                                                                                                        hour12: true,
-                                                                                                    }
-                                                                                                );
-                                                                                            }
-                                                                                            // Just time string like "14:30:00" or "14:30"
-                                                                                            const [
-                                                                                                hours,
-                                                                                                minutes,
-                                                                                            ] =
-                                                                                                timeStr.split(
-                                                                                                    ":"
-                                                                                                );
-                                                                                            const hour =
-                                                                                                parseInt(
-                                                                                                    hours
-                                                                                                );
-                                                                                            const ampm =
-                                                                                                hour >=
-                                                                                                12
-                                                                                                    ? "PM"
-                                                                                                    : "AM";
-                                                                                            const displayHour =
-                                                                                                hour %
-                                                                                                    12 ||
-                                                                                                12;
-                                                                                            return `${displayHour}:${minutes} ${ampm}`;
-                                                                                        };
-
-                                                                                    const startTime =
-                                                                                        formatTime(
-                                                                                            task.start_time
-                                                                                        );
-                                                                                    const endTime =
-                                                                                        formatTime(
-                                                                                            task.end_time
-                                                                                        );
-
-                                                                                    if (
-                                                                                        startTime &&
-                                                                                        endTime
-                                                                                    ) {
-                                                                                        return `${startTime}-${endTime}`;
-                                                                                    } else if (
-                                                                                        startTime
-                                                                                    ) {
-                                                                                        return startTime;
-                                                                                    } else if (
-                                                                                        endTime
-                                                                                    ) {
-                                                                                        return endTime;
-                                                                                    }
-                                                                                    return "";
-                                                                                })()}
-                                                                            </span>
-                                                                        )}
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    {day.transactions
-                                                        .slice(
-                                                            0,
-                                                            isMobile ? 1 : 2
-                                                        )
-                                                        .map((transaction) => (
-                                                            <div
-                                                                key={`transaction-${transaction.id}`}
-                                                                className={`text-xs p-1 rounded text-white truncate ${getTransactionTypeColor(
-                                                                    transaction.type
-                                                                )}`}
-                                                                title={`${
-                                                                    transaction.description
-                                                                } - ${formatCurrency(
-                                                                    transaction.amount,
-                                                                    transaction.currency ??
-                                                                        "PHP"
-                                                                )}`}
-                                                            >
-                                                                <div className="flex items-center justify-between">
-                                                                    <span className="truncate flex-1">
-                                                                        {
-                                                                            transaction.description
-                                                                        }
-                                                                    </span>
-                                                                    <span className="ml-1 opacity-75 text-xs">
-                                                                        {formatCurrency(
-                                                                            transaction.amount,
-                                                                            transaction.currency ??
-                                                                                "PHP"
-                                                                        )}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    {day.tasks.length >
-                                                        (isMobile ? 2 : 3) && (
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                            +
-                                                            {day.tasks.length -
-                                                                (isMobile
-                                                                    ? 2
-                                                                    : 3)}{" "}
-                                                            more
-                                                        </div>
-                                                    )}
-                                                    {day.transactions.length >
-                                                        (isMobile ? 1 : 2) && (
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                            +
-                                                            {day.transactions.length -
-                                                                (isMobile
-                                                                    ? 1
-                                                                    : 2)}{" "}
-                                                            more transactions
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </>
-                            )}
-                        </div>
+                                </MenuItem>
+                            </MenuItems>
+                        </Menu>
                     </div>
                 </div>
-
-                {/* Sidebar - Hidden on mobile when in list view */}
+            }
+        >
+            <Head title="Calendar" />
+            <div className="card overflow-hidden" data-tour="calendar-grid">
                 <div
-                    className={`w-full lg:w-80 space-y-6 order-1 lg:order-2 ${
-                        isMobile && viewMode === "list" ? "hidden" : ""
-                    }`}
+                    className="flex flex-col gap-3 border-b border-light-border/70 p-3 dark:border-dark-border/70 sm:p-4"
+                    data-tour="calendar-header"
                 >
-                    {/* Quick Actions */}
-                    <div className="card p-4 sm:p-6">
-                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                            Quick Actions
-                        </h3>
-                        <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1">
                             <button
                                 type="button"
-                                onClick={() => setShowCreateTaskModal(true)}
-                                className="flex items-center w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                                onClick={() => calendarRef.current?.getApi().prev()}
+                                aria-label="Previous period"
+                                className="min-h-11 min-w-11 rounded-xl p-2 text-light-secondary hover:bg-light-hover dark:text-dark-secondary dark:hover:bg-dark-hover"
                             >
-                                <Plus className="w-4 h-4 mr-2" />
-                                Create New Task
+                                <ChevronLeft className="h-5 w-5" />
                             </button>
-                            <Link
-                                href={route("tasks.index")}
-                                className="flex items-center w-full px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                            <button
+                                type="button"
+                                onClick={() => calendarRef.current?.getApi().next()}
+                                aria-label="Next period"
+                                className="min-h-11 min-w-11 rounded-xl p-2 text-light-secondary hover:bg-light-hover dark:text-dark-secondary dark:hover:bg-dark-hover"
                             >
-                                <Eye className="w-4 h-4 mr-2" />
-                                View All Tasks
-                            </Link>
+                                <ChevronRight className="h-5 w-5" />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => calendarRef.current?.getApi().today()}
+                                className="btn-secondary min-h-11 text-sm"
+                            >
+                                Today
+                            </button>
                         </div>
-                    </div>
-
-                    {/* Overdue Tasks */}
-                    {overdueTasks.length > 0 && (
-                        <div className="card p-4 sm:p-6">
-                            <div className="flex items-center mb-4">
-                                <AlertTriangle className="w-4 sm:w-5 h-4 sm:h-5 text-red-500 mr-2" />
-                                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                    Overdue Tasks ({overdueTasks.length})
-                                </h3>
-                            </div>
-                            <div className="space-y-3 max-h-64 overflow-y-auto">
-                                {overdueTasks.map((task) => (
-                                    <div
-                                        key={task.id}
-                                        className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800"
+                        <div className="min-w-0 text-center">
+                            <h2 className="truncate text-base font-semibold text-light-primary dark:text-dark-primary sm:text-lg">
+                                {title}
+                            </h2>
+                            {monthTitle && (
+                                <p className="truncate text-xs text-light-muted dark:text-dark-muted">
+                                    {monthTitle}
+                                </p>
+                            )}
+                        </div>
+                        <Menu as="div" className="relative">
+                            <MenuButton
+                                aria-label="More calendar options"
+                                className="min-h-11 min-w-11 rounded-xl p-2 text-light-secondary hover:bg-light-hover dark:text-dark-secondary dark:hover:bg-dark-hover"
+                            >
+                                <Ellipsis className="h-5 w-5" />
+                            </MenuButton>
+                            <MenuItems
+                                anchor="bottom end"
+                                className="z-40 mt-2 w-72 rounded-xl border border-light-border bg-light-card p-3 shadow-xl dark:border-dark-border dark:bg-dark-card"
+                            >
+                                <div>
+                                    <label
+                                        htmlFor="month-title"
+                                        className="text-xs font-medium text-light-secondary dark:text-dark-secondary"
                                     >
-                                        <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm">
-                                            {task.title}
-                                        </h4>
-                                        <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                                            Due: {formatDate(task.due_date)}
-                                        </p>
-                                        {task.category && (
-                                            <span
-                                                className="inline-block text-xs px-2 py-1 rounded-full text-white mt-2"
-                                                style={{
-                                                    backgroundColor:
-                                                        task.status ===
-                                                        "completed"
-                                                            ? "#6B7280"
-                                                            : task.category
-                                                                  .color,
-                                                }}
-                                            >
-                                                {task.category.name}
-                                            </span>
-                                        )}
+                                        Name this month
+                                    </label>
+                                    <div className="mt-2 flex gap-2">
+                                        <input
+                                            id="month-title"
+                                            value={monthTitleDraft}
+                                            maxLength="60"
+                                            onChange={(e) => setMonthTitleDraft(e.target.value)}
+                                            className="input-primary min-w-0 flex-1 py-2 text-sm"
+                                            placeholder="Optional theme"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={saveMonthTitle}
+                                            className="btn-primary px-3 text-sm"
+                                        >
+                                            Save
+                                        </button>
                                     </div>
-                                ))}
-                            </div>
+                                </div>
+                            </MenuItems>
+                        </Menu>
+                    </div>
+                    <div className="flex w-full overflow-x-auto rounded-xl bg-light-hover p-1 dark:bg-dark-hover sm:mx-auto sm:w-auto">
+                        {viewOptions.map(([value, label]) => (
+                            <button
+                                key={value}
+                                type="button"
+                                onClick={() => changeView(value)}
+                                aria-pressed={view === value}
+                                className={`min-h-10 flex-1 whitespace-nowrap rounded-lg px-3 text-sm font-medium sm:flex-none ${view === value ? "bg-light-card text-light-primary shadow-sm dark:bg-dark-card dark:text-dark-primary" : "text-light-muted hover:text-light-primary dark:text-dark-muted dark:hover:text-dark-primary"}`}
+                            >
+                                {label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="calendar-shell relative p-2 sm:p-4">
+                    {isLoading && (
+                        <div
+                            className="absolute right-4 top-4 z-20 rounded-full bg-light-card/95 px-3 py-1.5 text-xs font-medium text-light-secondary shadow-soft dark:bg-dark-card/95 dark:text-dark-secondary"
+                            role="status"
+                        >
+                            Updating calendar…
                         </div>
                     )}
-
-                    {/* Upcoming Tasks */}
-                    <div className="card p-4 sm:p-6">
-                        <div className="flex items-center mb-4">
-                            <Clock className="w-4 sm:w-5 h-4 sm:h-5 text-blue-500 mr-2" />
-                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                Upcoming Tasks ({upcomingTasks.length})
-                            </h3>
-                        </div>
-                        <div className="space-y-3 max-h-64 overflow-y-auto">
-                            {upcomingTasks.length > 0 ? (
-                                upcomingTasks.map((task) => (
-                                    <div
-                                        key={task.id}
-                                        className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800"
-                                    >
-                                        <div className="flex items-center space-x-2 mb-1">
-                                            <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm">
-                                                {task.title}
-                                            </h4>
-                                            {task.is_recurring && (
-                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
-                                                    Recurring
-                                                </span>
-                                            )}
-                                        </div>
-                                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                                            Due: {formatDate(task.due_date)}
-                                        </p>
-                                        {task.category && (
-                                            <span
-                                                className="inline-block text-xs px-2 py-1 rounded-full text-white mt-2"
-                                                style={{
-                                                    backgroundColor:
-                                                        task.status ===
-                                                        "completed"
-                                                            ? "#6B7280"
-                                                            : task.category
-                                                                  .color,
-                                                }}
-                                            >
-                                                {task.category.name}
-                                            </span>
-                                        )}
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="text-gray-500 dark:text-gray-400 text-sm">
-                                    No upcoming tasks in the next 7 days.
-                                </p>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Recently Accomplished Tasks */}
-                    <div className="card p-4 sm:p-6">
-                        <div className="flex items-center mb-4">
-                            <CheckCircle className="w-4 sm:w-5 h-4 sm:h-5 text-primary mr-2" />
-                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                Recently Accomplished (
-                                {recentlyAccomplishedTasks.length})
-                            </h3>
-                        </div>
-                        <div className="space-y-3 max-h-64 overflow-y-auto">
-                            {recentlyAccomplishedTasks.length > 0 ? (
-                                recentlyAccomplishedTasks.map((task) => (
-                                    <div
-                                        key={task.id}
-                                        className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800"
-                                    >
-                                        <div className="flex items-center space-x-2 mb-1">
-                                            <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm line-through decoration-green-500/60">
-                                                {task.title}
-                                            </h4>
-                                            {task.is_recurring && (
-                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
-                                                    Recurring
-                                                </span>
-                                            )}
-                                        </div>
-                                        <p className="text-xs text-green-700 dark:text-green-400 mt-1">
-                                            Completed:{" "}
-                                            {formatCompletedAt(task.completed_at)}
-                                        </p>
-                                        {task.category && (
-                                            <span
-                                                className="inline-block text-xs px-2 py-1 rounded-full text-white mt-2"
-                                                style={{
-                                                    backgroundColor:
-                                                        task.category.color,
-                                                }}
-                                            >
-                                                {task.category.name}
-                                            </span>
-                                        )}
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="text-gray-500 dark:text-gray-400 text-sm">
-                                    No tasks accomplished recently.
-                                </p>
-                            )}
-                        </div>
-                    </div>
+                    <FullCalendar
+                        ref={calendarRef}
+                        plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
+                        initialView={view}
+                        initialDate={currentDate}
+                        headerToolbar={false}
+                        events={calendarEvents}
+                        datesSet={handleDatesSet}
+                        selectable
+                        selectMirror
+                        select={handleSelect}
+                        eventClick={handleEventClick}
+                        editable
+                        eventDrop={persistScheduleChange}
+                        eventResize={persistScheduleChange}
+                        dayMaxEvents={3}
+                        nowIndicator
+                        allDaySlot
+                        slotMinTime="05:00:00"
+                        slotMaxTime="24:00:00"
+                        scrollTime="07:00:00"
+                        height="auto"
+                        eventTimeFormat={{ hour: "numeric", minute: "2-digit", meridiem: "short" }}
+                        noEventsContent="Nothing scheduled here yet."
+                    />
                 </div>
             </div>
 
-            {/* Modals */}
-            <DayTasksModal
-                show={showDayTasksModal}
+            <EventModal
+                key={`${selectedItem?.eventId || "new"}:${selectedItem?.occurrenceKey || selection?.start || "blank"}:${showEventModal}`}
+                show={showEventModal}
                 onClose={() => {
-                    setShowDayTasksModal(false);
-                    setSelectedDate(null);
+                    setShowEventModal(false);
+                    setSelectedItem(null);
+                    setSelection(null);
                 }}
-                selectedDate={selectedDate}
-                tasks={getSelectedDateTasks()}
-                transactions={transactions?.[selectedDate] ?? []}
-                onTaskView={handleTaskView}
-                onTaskEdit={handleTaskEdit}
-                onTaskStatusToggle={handleTaskStatusToggle}
+                calendars={eventCalendars}
+                timezone={userTimezone}
+                item={selectedItem}
+                initialSelection={selection}
             />
-
             <TaskModal
-                show={showCreateTaskModal}
-                onClose={() => setShowCreateTaskModal(false)}
-            />
-
-            <TaskViewModal
-                show={showViewModal}
-                onClose={() => {
-                    setShowViewModal(false);
-                    setSelectedTask(null);
-                }}
-                task={selectedTask}
-                onTaskUpdate={handleTaskUpdate}
-            />
-
-            <TaskEditModal
-                show={showEditModal}
-                onClose={() => {
-                    setShowEditModal(false);
-                    setSelectedTask(null);
-                }}
-                task={selectedTask}
+                show={showTaskModal}
+                onClose={() => setShowTaskModal(false)}
                 categories={categories}
-                onTaskUpdate={handleTaskUpdate}
+                lists={lists}
+            />
+            <TaskViewModal
+                show={showTaskView}
+                onClose={() => setShowTaskView(false)}
+                task={selectedTask}
+                onTaskUpdate={setSelectedTask}
             />
             <OnboardingTour
                 tourKey="calendar"

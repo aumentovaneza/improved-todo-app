@@ -2,6 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
+/* FullCalendar is only the interaction/view engine. These overrides keep its
+   surfaces inside Wevie's design system in both themes. */
+.calendar-shell .fc {
+    --fc-border-color: #dde6e8;
+    --fc-page-bg-color: transparent;
+    --fc-neutral-bg-color: #eef5f6;
+    --fc-list-event-hover-bg-color: #eef5f6;
+    color: #1f2f33;
+}
+
+.dark .calendar-shell .fc {
+    --fc-border-color: #2f4a50;
+    --fc-neutral-bg-color: #2a4247;
+    --fc-list-event-hover-bg-color: #2a4247;
+    color: #e6f2f3;
+}
+
+.calendar-shell .fc .fc-scrollgrid,
+.calendar-shell .fc .fc-list {
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.calendar-shell .fc .fc-col-header-cell,
+.calendar-shell .fc .fc-timegrid-axis,
+.calendar-shell .fc .fc-list-day-cushion {
+    @apply bg-light-hover text-light-secondary dark:bg-dark-hover dark:text-dark-secondary;
+}
+
+.calendar-shell .fc .fc-daygrid-day-number,
+.calendar-shell .fc .fc-timegrid-slot-label,
+.calendar-shell .fc .fc-list-event-time,
+.calendar-shell .fc .fc-list-event-title {
+    @apply text-light-secondary dark:text-dark-secondary;
+}
+
+.calendar-shell .fc .fc-day-today {
+    @apply bg-wevie-teal/10 dark:bg-wevie-teal/10;
+}
+
+.calendar-shell .fc .fc-event {
+    @apply rounded-md border-0 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wevie-teal;
+}
+
+@media (max-width: 640px) {
+    .calendar-shell .fc .fc-toolbar-title {
+        font-size: 1rem;
+    }
+
+    .calendar-shell .fc .fc-daygrid-day-frame {
+        min-height: 4.75rem;
+    }
+}
+
 /* Global dark mode styles */
 @layer base {
     html {

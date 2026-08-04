@@ -83,6 +83,18 @@ class User extends Authenticatable
         return $this->hasMany(Task::class);
     }
 
+    /** @return HasMany<EventCalendar, $this> */
+    public function eventCalendars(): HasMany
+    {
+        return $this->hasMany(EventCalendar::class);
+    }
+
+    /** @return HasMany<CalendarEvent, $this> */
+    public function calendarEvents(): HasMany
+    {
+        return $this->hasMany(CalendarEvent::class);
+    }
+
     public function reminders(): HasMany
     {
         return $this->hasMany(Reminder::class);

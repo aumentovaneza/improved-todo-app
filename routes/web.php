@@ -4,10 +4,12 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\BoardController;
 use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\CalendarEventController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardLayoutController;
 use App\Http\Controllers\DeviceTokenController;
+use App\Http\Controllers\EventCalendarController;
 use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\ListItemController;
 use App\Http\Controllers\NotificationController;
@@ -118,6 +120,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('calendar', [CalendarController::class, 'index'])->name('calendar.index');
     Route::post('calendar/month-title', [CalendarController::class, 'updateMonthTitle'])
         ->name('calendar.month-title.update');
+    Route::resource('calendar-events', CalendarEventController::class)
+        ->only(['store', 'update', 'destroy']);
+    Route::resource('event-calendars', EventCalendarController::class)
+        ->only(['store', 'update', 'destroy']);
 
     // Analytics
     Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');

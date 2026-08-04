@@ -212,28 +212,46 @@ class CalendarController extends Controller
      */
     private function financeItems(int $userId, Carbon $start, Carbon $end, string $timezone): array
     {
+        // One summary chip per day (count + cash-flow net) instead of one item per
+        // transaction; the busy days that flooded the grid now collapse to a single
+        // chip that deep-links to the filtered transactions page. Note: this still
+        // loads all of the user's transactions to expand recurrences in PHP — a
+        // whereBetween('occurred_at', ...) prefilter for non-recurring rows is a
+        // possible follow-up perf win.
         return FinanceTransaction::query()
             ->where('user_id', $userId)
-            ->with('category')
             ->get()
             ->flatMap(fn ($transaction) => $transaction->getOccurrencesInRange($start, $end))
-            ->map(function ($transaction) use ($timezone) {
-                $date = $transaction->occurred_at->setTimezone($timezone)->format('Y-m-d');
-                $colors = ['income' => '#10B981', 'expense' => '#F43F5E', 'savings' => '#8B5CF6'];
+            ->groupBy(fn ($transaction) => $transaction->occurred_at->setTimezone($timezone)->format('Y-m-d'))
+            ->map(function ($transactions, $date) {
+                // Cash-flow net: income in, expense and savings out.
+                $net = $transactions->reduce(function (float $carry, $transaction) {
+                    $amount = (float) $transaction->amount;
+
+                    return $carry + ($transaction->type === 'income' ? $amount : -$amount);
+                }, 0.0);
+                $count = $transactions->count();
 
                 return [
-                    'id' => "finance:{$transaction->id}:{$date}",
+                    'id' => "finance-summary:{$date}",
                     'sourceType' => 'finance',
-                    'sourceId' => $transaction->category_id,
+                    'sourceId' => null,
                     'eventId' => null,
                     'occurrenceKey' => $date,
-                    'title' => $transaction->description,
+                    'title' => $count.' '.($count === 1 ? 'transaction' : 'transactions'),
                     'start' => $date,
                     'end' => Carbon::parse($date)->addDay()->format('Y-m-d'),
                     'allDay' => true,
-                    'color' => $colors[$transaction->type] ?? '#64748B',
+                    'color' => $net >= 0 ? '#10B981' : '#F43F5E',
                     'editable' => false,
-                    'extendedProps' => ['transaction' => $transaction, 'kind' => 'finance'],
+                    'extendedProps' => [
+                        'kind' => 'finance',
+                        'aggregated' => true,
+                        'date' => $date,
+                        'count' => $count,
+                        'net' => round($net, 2),
+                        'currency' => $transactions->first()->currency ?? 'PHP',
+                    ],
                 ];
             })
             ->values()

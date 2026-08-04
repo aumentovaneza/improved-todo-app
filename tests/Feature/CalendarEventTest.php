@@ -4,6 +4,7 @@ use App\Models\CalendarEvent;
 use App\Models\EventCalendar;
 use App\Models\Task;
 use App\Models\User;
+use App\Modules\Finance\Models\FinanceTransaction;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 
@@ -242,4 +243,39 @@ it('can create, update, and remove an empty custom calendar but protects the def
     $this->actingAs($user)
         ->delete(route('event-calendars.destroy', $user->eventCalendars()->firstOrFail()))
         ->assertSessionHasErrors('calendar');
+});
+
+it('collapses a day of finance transactions into a single summary item', function () {
+    $user = User::factory()->create();
+
+    foreach ([
+        ['type' => 'income', 'amount' => 5000, 'description' => 'Salary'],
+        ['type' => 'expense', 'amount' => 1200, 'description' => 'Groceries'],
+        ['type' => 'savings', 'amount' => 800, 'description' => 'Emergency fund'],
+    ] as $transaction) {
+        FinanceTransaction::create(array_merge([
+            'user_id' => $user->id,
+            'currency' => 'PHP',
+            'occurred_at' => '2026-09-14 09:00:00',
+        ], $transaction));
+    }
+
+    $this->actingAs($user)
+        ->get(route('calendar.index', [
+            'date' => '2026-09-14',
+            'start' => '2026-09-01',
+            'end' => '2026-09-30',
+            'sources' => 'finance',
+        ]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Calendar/Index')
+            ->has('calendarItems', 1)
+            ->where('calendarItems.0.id', 'finance-summary:2026-09-14')
+            ->where('calendarItems.0.sourceType', 'finance')
+            ->where('calendarItems.0.extendedProps.aggregated', true)
+            ->where('calendarItems.0.extendedProps.count', 3)
+            // Cash-flow net: 5000 income − 1200 expense − 800 savings.
+            ->where('calendarItems.0.extendedProps.net', 3000)
+            ->where('calendarItems.0.extendedProps.date', '2026-09-14'));
 });

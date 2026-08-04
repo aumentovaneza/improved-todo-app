@@ -46,13 +46,98 @@
     @apply rounded-md border-0 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wevie-teal;
 }
 
+/* Day numbers sit clear of events, and clicking them is discoverable. */
+.calendar-shell .fc .fc-daygrid-day-top {
+    @apply flex-row justify-end px-1 pt-1;
+}
+
+.calendar-shell .fc .fc-daygrid-day-number {
+    @apply rounded-md px-1 text-xs font-medium hover:text-wevie-teal;
+}
+
+.calendar-shell .fc .fc-daygrid-day-events {
+    margin-top: 0.125rem;
+}
+
+/* Compact, single-line chips that truncate instead of overflowing the cell. */
+.calendar-shell .fc .fc-daygrid-event {
+    @apply my-px rounded-md px-1.5 py-0.5 text-xs font-medium leading-tight;
+}
+
+.calendar-shell .fc .wv-ev-chip {
+    width: 100%;
+    min-width: 0;
+}
+
+.calendar-shell .fc .fc-event .fc-event-main {
+    overflow: hidden;
+}
+
+/* Our chip already carries a type icon, so drop FullCalendar's default dot. */
+.calendar-shell .fc .fc-daygrid-event .fc-daygrid-event-dot {
+    display: none;
+}
+
+/* Type accent + readable hover for month/week/day chips. */
+.calendar-shell .fc .wv-ev {
+    border-inline-start: 3px solid transparent;
+}
+
+.calendar-shell .fc .wv-ev--task {
+    border-inline-start-color: theme("colors.primary.400");
+}
+
+.calendar-shell .fc .wv-ev--finance {
+    border-inline-start-color: theme("colors.warning.500");
+}
+
+.calendar-shell .fc .wv-ev--event {
+    border-inline-start-color: theme("colors.secondary.400");
+}
+
+.calendar-shell .fc .fc-event:hover {
+    @apply shadow-md;
+    filter: brightness(0.97);
+}
+
+.dark .calendar-shell .fc .fc-event:hover {
+    filter: brightness(1.12);
+}
+
+/* Time-grid: side-by-side tiling (slotEventOverlap=false) plus breathing room. */
+.calendar-shell .fc .fc-timegrid-event {
+    @apply rounded-md text-xs;
+}
+
+.calendar-shell .fc .fc-timegrid-event-harness {
+    inset-inline: 1px;
+}
+
+.calendar-shell .fc .fc-timegrid-event .fc-event-main {
+    @apply px-1 py-0.5;
+}
+
+/* Agenda: our custom row renders the badge + secondary text, so hide the
+   repetitive default time cell and let the title cell span the row. */
+.calendar-shell .fc .fc-list-event-time {
+    display: none;
+}
+
+.calendar-shell .fc .fc-list-event-title {
+    @apply w-full;
+}
+
+.calendar-shell .fc .fc-list-event:hover td {
+    @apply bg-light-hover dark:bg-dark-hover;
+}
+
 @media (max-width: 640px) {
     .calendar-shell .fc .fc-toolbar-title {
         font-size: 1rem;
     }
 
     .calendar-shell .fc .fc-daygrid-day-frame {
-        min-height: 4.75rem;
+        min-height: 5rem;
     }
 }
 

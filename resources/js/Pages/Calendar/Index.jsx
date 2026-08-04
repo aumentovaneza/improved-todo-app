@@ -1,10 +1,13 @@
+import { metaForSource } from "@/Components/Calendar/CalendarItemMeta";
 import CalendarSources from "@/Components/Calendar/CalendarSources";
+import DayDetailModal from "@/Components/Calendar/DayDetailModal";
 import EventModal from "@/Components/Calendar/EventModal";
 import OnboardingTour from "@/Components/OnboardingTour";
 import TaskModal from "@/Components/TaskModal";
 import TaskViewModal from "@/Components/TaskViewModal";
 import TodoLayout from "@/Layouts/TodoLayout";
 import { calendarSteps } from "@/tours";
+import { formatCompactCurrency } from "@/Utils/currency";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/react/daygrid";
 import interactionPlugin from "@fullcalendar/react/interaction";
@@ -26,6 +29,18 @@ const CALENDAR_KEY = "calendar.native-sources.v2";
 const toDateString = (value) => {
     const date = new Date(value);
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+};
+
+const capitalize = (value) => (value ? value.charAt(0).toUpperCase() + value.slice(1) : "");
+
+// The local calendar date an item belongs to: all-day/finance items carry a
+// Y-m-d occurrenceKey; timed items derive it from their start.
+const itemDateKey = (item) => {
+    if (item.allDay) {
+        const key = item.occurrenceKey || item.start;
+        return String(key).slice(0, 10);
+    }
+    return toDateString(item.start);
 };
 
 const readJson = (key, fallback) => {
@@ -76,6 +91,9 @@ export default function Index({
     const [selectedItem, setSelectedItem] = useState(null);
     const [selectedTask, setSelectedTask] = useState(null);
     const [selection, setSelection] = useState(null);
+    const [showDayDetail, setShowDayDetail] = useState(false);
+    const [dayDetailDate, setDayDetailDate] = useState(null);
+    const [taskDefaultDueDate, setTaskDefaultDueDate] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [monthTitleDraft, setMonthTitleDraft] = useState(monthTitle || "");
 
@@ -160,6 +178,15 @@ export default function Index({
     };
 
     const handleSelect = (info) => {
+        // In month view a single-day click is handled by dateClick (it opens the
+        // day panel); only a multi-day drag should start a ranged event here.
+        if (
+            info.view.type === "dayGridMonth" &&
+            info.end.getTime() - info.start.getTime() <= 86400000
+        ) {
+            calendarRef.current?.getApi().unselect();
+            return;
+        }
         openEvent(null, {
             start: info.startStr,
             end: info.endStr,
@@ -179,6 +206,10 @@ export default function Index({
         extendedProps: event.extendedProps,
     });
 
+    const openTransactionsForDate = (date) => {
+        router.visit(route("weviewallet.transactions.index", { start_date: date, end_date: date }));
+    };
+
     const handleEventClick = (info) => {
         const item = itemFromCalendarEvent(info.event);
         if (item.sourceType === "event") {
@@ -187,8 +218,33 @@ export default function Index({
             setSelectedTask(info.event.extendedProps.task);
             setShowTaskView(true);
         } else {
-            toast.info("Finance entries are managed from WevieWallet.");
+            openTransactionsForDate(info.event.extendedProps.date || item.occurrenceKey);
         }
+    };
+
+    const handleDateClick = (info) => {
+        // The day panel is the month-view affordance; in week/day a slot click
+        // still creates an event through the select handler.
+        if (info.view.type !== "dayGridMonth") return;
+        setDayDetailDate(info.dateStr);
+        setShowDayDetail(true);
+    };
+
+    const openNewEventForDate = (date) => {
+        setShowDayDetail(false);
+        openEvent(null, { start: date, allDay: true, kind: "event" });
+    };
+
+    const openNewTaskForDate = (date) => {
+        setShowDayDetail(false);
+        setTaskDefaultDueDate(date);
+        setShowTaskModal(true);
+    };
+
+    const viewDay = (date) => {
+        setShowDayDetail(false);
+        changeView("timeGridDay");
+        calendarRef.current?.getApi().gotoDate(date);
     };
 
     const persistScheduleChange = async (info) => {
@@ -283,6 +339,65 @@ export default function Index({
         [calendarItems]
     );
 
+    const itemsForDate = useMemo(() => {
+        if (!dayDetailDate) return [];
+        return calendarEvents.filter((item) => itemDateKey(item) === dayDetailDate);
+    }, [calendarEvents, dayDetailDate]);
+
+    // One renderer for every view: a compact, truncating chip in month/week/day
+    // and a labelled row in the agenda, so the three sources stay distinct and
+    // never overlap.
+    const renderEventContent = (arg) => {
+        const { event, view, timeText } = arg;
+        const sourceType = event.extendedProps.sourceType;
+        const meta = metaForSource(sourceType);
+        const { aggregated, count, net, currency, task } = event.extendedProps;
+
+        const title = aggregated ? `${count} transactions` : event.title;
+
+        if (view.type === "listMonth") {
+            let secondary = event.allDay ? "All-day" : timeText;
+            if (sourceType === "task" && task) {
+                secondary = [capitalize(task.priority), capitalize(task.status?.replace("_", " "))]
+                    .filter(Boolean)
+                    .join(" · ");
+            } else if (aggregated) {
+                secondary = `Net ${formatCompactCurrency(net, currency)}`;
+            }
+
+            return (
+                <div className="flex w-full items-center gap-2">
+                    <span
+                        className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${meta.badgeClass}`}
+                    >
+                        <meta.Icon className="h-3 w-3" />
+                        {meta.label}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate font-medium">{title}</span>
+                    {secondary && (
+                        <span className="shrink-0 text-xs text-light-muted dark:text-dark-muted">
+                            {secondary}
+                        </span>
+                    )}
+                </div>
+            );
+        }
+
+        const label = aggregated ? `${count} · ${formatCompactCurrency(net, currency)}` : title;
+
+        return (
+            <div className="wv-ev-chip flex items-center gap-1 overflow-hidden">
+                <meta.Icon className="h-3 w-3 shrink-0 opacity-90" />
+                {!event.allDay && timeText && (
+                    <span className="shrink-0 text-[0.65rem] font-medium opacity-90">
+                        {timeText}
+                    </span>
+                )}
+                <span className="min-w-0 flex-1 truncate">{label}</span>
+            </div>
+        );
+    };
+
     const viewOptions = [
         ["dayGridMonth", "Month"],
         ["timeGridWeek", "Week"],
@@ -332,10 +447,13 @@ export default function Index({
                                 <MenuItem>
                                     <button
                                         type="button"
-                                        onClick={() => setShowTaskModal(true)}
+                                        onClick={() => {
+                                            setTaskDefaultDueDate("");
+                                            setShowTaskModal(true);
+                                        }}
                                         className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm text-light-primary hover:bg-light-hover focus:bg-light-hover focus:outline-none dark:text-dark-primary dark:hover:bg-dark-hover dark:focus:bg-dark-hover"
                                     >
-                                        <ListPlus className="h-4 w-4 text-info-500" />
+                                        <ListPlus className="h-4 w-4 text-secondary-500" />
                                         New task
                                     </button>
                                 </MenuItem>
@@ -457,15 +575,24 @@ export default function Index({
                         initialDate={currentDate}
                         headerToolbar={false}
                         events={calendarEvents}
+                        eventContent={renderEventContent}
+                        eventClassNames={(arg) => [
+                            "wv-ev",
+                            `wv-ev--${arg.event.extendedProps.sourceType}`,
+                        ]}
                         datesSet={handleDatesSet}
                         selectable
                         selectMirror
                         select={handleSelect}
                         eventClick={handleEventClick}
+                        navLinks
+                        navLinkDayClick={(date) => viewDay(toDateString(date))}
+                        dateClick={handleDateClick}
                         editable
                         eventDrop={persistScheduleChange}
                         eventResize={persistScheduleChange}
                         dayMaxEvents={3}
+                        slotEventOverlap={false}
                         nowIndicator
                         allDaySlot
                         slotMinTime="05:00:00"
@@ -493,9 +620,36 @@ export default function Index({
             />
             <TaskModal
                 show={showTaskModal}
-                onClose={() => setShowTaskModal(false)}
+                onClose={() => {
+                    setShowTaskModal(false);
+                    setTaskDefaultDueDate("");
+                }}
                 categories={categories}
                 lists={lists}
+                defaultDueDate={taskDefaultDueDate}
+            />
+            <DayDetailModal
+                show={showDayDetail}
+                onClose={() => setShowDayDetail(false)}
+                date={dayDetailDate}
+                items={itemsForDate}
+                onNewEvent={openNewEventForDate}
+                onNewTask={openNewTaskForDate}
+                onViewDay={viewDay}
+                onOpenEvent={(item) => {
+                    setShowDayDetail(false);
+                    openEvent(item);
+                }}
+                onOpenTask={(task) => {
+                    if (!task) return;
+                    setShowDayDetail(false);
+                    setSelectedTask(task);
+                    setShowTaskView(true);
+                }}
+                onOpenFinance={(date) => {
+                    setShowDayDetail(false);
+                    openTransactionsForDate(date);
+                }}
             />
             <TaskViewModal
                 show={showTaskView}

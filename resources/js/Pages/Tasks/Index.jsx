@@ -104,6 +104,49 @@ function SortableTask({
         }
     };
 
+    const actionItems = [
+        {
+            label: "Add subtask",
+            icon: ListTodo,
+            onClick: () => {
+                setSelectedTask(task);
+                setShowSubtaskModal(true);
+            },
+        },
+        {
+            label: "View",
+            icon: Eye,
+            onClick: () => {
+                setSelectedTask(task);
+                setShowViewModal(true);
+            },
+        },
+        {
+            label: "Edit",
+            icon: Edit,
+            onClick: () => {
+                setSelectedTask(task);
+                setShowEditModal(true);
+            },
+        },
+        ...(task.lists && task.lists.length > 0
+            ? [
+                  {
+                      label: "Open list",
+                      icon: List,
+                      onClick: () =>
+                          router.visit(route("lists.show", task.lists[0].id)),
+                  },
+              ]
+            : []),
+        {
+            label: "Delete",
+            icon: Trash2,
+            danger: true,
+            onClick: () => handleDeleteTask(task),
+        },
+    ];
+
     return (
         <div
             ref={setNodeRef}
@@ -164,6 +207,11 @@ function SortableTask({
                             </p>
                         )}
                     </div>
+
+                    {/* Actions (mobile: pinned to the title row so it never wraps) */}
+                    <div className="flex-shrink-0 sm:hidden">
+                        <TaskActionsMenu items={actionItems} />
+                    </div>
                 </div>
 
                 {/* Category */}
@@ -174,8 +222,9 @@ function SortableTask({
                             style={{
                                 backgroundColor: task.category?.color || "#6B7280",
                             }}
+                            title={task.category?.name || "Uncategorized"}
                         />
-                        <span className="text-xs text-light-secondary dark:text-dark-secondary truncate max-w-24">
+                        <span className="hidden sm:inline text-xs text-light-secondary dark:text-dark-secondary truncate max-w-24">
                             {task.category?.name || "Uncategorized"}
                         </span>
                     </div>
@@ -312,57 +361,9 @@ function SortableTask({
                         </div>
                     )}
 
-                    {/* Actions */}
-                    <div className="opacity-100 transition-opacity focus-within:opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
-                        <TaskActionsMenu
-                            items={[
-                                {
-                                    label: "Add subtask",
-                                    icon: ListTodo,
-                                    onClick: () => {
-                                        setSelectedTask(task);
-                                        setShowSubtaskModal(true);
-                                    },
-                                },
-                                {
-                                    label: "View",
-                                    icon: Eye,
-                                    onClick: () => {
-                                        setSelectedTask(task);
-                                        setShowViewModal(true);
-                                    },
-                                },
-                                {
-                                    label: "Edit",
-                                    icon: Edit,
-                                    onClick: () => {
-                                        setSelectedTask(task);
-                                        setShowEditModal(true);
-                                    },
-                                },
-                                ...(task.lists && task.lists.length > 0
-                                    ? [
-                                          {
-                                              label: "Open list",
-                                              icon: List,
-                                              onClick: () =>
-                                                  router.visit(
-                                                      route(
-                                                          "lists.show",
-                                                          task.lists[0].id
-                                                      )
-                                                  ),
-                                          },
-                                      ]
-                                    : []),
-                                {
-                                    label: "Delete",
-                                    icon: Trash2,
-                                    danger: true,
-                                    onClick: () => handleDeleteTask(task),
-                                },
-                            ]}
-                        />
+                    {/* Actions (desktop: hover-reveal at the end of the meta row) */}
+                    <div className="hidden opacity-100 transition-opacity focus-within:opacity-100 sm:block sm:opacity-0 sm:group-hover:opacity-100">
+                        <TaskActionsMenu items={actionItems} />
                     </div>
                 </div>
             </div>

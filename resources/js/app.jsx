@@ -10,6 +10,7 @@ import { ToastContainer, toast } from "react-toastify";
 import { PomodoroProvider } from "./Components/Pomodoro";
 import NavigationLoader from "./Components/NavigationLoader";
 import { registerSW } from "virtual:pwa-register";
+import { initStatusBar } from "./native/statusBar";
 
 const appName = import.meta.env.VITE_APP_NAME || "Wevie";
 
@@ -48,6 +49,9 @@ function FlashToaster() {
 
     return null;
 }
+
+// Native shell (iOS/Capacitor): overlay the status bar so the safe-area inset resolves.
+initStatusBar();
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,

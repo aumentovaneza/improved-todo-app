@@ -234,7 +234,7 @@ export default function TodoLayout({ header, children }) {
     ];
 
     return (
-        <div className={`min-h-screen bg-light-primary dark:bg-dark-primary lg:flex`}>
+        <div className={`min-h-[100dvh] bg-light-primary dark:bg-dark-primary lg:flex`}>
             {/* Mobile sidebar overlay */}
             {sidebarOpen && (
                 <div className="fixed inset-0 z-50 lg:hidden">
@@ -904,9 +904,9 @@ export default function TodoLayout({ header, children }) {
                 </div>
             </aside>
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-h-screen w-full lg:ml-64">
+            <div className="flex-1 flex flex-col min-h-[100dvh] w-full lg:ml-64">
                 {/* Top Navigation Bar */}
-                <header className="sticky top-0 z-10 bg-light-secondary dark:bg-dark-secondary border-b border-light-border dark:border-dark-border">
+                <header className="sticky top-0 z-10 bg-light-secondary dark:bg-dark-secondary border-b border-light-border dark:border-dark-border pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
                     <div className="flex items-center justify-between min-h-14 h-auto py-3 sm:h-16 sm:py-0 px-2 sm:px-6 lg:px-8">
                         <div className="flex items-center">
                             <button
@@ -953,7 +953,7 @@ export default function TodoLayout({ header, children }) {
                     </div>
                 </header>
                 {/* Page Content */}
-                <main className="flex-1 p-6 pb-28 lg:pb-6">
+                <main className="flex-1 overflow-x-hidden p-6 pb-28 lg:pb-6">
                     <div className="mx-auto w-full max-w-7xl">{children}</div>
                 </main>
             </div>

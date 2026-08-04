@@ -538,7 +538,7 @@ class FinanceService
 
         $amount = (float) $transaction->amount * $direction;
         $delta = match ($transaction->type) {
-            'expense' => $amount * -1,
+            'expense', 'savings' => $amount * -1,
             default => $amount,
         };
 

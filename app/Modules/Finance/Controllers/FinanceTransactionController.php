@@ -49,6 +49,7 @@ class FinanceTransactionController extends Controller
             'end_date' => $request->string('end_date')->toString(),
             'sort' => $request->string('sort')->toString(),
             'tags' => array_values(array_filter((array) $request->input('tags', []))),
+            'finance_account_id' => $request->integer('finance_account_id') ?: null,
             'wallet_user_id' => $walletUserId,
         ];
 
@@ -100,6 +101,7 @@ class FinanceTransactionController extends Controller
             'end_date' => $request->string('end_date')->toString(),
             'sort' => $request->string('sort')->toString(),
             'tags' => array_values(array_filter((array) $request->input('tags', []))),
+            'finance_account_id' => $request->integer('finance_account_id') ?: null,
             'wallet_user_id' => $walletUserId,
         ];
 
@@ -154,6 +156,15 @@ class FinanceTransactionController extends Controller
             $tagIds = array_map('intval', $filters['tags']);
             $query->whereHas('tags', function ($tagQuery) use ($tagIds) {
                 $tagQuery->whereIn('tags.id', $tagIds);
+            });
+        }
+
+        if (! empty($filters['finance_account_id'])) {
+            $accountId = (int) $filters['finance_account_id'];
+            $query->where(function ($accountQuery) use ($accountId) {
+                $accountQuery->where('finance_account_id', $accountId)
+                    ->orWhere('finance_transfer_account_id', $accountId)
+                    ->orWhere('finance_credit_card_account_id', $accountId);
             });
         }
 

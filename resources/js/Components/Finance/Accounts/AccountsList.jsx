@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { CreditCard, Pencil, Trash2 } from "lucide-react";
+import { Link } from "@inertiajs/react";
+import { CreditCard, Pencil, Receipt, Trash2 } from "lucide-react";
 import EmptyState from "@/Components/Finance/UI/EmptyState";
 import { formatCurrency } from "@/Utils/currency";
 
@@ -16,7 +17,12 @@ const maskAccountNumber = (value) => {
     return `•••• ${digits.slice(-4)}`;
 };
 
-export default function AccountsList({ accounts = [], onEdit, onDelete }) {
+export default function AccountsList({
+    accounts = [],
+    walletUserId,
+    onEdit,
+    onDelete,
+}) {
     const groupedAccounts = useMemo(() => {
         const groups = {
             cash: [],
@@ -164,6 +170,23 @@ export default function AccountsList({ accounts = [], onEdit, onDelete }) {
                                         </div>
                                     </div>
                                     <div className="mt-2 flex justify-end gap-2">
+                                        <Link
+                                            href={route(
+                                                "weviewallet.transactions.index",
+                                                {
+                                                    finance_account_id:
+                                                        account.id,
+                                                    wallet_user_id:
+                                                        walletUserId ||
+                                                        undefined,
+                                                }
+                                            )}
+                                            className="rounded-md p-1 text-light-secondary hover:text-light-primary dark:text-dark-secondary dark:hover:text-dark-primary"
+                                            title="View transactions"
+                                            aria-label="View transactions"
+                                        >
+                                            <Receipt className="h-4 w-4" />
+                                        </Link>
                                         {onEdit && (
                                             <button
                                                 type="button"

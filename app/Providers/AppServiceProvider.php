@@ -43,6 +43,11 @@ class AppServiceProvider extends ServiceProvider
             \App\Repositories\Eloquent\DailySummaryRepository::class
         );
 
+        $this->app->bind(
+            \App\Repositories\Contracts\CalendarEventRepositoryInterface::class,
+            \App\Repositories\Eloquent\CalendarEventRepository::class
+        );
+
         // AI text-generation manager + default driver bound to the contract.
         $this->app->singleton(\App\Services\Ai\AiManager::class, function ($app) {
             return new \App\Services\Ai\AiManager($app);
@@ -67,6 +72,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Services\QueueService::class);
         $this->app->singleton(\App\Services\DatabaseOptimizationService::class);
         $this->app->singleton(\App\Services\MonitoringService::class);
+        $this->app->singleton(\App\Services\CalendarRecurrenceService::class);
+        $this->app->singleton(\App\Services\CalendarEventService::class);
     }
 
     /**

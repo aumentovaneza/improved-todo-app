@@ -12,7 +12,13 @@ import TaskListSelector from "./TaskListSelector";
 import RecurrenceConfigFields from "./RecurrenceConfigFields";
 import { addTaskFormSteps } from "@/tours";
 
-export default function TaskModal({ show, onClose, onSubmitting, defaultCategoryId = null }) {
+export default function TaskModal({
+    show,
+    onClose,
+    onSubmitting,
+    defaultCategoryId = null,
+    defaultDueDate = "",
+}) {
     // `canUseTaskCapture` is only provided on pages that offer AI capture (the
     // Tasks page). `undefined` → feature not available here (render nothing);
     // `true`/`false` → entitled / locked-upsell states.
@@ -27,7 +33,7 @@ export default function TaskModal({ show, onClose, onSubmitting, defaultCategory
         description: "",
         category_id: defaultCategoryId || "",
         priority: "medium",
-        due_date: "",
+        due_date: defaultDueDate || "",
         end_date: "",
         start_time: "",
         end_time: "",
@@ -52,7 +58,7 @@ export default function TaskModal({ show, onClose, onSubmitting, defaultCategory
                 description: "",
                 category_id: defaultCategoryId || "",
                 priority: "medium",
-                due_date: "",
+                due_date: defaultDueDate || "",
                 end_date: "",
                 start_time: "",
                 end_time: "",
@@ -69,7 +75,7 @@ export default function TaskModal({ show, onClose, onSubmitting, defaultCategory
             setCaptureInput("");
             setCapturing(false);
         }
-    }, [show, defaultCategoryId]);
+    }, [show, defaultCategoryId, defaultDueDate]);
 
     // Turn a natural-language description into structured fields via AI, then
     // pre-fill the form for the user to review before saving. The AI never

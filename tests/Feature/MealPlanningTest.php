@@ -1,9 +1,11 @@
 <?php
 
+use App\Models\Task;
 use App\Models\User;
 use App\Modules\MealPlanning\Data\RecipeSearchCriteria;
 use App\Modules\MealPlanning\Models\Household;
 use App\Modules\MealPlanning\Models\HouseholdMember;
+use App\Modules\MealPlanning\Models\MealCalendarEvent;
 use App\Modules\MealPlanning\Models\MealDiaryEntry;
 use App\Modules\MealPlanning\Models\MealPlan;
 use App\Modules\MealPlanning\Models\PantryItem;
@@ -18,6 +20,7 @@ use Database\Seeders\MealPlanningSeeder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Inertia\Testing\AssertableInertia as Assert;
 
 function mealHousehold(User $owner): Household
 {
@@ -60,6 +63,42 @@ test('manual recipe updates create immutable versions and only household recipes
     $this->deleteJson(route('meal-planning.api.recipes.destroy', [$household, $recipe]))->assertNoContent();
     expect(Recipe::find($recipe->id))->toBeNull()
         ->and(Recipe::withTrashed()->findOrFail($recipe->id)->trashed())->toBeTrue();
+});
+
+test('calendar exposes household meal events without duplicating linked preparation tasks', function () {
+    $owner = User::factory()->create();
+    $household = mealHousehold($owner);
+    $event = MealCalendarEvent::create([
+        'household_id' => $household->id,
+        'type' => 'preparation',
+        'title' => 'Prepare family dinner',
+        'starts_at' => '2026-08-10 09:00:00',
+        'ends_at' => '2026-08-10 10:00:00',
+        'status' => 'planned',
+    ]);
+    Task::create([
+        'user_id' => $owner->id,
+        'title' => 'Prepare family dinner',
+        'due_date' => '2026-08-10',
+        'status' => 'pending',
+        'source_type' => 'meal_calendar_event',
+        'source_id' => $event->id,
+        'meal_household_id' => $household->id,
+    ]);
+
+    $this->actingAs($owner)
+        ->get(route('calendar.index', [
+            'date' => '2026-08-10',
+            'start' => '2026-08-10',
+            'end' => '2026-08-10',
+            'sources' => 'tasks,meals',
+        ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Calendar/Index')
+            ->has('calendarItems', 1)
+            ->where('calendarItems.0.sourceType', 'meal')
+            ->where('calendarItems.0.eventId', $event->id));
 });
 
 test('private profile data is encrypted while lookup fields remain queryable', function () {

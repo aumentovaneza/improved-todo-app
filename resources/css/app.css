@@ -2,6 +2,188 @@
 @tailwind components;
 @tailwind utilities;
 
+/* FullCalendar is only the interaction/view engine. These overrides keep its
+   surfaces inside Wevie's design system in both themes. */
+.calendar-shell .fc {
+    --fc-border-color: #dde6e8;
+    --fc-page-bg-color: transparent;
+    --fc-neutral-bg-color: #eef5f6;
+    --fc-list-event-hover-bg-color: #eef5f6;
+    color: #1f2f33;
+}
+
+.dark .calendar-shell .fc {
+    --fc-border-color: #2f4a50;
+    --fc-neutral-bg-color: #2a4247;
+    --fc-list-event-hover-bg-color: #2a4247;
+    color: #e6f2f3;
+}
+
+.calendar-shell .fc .fc-scrollgrid,
+.calendar-shell .fc .fc-list {
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+/* We import only FullCalendar's minimal skeleton.css, which draws almost no
+   grid lines, so paint them ourselves from the shared --fc-border-color. This
+   is what makes month/week/day read as a real grid in both themes. */
+.calendar-shell .fc .fc-scrollgrid {
+    border: 1px solid var(--fc-border-color);
+}
+
+/* Month: lines between weekday columns and between date cells. */
+.calendar-shell .fc .fc-col-header-cell,
+.calendar-shell .fc .fc-daygrid-day {
+    border-right: 1px solid var(--fc-border-color);
+}
+
+.calendar-shell .fc .fc-daygrid-day {
+    border-bottom: 1px solid var(--fc-border-color);
+}
+
+/* Week/Day: divider between the time axis and the day columns, and between days. */
+.calendar-shell .fc .fc-timegrid-axis,
+.calendar-shell .fc .fc-timegrid-col {
+    border-right: 1px solid var(--fc-border-color);
+}
+
+/* Day/Week: lines between time slots (hour lines solid, half-hour lines lighter). */
+.calendar-shell .fc .fc-timegrid-slot {
+    border-bottom: 1px solid var(--fc-border-color);
+}
+
+.calendar-shell .fc .fc-timegrid-slot-minor {
+    border-bottom-style: dotted;
+}
+
+/* Separate the all-day row from the timed grid so it stops feeling cramped. */
+.calendar-shell .fc .fc-timegrid-divider {
+    border-bottom: 1px solid var(--fc-border-color);
+}
+
+.calendar-shell .fc .fc-col-header-cell,
+.calendar-shell .fc .fc-timegrid-axis,
+.calendar-shell .fc .fc-list-day-cushion {
+    @apply bg-light-hover text-light-secondary dark:bg-dark-hover dark:text-dark-secondary;
+}
+
+.calendar-shell .fc .fc-daygrid-day-number,
+.calendar-shell .fc .fc-timegrid-slot-label,
+.calendar-shell .fc .fc-list-event-time,
+.calendar-shell .fc .fc-list-event-title {
+    @apply text-light-secondary dark:text-dark-secondary;
+}
+
+.calendar-shell .fc .fc-day-today {
+    @apply bg-wevie-teal/10 dark:bg-wevie-teal/10;
+}
+
+/* Today's date number gets a filled teal circle (the cell tint above stays),
+   so the current day is unmistakable at a glance. */
+.calendar-shell .fc .fc-day-today .fc-daygrid-day-number {
+    @apply flex h-6 min-w-6 items-center justify-center rounded-full bg-wevie-teal px-1 font-semibold text-white hover:text-white;
+}
+
+.calendar-shell .fc .fc-event {
+    @apply rounded-md border-0 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wevie-teal;
+}
+
+/* Day numbers sit clear of events, and clicking them is discoverable. */
+.calendar-shell .fc .fc-daygrid-day-top {
+    @apply flex-row justify-end px-1 pt-1;
+}
+
+.calendar-shell .fc .fc-daygrid-day-number {
+    @apply rounded-md px-1 text-xs font-medium hover:text-wevie-teal;
+}
+
+.calendar-shell .fc .fc-daygrid-day-events {
+    margin-top: 0.125rem;
+}
+
+/* Compact, single-line chips that truncate instead of overflowing the cell. */
+.calendar-shell .fc .fc-daygrid-event {
+    @apply my-px rounded-md px-1.5 py-0.5 text-xs font-medium leading-tight;
+}
+
+.calendar-shell .fc .wv-ev-chip {
+    width: 100%;
+    min-width: 0;
+}
+
+.calendar-shell .fc .fc-event .fc-event-main {
+    overflow: hidden;
+}
+
+/* Our chip already carries a type icon, so drop FullCalendar's default dot. */
+.calendar-shell .fc .fc-daygrid-event .fc-daygrid-event-dot {
+    display: none;
+}
+
+/* Type accent + readable hover for month/week/day chips. */
+.calendar-shell .fc .wv-ev {
+    border-inline-start: 3px solid transparent;
+}
+
+.calendar-shell .fc .wv-ev--task {
+    border-inline-start-color: theme("colors.primary.400");
+}
+
+.calendar-shell .fc .wv-ev--finance {
+    border-inline-start-color: theme("colors.warning.500");
+}
+
+.calendar-shell .fc .wv-ev--event {
+    border-inline-start-color: theme("colors.secondary.400");
+}
+
+.calendar-shell .fc .fc-event:hover {
+    @apply shadow-md;
+    filter: brightness(0.97);
+}
+
+.dark .calendar-shell .fc .fc-event:hover {
+    filter: brightness(1.12);
+}
+
+/* Time-grid: side-by-side tiling (slotEventOverlap=false) plus breathing room. */
+.calendar-shell .fc .fc-timegrid-event {
+    @apply rounded-md text-xs;
+}
+
+.calendar-shell .fc .fc-timegrid-event-harness {
+    inset-inline: 1px;
+}
+
+.calendar-shell .fc .fc-timegrid-event .fc-event-main {
+    @apply px-1 py-0.5;
+}
+
+/* Agenda: our custom row renders the badge + secondary text, so hide the
+   repetitive default time cell and let the title cell span the row. */
+.calendar-shell .fc .fc-list-event-time {
+    display: none;
+}
+
+.calendar-shell .fc .fc-list-event-title {
+    @apply w-full;
+}
+
+.calendar-shell .fc .fc-list-event:hover td {
+    @apply bg-light-hover dark:bg-dark-hover;
+}
+
+@media (max-width: 640px) {
+    .calendar-shell .fc .fc-toolbar-title {
+        font-size: 1rem;
+    }
+
+    .calendar-shell .fc .fc-daygrid-day-frame {
+        min-height: 5rem;
+    }
+}
+
 /* Global dark mode styles */
 @layer base {
     html {

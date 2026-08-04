@@ -213,8 +213,15 @@ export const tasksSteps = [
         placement: "center",
         title: "Tasks",
         content:
-            "Capture every to-do here — short ones, long ones, recurring ones. The list is sorted by date and time.",
+            "Start with what matters today, then move into upcoming work only when you need it.",
         disableBeacon: true,
+    },
+    {
+        target: '[data-tour="tasks-views"]',
+        title: "Choose your focus",
+        content:
+            "Today includes today’s work and keeps overdue items tucked into Needs attention. Upcoming, Inbox, All, and Completed are one tap away.",
+        placement: "bottom",
     },
     {
         target: '[data-tour="tasks-create"]',
@@ -226,7 +233,8 @@ export const tasksSteps = [
     {
         target: '[data-tour="tasks-filters"]',
         title: "Find what you need",
-        content: "Search by keyword, or filter by status, priority, category, or tag.",
+        content:
+            "Search by keyword, or open one filter drawer for status, priority, category, tag, and date.",
         placement: "bottom",
     },
     {
@@ -427,22 +435,22 @@ export const calendarSteps = [
         placement: "center",
         title: "Calendar",
         content:
-            "See every task and finance event laid out by date. Tasks with start/end times show up where they fall.",
+            "See events and tasks together. Finance entries stay available as an optional source when you want them.",
         disableBeacon: true,
     },
     {
         target: '[data-tour="calendar-header"]',
-        title: "Browse months",
+        title: "Choose a view",
         content:
-            "Use the chevrons to step through months, or hit Today to jump back to the current date.",
+            "Browse Month, Week, Day, or Agenda, and use the chevrons or Today to move through your schedule.",
         placement: "bottom",
         mobilePlacement: "top",
     },
     {
         target: '[data-tour="calendar-grid"]',
-        title: "Click a day",
+        title: "Plan directly",
         content:
-            "Click any day to see all tasks and transactions on that date, or to add a new task scheduled there.",
+            "Select empty space to prefill an event. Open an item for details, or drag an event to propose a new time.",
         placement: "top",
     },
 ];

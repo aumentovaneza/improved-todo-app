@@ -25,6 +25,11 @@ Schedule::command('notifications:dispatch')
     ->everyFifteenMinutes()
     ->description('Dispatch reminder and task due/overdue notifications');
 
+Schedule::command('calendar:dispatch-reminders')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->description('Dispatch native calendar event reminders');
+
 // Dispatch daily digests every hour; the command sends to each user only when
 // their local time hits the digest hour.
 Schedule::command('notifications:send-digests')

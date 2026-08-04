@@ -122,11 +122,10 @@ export default function Index({ users }) {
     const notifyForm = useForm({ user_id: "", message: "" });
     const submitNotification = (e) => {
         e.preventDefault();
-        notifyForm
-            .transform((data) => ({ ...data, user_id: notifyUser?.id ?? "" }))
-            .post(route("admin.tools.test-notification"), {
-                preserveScroll: true,
-            });
+        notifyForm.transform((data) => ({ ...data, user_id: notifyUser?.id ?? "" }));
+        notifyForm.post(route("admin.tools.test-notification"), {
+            preserveScroll: true,
+        });
     };
 
     // Enable web push on this device (must run from a user gesture).
@@ -157,11 +156,10 @@ export default function Index({ users }) {
             )
         )
             return;
-        summaryForm
-            .transform((data) => ({ ...data, user_id: summaryUser.id }))
-            .post(route("admin.tools.clear-daily-summary"), {
-                preserveScroll: true,
-            });
+        summaryForm.transform((data) => ({ ...data, user_id: summaryUser.id }));
+        summaryForm.post(route("admin.tools.clear-daily-summary"), {
+            preserveScroll: true,
+        });
     };
 
     // Clear spending insights
@@ -176,11 +174,10 @@ export default function Index({ users }) {
             )
         )
             return;
-        insightsForm
-            .transform((data) => ({ ...data, user_id: insightsUser.id }))
-            .post(route("admin.tools.clear-spending-insights"), {
-                preserveScroll: true,
-            });
+        insightsForm.transform((data) => ({ ...data, user_id: insightsUser.id }));
+        insightsForm.post(route("admin.tools.clear-spending-insights"), {
+            preserveScroll: true,
+        });
     };
 
     const primaryBtn =

@@ -364,6 +364,110 @@
     pointer-events: none;
 }
 
+/* ---------------------------------------------------------------------------
+   react-toastify — Wevie tinted-card theme
+   The <ToastContainer> runs without theme="colored", so we drive the look here.
+   Each type gets a light brand-tinted surface with dark brand text/icon in light
+   mode, and a dark-tinted surface with light brand text in dark mode. Selectors
+   sit outside @layer so they win over the library's bundled ReactToastify.css.
+--------------------------------------------------------------------------- */
+
+/* Base card: match Wevie cards (rounded-xl + soft shadow + hairline border). */
+.Toastify__toast {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    border: 1px solid #dde6e8; /* light-border */
+}
+.Toastify__close-button {
+    color: currentColor;
+    opacity: 0.6;
+}
+.Toastify__close-button:hover {
+    opacity: 1;
+}
+
+/* --- Light mode, per type --- */
+.Toastify__toast--success {
+    background: #e6f9f2; /* primary-50 */
+    color: #1f5239; /* primary-700 */
+}
+.Toastify__toast--success .Toastify__toast-icon svg {
+    fill: #3da373; /* primary-500 */
+}
+.Toastify__progress-bar--success {
+    background: #4acf91; /* primary-400 */
+}
+
+.Toastify__toast--error {
+    background: #fef2f2; /* error-50 */
+    color: #b91c1c; /* error-700 */
+}
+.Toastify__toast--error .Toastify__toast-icon svg {
+    fill: #f56565; /* error-500 */
+}
+.Toastify__progress-bar--error {
+    background: #f56565; /* error-500 */
+}
+
+.Toastify__toast--warning {
+    background: #fefce8; /* warning-50 */
+    color: #a16207; /* warning-700 */
+}
+.Toastify__toast--warning .Toastify__toast-icon svg {
+    fill: #ecc94b; /* warning-500 */
+}
+.Toastify__progress-bar--warning {
+    background: #ecc94b; /* warning-500 */
+}
+
+.Toastify__toast--info {
+    background: #e6f9fa; /* secondary-50 */
+    color: #265659; /* secondary-700 */
+}
+.Toastify__toast--info .Toastify__toast-icon svg {
+    fill: #4cb0b3; /* secondary-500 */
+}
+.Toastify__progress-bar--info {
+    background: #4cb0b3; /* secondary-500 */
+}
+
+/* --- Dark mode, per type --- */
+.dark .Toastify__toast {
+    border-color: #2f4a50; /* dark-border */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.dark .Toastify__toast--success {
+    background: #143529; /* deep green-tinted surface */
+    color: #99e7cb; /* primary-200 */
+}
+.dark .Toastify__toast--success .Toastify__toast-icon svg {
+    fill: #4acf91; /* primary-400 */
+}
+
+.dark .Toastify__toast--error {
+    background: #3a1a1a; /* deep red-tinted surface */
+    color: #fecaca; /* error-200 */
+}
+.dark .Toastify__toast--error .Toastify__toast-icon svg {
+    fill: #f87171; /* error-400 */
+}
+
+.dark .Toastify__toast--warning {
+    background: #362d12; /* deep amber-tinted surface */
+    color: #fde047; /* warning-300 */
+}
+.dark .Toastify__toast--warning .Toastify__toast-icon svg {
+    fill: #facc15; /* warning-400 */
+}
+
+.dark .Toastify__toast--info {
+    background: #123030; /* deep cyan-tinted surface */
+    color: #99e7eb; /* secondary-200 */
+}
+.dark .Toastify__toast--info .Toastify__toast-icon svg {
+    fill: #5fdde0; /* secondary-400 */
+}
+
 /* Toolbar tooltip (portaled to body, so styled outside .journal-content). */
 @keyframes journalTooltipIn {
     from {

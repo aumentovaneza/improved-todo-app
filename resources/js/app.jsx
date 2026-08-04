@@ -75,7 +75,6 @@ createInertiaApp({
                     closeOnClick
                     pauseOnHover
                     draggable
-                    theme="colored"
                     aria-label="Notifications"
                 />
             </PomodoroProvider>

@@ -421,7 +421,7 @@ export default function Index({
                             See your time clearly, without the extra noise.
                         </p>
                     </div>
-                    <div className="relative flex flex-wrap items-center gap-2">
+                    <div className="relative flex w-full items-center gap-2 sm:w-auto">
                         <CalendarSources
                             calendars={eventCalendars}
                             sources={sources}
@@ -430,7 +430,7 @@ export default function Index({
                             onCalendarsChange={changeCalendars}
                         />
                         <Menu as="div" className="relative">
-                            <MenuButton className="btn-primary min-h-11 gap-2">
+                            <MenuButton className="btn-primary min-h-11 flex-1 justify-center gap-2 px-6 sm:flex-none">
                                 <Plus className="h-4 w-4" />
                                 Add
                             </MenuButton>

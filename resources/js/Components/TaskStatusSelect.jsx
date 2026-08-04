@@ -8,7 +8,7 @@ import { Check, ChevronDown } from "lucide-react";
 //     other Tasks group branches (category / priority / due date).
 export const TASK_STATUS_OPTIONS = [
     { value: "pending", label: "Ready", dotClass: "bg-amber-500", color: "#F59E0B" },
-    { value: "in_progress", label: "In flow", dotClass: "bg-sky-500", color: "#0EA5E9" },
+    { value: "in_progress", label: "In Progress", dotClass: "bg-sky-500", color: "#0EA5E9" },
     { value: "completed", label: "Completed", dotClass: "bg-emerald-500", color: "#10B981" },
     { value: "cancelled", label: "Paused", dotClass: "bg-slate-400", color: "#94A3B8" },
 ];

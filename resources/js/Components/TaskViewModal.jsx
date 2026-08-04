@@ -236,7 +236,7 @@ export default function TaskViewModal({ show, onClose, task, onTaskUpdate }) {
                                     {task.status === "pending"
                                         ? "Ready"
                                         : task.status === "in_progress"
-                                          ? "In flow"
+                                          ? "In Progress"
                                           : task.status === "cancelled"
                                             ? "Paused"
                                             : "Completed"}

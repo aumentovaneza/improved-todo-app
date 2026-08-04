@@ -228,7 +228,7 @@ export default function TaskEditModal({
                                         }
                                     >
                                         <option value="pending">Ready</option>
-                                        <option value="in_progress">In flow</option>
+                                        <option value="in_progress">In Progress</option>
                                         <option value="completed">
                                             Completed
                                         </option>

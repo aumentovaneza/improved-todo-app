@@ -20,6 +20,7 @@ const maskAccountNumber = (value) => {
 export default function AccountsList({
     accounts = [],
     walletUserId,
+    currentMonth,
     onEdit,
     onDelete,
 }) {
@@ -176,14 +177,17 @@ export default function AccountsList({
                                                 {
                                                     finance_account_id:
                                                         account.id,
+                                                    start_date:
+                                                        currentMonth?.start,
+                                                    end_date: currentMonth?.end,
                                                     wallet_user_id:
                                                         walletUserId ||
                                                         undefined,
                                                 }
                                             )}
                                             className="rounded-md p-1 text-light-secondary hover:text-light-primary dark:text-dark-secondary dark:hover:text-dark-primary"
-                                            title="View transactions"
-                                            aria-label="View transactions"
+                                            title="View current month transactions"
+                                            aria-label="View current month transactions"
                                         >
                                             <Receipt className="h-4 w-4" />
                                         </Link>

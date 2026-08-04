@@ -803,7 +803,7 @@ export default function Dashboard(props) {
                     </h3>
                 </div>
                 <div className="px-6 py-4 space-y-4 text-sm text-light-secondary dark:text-dark-secondary">
-                    <p>Net = Income + Savings - Expenses</p>
+                    <p>Net = Income + Loans - Spending</p>
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <span>Income</span>
@@ -812,13 +812,13 @@ export default function Dashboard(props) {
                             </span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span>Savings</span>
-                            <span className="font-semibold text-violet-600 dark:text-violet-300">
-                                {formatCurrency(summary?.savings ?? 0)}
+                            <span>Loans</span>
+                            <span className="font-semibold text-cyan-600 dark:text-cyan-300">
+                                {formatCurrency(summary?.borrowed ?? 0)}
                             </span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span>Expenses</span>
+                            <span>Spending</span>
                             <span className="font-semibold text-rose-600 dark:text-rose-300">
                                 {formatCurrency(summary?.expenses ?? 0)}
                             </span>
@@ -843,7 +843,7 @@ export default function Dashboard(props) {
                     </h3>
                 </div>
                 <div className="px-6 py-4 space-y-4 text-sm text-light-secondary dark:text-dark-secondary">
-                    <p>Unassigned = (Income + Loans) - Savings - Expenses</p>
+                    <p>Unassigned = Income + Loans - Spending - Savings</p>
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <span>Income</span>
@@ -864,7 +864,7 @@ export default function Dashboard(props) {
                             </span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span>Expenses</span>
+                            <span>Spending</span>
                             <span className="font-semibold text-rose-600 dark:text-rose-300">
                                 {formatCurrency(summary?.expenses ?? 0)}
                             </span>

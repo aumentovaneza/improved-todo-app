@@ -41,11 +41,16 @@ class FinanceAccountController extends Controller
             $request->integer('wallet_user_id') ?: null
         );
         $accounts = $this->accountRepository->getForUser($walletUserId);
+        $currentMonth = [
+            'start' => now()->startOfMonth()->toDateString(),
+            'end' => now()->endOfMonth()->toDateString(),
+        ];
 
         return Inertia::render('Finance/Accounts', [
             'accounts' => $accounts->values()->all(),
             'accountSuggestions' => FinanceAccountInstitution::suggestionsByType(),
             'walletUserId' => $walletUserId,
+            'currentMonth' => $currentMonth,
         ]);
     }
 

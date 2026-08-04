@@ -147,15 +147,15 @@ export default function TransactionsList({
 
     return (
         <div className="card p-4">
-            <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-light-primary dark:text-dark-primary">
+            <div className="mb-4 flex items-center justify-between gap-2">
+                <h3 className="min-w-0 truncate text-lg font-semibold text-light-primary dark:text-dark-primary">
                     Recent activity
                 </h3>
                 <button
                     type="button"
                     onClick={onViewAll}
                     disabled={isLoading}
-                    className="rounded-xl bg-gradient-to-r from-wevie-teal to-wevie-mint px-3 py-1.5 text-sm text-white shadow-soft hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="shrink-0 rounded-xl bg-gradient-to-r from-wevie-teal to-wevie-mint px-3 py-1.5 text-sm text-white shadow-soft hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                     {isLoading ? "Loading..." : "See all"}
                 </button>

@@ -60,14 +60,14 @@ export default function FinanceCategories({ categories = [], walletUserId }) {
     return (
         <TodoLayout header="WevieWallet Categories">
             <Head title="WevieWallet Categories" />
-            <div className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-5xl space-y-6">
                 <div className="card p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                        <div className="min-w-0">
+                            <h2 className="text-xl font-semibold text-light-primary dark:text-dark-primary">
                                 Finance categories
                             </h2>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">
+                            <p className="text-sm text-light-muted dark:text-dark-muted">
                                 Manage income, expense, and savings categories.
                             </p>
                         </div>
@@ -75,7 +75,7 @@ export default function FinanceCategories({ categories = [], walletUserId }) {
                             href={route("weviewallet.dashboard", {
                                 wallet_user_id: walletUserId || undefined,
                             })}
-                            className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200"
+                            className="shrink-0 text-sm font-semibold text-wevie-teal hover:text-wevie-teal/80 dark:text-wevie-mint dark:hover:text-wevie-mint/80"
                         >
                             Back to WevieWallet
                         </Link>

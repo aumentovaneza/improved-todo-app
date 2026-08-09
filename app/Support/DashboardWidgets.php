@@ -38,6 +38,7 @@ class DashboardWidgets
             ['key' => 'calendar', 'title' => 'Calendar', 'defaultSize' => 'md', 'allowedSizes' => $full, 'defaultEnabled' => true],
             ['key' => 'productivity', 'title' => 'Productivity', 'defaultSize' => 'lg', 'allowedSizes' => $full, 'defaultEnabled' => true],
             ['key' => 'pomodoro', 'title' => 'Pomodoro', 'defaultSize' => 'sm', 'allowedSizes' => $compact, 'defaultEnabled' => false, 'selectable' => false],
+            ['key' => 'points', 'title' => 'Points', 'defaultSize' => 'sm', 'allowedSizes' => $compact, 'defaultEnabled' => false],
         ];
     }
 

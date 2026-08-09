@@ -5,6 +5,9 @@ namespace App\Services;
 use App\Models\User;
 use App\Modules\Finance\Models\FinanceTransaction;
 use App\Modules\Finance\Services\FinanceService;
+use App\Modules\Points\Enums\PointSource;
+use App\Modules\Points\Repositories\Contracts\PointLedgerRepositoryInterface;
+use App\Modules\Points\Services\PointsWalletService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -19,6 +22,8 @@ class DashboardService
         private TaskService $taskService,
         private ReportingService $reportingService,
         private FinanceService $financeService,
+        private PointsWalletService $pointsWalletService,
+        private PointLedgerRepositoryInterface $pointLedger,
     ) {}
 
     /**
@@ -90,9 +95,42 @@ class DashboardService
             ];
         }
 
+        if (isset($enabled['points'])) {
+            $data['points'] = $this->pointsWidget($user);
+        }
+
         // pomodoro and weather are client-only widgets: no server payload.
 
         return $data;
+    }
+
+    /**
+     * The points widget payload: current balance + streak, points earned so far
+     * this week, and a per-source breakdown of this week's earns. The week-start
+     * boundary is computed in PHP and passed as a binding so the query stays
+     * portable across MySQL/SQLite/Postgres.
+     *
+     * @return array{balance: int, streak: int, earned_this_week: int, by_source: array<int, array{source: string, source_label: string, total: int}>}
+     */
+    public function pointsWidget(User $user): array
+    {
+        $wallet = $this->pointsWalletService->ensureWallet($user->id);
+        $since = Carbon::now()->startOfWeek();
+
+        $bySource = array_map(fn (array $row): array => [
+            'source' => $row['source'],
+            'source_label' => PointSource::from($row['source'])->label(),
+            'total' => $row['total'],
+        ], $this->pointLedger->weeklyEarnBreakdown($user->id, $since));
+
+        $earnedThisWeek = array_sum(array_column($bySource, 'total'));
+
+        return [
+            'balance' => (int) $wallet->balance,
+            'streak' => (int) $wallet->current_streak_days,
+            'earned_this_week' => (int) $earnedThisWeek,
+            'by_source' => $bySource,
+        ];
     }
 
     /**

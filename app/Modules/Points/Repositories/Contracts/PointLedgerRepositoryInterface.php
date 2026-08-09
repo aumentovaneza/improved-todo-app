@@ -4,10 +4,27 @@ namespace App\Modules\Points\Repositories\Contracts;
 
 use App\Modules\Points\Enums\PointSource;
 use App\Modules\Points\Models\PointLedgerEntry;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 interface PointLedgerRepositoryInterface
 {
+    /**
+     * Paginate a user's ledger entries, newest first.
+     *
+     * @return LengthAwarePaginator<int, PointLedgerEntry>
+     */
+    public function paginateForUser(int $userId, int $perPage = 20): LengthAwarePaginator;
+
+    /**
+     * Sum + group this user's positive earn amounts since $since, by source,
+     * ordered by total desc, excluding sources with a non-positive total.
+     *
+     * @return array<int, array{source: string, total: int}>
+     */
+    public function weeklyEarnBreakdown(int $userId, CarbonInterface $since): array;
+
     /**
      * @param  array<string, mixed>  $data
      */

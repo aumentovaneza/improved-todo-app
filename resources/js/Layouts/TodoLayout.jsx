@@ -1,6 +1,8 @@
 import ApplicationLogo from "@/Components/ApplicationLogo";
+import Avatar from "@/Components/Avatar/Avatar";
 import Dropdown from "@/Components/Dropdown";
 import NotificationBell from "@/Components/NotificationBell";
+import PointsBadge from "@/Components/Points/PointsBadge";
 import MobileFab from "@/Components/Mobile/MobileFab";
 import MobileTabBar from "@/Components/Mobile/MobileTabBar";
 import OnboardingTour from "@/Components/OnboardingTour";
@@ -37,10 +39,12 @@ import {
     ListChecks,
     Wrench,
     UtensilsCrossed,
+    ShoppingBag,
 } from "lucide-react";
 
 export default function TodoLayout({ header, children }) {
-    const user = usePage().props.auth.user;
+    const auth = usePage().props.auth;
+    const user = auth.user;
     const isFinanceRoute = route().current("finance.*") || route().current("weviewallet.*");
     const isWevieWalletRoute = route().current("weviewallet.*");
     const walletSubLinks = [
@@ -208,6 +212,13 @@ export default function TodoLayout({ header, children }) {
             icon: BookOpen,
             current: route().current("journal.*"),
             tourKey: "nav-journal",
+        },
+        {
+            name: "Store",
+            href: route("store.index"),
+            icon: ShoppingBag,
+            current: route().current("store.*"),
+            tourKey: "nav-store",
         },
         ...(user.role === "admin"
             ? [
@@ -547,13 +558,7 @@ export default function TodoLayout({ header, children }) {
                                 {/* User Profile */}
                                 <div className="border-t border-gray-200 dark:border-gray-700 p-4">
                                     <div className="flex items-center">
-                                        <div className="flex-shrink-0">
-                                            <div className="h-8 w-8 rounded-full bg-primary-400 dark:bg-[#2ED7A1] flex items-center justify-center">
-                                                <span className="text-sm font-medium text-white">
-                                                    {user.name.charAt(0).toUpperCase()}
-                                                </span>
-                                            </div>
-                                        </div>
+                                        <Avatar avatar={auth.avatar} size="sm" />
                                         <div className="ml-3 flex-1 min-w-0">
                                             <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                                                 {user.name}
@@ -852,13 +857,7 @@ export default function TodoLayout({ header, children }) {
                     {/* User Profile */}
                     <div className="border-t border-light-border dark:border-dark-border p-4">
                         <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                                <div className="h-8 w-8 rounded-full bg-primary-400 dark:bg-[#2ED7A1] flex items-center justify-center">
-                                    <span className="text-sm font-medium text-white">
-                                        {user.name.charAt(0).toUpperCase()}
-                                    </span>
-                                </div>
-                            </div>
+                            <Avatar avatar={auth.avatar} size="sm" />
                             <div className="ml-3 flex-1 min-w-0">
                                 <p className="text-sm font-medium text-light-primary dark:text-dark-primary truncate">
                                     {user.name}
@@ -930,6 +929,13 @@ export default function TodoLayout({ header, children }) {
                             )}
                         </div>
                         <div className="flex items-center space-x-4">
+                            <Link
+                                href={route("store.index")}
+                                className="hidden sm:inline-flex"
+                                title="Open the Store"
+                            >
+                                <PointsBadge />
+                            </Link>
                             {pendingCount > 0 && (
                                 <button
                                     type="button"

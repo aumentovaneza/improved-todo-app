@@ -13,6 +13,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Seed the Points store catalog first so the UserObserver can grant and
+        // equip the default base avatar to users created below.
+        $this->call(PointsStoreCatalogSeeder::class);
+
         // Create admin user
         User::factory()->create([
             'name' => 'Admin User',

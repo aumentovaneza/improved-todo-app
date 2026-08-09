@@ -1,7 +1,7 @@
+import Avatar from "@/Components/Avatar/Avatar";
 import TodoLayout from "@/Layouts/TodoLayout";
-import { Head, Link, useForm } from "@inertiajs/react";
+import { Head, Link, useForm, usePage } from "@inertiajs/react";
 import {
-    User,
     Mail,
     Calendar,
     Shield,
@@ -17,6 +17,7 @@ import SecondaryButton from "@/Components/SecondaryButton";
 import PrimaryButton from "@/Components/PrimaryButton";
 
 export default function Show({ user, stats }) {
+    const auth = usePage().props.auth;
     const { post } = useForm();
 
     const handleLogout = (e) => {
@@ -65,9 +66,7 @@ export default function Show({ user, stats }) {
                     <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:space-x-6">
                         {/* Avatar */}
                         <div className="flex-shrink-0">
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                                <User className="w-12 h-12 text-blue-600 dark:text-blue-300" />
-                            </div>
+                            <Avatar avatar={auth.avatar} size="lg" />
                         </div>
 
                         {/* User Info */}

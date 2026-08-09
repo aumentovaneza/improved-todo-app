@@ -1,14 +1,18 @@
 import ApplicationLogo from "@/Components/ApplicationLogo";
+import Avatar from "@/Components/Avatar/Avatar";
 import Dropdown from "@/Components/Dropdown";
 import NavLink from "@/Components/NavLink";
 import OnboardingTour from "@/Components/OnboardingTour";
+import PointsBadge from "@/Components/Points/PointsBadge";
 import ResponsiveNavLink from "@/Components/ResponsiveNavLink";
 import { FloatingPomodoroWidget, FocusMode } from "@/Components/Pomodoro";
 import { Link, usePage } from "@inertiajs/react";
+import { ShoppingBag } from "lucide-react";
 import { useState } from "react";
 
 export default function AuthenticatedLayout({ header, children }) {
-    const user = usePage().props.auth.user;
+    const auth = usePage().props.auth;
+    const user = auth.user;
     const isFinanceRoute =
         route().current("finance.*") || route().current("weviewallet.*");
 
@@ -71,10 +75,20 @@ export default function AuthenticatedLayout({ header, children }) {
                                         WevieWallet
                                     </NavLink>
                                 </span>
+                                <span data-tour="nav-store">
+                                    <NavLink
+                                        href={route("store.index")}
+                                        active={route().current("store.*")}
+                                    >
+                                        <ShoppingBag className="me-1.5 h-4 w-4" aria-hidden="true" />
+                                        Store
+                                    </NavLink>
+                                </span>
                             </div>
                         </div>
 
                         <div className="hidden sm:ms-6 sm:flex sm:items-center">
+                            <PointsBadge className="me-3" />
                             <div className="relative ms-3" data-tour="user-menu">
                                 <Dropdown>
                                     <Dropdown.Trigger>
@@ -83,6 +97,11 @@ export default function AuthenticatedLayout({ header, children }) {
                                                 type="button"
                                                 className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
                                             >
+                                                <Avatar
+                                                    avatar={auth.avatar}
+                                                    size="sm"
+                                                    className="me-2"
+                                                />
                                                 {user.name}
 
                                                 <svg
@@ -211,16 +230,26 @@ export default function AuthenticatedLayout({ header, children }) {
                         >
                             WevieWallet
                         </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            href={route("store.index")}
+                            active={route().current("store.*")}
+                        >
+                            Store
+                        </ResponsiveNavLink>
                     </div>
 
                     <div className="border-t border-gray-200 pb-1 pt-4 dark:border-gray-600">
-                        <div className="px-4">
-                            <div className="text-base font-medium text-gray-800 dark:text-gray-200">
-                                {user.name}
+                        <div className="flex items-center gap-3 px-4">
+                            <Avatar avatar={auth.avatar} size="sm" />
+                            <div className="min-w-0 flex-1">
+                                <div className="text-base font-medium text-gray-800 dark:text-gray-200">
+                                    {user.name}
+                                </div>
+                                <div className="text-sm font-medium text-gray-500">
+                                    {user.email}
+                                </div>
                             </div>
-                            <div className="text-sm font-medium text-gray-500">
-                                {user.email}
-                            </div>
+                            <PointsBadge />
                         </div>
 
                         <div className="mt-3 space-y-1">

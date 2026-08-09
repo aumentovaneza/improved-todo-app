@@ -1,3 +1,4 @@
+import { router } from "@inertiajs/react";
 import React, {
     createContext,
     useContext,
@@ -7,6 +8,17 @@ import React, {
 } from "react";
 
 const PomodoroContext = createContext();
+
+/**
+ * Collision-resistant idempotency id for a pomodoro session. Prefers the
+ * platform UUID generator, falling back where it isn't available.
+ */
+function newClientRequestId() {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+        return crypto.randomUUID();
+    }
+    return `req-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
 
 // Timer states
 const TIMER_STATES = {
@@ -153,6 +165,9 @@ export function PomodoroProvider({ children }) {
     const [state, dispatch] = useReducer(pomodoroReducer, initialState);
     const intervalRef = useRef(null);
     const audioRef = useRef(null);
+    // Tracks the in-flight work session so points are awarded once, server-side,
+    // when it completes naturally. Holds { clientRequestId, startedAt, durationSeconds }.
+    const workSessionRef = useRef(null);
 
     // Load state from localStorage on mount
     useEffect(() => {
@@ -256,6 +271,61 @@ export function PomodoroProvider({ children }) {
             }
         }
     }, [state.timeLeft, state.state]);
+
+    // Award points server-side when a WORK session completes naturally.
+    // The reducer flips a finished work session to the BREAK state (manual
+    // resets/skips go to IDLE instead, so they never award). An idempotency id
+    // is minted once per session start and reused on retries.
+    useEffect(() => {
+        // A fresh work session began — capture id + start time once. Resuming
+        // from pause keeps the same id (the ref is still set), so no re-award.
+        if (
+            state.state === TIMER_STATES.RUNNING &&
+            state.currentSession === "work" &&
+            !workSessionRef.current
+        ) {
+            workSessionRef.current = {
+                clientRequestId: newClientRequestId(),
+                startedAt: new Date().toISOString(),
+                durationSeconds: state.totalTime,
+            };
+            return;
+        }
+
+        // Work session finished naturally → record it so the backend awards points.
+        if (state.state === TIMER_STATES.BREAK && workSessionRef.current) {
+            const session = workSessionRef.current;
+            workSessionRef.current = null;
+
+            try {
+                router.post(
+                    route("pomodoro.sessions.store"),
+                    {
+                        type: "work",
+                        duration_seconds: session.durationSeconds,
+                        started_at: session.startedAt,
+                        completed_at: new Date().toISOString(),
+                        client_request_id: session.clientRequestId,
+                    },
+                    {
+                        preserveState: true,
+                        preserveScroll: true,
+                        only: ["auth"],
+                    }
+                );
+            } catch (error) {
+                // Never let points wiring disrupt the timer experience.
+                console.error("Failed to record pomodoro session:", error);
+            }
+            return;
+        }
+
+        // Manual reset/skip during a work session (goes IDLE): drop the pending
+        // session so nothing is awarded and the next session mints a fresh id.
+        if (state.state === TIMER_STATES.IDLE && workSessionRef.current) {
+            workSessionRef.current = null;
+        }
+    }, [state.state, state.currentSession, state.totalTime]);
 
     const actions = {
         startTimer: () => dispatch({ type: "START_TIMER" }),

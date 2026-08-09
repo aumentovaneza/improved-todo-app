@@ -16,6 +16,7 @@ use App\Modules\MealPlanning\Resources\PantryItemResource;
 use App\Modules\MealPlanning\Resources\RecipeResource;
 use App\Modules\MealPlanning\Services\HouseholdAccessService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -26,8 +27,13 @@ class MealPlanningPageController extends Controller
     public function index(Request $request): Response
     {
         $households = Household::with('members')->whereHas('members', fn ($q) => $q->where('user_id', $request->user()->id))->get();
+        $countries = DB::table('countries')->orderBy('name')->get(['code', 'name', 'currency']);
 
-        return Inertia::render('MealPlanning/Index', ['households' => HouseholdResource::collection($households)->resolve()]);
+        return Inertia::render('MealPlanning/Index', [
+            'households' => HouseholdResource::collection($households)->resolve(),
+            'countries' => $countries,
+            'userTimezone' => $request->user()->timezone,
+        ]);
     }
 
     public function planner(Request $request, Household $household): Response

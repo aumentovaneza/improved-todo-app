@@ -1,9 +1,17 @@
 import MealPlanningLayout, { Panel } from "@/Components/MealPlanning/MealPlanningLayout";
+import InputLabel from "@/Components/InputLabel";
+import { Loader2, Save } from "lucide-react";
 import { useState } from "react";
+import { toast } from "react-toastify";
+
+const inputClass =
+    "input-primary mt-1 block w-full border px-3 py-2 text-sm focus:ring-1 focus:outline-none";
+const checkboxClass =
+    "h-4 w-4 rounded border-light-border/70 text-wevie-teal focus:ring-wevie-teal/30 dark:border-dark-border/70 dark:bg-dark-card";
 
 export default function Preferences({ household }) {
     const current = household.settings || {};
-    const [saved, setSaved] = useState(false);
+    const [busy, setBusy] = useState(false);
     const [form, setForm] = useState({
         priority_profile: current.priority_profile || "balanced",
         budget_total: current.budget_total || "",
@@ -14,30 +22,38 @@ export default function Preferences({ household }) {
     });
     const save = async (event) => {
         event.preventDefault();
-        await window.axios.patch(route("meal-planning.api.households.update", household.id), {
-            settings: {
-                ...current,
-                ...form,
-                budget_total: form.budget_total ? Number(form.budget_total) : null,
-                preferred_preparation_minutes: Number(form.preferred_preparation_minutes),
-                equipment: form.equipment
-                    .split(",")
-                    .map((v) => v.trim())
-                    .filter(Boolean),
-            },
-        });
-        setSaved(true);
+        setBusy(true);
+        try {
+            await window.axios.patch(route("meal-planning.api.households.update", household.id), {
+                settings: {
+                    ...current,
+                    ...form,
+                    budget_total: form.budget_total ? Number(form.budget_total) : null,
+                    preferred_preparation_minutes: Number(form.preferred_preparation_minutes),
+                    equipment: form.equipment
+                        .split(",")
+                        .map((v) => v.trim())
+                        .filter(Boolean),
+                },
+            });
+            toast.success("Preferences saved.");
+        } catch {
+            toast.error("We couldn’t save your preferences just now.");
+        } finally {
+            setBusy(false);
+        }
     };
     return (
         <MealPlanningLayout household={household} title="Preferences">
             <Panel title="Planning defaults">
                 <form onSubmit={save} className="grid max-w-2xl gap-4 sm:grid-cols-2">
-                    <label className="text-sm text-gray-600 dark:text-gray-300">
-                        Priority
+                    <div>
+                        <InputLabel htmlFor="pref-priority" value="Priority" />
                         <select
+                            id="pref-priority"
                             value={form.priority_profile}
                             onChange={(e) => setForm({ ...form, priority_profile: e.target.value })}
-                            className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-gray-900"
+                            className={`${inputClass} capitalize`}
                         >
                             {[
                                 "balanced",
@@ -52,62 +68,84 @@ export default function Preferences({ household }) {
                                 </option>
                             ))}
                         </select>
-                    </label>
-                    <label className="text-sm text-gray-600 dark:text-gray-300">
-                        Weekly budget
+                    </div>
+                    <div>
+                        <InputLabel htmlFor="pref-budget" value="Weekly budget" />
                         <input
+                            id="pref-budget"
                             type="number"
                             min="0"
                             value={form.budget_total}
                             onChange={(e) => setForm({ ...form, budget_total: e.target.value })}
-                            className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-gray-900"
+                            placeholder="0"
+                            className={inputClass}
                         />
-                    </label>
-                    <label className="text-sm text-gray-600 dark:text-gray-300">
-                        Preferred preparation minutes
+                    </div>
+                    <div>
+                        <InputLabel htmlFor="pref-prep" value="Preferred preparation minutes" />
                         <input
+                            id="pref-prep"
                             type="number"
                             min="1"
                             value={form.preferred_preparation_minutes}
                             onChange={(e) =>
-                                setForm({ ...form, preferred_preparation_minutes: e.target.value })
+                                setForm({
+                                    ...form,
+                                    preferred_preparation_minutes: e.target.value,
+                                })
                             }
-                            className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-gray-900"
+                            className={inputClass}
                         />
-                    </label>
-                    <label className="text-sm text-gray-600 dark:text-gray-300">
-                        Equipment
+                    </div>
+                    <div>
+                        <InputLabel htmlFor="pref-equipment" value="Equipment" />
                         <input
+                            id="pref-equipment"
                             value={form.equipment}
                             onChange={(e) => setForm({ ...form, equipment: e.target.value })}
                             placeholder="oven, blender"
-                            className="mt-1 block w-full rounded-lg border-gray-300 dark:bg-gray-900"
+                            className={inputClass}
                         />
-                    </label>
-                    <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                    </div>
+                    <label className="flex items-center gap-2 text-sm text-light-secondary dark:text-dark-secondary">
                         <input
                             type="checkbox"
                             checked={form.allow_specialty_ingredients}
                             onChange={(e) =>
-                                setForm({ ...form, allow_specialty_ingredients: e.target.checked })
+                                setForm({
+                                    ...form,
+                                    allow_specialty_ingredients: e.target.checked,
+                                })
                             }
+                            className={checkboxClass}
                         />
                         Allow specialty ingredients
                     </label>
-                    <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                    <label className="flex items-center gap-2 text-sm text-light-secondary dark:text-dark-secondary">
                         <input
                             type="checkbox"
                             checked={form.enable_leftovers}
                             onChange={(e) =>
                                 setForm({ ...form, enable_leftovers: e.target.checked })
                             }
+                            className={checkboxClass}
                         />
                         Plan explicit leftovers and reserve the full batch
                     </label>
-                    <button className="rounded-lg bg-primary-600 px-4 py-2 text-white">
-                        Save preferences
-                    </button>
-                    {saved && <p className="text-sm text-green-600">Saved.</p>}
+                    <div className="sm:col-span-2">
+                        <button
+                            type="submit"
+                            disabled={busy}
+                            className="btn-primary disabled:opacity-60"
+                        >
+                            {busy ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Save className="mr-2 h-4 w-4" />
+                            )}
+                            Save preferences
+                        </button>
+                    </div>
                 </form>
             </Panel>
         </MealPlanningLayout>

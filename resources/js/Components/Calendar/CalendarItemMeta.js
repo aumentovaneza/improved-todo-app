@@ -32,7 +32,7 @@ export const SOURCE_META = {
     meal: {
         label: "Meal",
         Icon: Utensils,
-        badgeClass: "bg-wevie-teal/15 text-primary-700 dark:bg-wevie-teal/20 dark:text-primary-300",
+        badgeClass: "bg-wevie-teal/15 text-wevie-teal dark:bg-wevie-teal/20 dark:text-wevie-mint",
         dotClass: "bg-wevie-teal",
     },
 };

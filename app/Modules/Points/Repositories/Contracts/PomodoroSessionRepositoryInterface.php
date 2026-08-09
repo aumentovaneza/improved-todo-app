@@ -17,7 +17,8 @@ interface PomodoroSessionRepositoryInterface
     public function findByClientRequestId(int $userId, string $clientRequestId): ?PomodoroSession;
 
     /**
-     * Count of sessions that already earned points within the given window.
+     * Count of sessions that already earned points within the given window,
+     * measured by server-set created_at (not client-supplied completed_at).
      */
     public function todaysAwardedCount(int $userId, CarbonInterface $start, CarbonInterface $end): int;
 }

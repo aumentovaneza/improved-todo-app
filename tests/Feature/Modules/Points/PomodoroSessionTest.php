@@ -70,6 +70,20 @@ it('stops awarding once the daily cap is reached', function () {
     expect(PomodoroSession::where('user_id', $user->id)->where('awarded_points', '>', 0)->count())->toBe(2);
 });
 
+it('counts backdated sessions against the daily cap by server time', function () {
+    config()->set('points.pomodoro.daily_award_cap', 2);
+    $user = User::factory()->create();
+
+    // Backdating completed_at must not let sessions escape the daily cap.
+    $backdated = ['completed_at' => now()->subDay()->toIso8601String()];
+    recordPomodoro($user, $backdated);
+    recordPomodoro($user, $backdated);
+    $third = recordPomodoro($user, $backdated);
+
+    expect($third->awarded_points)->toBe(0);
+    expect(PomodoroSession::where('user_id', $user->id)->where('awarded_points', '>', 0)->count())->toBe(2);
+});
+
 it('rejects a future completed_at at the request layer', function () {
     $user = User::factory()->create();
 

@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\Task;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 
 class ResetRecurringTasks extends Command
 {
@@ -70,7 +70,7 @@ class ResetRecurringTasks extends Command
      */
     private function shouldResetTask(Task $task, Carbon $userToday): bool
     {
-        if (!$task->completed_at) {
+        if (! $task->completed_at) {
             return false;
         }
 
@@ -84,7 +84,7 @@ class ResetRecurringTasks extends Command
             $nextOccurrenceDate = $nextOccurrenceDate->setTimezone($userToday->timezone)->startOfDay();
         }
 
-        if (!$nextOccurrenceDate) {
+        if (! $nextOccurrenceDate) {
             return false;
         }
 
@@ -128,11 +128,15 @@ class ResetRecurringTasks extends Command
             'due_date' => $newDueDate,
         ]);
 
-        // Reset all subtasks to incomplete
-        $task->subtasks()->update([
-            'is_completed' => false,
-            'completed_at' => null,
-        ]);
+        // Reset all subtasks to incomplete. Update each model individually
+        // (not a bulk relationship query) so `updated` events fire and points
+        // observers can reverse the completion awards for the next occurrence.
+        foreach ($task->subtasks as $subtask) {
+            $subtask->update([
+                'is_completed' => false,
+                'completed_at' => null,
+            ]);
+        }
     }
 
     /**
@@ -148,7 +152,7 @@ class ResetRecurringTasks extends Command
 
             case 'weekly':
                 $days = $config['days_of_week'] ?? null;
-                if (!empty($days)) {
+                if (! empty($days)) {
                     $days = array_map('intval', $days);
                     // Next selected weekday strictly after $fromDate
                     for ($i = 1; $i <= 7; $i++) {

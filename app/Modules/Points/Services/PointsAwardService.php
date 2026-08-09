@@ -15,10 +15,12 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Translates productive actions into point awards / reversals.
  *
- * Award idempotency uses a net-award guard: award only when the running net
- * (SUM of signed ledger amounts) for a source + sourceable is <= 0. Reversals
- * subtract the outstanding net but are clamped by the wallet so the balance
- * never drops below 0. Every earn also rolls the daily streak.
+ * Award idempotency uses a completion-*cycle* guard: award only when no
+ * un-reversed award is outstanding (earn entries do not outnumber reversals)
+ * for a source + sourceable. Reversals deduct the fixed award amount but are
+ * clamped by the wallet so the balance never drops below 0 — the reversal entry
+ * still closes the cycle even when clamped to 0, so a recurring task can earn
+ * again after a reset. Every earn also rolls the daily streak.
  */
 class PointsAwardService
 {
@@ -34,7 +36,7 @@ class PointsAwardService
 
     public function reverseForTask(Task $task): void
     {
-        $this->reverseFor($task, $task->user_id, PointSource::TaskCompletion);
+        $this->reverseFor($task, $task->user_id, PointSource::TaskCompletion, (int) config('points.award.task_completion'));
     }
 
     public function awardForSubtask(Subtask $subtask): void
@@ -56,7 +58,7 @@ class PointsAwardService
             return;
         }
 
-        $this->reverseFor($subtask, $task->user_id, PointSource::SubtaskCompletion);
+        $this->reverseFor($subtask, $task->user_id, PointSource::SubtaskCompletion, (int) config('points.award.subtask_completion'));
     }
 
     /**
@@ -125,8 +127,8 @@ class PointsAwardService
             return;
         }
 
-        // Net-award guard: only award when nothing net-positive is outstanding.
-        if ($this->ledger->netAwardedFor($user->id, $source, $sourceable) > 0) {
+        // Cycle guard: skip when an un-reversed award is still outstanding.
+        if ($this->ledger->awardCycleOpen($user->id, $source, $sourceable)) {
             return;
         }
 
@@ -135,18 +137,18 @@ class PointsAwardService
         $this->registerStreakActivity($this->walletService->ensureWallet($user->id), $user);
     }
 
-    private function reverseFor(Model $sourceable, ?int $userId, PointSource $source): void
+    private function reverseFor(Model $sourceable, ?int $userId, PointSource $source, int $amount): void
     {
         if (! $userId) {
             return;
         }
 
-        $net = $this->ledger->netAwardedFor($userId, $source, $sourceable);
-
-        if ($net <= 0) {
+        // Nothing to reverse unless an award cycle is open. The adjust is
+        // clamped to the wallet balance but its entry still closes the cycle.
+        if (! $this->ledger->awardCycleOpen($userId, $source, $sourceable)) {
             return;
         }
 
-        $this->walletService->adjust($userId, $net, $source, $sourceable);
+        $this->walletService->adjust($userId, $amount, $source, $sourceable);
     }
 }

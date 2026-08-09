@@ -14,10 +14,13 @@ interface PointLedgerRepositoryInterface
     public function create(array $data): PointLedgerEntry;
 
     /**
-     * Net amount (SUM of signed amounts) awarded for a given source + sourceable.
-     * Drives the idempotent net-award guard.
+     * Whether an un-reversed award is outstanding for a source + sourceable,
+     * i.e. earn entries outnumber reversal (adjust) entries. Drives the
+     * idempotent award/reverse guard by completion *cycle* rather than by
+     * amount, so a balance-clamped reversal still closes the cycle and lets a
+     * recurring task earn again.
      */
-    public function netAwardedFor(int $userId, PointSource $source, Model $sourceable): int;
+    public function awardCycleOpen(int $userId, PointSource $source, Model $sourceable): bool;
 
     public function existsByClientRequestId(int $userId, string $clientRequestId): bool;
 

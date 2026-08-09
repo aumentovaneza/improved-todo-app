@@ -31,10 +31,12 @@ class PomodoroSessionRepository implements PomodoroSessionRepositoryInterface
 
     public function todaysAwardedCount(int $userId, CarbonInterface $start, CarbonInterface $end): int
     {
+        // Count against server-set created_at, never the client-supplied
+        // completed_at — otherwise backdated sessions escape the daily cap.
         return PomodoroSession::query()
             ->where('user_id', $userId)
             ->where('awarded_points', '>', 0)
-            ->whereBetween('completed_at', [$start, $end])
+            ->whereBetween('created_at', [$start, $end])
             ->count();
     }
 }

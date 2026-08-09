@@ -87,6 +87,22 @@ it('does not double-charge on a repeated purchase', function () {
     expect(UserStoreItem::where('user_id', $user->id)->where('store_item_id', $item->id)->count())->toBe(1);
 });
 
+it('rejects reusing a client_request_id for a different item', function () {
+    $user = User::factory()->create();
+    $first = makeBaseItem(['cost' => 50, 'key' => 'base_first']);
+    $second = makeBaseItem(['cost' => 50, 'key' => 'base_second']);
+    fundWallet($user, 100);
+
+    app(StoreService::class)->purchase($user, $first, 'crid-shared');
+
+    // A reused request id must not grant the second item on the first spend.
+    expect(fn () => app(StoreService::class)->purchase($user, $second, 'crid-shared'))
+        ->toThrow(RuntimeException::class);
+
+    expect(UserStoreItem::where('user_id', $user->id)->where('store_item_id', $second->id)->count())->toBe(0);
+    expect(PointWallet::where('user_id', $user->id)->value('balance'))->toBe(50);
+});
+
 it('equips an owned item', function () {
     $user = User::factory()->create();
     $item = makeBaseItem(['cost' => 0]);

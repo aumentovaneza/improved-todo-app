@@ -82,6 +82,16 @@ class StoreService
                 $clientRequestId,
             );
 
+            // Guard against a client_request_id reused across different items:
+            // debit() is idempotent per request id and would otherwise return
+            // the *first* item's spend entry, granting this item for free.
+            $matchesItem = (int) $entry->sourceable_id === (int) $storeItem->id
+                && $entry->sourceable_type === $storeItem->getMorphClass();
+
+            if (! $matchesItem) {
+                throw new RuntimeException('This request has already been used for a different purchase.');
+            }
+
             $inventory = $this->inventory->create([
                 'user_id' => $user->id,
                 'store_item_id' => $storeItem->id,

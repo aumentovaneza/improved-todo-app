@@ -80,6 +80,29 @@ it('clamps reversals so the balance never goes below zero', function () {
     expect(PointWallet::where('user_id', $user->id)->value('balance'))->toBe(0);
 });
 
+it('re-awards a recurring task even after the awarded points were already spent', function () {
+    $user = User::factory()->create();
+    $task = pointsEarnTask($user);
+
+    $task->update(['status' => 'completed', 'completed_at' => now()]); // +10 task +5 streak
+    app(PointsWalletService::class)->debit($user->id, 15, PointSource::StorePurchase); // spend all
+    expect(PointWallet::where('user_id', $user->id)->value('balance'))->toBe(0);
+
+    // Reset reverses but is clamped to 0; the reversal entry still closes the
+    // completion cycle so the next completion can earn again.
+    $task->update(['status' => 'pending', 'completed_at' => null]);
+    $task->update(['status' => 'completed', 'completed_at' => now()->addMinute()]);
+
+    $earnEntries = \App\Modules\Points\Models\PointLedgerEntry::where('user_id', $user->id)
+        ->where('source', PointSource::TaskCompletion->value)
+        ->where('amount', '>', 0)
+        ->count();
+
+    expect($earnEntries)->toBe(2);
+    // Second award lands (10); streak bonus already granted earlier today.
+    expect(PointWallet::where('user_id', $user->id)->value('balance'))->toBe(10);
+});
+
 it('re-awards a recurring task after it is reset and completed again', function () {
     $user = User::factory()->create();
     $task = pointsEarnTask($user);

@@ -2,6 +2,7 @@
 
 namespace App\Modules\Points\Repositories\Eloquent;
 
+use App\Modules\Points\Enums\PointLedgerType;
 use App\Modules\Points\Enums\PointSource;
 use App\Modules\Points\Models\PointLedgerEntry;
 use App\Modules\Points\Repositories\Contracts\PointLedgerRepositoryInterface;
@@ -14,14 +15,18 @@ class PointLedgerRepository implements PointLedgerRepositoryInterface
         return PointLedgerEntry::create($data);
     }
 
-    public function netAwardedFor(int $userId, PointSource $source, Model $sourceable): int
+    public function awardCycleOpen(int $userId, PointSource $source, Model $sourceable): bool
     {
-        return (int) PointLedgerEntry::query()
+        $base = PointLedgerEntry::query()
             ->where('user_id', $userId)
             ->where('source', $source->value)
             ->where('sourceable_type', $sourceable->getMorphClass())
-            ->where('sourceable_id', $sourceable->getKey())
-            ->sum('amount');
+            ->where('sourceable_id', $sourceable->getKey());
+
+        $earns = (clone $base)->where('type', PointLedgerType::Earn->value)->count();
+        $reversals = (clone $base)->where('type', PointLedgerType::Adjust->value)->count();
+
+        return $earns > $reversals;
     }
 
     public function existsByClientRequestId(int $userId, string $clientRequestId): bool
